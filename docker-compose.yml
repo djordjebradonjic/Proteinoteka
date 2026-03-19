@@ -3,7 +3,7 @@ services:
     image: postgres:16-alpine
     container_name: proteinoteka_db
     environment:
-      POSTGRES_USER: proteionoteka_2026
+      POSTGRES_USER: proteinoteka_2026
       POSTGRES_PASSWORD: proteinoteka_19032026
       POSTGRES_DB: proteinoteka
     ports:
