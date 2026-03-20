@@ -27,5 +27,5 @@ public class Product {
     @JoinColumn(name= "store_id")
     private Store store;
 
-    private LocalDateTime last_updated = LocalDateTime.now();
+    private LocalDateTime lastUpdated = LocalDateTime.now();
 }
