@@ -24,10 +24,19 @@ public class Product {
     private String brand;
     private String price;
     private String imageUrl;
-    private String description;
-    private List<String> package_weight = new ArrayList<>();
-    private List<String> flavours = new ArrayList<>();
 
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @ElementCollection
+    @CollectionTable(name = "product_package_weights", joinColumns = @JoinColumn(name = "product_id"))
+    @Column(name = "package_weight")
+    private List<String> package_weight = new ArrayList<>();
+
+    @ElementCollection
+    @CollectionTable(name = "product_flavours", joinColumns = @JoinColumn(name = "product_id"))
+    @Column(name = "flavour")
+    private List<String> flavours = new ArrayList<>();
     @ManyToOne
     @JoinColumn(name= "store_id")
     private Store store;
