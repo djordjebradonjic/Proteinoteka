@@ -15,12 +15,11 @@ public class BackendApplication {
 
 	@Bean
 	CommandLineRunner run(ScraperService scraperService) {
-		return args -> {System.out.println("--- Aplikacija se pokreće, krećem sa skrapovanjem ---");
+		return args -> {System.out.println("--- Application statrs scraping---");
 
-			// Pozivamo metodu iz tvog servisa
 			scraperService.scrapePansport();
 
-			System.out.println("--- Skrapovanje je završeno! Proveri bazu podataka. ---");
+			System.out.println("--- Scraping is over. Check database---");
 		};
 
 	}
