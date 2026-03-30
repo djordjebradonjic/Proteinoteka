@@ -1,5 +1,7 @@
 package com.proteinoteka.service;
 
+import com.microsoft.playwright.*;
+import com.microsoft.playwright.options.WaitUntilState;
 import com.proteinoteka.model.Product;
 import com.proteinoteka.model.Store;
 import com.proteinoteka.repository.ProductRepository;
@@ -31,35 +33,62 @@ public class ScraperService {
                 orElseThrow(() -> new RuntimeException("Store Pansport not found"));
         List<Product> products = new ArrayList<>();
 
-        try {
+        try (Playwright playwright = Playwright.create()){
 
-            Document doc = Jsoup.connect(url)
-                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
-                            "AppleWebKit/537.36 (KHTML, like Gecko) " +
-                            "Chrome/123.0.0.0 Safari/537.36")
-                    .header("Accept-Language", "sr-RS,sr;q=0.9,en-US;q=0.8")
-                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-                    .header("Accept-Encoding", "gzip, deflate, br")
-                    .referrer("https://www.google.com")
-                    .timeout(10_000)
-                    .get();
+            Browser browser = playwright.chromium().launch(
+                    new BrowserType.LaunchOptions()
+                            .setHeadless(true)
+            );
+            BrowserContext context = browser.newContext(
+                    new Browser.NewContextOptions()
+                            .setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
+                                    "AppleWebKit/537.36 (KHTML, like Gecko) " +
+                                    "Chrome/123.0.0.0 Safari/537.36")
+            );
+
+            Page page = context.newPage();
+            page.navigate(url, new Page.NavigateOptions().setWaitUntil(WaitUntilState.NETWORKIDLE));
+
+            log.info("Page title: {}", page.title());
+
+            // Čekaj da Cloudflare challenge prođe
+            if (page.title().contains("Bot Detection") || page.title().isBlank()) {
+                log.info("Cloudflare detected, waiting...");
+                page.waitForSelector("div.product-teaser",
+                        new Page.WaitForSelectorOptions().setTimeout(20_000));
+            }
+
+            log.info("Page title after wait: {}", page.title());
+
+            // Uzmi HTML i parsiraj JSoupom
+            String html = page.content();
+            Document doc = Jsoup.parse(html);
+
+            log.info("Page title: {}", doc.title());
 
             Elements elements = doc.select("div.product-teaser");
 
             for (Element el : elements) {
                 Product p = parseProductElement(el.outerHtml());
                 if (p != null) {
+                    p.setStore(pansport);
+                    log.info("Parsed product:{}", p);
                     products.add(p);
-                    productRepository.save(p);
+                }else{
+                    log.warn("Failed to parse element, skipping");
+
                 }
             }
+            productRepository.saveAll(products);
+            log.info("Scraped and saved {} products", products.size());
+            browser.close();
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("Scraping error: {}", e.getMessage());
         }
         return products;
     }
-    public Product parseProductElement(String html) {
+    private Product parseProductElement(String html) {
 
         Document doc = Jsoup.parse(html);
         Element element = doc.selectFirst("div.product-teaser");

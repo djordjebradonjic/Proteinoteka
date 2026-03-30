@@ -1,11 +1,18 @@
 package com.proteinoteka;
 
+
+import com.proteinoteka.model.Product;
 import com.proteinoteka.service.ScraperService;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
+import java.util.List;
+
+@Slf4j
 @SpringBootApplication
 public class BackendApplication {
 
@@ -15,11 +22,11 @@ public class BackendApplication {
 
 	@Bean
 	CommandLineRunner run(ScraperService scraperService) {
-		return args -> {System.out.println("--- Application statrs scraping---");
+		return args -> {log.info("--- Application statrs scraping---");
 
-			scraperService.scrapePansport();
+			List<Product> products =  scraperService.scrapePansport();
 
-			System.out.println("--- Scraping is over. Check database---");
+			log.info("--- Scraping is over. Check database---");
 		};
 
 	}
