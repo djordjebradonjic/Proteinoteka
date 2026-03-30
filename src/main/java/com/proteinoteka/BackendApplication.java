@@ -22,11 +22,12 @@ public class BackendApplication {
 
 	@Bean
 	CommandLineRunner run(ScraperService scraperService) {
-		return args -> {log.info("--- Application statrs scraping---");
+		return args -> {
+			log.info("--- Application starts scraping ---");
 
-			List<Product> products =  scraperService.scrapePansport();
+			List<Product> products = scraperService.scrapeAll();
 
-			log.info("--- Scraping is over. Check database---");
+			log.info("--- Scraping finished. Total products: {} ---", products.size());
 		};
 
 	}
