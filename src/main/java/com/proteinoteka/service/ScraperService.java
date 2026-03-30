@@ -102,7 +102,7 @@ public class ScraperService {
 
         // to do
         Element img = element.selectFirst("div.teaser-image img");
-        p.setImageUrl("");
+        p.setImageUrl(img != null ? img.attr("src") : "");
 
         Element description = element.selectFirst("div.field__item");
         p.setDescription(description != null ? description.text().trim(): "");
