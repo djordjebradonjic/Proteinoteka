@@ -17,6 +17,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PansportScraper implements StoreScraper {
 
+
         @Override
         public String getStoreName() {
             return "Pansport";
