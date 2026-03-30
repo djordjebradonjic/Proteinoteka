@@ -24,6 +24,8 @@ public class Product {
     private String brand;
     private String price;
     private String imageUrl;
+    private String url;
+
 
     @Column(columnDefinition = "TEXT")
     private String description;

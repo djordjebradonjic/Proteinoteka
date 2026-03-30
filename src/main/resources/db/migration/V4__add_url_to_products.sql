@@ -1,0 +1,1 @@
+ALTER TABLE products ADD COLUMN url VARCHAR(500);

@@ -15,6 +15,7 @@ import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -115,6 +116,17 @@ public class ScraperService {
         for (Element opt : flavour) {
             p.getFlavours().add(opt.text().trim());
         }
+
+        Element priceEl = element.selectFirst("td.price-amount");
+        if (priceEl != null) {
+            String priceText = priceEl.text()
+                    .replace("\u00a0", "")  // non-breaking space
+                    .replace("RSD", "")
+                    .trim();
+            p.setPrice(priceText);
+        }
+        Element link = element.selectFirst("div.details a");
+        p.setUrl(link != null ? "https://www.pansport.rs" + link.attr("href") : "");
 
         return p;
     }
