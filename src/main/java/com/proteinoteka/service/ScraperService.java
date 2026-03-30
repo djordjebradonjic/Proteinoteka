@@ -28,68 +28,84 @@ public class ScraperService {
     private final ProductRepository productRepository;
     private final StoreRepository storeRepository;
 
-    public List<Product> scrapePansport() {
-        String url = "https://www.pansport.rs/proteini/koncentrati-koncentrati-izolati-proteina-surutke-whey";
-        Store pansport = storeRepository.findByName("Pansport").
-                orElseThrow(() -> new RuntimeException("Store Pansport not found"));
-        List<Product> products = new ArrayList<>();
+        public List<Product> scrapePansport() {
+            String baseUrl = "https://www.pansport.rs/proteini/koncentrati-koncentrati-izolati-proteina-surutke-whey";
 
-        try (Playwright playwright = Playwright.create()){
+            Store pansport = storeRepository.findByName("Pansport")
+                    .orElseThrow(() -> new RuntimeException("Store Pansport not found"));
 
-            Browser browser = playwright.chromium().launch(
-                    new BrowserType.LaunchOptions()
-                            .setHeadless(true)
-            );
-            BrowserContext context = browser.newContext(
-                    new Browser.NewContextOptions()
-                            .setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
-                                    "AppleWebKit/537.36 (KHTML, like Gecko) " +
-                                    "Chrome/123.0.0.0 Safari/537.36")
-            );
+            List<Product> products = new ArrayList<>();
 
-            Page page = context.newPage();
-            page.navigate(url, new Page.NavigateOptions().setWaitUntil(WaitUntilState.NETWORKIDLE));
+            try (Playwright playwright = Playwright.create()) {
+                Browser browser = playwright.chromium().launch(
+                        new BrowserType.LaunchOptions().setHeadless(true)
+                );
+                BrowserContext context = browser.newContext(
+                        new Browser.NewContextOptions()
+                                .setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
+                                        "AppleWebKit/537.36 (KHTML, like Gecko) " +
+                                        "Chrome/123.0.0.0 Safari/537.36")
+                );
 
-            log.info("Page title: {}", page.title());
+                Page page = context.newPage();
+                int currentPage = 0;
+                boolean hasNextPage = true;
 
-            // Čekaj da Cloudflare challenge prođe
-            if (page.title().contains("Bot Detection") || page.title().isBlank()) {
-                log.info("Cloudflare detected, waiting...");
-                page.waitForSelector("div.product-teaser",
-                        new Page.WaitForSelectorOptions().setTimeout(20_000));
-            }
+                while (hasNextPage) {
+                    String url = currentPage == 0 ? baseUrl : baseUrl + "?page=" + currentPage;
+                    log.info("Scraping page: {}", url);
 
-            log.info("Page title after wait: {}", page.title());
+                    page.navigate(url, new Page.NavigateOptions()
+                            .setWaitUntil(WaitUntilState.NETWORKIDLE));
 
-            // Uzmi HTML i parsiraj JSoupom
-            String html = page.content();
-            Document doc = Jsoup.parse(html);
+                    if (page.title().contains("Bot Detection") || page.title().isBlank()) {
+                        log.info("Cloudflare detected, waiting...");
+                        page.waitForSelector("div.product-teaser",
+                                new Page.WaitForSelectorOptions().setTimeout(20_000));
+                    }
 
-            log.info("Page title: {}", doc.title());
+                    log.info("Page title: {}", page.title());
 
-            Elements elements = doc.select("div.product-teaser");
+                    String html = page.content();
+                    Document doc = Jsoup.parse(html);
 
-            for (Element el : elements) {
-                Product p = parseProductElement(el.outerHtml());
-                if (p != null) {
-                    p.setStore(pansport);
-                    log.info("Parsed product:{}", p);
-                    products.add(p);
-                }else{
-                    log.warn("Failed to parse element, skipping");
+                    Elements elements = doc.select("div.product-teaser");
+                    log.info("Page {} — found {} products", currentPage, elements.size());
 
+                    for (Element el : elements) {
+                        Product p = parseProductElement(el.outerHtml());
+                        if (p != null) {
+                            p.setStore(pansport);
+                            log.info("Parsed product: {}", p);
+                            products.add(p);
+                        } else {
+                            log.warn("Failed to parse element, skipping");
+                        }
+                    }
+
+
+                    Element nextPage = doc.selectFirst("li.pager__item--next a");
+                    if (nextPage != null) {
+                        currentPage++;
+                    } else {
+                        hasNextPage = false;
+                        log.info("No more pages, stopping.");
+                    }
                 }
-            }
-            productRepository.saveAll(products);
-            log.info("Scraped and saved {} products", products.size());
-            browser.close();
 
-        } catch (Exception e) {
-            log.error("Scraping error: {}", e.getMessage());
+                productRepository.saveAll(products);
+                log.info("Total scraped and saved: {} products", products.size());
+
+                browser.close();
+
+            } catch (Exception e) {
+                log.error("Scraping failed: ", e);
+            }
+
+            return products;
         }
-        return products;
-    }
-    private Product parseProductElement(String html) {
+
+        private Product parseProductElement(String html) {
 
         Document doc = Jsoup.parse(html);
         Element element = doc.selectFirst("div.product-teaser");
