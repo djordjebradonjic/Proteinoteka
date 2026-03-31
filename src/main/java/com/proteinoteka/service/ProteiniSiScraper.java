@@ -62,6 +62,10 @@ public class ProteiniSiScraper implements StoreScraper{
             try {
                 page.navigate(p.getUrl(), new Page.NavigateOptions()
                         .setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
+                page.click("li.description_tab a");
+                page.waitForSelector("div#tab-description",
+                        new Page.WaitForSelectorOptions().setTimeout(5000));
+
 
                 Document doc = Jsoup.parse(page.content());
                 enrichWithVariations(doc, p);
@@ -100,7 +104,15 @@ public class ProteiniSiScraper implements StoreScraper{
                 }
             }
 
-            log.info("[{}] Enriched '{}' with flavours: {}", STORE_NAME, p.getName(), p.getFlavours());
+
+            Element descriptionEl = doc.selectFirst("div#tab-description div.ckeditor");
+            if (descriptionEl != null) {
+                p.setDescription(descriptionEl.text().trim());
+            }
+
+            log.info("[{}] Enriched '{}' — flavours: {}, description: {}chars",
+                    STORE_NAME, p.getName(), p.getFlavours(),
+                    p.getDescription() != null ? p.getDescription().length() : 0);
 
         } catch (Exception e) {
             log.warn("[{}] Failed to parse variations for {}: {}", STORE_NAME, p.getName(), e.getMessage());
