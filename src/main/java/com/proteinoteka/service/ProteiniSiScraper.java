@@ -3,9 +3,11 @@ package com.proteinoteka.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.playwright.Page;
+import com.microsoft.playwright.options.WaitUntilState;
 import com.proteinoteka.model.Product;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -49,8 +51,60 @@ public class ProteiniSiScraper implements StoreScraper{
                 log.warn("[{}] Failed to parse element, skipping", STORE_NAME);
             }
         }
+        enrichWithFlavours(page, products);
 
         return products;
+    }
+    public void enrichWithFlavours(Page page, List<Product> products) {
+        int count = 0;
+        for (Product p : products) {
+            if (p.getUrl() == null || p.getUrl().isBlank()) continue;
+            try {
+                page.navigate(p.getUrl(), new Page.NavigateOptions()
+                        .setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
+
+                Document doc = Jsoup.parse(page.content());
+                enrichWithVariations(doc, p);
+
+                count++;
+
+                if (count % 20 == 0) {
+                    log.info("[{}] Batch of 20 done, sleeping 30s...", STORE_NAME);
+                    Thread.sleep(30_000);
+                } else {
+                    Thread.sleep(2000 + (long)(Math.random() * 2000));
+                }
+
+            } catch (Exception e) {
+                log.error("[{}] Failed to enrich product {}: {}", STORE_NAME, p.getName(), e.getMessage());
+            }
+        }
+    }
+    private void enrichWithVariations(Document doc, Product p) {
+        try {
+            Element form = doc.selectFirst("form.variations_form");
+            if (form == null) return;
+
+            String json = form.attr("data-product_variations");
+            if (json == null || json.isBlank()) return;
+
+            JsonNode variations = objectMapper.readTree(json);
+            for (JsonNode variation : variations) {
+                String flavour = variation
+                        .path("attributes")
+                        .path("attribute_pa_izaberi-ukus")
+                        .asText("");
+
+                if (!flavour.isBlank() && !p.getFlavours().contains(flavour)) {
+                    p.getFlavours().add(flavour);
+                }
+            }
+
+            log.info("[{}] Enriched '{}' with flavours: {}", STORE_NAME, p.getName(), p.getFlavours());
+
+        } catch (Exception e) {
+            log.warn("[{}] Failed to parse variations for {}: {}", STORE_NAME, p.getName(), e.getMessage());
+        }
     }
 
     private Product parseElement(Element el) {
