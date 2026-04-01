@@ -1,5 +1,6 @@
 package com.proteinoteka.controller;
 
+import com.proteinoteka.dto.ProductDTO;
 import com.proteinoteka.model.Product;
 import com.proteinoteka.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,8 +17,23 @@ public class ProductController {
     private final ProductRepository productRepository;
 
     @GetMapping
-    public List<Product> getAllProducts() {
-        return productRepository.findAll();
+    public List<ProductDTO> getAllProducts() {
+        return productRepository.findAll()
+                .stream()
+                .map(this::convertToDTO)
+                .toList();
+    }
+    private ProductDTO convertToDTO(Product product) {
+        return new ProductDTO(
+                product.getName(),
+                product.getBrand(),
+                product.getPrice(),
+                product.getImageUrl(),
+                product.getUrl(),
+                product.getStore() != null ? product.getStore().getName() : "Unknown",
+                product.getPackage_weight(),
+                product.getFlavours()
+        );
     }
 
     @GetMapping("/store/{storeName}")

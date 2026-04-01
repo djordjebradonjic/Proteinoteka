@@ -25,9 +25,9 @@ public class BackendApplication {
 		return args -> {
 			log.info("--- Application starts scraping ---");
 
-			List<Product> products = scraperService.scrapeAll();
+			//List<Product> products = scraperService.scrapeAll();
 
-			log.info("--- Scraping finished. Total products: {} ---", products.size());
+			//log.info("--- Scraping finished. Total products: {} ---", products.size());
 		};
 
 	}
