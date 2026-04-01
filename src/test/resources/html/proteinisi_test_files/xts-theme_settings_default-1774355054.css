@@ -1,0 +1,128 @@
+@font-face {
+	font-weight: normal;
+	font-style: normal;
+	font-family: "woodmart-font";
+	src: url("//proteinisi.rs/wp-content/themes/woodmart/fonts/woodmart-font-3-400.woff2?v=8.3.7") format("woff2");
+}
+
+@font-face {
+	font-family: "star";
+	font-weight: 400;
+	font-style: normal;
+	src: url("//proteinisi.rs/wp-content/plugins/woocommerce/assets/fonts/star.eot?#iefix") format("embedded-opentype"), url("//proteinisi.rs/wp-content/plugins/woocommerce/assets/fonts/star.woff") format("woff"), url("//proteinisi.rs/wp-content/plugins/woocommerce/assets/fonts/star.ttf") format("truetype"), url("//proteinisi.rs/wp-content/plugins/woocommerce/assets/fonts/star.svg#star") format("svg");
+}
+
+@font-face {
+	font-family: "WooCommerce";
+	font-weight: 400;
+	font-style: normal;
+	src: url("//proteinisi.rs/wp-content/plugins/woocommerce/assets/fonts/WooCommerce.eot?#iefix") format("embedded-opentype"), url("//proteinisi.rs/wp-content/plugins/woocommerce/assets/fonts/WooCommerce.woff") format("woff"), url("//proteinisi.rs/wp-content/plugins/woocommerce/assets/fonts/WooCommerce.ttf") format("truetype"), url("//proteinisi.rs/wp-content/plugins/woocommerce/assets/fonts/WooCommerce.svg#WooCommerce") format("svg");
+}
+
+:root {
+	--wd-text-font: "Poppins", Arial, Helvetica, sans-serif;
+	--wd-text-font-weight: 400;
+	--wd-text-color: #767676;
+	--wd-text-font-size: 14px;
+	--wd-title-font: "Bebas Neue", Arial, Helvetica, sans-serif;
+	--wd-title-font-weight: 400;
+	--wd-title-color: rgb(255,255,255);
+	--wd-entities-title-font: "Bebas Neue", Arial, Helvetica, sans-serif;
+	--wd-entities-title-font-weight: 400;
+	--wd-entities-title-color: rgb(255,255,255);
+	--wd-entities-title-color-hover: rgb(51 51 51 / 65%);
+	--wd-alternative-font: "Poppins", Arial, Helvetica, sans-serif;
+	--wd-widget-title-font: "Bebas Neue", Arial, Helvetica, sans-serif;
+	--wd-widget-title-font-weight: 400;
+	--wd-widget-title-transform: uppercase;
+	--wd-widget-title-color: rgb(255,255,255);
+	--wd-widget-title-font-size: 16px;
+	--wd-header-el-font: "Poppins", Arial, Helvetica, sans-serif;
+	--wd-header-el-font-weight: 700;
+	--wd-header-el-transform: uppercase;
+	--wd-header-el-font-size: 13px;
+	--wd-brd-radius: 20px;
+	--wd-otl-style: dotted;
+	--wd-otl-width: 2px;
+	--wd-primary-color: rgb(255,206,2);
+	--wd-alternative-color: rgb(249,229,147);
+	--btn-default-bgcolor: rgb(255,206,2);
+	--btn-default-bgcolor-hover: rgba(255,206,2,0.67);
+	--btn-accented-bgcolor: rgb(255,206,2);
+	--btn-accented-bgcolor-hover: rgb(255,206,2);
+	--wd-form-brd-width: 2px;
+	--notices-success-bg: #459647;
+	--notices-success-color: #fff;
+	--notices-warning-bg: #E0B252;
+	--notices-warning-color: #fff;
+	--wd-link-color: #333333;
+	--wd-link-color-hover: #242424;
+}
+.wd-age-verify-wrap {
+	--wd-popup-width: 500px;
+}
+.wd-popup.wd-promo-popup {
+	background-color: #111111;
+	background-image: none;
+	background-repeat: no-repeat;
+	background-size: contain;
+	background-position: left center;
+}
+.wd-promo-popup-wrap {
+	--wd-popup-width: 800px;
+}
+:is(.woodmart-archive-shop .wd-builder-off,.wd-wishlist-content,.related-and-upsells,.cart-collaterals,.wd-shop-product,.wd-fbt) .wd-products-with-bg, :is(.woodmart-archive-shop .wd-builder-off,.wd-wishlist-content,.related-and-upsells,.cart-collaterals,.wd-shop-product,.wd-fbt) .wd-products-with-bg :is(.wd-product,.wd-cat) {
+	--wd-prod-bg:rgba(0,0,0,0);
+	--wd-bordered-bg:rgba(0,0,0,0);
+}
+:is(.woodmart-woocommerce-layered-nav, .wd-product-category-filter) .wd-scroll-content {
+	max-height: 223px;
+}
+.wd-page-title .wd-page-title-bg img {
+	object-fit: cover;
+	object-position: center center;
+}
+.wd-footer {
+	background-color: rgb(23,23,23);
+	background-image: none;
+}
+.page .wd-page-content {
+	background-color: rgb(23,23,23);
+	background-image: none;
+}
+.product-labels .product-label.new {
+	background-color: rgb(129,215,66);
+	color: rgb(255,255,255);
+}
+.mfp-wrap.wd-popup-quick-view-wrap {
+	--wd-popup-width: 920px;
+}
+
+@media (max-width: 768.98px) {
+	 {
+		font-size: 38px;
+	}
+
+}
+:root{
+--wd-form-brd-radius: 35px;
+--btn-default-color: #333;
+--btn-default-color-hover: #333;
+--btn-accented-color: #333;
+--btn-accented-color-hover: #333;
+--btn-default-brd-radius: 35px;
+--btn-default-box-shadow: none;
+--btn-default-box-shadow-hover: none;
+--btn-accented-brd-radius: 35px;
+--btn-accented-box-shadow: none;
+--btn-accented-box-shadow-hover: none;
+}
+
+
+
+
+/* Osiguravamo da su svi paneli vidljivi */
+.woocommerce-Tabs-panel {
+    display: block !important;
+    margin-bottom: 50px;
+}

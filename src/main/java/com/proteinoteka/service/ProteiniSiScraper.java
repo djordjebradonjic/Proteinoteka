@@ -47,11 +47,17 @@ public class ProteiniSiScraper implements StoreScraper{
             Product p = parseElement(el);
             if (p != null) {
                 products.add(p);
+
+
             } else {
                 log.warn("[{}] Failed to parse element, skipping", STORE_NAME);
             }
         }
-        enrichWithFlavours(page, products);
+        if (page != null) {
+            enrichWithFlavours(page, products);
+        } else {
+            log.info("[{}] Skipping enrichment (page is null) - returning basic product data.", STORE_NAME);
+        }
 
         return products;
     }
