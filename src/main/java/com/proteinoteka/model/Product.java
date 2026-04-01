@@ -44,4 +44,7 @@ public class Product {
     private Store store;
 
     private LocalDateTime lastUpdated = LocalDateTime.now();
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PriceHistory> priceHistories = new ArrayList<>();
 }

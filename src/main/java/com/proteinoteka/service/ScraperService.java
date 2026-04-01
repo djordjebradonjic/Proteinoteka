@@ -2,8 +2,10 @@ package com.proteinoteka.service;
 
 import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.WaitUntilState;
+import com.proteinoteka.model.PriceHistory;
 import com.proteinoteka.model.Product;
 import com.proteinoteka.model.Store;
+import com.proteinoteka.repository.PriceHistoryRepository;
 import com.proteinoteka.repository.ProductRepository;
 import com.proteinoteka.repository.StoreRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -23,18 +26,24 @@ public class ScraperService {
 
     private final ProductRepository productRepository;
     private final StoreRepository storeRepository;
-    private final List<StoreScraper> scrapers; // Spring injektuje sve implementacije
+    private final List<StoreScraper> scrapers; // Spring injects all implementations
+    private final PriceHistoryRepository priceHistoryRepository;
 
     private static final List<String> USER_AGENTS = List.of(
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1"
     );
     public List<Product> scrapeAll() {
         List<Product> allProducts = new ArrayList<>();
 
         for (StoreScraper scraper : scrapers) {
             allProducts.addAll(scrapeStore(scraper));
+            try {
+
+                Thread.sleep(30_000);
+            } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
         }
 
         return allProducts;
@@ -67,7 +76,7 @@ public class ScraperService {
 
             while (hasNext) {
 
-                long sleepTime = java.util.concurrent.ThreadLocalRandom.current().nextLong(3000, 6000);
+                long sleepTime = java.util.concurrent.ThreadLocalRandom.current().nextLong(6000, 10000);
                 log.info("Waiting {}ms before next page...", sleepTime);
                 Thread.sleep(sleepTime);
 
@@ -78,8 +87,10 @@ public class ScraperService {
                         .setWaitUntil(WaitUntilState.NETWORKIDLE));
 
                 page.mouse().wheel(0, 500);
-                Thread.sleep(500); // Imitate mouse movement
+                Thread.sleep(800); // Imitate mouse movement
                 page.mouse().wheel(0, -200);
+
+                simulateHumanScroll(page);
 
                 String html = page.content();
                 Document doc = Jsoup.parse(html);
@@ -93,9 +104,12 @@ public class ScraperService {
                 currentPage++;
 
                 if (currentPage > 50) break;
+                for (Product p : pageProducts) {
+                    saveOrUpdateProduct(p, store);
+                }
             }
 
-            productRepository.saveAll(products);
+
             browser.close();
 
         } catch (Exception e) {
@@ -105,4 +119,44 @@ public class ScraperService {
         return products;
     }
 
+    private void saveOrUpdateProduct(Product scrapedProduct, Store store) {
+
+        Optional<Product> existingOpt = productRepository.findByUrl(scrapedProduct.getUrl());
+
+        if (existingOpt.isPresent()) {
+            Product existingProduct = existingOpt.get();
+            String oldPrice = existingProduct.getPrice();
+            String newPrice = scrapedProduct.getPrice();
+
+
+            if (!oldPrice.equals(newPrice)) {
+                log.info("[{}] Prices has changed for: {}: {} -> {}",
+                        store.getName(), existingProduct.getName(), oldPrice, newPrice);
+
+                PriceHistory history = new PriceHistory();
+                history.setProduct(existingProduct);
+                history.setPrice(oldPrice);
+                history.setTimestamp(java.time.LocalDateTime.now());
+
+                priceHistoryRepository.save(history);
+
+
+                existingProduct.setPrice(newPrice);
+                existingProduct.setLastUpdated(java.time.LocalDateTime.now());
+                productRepository.save(existingProduct);
+            }
+        } else {
+            scrapedProduct.setStore(store);
+            productRepository.save(scrapedProduct);
+        }
+    }
+    private void simulateHumanScroll(Page page) {
+        try {
+            page.mouse().wheel(0, 400);
+            Thread.sleep(300);
+            page.mouse().wheel(0, 600);
+            Thread.sleep(200);
+            page.mouse().wheel(0, -300);
+        } catch (Exception ignored) {}
+    }
 }
