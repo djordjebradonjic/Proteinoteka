@@ -23,6 +23,23 @@ public class ProductController {
                 .map(this::convertToDTO)
                 .toList();
     }
+
+    @GetMapping
+    public List<ProductDTO> getProducts(@RequestParam(required = false) String name) {
+        List<Product> products;
+
+        if (name != null && !name.isEmpty()) {
+            products = productRepository.findByNameContainingIgnoreCase(name);
+        } else {
+            products = productRepository.findAll();
+        }
+
+        return products.stream()
+                .map(this::convertToDTO)
+                .toList();
+    }
+
+
     private ProductDTO convertToDTO(Product product) {
         return new ProductDTO(
                 product.getName(),
