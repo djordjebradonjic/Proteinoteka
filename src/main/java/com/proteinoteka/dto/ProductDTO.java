@@ -9,5 +9,6 @@ public record ProductDTO(String name,
                          String productUrl,
                          String storeName,
                          List<String> weights,
-                         List<String> flavours) {
+                         List<String> flavours,
+                         List<PriceHistoryDTO> priceHistory) {
 }
