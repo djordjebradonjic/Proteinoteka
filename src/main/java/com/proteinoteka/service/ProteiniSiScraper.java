@@ -17,11 +17,46 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class ProteiniSiScraper implements StoreScraper{
+
+    private static final Map<String, String> FLAVOUR_MAP = Map.ofEntries(
+            Map.entry("chocolate", "Čokolada"),
+            Map.entry("vanilla", "Vanila"),
+            Map.entry("strawberry", "Jagoda"),
+            Map.entry("banana", "Banana"),
+            Map.entry("cookies-cream", "Kolačić i krem"),
+            Map.entry("cookies", "Kolačić"),
+            Map.entry("chocolate-hazelnut-2", "Čokolada - lešnik"),
+            Map.entry("chocolate-hazelnut-3", "Čokolada - lešnik"),
+            Map.entry("chocolate-coconut", "Čokolada - kokos"),
+            Map.entry("chocolate-banana", "Čokolada - banana"),
+            Map.entry("white-chocolate", "Bela čokolada"),
+            Map.entry("white-choc-straw", "Bela čokolada - jagoda"),
+            Map.entry("white-choc-cocon", "Bela čokolada - kokos"),
+            Map.entry("milk-chocolate", "Mlečna čokolada"),
+            Map.entry("french-vanilla", "Vanila"),
+            Map.entry("creamy-vanilla", "Vanila"),
+            Map.entry("raspberry", "Malina"),
+            Map.entry("natural", "Bez ukusa"),
+            Map.entry("neutral", "Bez ukusa"),
+            Map.entry("mixed-berries", "Mešano voće"),
+            Map.entry("stracciatella-coconut", "Stracciatella - kokos"),
+            Map.entry("blueberry-muffin", "Borovnica mafin"),
+            Map.entry("cherry-yoghurt", "Trešnja - jogurt"),
+            Map.entry("banana-yoghurt", "Banana - jogurt"),
+            Map.entry("dark-equ-chocolate", "Tamna čokolada"),
+            Map.entry("pistachio-coconut", "Pistać - kokos"),
+            Map.entry("dubai-chocolate", "Dubai čokolada"),
+            Map.entry("wheytella", "Wheytella"),
+            Map.entry("cokolada-kokos", "Čokolada - kokos"),
+            Map.entry("chocolate-brownies", "Čokolada brauni"),
+            Map.entry("chocolate-cookie", "Čokolada kolačić")
+    );
 
 
     private static final String STORE_NAME = "Proteini.si";
@@ -107,8 +142,12 @@ public class ProteiniSiScraper implements StoreScraper{
                         .path("attribute_pa_izaberi-ukus")
                         .asText("");
 
-                if (!flavour.isBlank() && !p.getFlavours().contains(flavour)) {
-                    p.getFlavours().add(flavour);
+                if (!flavour.isBlank()){
+                    String normalized = normalizeFlavour(flavour);
+                    if (!p.getFlavours().contains(normalized)) {
+                        p.getFlavours().add(normalized);
+                    }
+
                 }
             }
 
@@ -192,6 +231,7 @@ public class ProteiniSiScraper implements StoreScraper{
                 .matcher(p.getName());
 
         while (matcher.find()) {
+            String weight = matcher.group().trim().replaceAll("\\s+", "");
             p.getPackage_weight().add(matcher.group().trim());
         }
     }
@@ -212,5 +252,9 @@ public class ProteiniSiScraper implements StoreScraper{
     @Override
     public String buildPageUrl(int page) {
         return page == 0 ? BASE_URL : BASE_URL + "page/" + page + "/";
+    }
+
+    private String normalizeFlavour(String flavour) {
+        return FLAVOUR_MAP.getOrDefault(flavour.toLowerCase(), flavour);
     }
 }

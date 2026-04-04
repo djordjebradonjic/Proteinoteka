@@ -8,6 +8,7 @@ import com.proteinoteka.model.Store;
 import com.proteinoteka.repository.PriceHistoryRepository;
 import com.proteinoteka.repository.ProductRepository;
 import com.proteinoteka.repository.StoreRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -119,6 +120,7 @@ public class ScraperService {
         return products;
     }
 
+    @Transactional
     private void saveOrUpdateProduct(Product scrapedProduct, Store store) {
 
         Optional<Product> existingOpt = productRepository.findByUrl(scrapedProduct.getUrl());
