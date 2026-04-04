@@ -5,11 +5,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.WaitUntilState;
 import com.proteinoteka.model.Product;
+import com.proteinoteka.util.HtmlCleaner;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.safety.Safelist;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
 
@@ -113,7 +115,10 @@ public class ProteiniSiScraper implements StoreScraper{
 
             Element descriptionEl = doc.selectFirst("div#tab-description div.ckeditor");
             if (descriptionEl != null) {
-                p.setDescription(descriptionEl.text().trim());
+                String cleanDescription = HtmlCleaner.cleanDescription(descriptionEl.html());
+                p.setDescription(cleanDescription);
+
+                p.setDescription(cleanDescription);
             }
 
             log.info("[{}] Enriched '{}' — flavours: {}, description: {}chars",

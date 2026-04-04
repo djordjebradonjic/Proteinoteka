@@ -11,3 +11,10 @@ spring:
       ddl-auto: validate
   flyway:
     enabled:true
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+  api-docs:
+    path: /api-docs
+  show-actuator: true
