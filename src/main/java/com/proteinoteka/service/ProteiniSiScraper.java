@@ -118,7 +118,6 @@ public class ProteiniSiScraper implements StoreScraper{
                 String cleanDescription = HtmlCleaner.cleanDescription(descriptionEl.html());
                 p.setDescription(cleanDescription);
 
-                p.setDescription(cleanDescription);
             }
 
             log.info("[{}] Enriched '{}' — flavours: {}, description: {}chars",
@@ -156,6 +155,7 @@ public class ProteiniSiScraper implements StoreScraper{
 
 
             extractPackageWeightFromName(p);
+            extractBrandFromName(p);
 
             return p;
 
@@ -169,8 +169,8 @@ public class ProteiniSiScraper implements StoreScraper{
         try {
             JsonNode data = objectMapper.readTree(json);
 
-            String brand = data.path("item_brand").asText("");
-            if (!brand.isBlank()) p.setBrand(brand);
+       //     String brand = data.path("item_brand").asText("");
+         //   if (!brand.isBlank()) p.setBrand(brand);
 
 //            String category = data.path("item_category").asText("");
 //            if (!category.isBlank()) p.setCategory(category);
@@ -194,6 +194,14 @@ public class ProteiniSiScraper implements StoreScraper{
         while (matcher.find()) {
             p.getPackage_weight().add(matcher.group().trim());
         }
+    }
+
+
+    private void extractBrandFromName(Product p) {
+        if (p.getName() == null || p.getName().isBlank()) return;
+
+        String firstName = p.getName().split(" ")[0].trim();
+        p.setBrand(firstName);
     }
 
     @Override
