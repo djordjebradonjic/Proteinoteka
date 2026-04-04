@@ -1,9 +1,11 @@
 package com.proteinoteka.service;
 
 import com.microsoft.playwright.Page;
+import com.microsoft.playwright.options.WaitUntilState;
 import com.proteinoteka.model.Product;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -40,6 +42,7 @@ public class PansportScraper implements StoreScraper {
                     products.add(p);
                 }
             }
+            enrichWithBrand(page, products);
 
             return products;
         }
@@ -84,7 +87,38 @@ public class PansportScraper implements StoreScraper {
             Element link = element.selectFirst("div.details a");
             p.setUrl(link != null ? "https://www.pansport.rs" + link.attr("href") : "");
 
+
             return p;
         }
+
+    private void enrichWithBrand(Page page, List<Product> products) {
+        int count = 0;
+        for (Product p : products) {
+            if (p.getUrl() == null || p.getUrl().isBlank()) continue;
+            try {
+                page.navigate(p.getUrl(), new Page.NavigateOptions()
+                        .setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
+
+                Document doc = Jsoup.parse(page.content());
+
+                Element brand = doc.selectFirst("div.field--name-field-manufacturer a");
+                if (brand != null) {
+                    p.setBrand(brand.text().trim());
+                    log.info("[Pansport] '{}' — brand: {}", p.getName(), p.getBrand());
+                }
+
+                count++;
+                if (count % 20 == 0) {
+                    log.info("[Pansport] Batch of 20 done, sleeping 30s...");
+                    Thread.sleep(30_000);
+                } else {
+                    Thread.sleep(2000 + (long)(Math.random() * 2000));
+                }
+
+            } catch (Exception e) {
+                log.error("[Pansport] Failed to enrich brand for {}: {}", p.getName(), e.getMessage());
+            }
+        }
+
 }
 

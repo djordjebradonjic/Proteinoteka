@@ -50,7 +50,8 @@ public class ProductController {
                 product.getPriceHistories().stream()
                         .map(h -> new PriceHistoryDTO(h.getPrice(), h.getTimestamp()))
                         .sorted(Comparator.comparing(PriceHistoryDTO::timestamp).reversed())
-                        .toList()
+                        .toList(),
+                product.getDescription()
         );
     }
 }
