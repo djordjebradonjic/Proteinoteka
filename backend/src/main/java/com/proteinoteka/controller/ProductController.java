@@ -39,6 +39,7 @@ public class ProductController {
 
     private ProductDTO convertToDTO(Product product) {
         return new ProductDTO(
+                product.getId(),
                 product.getName(),
                 product.getBrand(),
                 product.getPrice(),

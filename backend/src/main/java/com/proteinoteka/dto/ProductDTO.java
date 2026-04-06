@@ -2,7 +2,8 @@ package com.proteinoteka.dto;
 
 import java.util.List;
 
-public record ProductDTO(String name,
+public record ProductDTO(Long id,
+                         String name,
                          String brand,
                          String price,
                          String imageUrl,

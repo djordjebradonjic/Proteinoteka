@@ -17,7 +17,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   const stores = ["Sve", ...Array.from(new Set(products.map((p) => p.storeName)))];
-  const brands = ["Sve", ...Array.from(new Set(products.map((p) => p.brand).filter(Boolean)))];
+ const brands = ["Sve", ...Array.from(new Set(products.map((p) => p.brand).filter((b): b is string => b !== null)))];
+
 
   useEffect(() => {
     api.get("/products")
@@ -196,7 +197,7 @@ export default function Home() {
 
                 <CardFooter className="px-4 pb-4 gap-2 flex flex-col">
                   <Button asChild className="w-full" size="sm">
-                    <a href={p.url} target="_blank" rel="noopener noreferrer">
+                    <a href={p.imageUrl} target="_blank" rel="noopener noreferrer">
                       Kupi →
                     </a>
                   </Button>
