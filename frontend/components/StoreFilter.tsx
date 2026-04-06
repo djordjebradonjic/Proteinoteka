@@ -52,7 +52,7 @@ export default function StoreFilter({
           {brands.slice(0, 10).map((brand) => (
             <button
               key={brand}
-              onClick={() => onBrandChange(brand)}
+              onClick={() => onBrandChange(brand ?? "Sve")}
               className={`px-3 py-1 rounded-full text-sm font-medium transition-colors
                 ${selectedBrand === brand
                   ? "bg-slate-800 text-white"
