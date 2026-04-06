@@ -5,6 +5,7 @@ import com.proteinoteka.dto.ProductDTO;
 import com.proteinoteka.model.Product;
 import com.proteinoteka.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Comparator;
@@ -35,6 +36,14 @@ public class ProductController {
         return products.stream()
                 .map(this::convertToDTO)
                 .toList();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ProductDTO> getById(@PathVariable Long id) {
+        return productRepository.findById(id)
+                .map(this::convertToDTO)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     private ProductDTO convertToDTO(Product product) {
