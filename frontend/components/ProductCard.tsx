@@ -8,6 +8,7 @@ interface ProductCardProps {
   product: Product;
 }
 
+
 export default function ProductCard({ product }: ProductCardProps) {
   return (
     <Card className="flex flex-col hover:shadow-md transition-shadow bg-white">
@@ -46,9 +47,9 @@ export default function ProductCard({ product }: ProductCardProps) {
 
       <CardFooter className="px-4 pb-4 gap-2 flex flex-col">
         <Button asChild className="w-full" size="sm">
-          <a href={product.productUrl} target="_blank" rel="noopener noreferrer">
-            Kupi →
-          </a>
+         <a href={product.productUrl} target="_blank" rel="noopener noreferrer">
+             Kupi →
+        </a>
         </Button>
         <Button variant="outline" asChild className="w-full" size="sm">
           <Link href={`/product/${product.id}`}>

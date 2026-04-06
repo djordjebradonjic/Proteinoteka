@@ -4,10 +4,12 @@ import com.proteinoteka.dto.PriceHistoryDTO;
 import com.proteinoteka.dto.ProductDTO;
 import com.proteinoteka.model.Product;
 import com.proteinoteka.repository.ProductRepository;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
 @RestController
@@ -37,6 +39,8 @@ public class ProductController {
                 .map(this::convertToDTO)
                 .toList();
     }
+
+
 
     @GetMapping("/{id}")
     public ResponseEntity<ProductDTO> getById(@PathVariable Long id) {

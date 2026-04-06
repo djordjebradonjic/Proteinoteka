@@ -1,9 +1,18 @@
+export interface PriceHistory {
+  price: string;
+  timestamp: string;
+}
+
 export interface Product {
-  id: number;
+  id: number
   name: string;
-  brand: string;
-  price: number;
+  brand: string | null;
+  price: string;
   imageUrl: string;
-  url: string;
+  productUrl: string;
   storeName: string;
+  weights: string[];
+  flavours: string[];
+  priceHistory: PriceHistory[];
+  description: string;
 }

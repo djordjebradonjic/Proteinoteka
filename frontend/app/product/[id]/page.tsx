@@ -9,11 +9,14 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import Header from "@/components/Header";
 
+
+
 export default function ProductPage() {
   const { id } = useParams();
   const router = useRouter();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  
 
   useEffect(() => {
     api.get(`/products/${id}`)
@@ -144,9 +147,9 @@ export default function ProductPage() {
 
             {/* Kupi dugme */}
             <Button asChild size="lg" className="mt-auto">
-              <a href={product.productUrl} target="_blank" rel="noopener noreferrer">
-                Kupi na {product.storeName} →
-              </a>
+             <a href={product.productUrl} target="_blank" rel="noopener noreferrer">
+  Kupi →
+</a>
             </Button>
 
           </div>
