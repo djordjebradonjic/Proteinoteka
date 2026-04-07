@@ -8,7 +8,8 @@ import Header from "@/components/Header";
 import SearchBar from "@/components/SearchBar";
 import StoreFilter from "@/components/StoreFilter";
 import ProductGrid from "@/components/ProductGrid";
-import SortSelect from "@/components/SortSelect"; // ✅ Napravi ovu komponentu (kod ispod)
+import SortSelect from "@/components/SortSelect";
+import { useDebounce } from "use-debounce";
 
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
@@ -31,6 +32,9 @@ export default function Home() {
 
   const minPrice = searchParams.get("minPrice") || "";
   const maxPrice = searchParams.get("maxPrice") || "";
+
+  const [debouncedMinPrice] = useDebounce(minPrice, 500);
+const [debouncedMaxPrice] = useDebounce(maxPrice, 500);
 
   const updateFilters = useCallback((name: string, value: string | number) => {
     const params = new URLSearchParams(searchParams);
@@ -77,7 +81,7 @@ export default function Home() {
   // ✅ Dodat 'sort' u niz zavisnosti da bi se fetch pokrenuo pri promeni sortiranja
   useEffect(() => {
     fetchProducts();
-  }, [page, selectedStore, search, sort,minPrice,maxPrice]);
+  }, [page, selectedStore, search, sort,debouncedMinPrice, debouncedMaxPrice]);
 
   const handleReset = () => {
     replace(pathname);
