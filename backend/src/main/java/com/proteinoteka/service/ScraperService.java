@@ -122,33 +122,41 @@ public class ScraperService {
 
     @Transactional
     private void saveOrUpdateProduct(Product scrapedProduct, Store store) {
-
         Optional<Product> existingOpt = productRepository.findByUrl(scrapedProduct.getUrl());
+
+        Double numericPrice = parsePriceToNumeric(scrapedProduct.getPrice());
 
         if (existingOpt.isPresent()) {
             Product existingProduct = existingOpt.get();
-            String oldPrice = existingProduct.getPrice();
-            String newPrice = scrapedProduct.getPrice();
+            String oldPriceStr = existingProduct.getPrice();
+            String newPriceStr = scrapedProduct.getPrice();
 
-
-            if (!oldPrice.equals(newPrice)) {
-                log.info("[{}] Prices has changed for: {}: {} -> {}",
-                        store.getName(), existingProduct.getName(), oldPrice, newPrice);
+            if (!oldPriceStr.equals(newPriceStr)) {
+                log.info("[{}] Price change: {}: {} -> {}",
+                        store.getName(), existingProduct.getName(), oldPriceStr, newPriceStr);
 
                 PriceHistory history = new PriceHistory();
                 history.setProduct(existingProduct);
-                history.setPrice(oldPrice);
+                history.setPrice(oldPriceStr);
                 history.setTimestamp(java.time.LocalDateTime.now());
-
                 priceHistoryRepository.save(history);
 
-
-                existingProduct.setPrice(newPrice);
+                existingProduct.setPrice(newPriceStr);
                 existingProduct.setLastUpdated(java.time.LocalDateTime.now());
-                productRepository.save(existingProduct);
             }
+
+
+            existingProduct.setNumericPrice(numericPrice);
+            existingProduct.setBrand(scrapedProduct.getBrand());
+            existingProduct.setFlavours(scrapedProduct.getFlavours());
+            existingProduct.setPackage_weight(scrapedProduct.getPackage_weight());
+            existingProduct.setName(scrapedProduct.getName());
+
+            productRepository.save(existingProduct);
+
         } else {
             scrapedProduct.setStore(store);
+            scrapedProduct.setNumericPrice(numericPrice);
             productRepository.save(scrapedProduct);
         }
     }
@@ -160,5 +168,21 @@ public class ScraperService {
             Thread.sleep(200);
             page.mouse().wheel(0, -300);
         } catch (Exception ignored) {}
+    }
+
+    private Double parsePriceToNumeric(String priceStr) {
+        if (priceStr == null || priceStr.isEmpty()) {
+            return 0.0;
+        }
+        try {
+
+            String cleaned = priceStr.replaceAll("[^0-9,.]", "")
+                    .replace(".", "")
+                    .replace(",", ".");
+            return Double.parseDouble(cleaned);
+        } catch (Exception e) {
+            log.warn("Price conversion failed: {} - Error: {}", priceStr, e.getMessage());
+            return 0.0;
+        }
     }
 }

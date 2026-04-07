@@ -1,0 +1,1 @@
+ALTER TABLE products ADD COLUMN numeric_price DOUBLE PRECISION;

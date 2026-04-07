@@ -53,7 +53,7 @@ export default function Home() {
       const res = await api.get(url);
       
       setProducts(res.data.content);
-      setTotalPages(res.data.totalPages);
+      setTotalPages(res.data.page.totalPages);
     } catch (error) {
       console.error("Greška pri učitavanju:", error);
     } finally {
