@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import Header from "@/components/Header";
 
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 
 export default function ProductPage() {
@@ -170,25 +171,63 @@ export default function ProductPage() {
 
         {/* Istorija cena */}
         {product.priceHistory?.length > 0 && (
-          <Card className="mt-4">
-            <CardContent className="p-6">
-              <h2 className="text-lg font-bold text-slate-800 mb-4">Istorija cena</h2>
-              <div className="space-y-2">
-                {product.priceHistory.map((h, i) => (
-                  <div key={i} className="flex justify-between items-center py-2 border-b border-slate-100 last:border-0">
-                    <span className="text-slate-500 text-sm">
-                      {new Date(h.timestamp).toLocaleDateString("sr-RS", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric"
-                      })}
-                    </span>
-                    <span className="font-semibold text-slate-700">{h.price} RSD</span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <Card className="mt-8">
+    <CardContent className="p-6">
+      <h2 className="text-lg font-bold text-slate-800 mb-6">Trend cene</h2>
+      
+      <div className="h-64 w-full mt-4">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart
+            // Sortiramo podatke da idu od najstarijeg datuma ka najnovijem
+            data={[...product.priceHistory]
+              .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+              .map(h => ({
+                datum: new Date(h.timestamp).toLocaleDateString("sr-RS", { day: "2-digit", month: "2-digit" }),
+                cena: h.price
+              }))}
+          >
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+            <XAxis 
+              dataKey="datum" 
+              axisLine={false} 
+              tickLine={false} 
+              tick={{fill: '#94a3b8', fontSize: 12}}
+              dy={10}
+            />
+            <YAxis 
+              hide
+               // Možeš sakriti Y osu za moderniji izgled ili ostaviti sa tickFormatter-om
+              domain={['dataMin - 500', 'dataMax + 500']} 
+            />
+            <Tooltip 
+              contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+              labelStyle={{ fontWeight: 'bold', color: '#1e293b' }}
+            />
+            <Line 
+              type="monotone" 
+              dataKey="cena" 
+              stroke="#16a34a"
+              strokeWidth={3} 
+              dot={{ r: 4, fill: "#16a34a", strokeWidth: 2, stroke: "#fff" }}
+              activeDot={{ r: 6 }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="mt-8 space-y-2 border-t border-slate-100 pt-4">
+        <p className="text-xs font-semibold text-slate-400 uppercase mb-3">Hronološki pregled</p>
+        {product.priceHistory.map((h, i) => (
+          <div key={i} className="flex justify-between items-center py-1">
+             <span className="text-slate-500 text-sm">
+                {new Date(h.timestamp).toLocaleDateString("sr-RS")}
+             </span>
+             <span className="text-sm font-medium text-slate-700">{h.price} RSD</span>
+          </div>
+        ))}
+      </div>
+    </CardContent>
+  </Card>
         )}
 
       </div>

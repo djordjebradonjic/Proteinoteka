@@ -10,20 +10,18 @@ import ProductGrid from "@/components/ProductGrid";
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [page, setPage] = useState(0); // Pratimo stranicu
+  const [page, setPage] = useState(0); 
   const [totalPages, setTotalPages] = useState(0);
   const [search, setSearch] = useState("");
   const [selectedStore, setSelectedStore] = useState("Sve");
   const [loading, setLoading] = useState(true);
 
   // Za filtre (ovo možemo ostaviti hardkodovano ili vući posebnim API-jem kasnije)
-  const stores = ["Sve", "Pansport",  "Proteinisi"]; 
+  const stores = ["Sve", "Pansport",  "Proteini.si"]; 
 
-  // Glavna funkcija za učitavanje podataka sa servera
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      // Pravimo URL sa parametrima za paginaciju i filtere
       let url = `/products?page=${page}&size=12`;
       
       if (search) url += `&name=${encodeURIComponent(search)}`;
@@ -31,7 +29,6 @@ export default function Home() {
 
       const res = await api.get(url);
       
-      // PAŽNJA: Spring Boot Page vraća podatke u 'content' polju
       setProducts(res.data.content);
       setTotalPages(res.data.totalPages);
     } catch (error) {
@@ -41,17 +38,15 @@ export default function Home() {
     }
   };
 
-  // Okidamo fetch kada se promeni stranica, pretraga ili prodavnica
   useEffect(() => {
     fetchProducts();
   }, [page, selectedStore]);
 
-  // Poseban useEffect za pretragu (sa malim zakašnjenjem da ne šaljemo zahtev za svako slovo)
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
-      setPage(0); // Resetujemo na prvu stranu pri novoj pretrazi
+      setPage(0); 
       fetchProducts();
-    }, 500); // Čekamo 500ms nakon što korisnik prestane da kuca
+    }, 500); 
 
     return () => clearTimeout(delayDebounceFn);
   }, [search]);
