@@ -195,8 +195,7 @@ export default function ProductPage() {
               dy={10}
             />
             <YAxis 
-              hide
-               // Možeš sakriti Y osu za moderniji izgled ili ostaviti sa tickFormatter-om
+              hide // Možeš sakriti Y osu za moderniji izgled ili ostaviti sa tickFormatter-om
               domain={['dataMin - 500', 'dataMax + 500']} 
             />
             <Tooltip 

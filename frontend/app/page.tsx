@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import api from "@/lib/axios";
 import { Product } from "@/types/product";
 import Header from "@/components/Header";
@@ -8,16 +8,39 @@ import SearchBar from "@/components/SearchBar";
 import StoreFilter from "@/components/StoreFilter";
 import ProductGrid from "@/components/ProductGrid";
 
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
+
 export default function Home() {
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const { replace } = useRouter();
+
+  const search = searchParams.get("query") || "";
+  const selectedStore = searchParams.get("store") || "Sve";
+  const page = Number(searchParams.get("page")) || 0;
+
+  // Ostali podaci koji ne idu u URL ostaju u useState
   const [products, setProducts] = useState<Product[]>([]);
-  const [page, setPage] = useState(0); 
   const [totalPages, setTotalPages] = useState(0);
-  const [search, setSearch] = useState("");
-  const [selectedStore, setSelectedStore] = useState("Sve");
   const [loading, setLoading] = useState(true);
 
-  // Za filtre (ovo možemo ostaviti hardkodovano ili vući posebnim API-jem kasnije)
-  const stores = ["Sve", "Pansport",  "Proteini.si"]; 
+  const stores = ["Sve", "Pansport", "Proteini.si"];
+
+  const updateFilters = useCallback((name: string, value: string | number) => {
+    const params = new URLSearchParams(searchParams);
+    
+    if (value && value !== "Sve") {
+      params.set(name, value.toString());
+    } else {
+      params.delete(name);
+    }
+
+    if (name !== "page") {
+      params.set("page", "0");
+    }
+
+    replace(`${pathname}?${params.toString()}`);
+  }, [searchParams, pathname, replace]);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -40,34 +63,30 @@ export default function Home() {
 
   useEffect(() => {
     fetchProducts();
-  }, [page, selectedStore]);
-
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      setPage(0); 
-      fetchProducts();
-    }, 500); 
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [search]);
+  }, [page, selectedStore, search]);
 
   const handleReset = () => {
-    setSelectedStore("Sve");
-    setSearch("");
-    setPage(0);
+ 
+    replace(pathname);
   };
 
   return (
     <main className="min-h-screen bg-slate-50">
       <Header />
       <div className="max-w-6xl mx-auto px-4 py-8">
-        <SearchBar value={search} onChange={setSearch} />
+        
+        {/* SearchBar prosleđujemo updateFilters umesto setSearch */}
+        <SearchBar 
+          value={search} 
+          onChange={(val) => updateFilters("query", val)} 
+        />
+
         <StoreFilter
           stores={stores}
-          brands={[]} // Brendove ćemo rešiti kasnije
+          brands={[]} 
           selectedStore={selectedStore}
           selectedBrand={"Sve"}
-          onStoreChange={(val) => { setSelectedStore(val); setPage(0); }}
+          onStoreChange={(val) => updateFilters("store", val)}
           onBrandChange={() => {}}
           onReset={handleReset}
           hasActiveFilters={selectedStore !== "Sve" || !!search}
@@ -86,7 +105,7 @@ export default function Home() {
           currentPage={page}
           totalPages={totalPages}
           onPageChange={(newPage) => {
-            setPage(newPage);
+            updateFilters("page", newPage);
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
         />
