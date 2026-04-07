@@ -15,4 +15,6 @@ export interface Product {
   flavours: string[];
   priceHistory: PriceHistory[];
   description: string;
+  numericPrice: number;
+  
 }

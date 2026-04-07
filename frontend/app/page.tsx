@@ -7,6 +7,7 @@ import Header from "@/components/Header";
 import SearchBar from "@/components/SearchBar";
 import StoreFilter from "@/components/StoreFilter";
 import ProductGrid from "@/components/ProductGrid";
+import SortSelect from "@/components/SortSelect"; // ✅ Napravi ovu komponentu (kod ispod)
 
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
@@ -15,11 +16,12 @@ export default function Home() {
   const pathname = usePathname();
   const { replace } = useRouter();
 
+  // URL Parametri
   const search = searchParams.get("query") || "";
   const selectedStore = searchParams.get("store") || "Sve";
   const page = Number(searchParams.get("page")) || 0;
+  const sort = searchParams.get("sort") || "id,desc"; // ✅ Čitamo sort iz URL-a
 
-  // Ostali podaci koji ne idu u URL ostaju u useState
   const [products, setProducts] = useState<Product[]>([]);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -45,7 +47,8 @@ export default function Home() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      let url = `/products?page=${page}&size=12`;
+      // ✅ Dodat &sort parametar u API poziv
+      let url = `/products?page=${page}&size=12&sort=${sort}`;
       
       if (search) url += `&name=${encodeURIComponent(search)}`;
       if (selectedStore !== "Sve") url += `&storeName=${encodeURIComponent(selectedStore)}`;
@@ -53,7 +56,8 @@ export default function Home() {
       const res = await api.get(url);
       
       setProducts(res.data.content);
-      setTotalPages(res.data.page.totalPages);
+      // ✅ Pazi: pošto smo uveli VIA_DTO, podaci su sada u .page objektu
+      setTotalPages(res.data.page.totalPages); 
     } catch (error) {
       console.error("Greška pri učitavanju:", error);
     } finally {
@@ -61,12 +65,12 @@ export default function Home() {
     }
   };
 
+  // ✅ Dodat 'sort' u niz zavisnosti da bi se fetch pokrenuo pri promeni sortiranja
   useEffect(() => {
     fetchProducts();
-  }, [page, selectedStore, search]);
+  }, [page, selectedStore, search, sort]);
 
   const handleReset = () => {
- 
     replace(pathname);
   };
 
@@ -75,22 +79,29 @@ export default function Home() {
       <Header />
       <div className="max-w-6xl mx-auto px-4 py-8">
         
-        {/* SearchBar prosleđujemo updateFilters umesto setSearch */}
         <SearchBar 
           value={search} 
           onChange={(val) => updateFilters("query", val)} 
         />
 
-        <StoreFilter
-          stores={stores}
-          brands={[]} 
-          selectedStore={selectedStore}
-          selectedBrand={"Sve"}
-          onStoreChange={(val) => updateFilters("store", val)}
-          onBrandChange={() => {}}
-          onReset={handleReset}
-          hasActiveFilters={selectedStore !== "Sve" || !!search}
-        />
+        {/* ✅ Flex kontejner za filtere i sortiranje */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <StoreFilter
+            stores={stores}
+            brands={[]} 
+            selectedStore={selectedStore}
+            selectedBrand={"Sve"}
+            onStoreChange={(val) => updateFilters("store", val)}
+            onBrandChange={() => {}}
+            onReset={handleReset}
+            hasActiveFilters={selectedStore !== "Sve" || !!search || sort !== "id,desc"}
+          />
+
+          <SortSelect 
+            value={sort} 
+            onSortChange={(val) => updateFilters("sort", val)} 
+          />
+        </div>
         
         {!loading && (
           <p className="text-sm text-slate-500 mb-4">

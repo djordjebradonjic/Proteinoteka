@@ -171,7 +171,7 @@ public class ScraperService {
     }
 
     private Double parsePriceToNumeric(String priceStr) {
-        if (priceStr == null || priceStr.isEmpty()) {
+        if (priceStr == null || priceStr.trim().isEmpty()) {
             return 0.0;
         }
         try {

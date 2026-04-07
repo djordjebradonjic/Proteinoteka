@@ -43,8 +43,11 @@ public class PansportScraper implements StoreScraper {
                 products.add(p);
             }
         }
-        enrichWithBrand(page, products);
-
+        try {
+            enrichWithBrand(page, products);
+        } catch (Exception e) {
+            log.error("[Pansport] Enrichment failed, but continuing with basic data: {}", e.getMessage());
+        }
         return products;
     }
 

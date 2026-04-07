@@ -28,9 +28,8 @@ public class ProductController {
     public Page<ProductDTO> getProducts(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String storeName,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "12") int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+            Pageable pageable){
+
         Page<Product> productsPage;
         List<Product> products;
 
@@ -70,7 +69,8 @@ public class ProductController {
                         .map(h -> new PriceHistoryDTO(h.getPrice(), h.getTimestamp()))
                         .sorted(Comparator.comparing(PriceHistoryDTO::timestamp).reversed())
                         .toList(),
-                product.getDescription()
+                product.getDescription(),
+                product.getNumericPrice()
         );
     }
 }
