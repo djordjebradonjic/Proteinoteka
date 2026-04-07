@@ -6,6 +6,10 @@ import com.proteinoteka.model.Product;
 import com.proteinoteka.repository.ProductRepository;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,23 +25,24 @@ public class ProductController {
     private final ProductRepository productRepository;
 
     @GetMapping
-    public List<ProductDTO> getProducts(
+    public Page<ProductDTO> getProducts(
             @RequestParam(required = false) String name,
-            @RequestParam(required = false) String storeName) {
-
+            @RequestParam(required = false) String storeName,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        Page<Product> productsPage;
         List<Product> products;
 
         if (name != null && !name.isEmpty()) {
-            products = productRepository.findByNameContainingIgnoreCase(name);
+            productsPage = productRepository.findByNameContainingIgnoreCase(name,pageable);
         } else if (storeName != null && !storeName.isEmpty()) {
-            products = productRepository.findByStoreNameIgnoreCase(storeName);
+            productsPage = productRepository.findByStoreNameIgnoreCase(storeName,pageable);
         } else {
-            products = productRepository.findAll();
+            productsPage = productRepository.findAll(pageable);
         }
 
-        return products.stream()
-                .map(this::convertToDTO)
-                .toList();
+        return productsPage.map(this::convertToDTO);
     }
 
 

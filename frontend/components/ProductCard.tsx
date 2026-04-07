@@ -19,6 +19,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           <img
             src={product.imageUrl}
             alt={product.name}
+            referrerPolicy="no-referrer"
             className="h-full object-contain"
           />
         ) : (

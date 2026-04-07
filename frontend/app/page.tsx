@@ -10,50 +10,56 @@ import ProductGrid from "@/components/ProductGrid";
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [filtered, setFiltered] = useState<Product[]>([]);
+  const [page, setPage] = useState(0); // Pratimo stranicu
+  const [totalPages, setTotalPages] = useState(0);
   const [search, setSearch] = useState("");
   const [selectedStore, setSelectedStore] = useState("Sve");
-  const [selectedBrand, setSelectedBrand] = useState("Sve");
   const [loading, setLoading] = useState(true);
 
-  const stores = ["Sve", ...Array.from(new Set(products.map((p) => p.storeName)))];
-  const brands = ["Sve", ...Array.from(new Set(products.map((p) => p.brand).filter(Boolean) as string[]))];
+  // Za filtre (ovo možemo ostaviti hardkodovano ili vući posebnim API-jem kasnije)
+  const stores = ["Sve", "Pansport",  "Proteinisi"]; 
 
+  // Glavna funkcija za učitavanje podataka sa servera
+  const fetchProducts = async () => {
+    setLoading(true);
+    try {
+      // Pravimo URL sa parametrima za paginaciju i filtere
+      let url = `/products?page=${page}&size=12`;
+      
+      if (search) url += `&name=${encodeURIComponent(search)}`;
+      if (selectedStore !== "Sve") url += `&storeName=${encodeURIComponent(selectedStore)}`;
+
+      const res = await api.get(url);
+      
+      // PAŽNJA: Spring Boot Page vraća podatke u 'content' polju
+      setProducts(res.data.content);
+      setTotalPages(res.data.totalPages);
+    } catch (error) {
+      console.error("Greška pri učitavanju:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Okidamo fetch kada se promeni stranica, pretraga ili prodavnica
   useEffect(() => {
-    api.get("/products")
-      .then((res) => {
-        setProducts(res.data);
-        setFiltered(res.data);
-      })
-      .finally(() => setLoading(false));
-  }, []);
+    fetchProducts();
+  }, [page, selectedStore]);
 
+  // Poseban useEffect za pretragu (sa malim zakašnjenjem da ne šaljemo zahtev za svako slovo)
   useEffect(() => {
-    let result = products;
+    const delayDebounceFn = setTimeout(() => {
+      setPage(0); // Resetujemo na prvu stranu pri novoj pretrazi
+      fetchProducts();
+    }, 500); // Čekamo 500ms nakon što korisnik prestane da kuca
 
-    if (search) {
-      const q = search.toLowerCase();
-      result = result.filter((p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.brand?.toLowerCase().includes(q)
-      );
-    }
-
-    if (selectedStore !== "Sve") {
-      result = result.filter((p) => p.storeName === selectedStore);
-    }
-
-    if (selectedBrand !== "Sve") {
-      result = result.filter((p) => p.brand === selectedBrand);
-    }
-
-    setFiltered(result);
-  }, [search, selectedStore, selectedBrand, products]);
+    return () => clearTimeout(delayDebounceFn);
+  }, [search]);
 
   const handleReset = () => {
     setSelectedStore("Sve");
-    setSelectedBrand("Sve");
     setSearch("");
+    setPage(0);
   };
 
   return (
@@ -63,20 +69,32 @@ export default function Home() {
         <SearchBar value={search} onChange={setSearch} />
         <StoreFilter
           stores={stores}
-          brands={brands}
+          brands={[]} // Brendove ćemo rešiti kasnije
           selectedStore={selectedStore}
-          selectedBrand={selectedBrand}
-          onStoreChange={setSelectedStore}
-          onBrandChange={setSelectedBrand}
+          selectedBrand={"Sve"}
+          onStoreChange={(val) => { setSelectedStore(val); setPage(0); }}
+          onBrandChange={() => {}}
           onReset={handleReset}
-          hasActiveFilters={selectedStore !== "Sve" || selectedBrand !== "Sve" || !!search}
+          hasActiveFilters={selectedStore !== "Sve" || !!search}
         />
+        
         {!loading && (
           <p className="text-sm text-slate-500 mb-4">
-            Pronađeno <span className="font-semibold text-slate-700">{filtered.length}</span> proizvoda
+            Stranica <span className="font-semibold text-slate-700">{page + 1}</span> od {totalPages}
           </p>
         )}
-        <ProductGrid products={filtered} loading={loading} searchQuery={search} />
+
+        <ProductGrid 
+          products={products} 
+          loading={loading} 
+          searchQuery={search}
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+        />
       </div>
     </main>
   );

@@ -2,6 +2,8 @@ package com.proteinoteka.repository;
 
 import com.proteinoteka.model.Product;
 import com.proteinoteka.model.Store;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,12 +14,13 @@ import java.util.Optional;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
-    List<Product> findByStoreNameIgnoreCase(String storeName);
+    Page<Product> findByStoreNameIgnoreCase(String storeName, Pageable pageable);
 
     void deleteByStore(Store store);
 
-    List<Product> findByNameContainingIgnoreCase(String name);
+    Page<Product> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
     Optional<Product> findByUrl(String url);
+    Page<Product> findAll(Pageable pageable);
 
 }
