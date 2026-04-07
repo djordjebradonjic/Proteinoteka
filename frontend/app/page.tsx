@@ -1,4 +1,5 @@
 "use client";
+import PriceFilter from "@/components/PriceFilter";
 
 import { useEffect, useState, useCallback } from "react";
 import api from "@/lib/axios";
@@ -28,6 +29,9 @@ export default function Home() {
 
   const stores = ["Sve", "Pansport", "Proteini.si"];
 
+  const minPrice = searchParams.get("minPrice") || "";
+  const maxPrice = searchParams.get("maxPrice") || "";
+
   const updateFilters = useCallback((name: string, value: string | number) => {
     const params = new URLSearchParams(searchParams);
     
@@ -44,6 +48,8 @@ export default function Home() {
     replace(`${pathname}?${params.toString()}`);
   }, [searchParams, pathname, replace]);
 
+  
+
   const fetchProducts = async () => {
     setLoading(true);
     try {
@@ -52,6 +58,9 @@ export default function Home() {
       
       if (search) url += `&name=${encodeURIComponent(search)}`;
       if (selectedStore !== "Sve") url += `&storeName=${encodeURIComponent(selectedStore)}`;
+
+      if (minPrice) url += `&minPrice=${minPrice}`;
+      if (maxPrice) url += `&maxPrice=${maxPrice}`;
 
       const res = await api.get(url);
       
@@ -68,7 +77,7 @@ export default function Home() {
   // ✅ Dodat 'sort' u niz zavisnosti da bi se fetch pokrenuo pri promeni sortiranja
   useEffect(() => {
     fetchProducts();
-  }, [page, selectedStore, search, sort]);
+  }, [page, selectedStore, search, sort,minPrice,maxPrice]);
 
   const handleReset = () => {
     replace(pathname);
@@ -96,6 +105,12 @@ export default function Home() {
             onReset={handleReset}
             hasActiveFilters={selectedStore !== "Sve" || !!search || sort !== "id,desc"}
           />
+          <PriceFilter 
+             minPrice={minPrice}
+             maxPrice={maxPrice}
+            onMinChange={(val) => updateFilters("minPrice", val)}
+             onMaxChange={(val) => updateFilters("maxPrice", val)}
+         />
 
           <SortSelect 
             value={sort} 

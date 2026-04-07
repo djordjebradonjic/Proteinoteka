@@ -1,5 +1,6 @@
 package com.proteinoteka.controller;
 
+import com.proteinoteka.ProductSpecifications;
 import com.proteinoteka.dto.PriceHistoryDTO;
 import com.proteinoteka.dto.ProductDTO;
 import com.proteinoteka.model.Product;
@@ -10,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,20 +30,34 @@ public class ProductController {
     public Page<ProductDTO> getProducts(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String storeName,
+            @RequestParam(required = false) String brand,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice,
             Pageable pageable){
 
-        Page<Product> productsPage;
-        List<Product> products;
+        Specification<Product> spec = Specification.where(null);
 
         if (name != null && !name.isEmpty()) {
-            productsPage = productRepository.findByNameContainingIgnoreCase(name,pageable);
-        } else if (storeName != null && !storeName.isEmpty()) {
-            productsPage = productRepository.findByStoreNameIgnoreCase(storeName,pageable);
-        } else {
-            productsPage = productRepository.findAll(pageable);
+            spec = spec.and(ProductSpecifications.hasName(name));
+        }
+        if (storeName != null && !storeName.isEmpty()) {
+            spec = spec.and(ProductSpecifications.hasStoreName(storeName));
+        }
+        if (brand != null && !brand.isEmpty()) {
+            spec = spec.and(ProductSpecifications.hasBrand(brand));
+        }
+        if (minPrice != null) {
+            spec = spec.and(ProductSpecifications.priceGreaterThan(minPrice));
+        }
+        if (maxPrice != null) {
+            spec = spec.and(ProductSpecifications.priceLessThan(maxPrice));
         }
 
-        return productsPage.map(this::convertToDTO);
+        // findAll sada prima specifikaciju i pageable
+        return productRepository.findAll(spec, pageable)
+                .map(this::convertToDTO);
+
+
     }
 
 
