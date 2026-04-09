@@ -36,8 +36,11 @@ export default function Home() {
   const [debouncedMinPrice] = useDebounce(minPrice, 500);
 const [debouncedMaxPrice] = useDebounce(maxPrice, 500);
 
+const [brands, setBrands] = useState<string[]>([]);
+const [selectedBrand, setSelectedBrand] = useState("Sve");
+
   const updateFilters = useCallback((name: string, value: string | number) => {
-    const params = new URLSearchParams(searchParams);
+  const params = new URLSearchParams(searchParams);
     
     if (value && value !== "Sve") {
       params.set(name, value.toString());
@@ -52,7 +55,18 @@ const [debouncedMaxPrice] = useDebounce(maxPrice, 500);
     replace(`${pathname}?${params.toString()}`);
   }, [searchParams, pathname, replace]);
 
-  
+ const fetchBrands = useCallback(async () => {
+  try {
+    const res = await api.get("/products/brands");
+    setBrands(res.data);
+  } catch (err) {
+    console.error("Neuspešno učitavanje brendova", err);
+  }
+  }, []);
+
+  useEffect(() => {
+   fetchBrands();
+  }, [fetchBrands]);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -101,7 +115,7 @@ const [debouncedMaxPrice] = useDebounce(maxPrice, 500);
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <StoreFilter
             stores={stores}
-            brands={[]} 
+            brands={brands} 
             selectedStore={selectedStore}
             selectedBrand={"Sve"}
             onStoreChange={(val) => updateFilters("store", val)}
