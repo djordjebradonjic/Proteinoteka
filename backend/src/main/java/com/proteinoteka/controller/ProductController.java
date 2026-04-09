@@ -91,7 +91,9 @@ public class ProductController {
                         .sorted(Comparator.comparing(PriceHistoryDTO::timestamp).reversed())
                         .toList(),
                 product.getDescription(),
-                product.getNumericPrice()
+                product.getNumericPrice(),
+                product.getProteinPer100g(),
+                product.getValueScore()
         );
     }
 }

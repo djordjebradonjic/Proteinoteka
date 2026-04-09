@@ -26,6 +26,11 @@ public class Product {
     private String imageUrl;
     private String url;
 
+    @Column(name = "protein_per_100g")
+    private Double proteinPer100g;
+
+    private Double valueScore;
+
 
     @Column(columnDefinition = "TEXT")
     private String description;

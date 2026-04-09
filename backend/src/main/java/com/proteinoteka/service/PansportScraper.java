@@ -20,6 +20,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PansportScraper implements StoreScraper {
 
+    private final NutritionParserService nutritionParser;
 
     @Override
     public String getStoreName() {
@@ -103,7 +104,6 @@ public class PansportScraper implements StoreScraper {
                 .replaceAll("\\s+", "")           // ukloni razmake
                 .trim();
     }
-
     private void enrichWithBrand(Page page, List<Product> products) {
         int count = 0;
         for (Product p : products) {
@@ -114,10 +114,35 @@ public class PansportScraper implements StoreScraper {
 
                 Document doc = Jsoup.parse(page.content());
 
+                // Brand
                 Element brand = doc.selectFirst("div.field--name-field-manufacturer a");
                 if (brand != null) {
-                    p.setBrand(brand.text().trim());
+                    p.setBrand(brand.text().trim()
+                            .replaceAll("[\\uFFFD\\u0000-\\u001F]", "")
+                            .trim());
                     log.info("[Pansport] '{}' — brand: {}", p.getName(), p.getBrand());
+                }
+
+                // Pun opis
+                Element fullDescEl = doc.selectFirst("div.field--name-body");
+                if (fullDescEl != null) {
+                    p.setDescription(fullDescEl.text().trim());
+                }
+
+                // Proteini — prvo iz tabele, pa iz teksta
+                Double protein = extractProteinFromTable(doc);
+                if (protein == null) {
+                    String fullDesc = fullDescEl != null
+                            ? fullDescEl.text()
+                            : p.getDescription();
+                    protein = nutritionParser.extractProteinPer100g(fullDesc);
+                }
+
+                if (protein != null) {
+                    p.setProteinPer100g(protein);
+                    log.info("[Pansport] '{}' — protein: {}g/100g", p.getName(), protein);
+                } else {
+                    log.warn("[Pansport] '{}' — protein not found", p.getName());
                 }
 
                 count++;
@@ -125,14 +150,38 @@ public class PansportScraper implements StoreScraper {
                     log.info("[Pansport] Batch of 20 done, sleeping 30s...");
                     Thread.sleep(30_000);
                 } else {
-                    Thread.sleep(2000 + (long) (Math.random() * 2000));
+                    Thread.sleep(2000 + (long)(Math.random() * 2000));
                 }
 
             } catch (Exception e) {
                 log.error("[Pansport] Failed to enrich brand for {}: {}", p.getName(), e.getMessage());
             }
         }
+    }
 
+
+    private Double extractProteinFromTable(Document doc) {
+        try {
+            Elements rows = doc.select("table tr");
+            for (Element row : rows) {
+                Elements cells = row.select("td");
+                if (cells.isEmpty()) continue;
+
+                String firstCell = cells.get(0).text().trim();
+                if (firstCell.toLowerCase().contains("proteini") && cells.size() >= 3) {
+                    String per100g = cells.get(2).text()
+                            .replaceAll("[^0-9,.]", "")
+                            .replace(",", ".")
+                            .trim();
+                    if (!per100g.isBlank()) {
+                        return Double.parseDouble(per100g);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[Pansport] Failed to extract protein from table: {}", e.getMessage());
+        }
+        return null;
     }
 }
 

@@ -13,6 +13,8 @@ public record ProductDTO(Long id,
                          List<String> flavours,
                          List<PriceHistoryDTO> priceHistory,
                          String  description,
-                        Double numericPrice)
+                        Double numericPrice,
+                         Double proteinPer100g,
+                         Double valueScore)
     {
 }

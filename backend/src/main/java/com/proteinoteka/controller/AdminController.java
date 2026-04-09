@@ -2,11 +2,14 @@ package com.proteinoteka.controller;
 
 
 import com.proteinoteka.service.ScraperService;
+import com.proteinoteka.service.StoreScraper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -14,10 +17,20 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminController {
 
     private final ScraperService scraperService;
+    private final List<StoreScraper> scrapers;
 
     @PostMapping("/scrape")
     public ResponseEntity<String> triggerScrape() {
         scraperService.scrapeAll();
         return ResponseEntity.ok("Scraping started");
+    }
+
+    @PostMapping("/scrape/pansport")
+    public ResponseEntity<String> scrapePansport() {
+        scraperService.scrapeStore(scrapers.stream()
+                .filter(s -> s.getStoreName().equals("Pansport"))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Pansport scraper not found")));
+        return ResponseEntity.ok("Pansport scraping started");
     }
 }

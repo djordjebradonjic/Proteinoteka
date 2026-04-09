@@ -109,6 +109,15 @@ public class ProteiniSiScraper implements StoreScraper{
                 page.waitForSelector("div#tab-description",
                         new Page.WaitForSelectorOptions().setTimeout(5000));
 
+                try {
+                    page.click("li.hranljive_tab_tab a");
+                    page.waitForSelector("div#tab-hranljive_tab",
+                            new Page.WaitForSelectorOptions().setTimeout(5000));
+                } catch (Exception e) {
+                    log.warn("[{}] No nutrition tab for: {}", STORE_NAME, p.getName());
+                }
+
+
 
                 Document doc = Jsoup.parse(page.content());
                 enrichWithVariations(doc, p);
@@ -159,6 +168,11 @@ public class ProteiniSiScraper implements StoreScraper{
 
             }
 
+            Double protein = extractProteinFromNutritionTable(doc);
+            if (protein != null) {
+                p.setProteinPer100g(protein);
+                log.info("[{}] '{}' — protein: {}g/100g", STORE_NAME, p.getName(), protein);
+            }
             log.info("[{}] Enriched '{}' — flavours: {}, description: {}chars",
                     STORE_NAME, p.getName(), p.getFlavours(),
                     p.getDescription() != null ? p.getDescription().length() : 0);
@@ -236,6 +250,33 @@ public class ProteiniSiScraper implements StoreScraper{
         }
     }
 
+    private Double extractProteinFromNutritionTable(Document doc) {
+        try {
+            Element nutritionTab = doc.selectFirst("div#tab-hranljive_tab");
+            if (nutritionTab == null) return null;
+
+            Elements rows = nutritionTab.select("table tr");
+            for (Element row : rows) {
+                Elements cells = row.select("td");
+                if (cells.isEmpty()) continue;
+
+                String firstCell = cells.get(0).text().trim();
+                if (firstCell.equalsIgnoreCase("Proteini") && cells.size() >= 3) {
+                    // Treća kolona = na 100g — npr. "77 g"
+                    String per100g = cells.get(2).text()
+                            .replaceAll("[^0-9,.]", "")
+                            .replace(",", ".")
+                            .trim();
+                    if (!per100g.isBlank()) {
+                        return Double.parseDouble(per100g);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[{}] Failed to extract protein from table: {}", STORE_NAME, e.getMessage());
+        }
+        return null;
+    }
 
     private void extractBrandFromName(Product p) {
         if (p.getName() == null || p.getName().isBlank()) return;

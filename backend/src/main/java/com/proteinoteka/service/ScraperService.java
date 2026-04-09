@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -29,6 +30,8 @@ public class ScraperService {
     private final StoreRepository storeRepository;
     private final List<StoreScraper> scrapers; // Spring injects all implementations
     private final PriceHistoryRepository priceHistoryRepository;
+    @Autowired
+    private NutritionParserService nutritionParser;
 
     private static final List<String> USER_AGENTS = List.of(
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
@@ -125,6 +128,7 @@ public class ScraperService {
         Optional<Product> existingOpt = productRepository.findByUrl(scrapedProduct.getUrl());
 
         Double numericPrice = parsePriceToNumeric(scrapedProduct.getPrice());
+        Double valueScore = calculateValueScore(numericPrice, scrapedProduct);
 
         if (existingOpt.isPresent()) {
             Product existingProduct = existingOpt.get();
@@ -151,12 +155,15 @@ public class ScraperService {
             existingProduct.setFlavours(scrapedProduct.getFlavours());
             existingProduct.setPackage_weight(scrapedProduct.getPackage_weight());
             existingProduct.setName(scrapedProduct.getName());
+            existingProduct.setProteinPer100g(scrapedProduct.getProteinPer100g());
+            existingProduct.setValueScore(valueScore);
 
             productRepository.save(existingProduct);
 
         } else {
             scrapedProduct.setStore(store);
             scrapedProduct.setNumericPrice(numericPrice);
+            scrapedProduct.setValueScore(valueScore);
             productRepository.save(scrapedProduct);
         }
     }
@@ -170,19 +177,60 @@ public class ScraperService {
         } catch (Exception ignored) {}
     }
 
-    private Double parsePriceToNumeric(String priceStr) {
-        if (priceStr == null || priceStr.trim().isEmpty()) {
-            return 0.0;
-        }
-        try {
 
-            String cleaned = priceStr.replaceAll("[^0-9,.]", "")
-                    .replace(".", "")
-                    .replace(",", ".");
+    private Double parsePriceToNumeric(String priceStr) {
+        if (priceStr == null || priceStr.trim().isEmpty()) return 0.0;
+        try {
+            String cleaned = priceStr
+                    .trim()
+                    .replace(".", "")     // "1.950,00" → "1950,00"
+                    .replace(",", ".")    // "1950,00"  → "1950.00"
+                    .replaceAll("[^0-9.]", "");
             return Double.parseDouble(cleaned);
         } catch (Exception e) {
-            log.warn("Price conversion failed: {} - Error: {}", priceStr, e.getMessage());
+            log.warn("Price conversion failed: '{}' - Error: {}", priceStr, e.getMessage());
             return 0.0;
         }
+    }
+    private Double calculateValueScore(Double numericPrice, Product p) {
+        if (numericPrice == null || numericPrice == 0) return null;
+        if (p.getProteinPer100g() == null) return null;
+        if (p.getPackage_weight() == null || p.getPackage_weight().isEmpty()) return null;
+
+        double packageGrams = extractPackageGrams(p);
+        if (packageGrams == 0) return null;
+
+        double totalProteinGrams = (p.getProteinPer100g() / 100.0) * packageGrams;
+        if (totalProteinGrams == 0) return null;
+
+        double score = numericPrice / totalProteinGrams;
+        double rounded = Math.round(score * 100.0) / 100.0;
+
+        log.info("ValueScore for '{}': {}g pkg, {}g/100g protein, {}RSD → {:.2f} RSD/g",
+                p.getName(), packageGrams, p.getProteinPer100g(), numericPrice, rounded);
+
+        return rounded;
+    }
+
+    private double extractPackageGrams(Product p) {
+        if (p.getPackage_weight() == null || p.getPackage_weight().isEmpty()) return 0;
+
+        String weight = p.getPackage_weight().get(0)
+                .toLowerCase()
+                .replaceAll("\\s+", "");
+
+        try {
+            if (weight.contains("kg")) {
+                double kg = Double.parseDouble(
+                        weight.replace("kg", "").replace(",", "."));
+                return kg * 1000;
+            } else if (weight.contains("g")) {
+                return Double.parseDouble(
+                        weight.replace("g", "").replace(",", "."));
+            }
+        } catch (Exception e) {
+            log.warn("Cannot parse weight: {}", weight);
+        }
+        return 0;
     }
 }
