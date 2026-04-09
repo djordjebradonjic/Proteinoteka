@@ -1,0 +1,2 @@
+playwright:
+  executable-path: /usr/bin/chromium-browser

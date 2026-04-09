@@ -1,0 +1,5 @@
+spring:
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/proteinoteka}
+    username: ${DATABASE_USERNAME:your_username}
+    password: ${DATABASE_PASSWORD:your_password}

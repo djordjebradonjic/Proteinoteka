@@ -15,6 +15,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -32,6 +33,9 @@ public class ScraperService {
     private final PriceHistoryRepository priceHistoryRepository;
     @Autowired
     private NutritionParserService nutritionParser;
+
+    @Value("${playwright.executable-path:}")
+    private String playwrightExecutablePath;
 
     private static final List<String> USER_AGENTS = List.of(
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
@@ -64,6 +68,9 @@ public class ScraperService {
 
             Browser browser = playwright.chromium().launch(
                     new BrowserType.LaunchOptions().setHeadless(true)
+                            .setExecutablePath(  playwrightExecutablePath.isBlank()
+                                    ? null
+                                    : java.nio.file.Path.of(playwrightExecutablePath))
             );
 
             String randomUA = USER_AGENTS.get(java.util.concurrent.ThreadLocalRandom.current().nextInt(USER_AGENTS.size()));
