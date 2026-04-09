@@ -124,7 +124,7 @@ public class PansportScraper implements StoreScraper {
                 }
 
                 // Pun opis
-                Element fullDescEl = doc.selectFirst("div.field--name-body");
+                Element fullDescEl = doc.selectFirst("div#node-product-body");
                 if (fullDescEl != null) {
                     p.setDescription(fullDescEl.text().trim());
                 }

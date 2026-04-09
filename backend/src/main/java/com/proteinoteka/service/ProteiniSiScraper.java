@@ -256,19 +256,55 @@ public class ProteiniSiScraper implements StoreScraper{
             if (nutritionTab == null) return null;
 
             Elements rows = nutritionTab.select("table tr");
+
+            // Prvo detektuj format tabele — 2 ili 3 kolone
+            // Proveri header red da vidimo redosled kolona
+            boolean per100gIsSecondColumn = false;
+            for (Element row : rows) {
+                Elements cells = row.select("td");
+                if (cells.size() >= 2) {
+                    String headerText = cells.stream()
+                            .map(Element::text)
+                            .reduce("", String::concat)
+                            .toLowerCase();
+                    if (headerText.contains("na 100") || headerText.contains("100 g")) {
+                        // Proveri da li je 100g u drugoj ili trećoj koloni
+                        for (int i = 0; i < cells.size(); i++) {
+                            if (cells.get(i).text().toLowerCase().contains("100")) {
+                                per100gIsSecondColumn = (i == 1);
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+
             for (Element row : rows) {
                 Elements cells = row.select("td");
                 if (cells.isEmpty()) continue;
 
-                String firstCell = cells.get(0).text().trim();
-                if (firstCell.equalsIgnoreCase("Proteini") && cells.size() >= 3) {
-                    // Treća kolona = na 100g — npr. "77 g"
-                    String per100g = cells.get(2).text()
-                            .replaceAll("[^0-9,.]", "")
-                            .replace(",", ".")
-                            .trim();
-                    if (!per100g.isBlank()) {
-                        return Double.parseDouble(per100g);
+                String firstCell = cells.get(0).text().trim().toLowerCase();
+
+                // Pokriva: "Proteini", "proteini", "belančevine"
+                if ((firstCell.contains("proteini") || firstCell.contains("belančevine"))
+                        && !firstCell.contains("koncentrat")
+                        && !firstCell.contains("graška")
+                        && !firstCell.contains("pirinča")) {
+
+                    // Uzmi vrednost iz ispravne kolone
+                    int targetCol = per100gIsSecondColumn ? 1 : 2;
+                    if (cells.size() > targetCol) {
+                        String val = cells.get(targetCol).text()
+                                .replaceAll("[^0-9,.]", "")
+                                .replace(",", ".")
+                                .trim();
+                        if (!val.isBlank()) {
+                            double protein = Double.parseDouble(val);
+                            if (protein > 0 && protein <= 100) {
+                                return protein;
+                            }
+                        }
                     }
                 }
             }
