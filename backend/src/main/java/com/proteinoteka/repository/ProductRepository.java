@@ -24,4 +24,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     Optional<Product> findByUrl(String url);
     Page<Product> findAll(Pageable pageable);
 
+    @Query("SELECT DISTINCT p.brand from products p WHERE p.brand IS NOT NULL ORDER BY p.brand ASC")
+    List<String> findAllUniqueBrands();
+
 }

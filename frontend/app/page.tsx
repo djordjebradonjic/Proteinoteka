@@ -73,9 +73,12 @@ const [selectedBrand, setSelectedBrand] = useState("Sve");
     try {
       // ✅ Dodat &sort parametar u API poziv
       let url = `/products?page=${page}&size=12&sort=${sort}`;
+      const brandParam = searchParams.get("brand") || "";
       
       if (search) url += `&name=${encodeURIComponent(search)}`;
       if (selectedStore !== "Sve") url += `&storeName=${encodeURIComponent(selectedStore)}`;
+
+      if (brandParam && brandParam !== "Sve") url += `&brand=${encodeURIComponent(brandParam)}`;
 
       if (minPrice) url += `&minPrice=${minPrice}`;
       if (maxPrice) url += `&maxPrice=${maxPrice}`;
@@ -95,7 +98,7 @@ const [selectedBrand, setSelectedBrand] = useState("Sve");
   // ✅ Dodat 'sort' u niz zavisnosti da bi se fetch pokrenuo pri promeni sortiranja
   useEffect(() => {
     fetchProducts();
-  }, [page, selectedStore, search, sort,debouncedMinPrice, debouncedMaxPrice]);
+  }, [page, selectedStore, search, sort,debouncedMinPrice, debouncedMaxPrice,searchParams.get("brand")]);
 
   const handleReset = () => {
     replace(pathname);
@@ -117,9 +120,9 @@ const [selectedBrand, setSelectedBrand] = useState("Sve");
             stores={stores}
             brands={brands} 
             selectedStore={selectedStore}
-            selectedBrand={"Sve"}
+            selectedBrand={searchParams.get("brand") || "Sve"}
             onStoreChange={(val) => updateFilters("store", val)}
-            onBrandChange={() => {}}
+            onBrandChange={(val) => updateFilters("brand", val)}
             onReset={handleReset}
             hasActiveFilters={selectedStore !== "Sve" || !!search || sort !== "id,desc"}
           />

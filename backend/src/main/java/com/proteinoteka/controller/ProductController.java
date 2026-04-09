@@ -70,6 +70,11 @@ public class ProductController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/brands")
+    List<String> getAllBrands(){
+        return productRepository.findAllUniqueBrands();
+    }
+
     private ProductDTO convertToDTO(Product product) {
         return new ProductDTO(
                 product.getId(),
