@@ -7,10 +7,7 @@ import com.proteinoteka.model.Product;
 import com.proteinoteka.repository.ProductRepository;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -33,36 +30,46 @@ public class ProductController {
             @RequestParam(required = false) String brand,
             @RequestParam(required = false) Double minPrice,
             @RequestParam(required = false) Double maxPrice,
-            Pageable pageable){
+            Pageable pageable) {
 
-        if (pageable.getSort().stream()
-                .anyMatch(o -> o.getProperty().equals("valueScore"))) {
-            Sort sort = Sort.by(Sort.Order.asc("valueScore").nullsLast());
-            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+        // ← ZAMENI stari nullsLast blok sa ovim
+        boolean sortByValue = pageable.getSort().stream()
+                .anyMatch(o -> o.getProperty().equals("valueScore"));
+
+        if (sortByValue) {
+            // Ukloni valueScore sort, fetchuj bez sorta pa sortiraj u memoriji
+            Pageable unsorted = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+
+            Specification<Product> spec = buildSpec(name, storeName, brand, minPrice, maxPrice);
+
+            List<ProductDTO> sorted = productRepository.findAll(spec, unsorted)
+                    .stream()
+                    .map(this::convertToDTO)
+                    .sorted(Comparator.comparingDouble(
+                            p -> p.valueScore() != null ? p.valueScore() : Double.MAX_VALUE))
+                    .toList();
+
+            return new PageImpl<>(sorted, pageable, sorted.size());
         }
+
+        Specification<Product> spec = buildSpec(name, storeName, brand, minPrice, maxPrice);
+        return productRepository.findAll(spec, pageable).map(this::convertToDTO);
+    }
+
+    private Specification<Product> buildSpec(String name, String storeName,
+                                             String brand, Double minPrice, Double maxPrice) {
         Specification<Product> spec = Specification.where(null);
-
-        if (name != null && !name.isEmpty()) {
+        if (name != null && !name.isEmpty())
             spec = spec.and(ProductSpecifications.hasName(name));
-        }
-        if (storeName != null && !storeName.isEmpty()) {
+        if (storeName != null && !storeName.isEmpty())
             spec = spec.and(ProductSpecifications.hasStoreName(storeName));
-        }
-        if (brand != null && !brand.isEmpty()) {
+        if (brand != null && !brand.isEmpty())
             spec = spec.and(ProductSpecifications.hasBrand(brand));
-        }
-        if (minPrice != null) {
+        if (minPrice != null)
             spec = spec.and(ProductSpecifications.priceGreaterThan(minPrice));
-        }
-        if (maxPrice != null) {
+        if (maxPrice != null)
             spec = spec.and(ProductSpecifications.priceLessThan(maxPrice));
-        }
-
-        // findAll sada prima specifikaciju i pageable
-        return productRepository.findAll(spec, pageable)
-                .map(this::convertToDTO);
-
-
+        return spec;
     }
 
 
