@@ -1,6 +1,7 @@
 package com.proteinoteka.scraper;
 
 import com.proteinoteka.model.Product;
+import com.proteinoteka.service.NutritionParserService;
 import com.proteinoteka.service.PansportScraper;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -19,7 +20,9 @@ public class PansportScraperTest {
 
     @BeforeEach
     void setUp() throws IOException {
-        pansportScraper = new PansportScraper();
+       
+        pansportScraper = new PansportScraper(new NutritionParserService());
+
         File htmlFile = new File("src/test/resources/html/pansport_test.html");
         mockDoc = Jsoup.parse(htmlFile, StandardCharsets.UTF_8.name());
     }
