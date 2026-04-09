@@ -41,6 +41,17 @@ export default function ProductCard({ product }: ProductCardProps) {
         <p className="text-xl font-bold text-green-600">
           {product.price} RSD
         </p>
+         {product.valueScore && (
+        <p className="text-xs text-green-700 font-medium mt-1">
+          ⚡ {product.valueScore} RSD/g proteina
+        </p>
+         )}
+        {product.proteinPer100g && (
+          <p className="text-xs text-slate-400 mt-0.5">
+         🥩 {product.proteinPer100g}g proteina/100g
+        </p>
+        )}
+
         <Badge variant="outline" className="mt-2 text-xs">
           {product.storeName}
         </Badge>

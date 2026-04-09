@@ -4,6 +4,7 @@ export interface PriceHistory {
 }
 
 export interface Product {
+  
   id: number
   name: string;
   brand: string | null;
@@ -16,5 +17,7 @@ export interface Product {
   priceHistory: PriceHistory[];
   description: string;
   numericPrice: number;
+  valueScore: number;
+  proteinPer100g:number;
   
 }

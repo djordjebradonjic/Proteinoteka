@@ -110,8 +110,19 @@ export default function ProductPage() {
               <p className="text-3xl font-bold text-green-600">
                 {product.price} RSD
               </p>
-            </div>
+           
 
+           {product.proteinPer100g && (
+             <p className="text-sm text-slate-500 mt-2">
+             🥩 {product.proteinPer100g}g proteina na 100g
+            </p>
+           )}
+            {product.valueScore && (
+              <p className="text-sm font-medium text-green-700 mt-1">
+            ⚡ {product.valueScore} RSD/g proteina
+           </p>
+           )}
+          </div>
             {/* Pakovanja */}
             {product.weights?.length > 0 && (
               <div>
