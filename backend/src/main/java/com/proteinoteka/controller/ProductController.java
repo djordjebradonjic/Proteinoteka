@@ -35,6 +35,11 @@ public class ProductController {
             @RequestParam(required = false) Double maxPrice,
             Pageable pageable){
 
+        if (pageable.getSort().stream()
+                .anyMatch(o -> o.getProperty().equals("valueScore"))) {
+            Sort sort = Sort.by(Sort.Order.asc("valueScore").nullsLast());
+            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+        }
         Specification<Product> spec = Specification.where(null);
 
         if (name != null && !name.isEmpty()) {
