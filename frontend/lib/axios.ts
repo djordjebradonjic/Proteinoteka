@@ -1,7 +1,6 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api/v1', // Proveri da li ti je na backendu port 8080
-});
+ baseURL: `${process.env.NEXT_PUBLIC_API_URL}/api/v1`,});
 
 export default api;
