@@ -1,6 +1,6 @@
 "use client";
-import PriceFilter from "@/components/PriceFilter";
 
+import PriceFilter from "@/components/PriceFilter";
 import { useEffect, useState, useCallback } from "react";
 import api from "@/lib/axios";
 import { Product } from "@/types/product";
@@ -10,19 +10,19 @@ import StoreFilter from "@/components/StoreFilter";
 import ProductGrid from "@/components/ProductGrid";
 import SortSelect from "@/components/SortSelect";
 import { useDebounce } from "use-debounce";
-
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { Suspense } from "react";
 
-export default function Home() {
+
+function HomeContent() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const { replace } = useRouter();
 
-  // URL Parametri
   const search = searchParams.get("query") || "";
   const selectedStore = searchParams.get("store") || "Sve";
   const page = Number(searchParams.get("page")) || 0;
-  const sort = searchParams.get("sort") || "id,desc"; // ✅ Čitamo sort iz URL-a
+  const sort = searchParams.get("sort") || "id,desc";
 
   const [products, setProducts] = useState<Product[]>([]);
   const [totalPages, setTotalPages] = useState(0);
@@ -34,71 +34,59 @@ export default function Home() {
   const maxPrice = searchParams.get("maxPrice") || "";
 
   const [debouncedMinPrice] = useDebounce(minPrice, 500);
-const [debouncedMaxPrice] = useDebounce(maxPrice, 500);
+  const [debouncedMaxPrice] = useDebounce(maxPrice, 500);
 
-const [brands, setBrands] = useState<string[]>([]);
-const [selectedBrand, setSelectedBrand] = useState("Sve");
+  const [brands, setBrands] = useState<string[]>([]);
 
   const updateFilters = useCallback((name: string, value: string | number) => {
-  const params = new URLSearchParams(searchParams);
-    
+    const params = new URLSearchParams(searchParams);
     if (value && value !== "Sve") {
       params.set(name, value.toString());
     } else {
       params.delete(name);
     }
-
     if (name !== "page") {
       params.set("page", "0");
     }
-
     replace(`${pathname}?${params.toString()}`);
   }, [searchParams, pathname, replace]);
 
- const fetchBrands = useCallback(async () => {
-  try {
-    const res = await api.get("/products/brands");
-    setBrands(res.data);
-  } catch (err) {
-    console.error("Neuspešno učitavanje brendova", err);
-  }
+  const fetchBrands = useCallback(async () => {
+    try {
+      const res = await api.get("/products/brands");
+      setBrands(res.data);
+    } catch (err) {
+      console.error("Neuspešno učitavanje brendova", err);
+    }
   }, []);
 
   useEffect(() => {
-   fetchBrands();
+    fetchBrands();
   }, [fetchBrands]);
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
-      // ✅ Dodat &sort parametar u API poziv
       let url = `/products?page=${page}&size=12&sort=${sort}`;
       const brandParam = searchParams.get("brand") || "";
-      
       if (search) url += `&name=${encodeURIComponent(search)}`;
       if (selectedStore !== "Sve") url += `&storeName=${encodeURIComponent(selectedStore)}`;
-
       if (brandParam && brandParam !== "Sve") url += `&brand=${encodeURIComponent(brandParam)}`;
-
       if (minPrice) url += `&minPrice=${minPrice}`;
       if (maxPrice) url += `&maxPrice=${maxPrice}`;
-
       const res = await api.get(url);
-      
       setProducts(res.data.content);
-      // ✅ Pazi: pošto smo uveli VIA_DTO, podaci su sada u .page objektu
-      setTotalPages(res.data.page.totalPages); 
+      setTotalPages(res.data.page.totalPages);
     } catch (error) {
       console.error("Greška pri učitavanju:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, selectedStore, search, sort, debouncedMinPrice, debouncedMaxPrice, searchParams]);
 
-  // ✅ Dodat 'sort' u niz zavisnosti da bi se fetch pokrenuo pri promeni sortiranja
   useEffect(() => {
     fetchProducts();
-  }, [page, selectedStore, search, sort,debouncedMinPrice, debouncedMaxPrice,searchParams.get("brand")]);
+  }, [fetchProducts]);
 
   const handleReset = () => {
     replace(pathname);
@@ -108,17 +96,14 @@ const [selectedBrand, setSelectedBrand] = useState("Sve");
     <main className="min-h-screen bg-slate-50">
       <Header />
       <div className="max-w-6xl mx-auto px-4 py-8">
-        
-        <SearchBar 
-          value={search} 
-          onChange={(val) => updateFilters("query", val)} 
+        <SearchBar
+          value={search}
+          onChange={(val) => updateFilters("query", val)}
         />
-
-        {/* ✅ Flex kontejner za filtere i sortiranje */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <StoreFilter
             stores={stores}
-            brands={brands} 
+            brands={brands}
             selectedStore={selectedStore}
             selectedBrand={searchParams.get("brand") || "Sve"}
             onStoreChange={(val) => updateFilters("store", val)}
@@ -126,37 +111,54 @@ const [selectedBrand, setSelectedBrand] = useState("Sve");
             onReset={handleReset}
             hasActiveFilters={selectedStore !== "Sve" || !!search || sort !== "id,desc"}
           />
-          <PriceFilter 
-             minPrice={minPrice}
-             maxPrice={maxPrice}
+          <PriceFilter
+            minPrice={minPrice}
+            maxPrice={maxPrice}
             onMinChange={(val) => updateFilters("minPrice", val)}
-             onMaxChange={(val) => updateFilters("maxPrice", val)}
-         />
-
-          <SortSelect 
-            value={sort} 
-            onSortChange={(val) => updateFilters("sort", val)} 
+            onMaxChange={(val) => updateFilters("maxPrice", val)}
+          />
+          <SortSelect
+            value={sort}
+            onSortChange={(val) => updateFilters("sort", val)}
           />
         </div>
-        
         {!loading && (
           <p className="text-sm text-slate-500 mb-4">
             Stranica <span className="font-semibold text-slate-700">{page + 1}</span> od {totalPages}
           </p>
         )}
-
-        <ProductGrid 
-          products={products} 
-          loading={loading} 
+        <ProductGrid
+          products={products}
+          loading={loading}
           searchQuery={search}
           currentPage={page}
           totalPages={totalPages}
           onPageChange={(newPage) => {
             updateFilters("page", newPage);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo({ top: 0, behavior: "smooth" });
           }}
         />
       </div>
     </main>
+  );
+}
+
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen bg-slate-50">
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          <div className="h-8 w-48 bg-slate-200 rounded animate-pulse mb-8" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="h-72 bg-slate-200 rounded-lg animate-pulse" />
+            ))}
+          </div>
+        </div>
+      </main>
+    }>
+      <HomeContent />
+    </Suspense>
   );
 }
