@@ -17,6 +17,9 @@ RUN ./mvnw package -DskipTests
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
+ARG CACHEBUST=1
+
+
 RUN apk add --no-cache \
       nodejs \
       npm \
