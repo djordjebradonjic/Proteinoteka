@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -68,9 +69,11 @@ public class ScraperService {
 
             Browser browser = playwright.chromium().launch(
                     new BrowserType.LaunchOptions().setHeadless(true)
-                            .setExecutablePath(  playwrightExecutablePath.isBlank()
-                                    ? null
-                                    : java.nio.file.Path.of(playwrightExecutablePath))
+                            .setArgs(Arrays.asList(
+                                    "--disable-dev-shm-usage",
+                                    "--no-sandbox",
+                                    "--disable-setuid-sandbox"
+                            ))
             );
 
             String randomUA = USER_AGENTS.get(java.util.concurrent.ThreadLocalRandom.current().nextInt(USER_AGENTS.size()));
