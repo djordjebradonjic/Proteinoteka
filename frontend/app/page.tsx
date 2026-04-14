@@ -1,9 +1,12 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import dynamicImport from "next/dynamic";
+
 import { Suspense } from "react";
 
-const HomeContent = dynamic(() => import("@/components/HomeContent"), {
+export const dynamic = 'force-dynamic';
+
+const HomeContent = dynamicImport(() => import("@/components/HomeContent"), {
   ssr: false,
 });
 
