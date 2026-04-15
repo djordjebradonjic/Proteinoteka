@@ -13,7 +13,9 @@ public class CorsConfig implements WebMvcConfigurer {
         registry.addMapping("/api/**")
                 .allowedOrigins(
                         "http://localhost:3000",
-                        "https://proteinoteka.vercel.app"
+                        "https://proteinoteka.vercel.app",
+                        "https://proteinoteka.rs",
+                        "https://www.proteinoteka.rs"
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE")
                 .allowedHeaders("*");
