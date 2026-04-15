@@ -19,11 +19,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
       title,
       description,
-      alternates: { canonical: `https://proteinoteka.vercel.app/product/${params.id}` },
+      alternates: { canonical: `https://proteinoteka.rs/product/${params.id}` },
       openGraph: {
         title,
         description,
-        url: `https://proteinoteka.vercel.app/product/${params.id}`,
+        url: `https://proteinoteka.rs/product/${params.id}`,
         siteName: "Proteinoteka",
         images: product.imageUrl ? [{ url: product.imageUrl, width: 800, height: 800 }] : [],
         locale: "sr_RS",

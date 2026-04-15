@@ -40,9 +40,9 @@ export const metadata: Metadata = {
     "cena proteina po gramu",
   ],
 
-  authors: [{ name: "Proteinoteka", url: "https://proteinoteka.vercel.app" }],
+  authors: [{ name: "Proteinoteka", url: "https://proteinoteka.rs" }],
   creator: "Proteinoteka",
-  metadataBase: new URL("https://proteinoteka.vercel.app"),
+  metadataBase: new URL("https://proteinoteka.rs"),
   
   alternates: {
     canonical: "/",
@@ -52,7 +52,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "sr_RS",
-    url: "https://proteinoteka.vercel.app",
+    url: "https://proteinoteka.rs",
     siteName: "Proteinoteka",
     title: "Gde je najjeftiniji protein u Srbiji? | Proteinoteka",
     description:
