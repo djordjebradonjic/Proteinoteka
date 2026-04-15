@@ -129,6 +129,21 @@ export default function ProductPage() {
             </CardContent>
           </Card>
         )}
+        {product.description && (
+     <Card className="mt-6 border-none shadow-sm">
+      <CardContent className="p-6">
+       <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+          <span className="w-2 h-6 bg-blue-500 rounded-full"></span>
+          Opis proizvoda
+        </h2>
+       <div
+         className="text-slate-600 text-sm leading-relaxed prose max-w-none"
+         dangerouslySetInnerHTML={{ __html: product.description }}
+       />
+      </CardContent>
+   </Card>
+)}
+
       </div>
     </main>
   );
