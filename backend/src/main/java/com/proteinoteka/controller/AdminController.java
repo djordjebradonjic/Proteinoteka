@@ -43,4 +43,13 @@ public class AdminController {
         return ResponseEntity.ok("Proteinbox scraping started");
     }
 
+    @PostMapping("/scrape/supplementshop")
+    public ResponseEntity<String> scrapeSupplementShop() {
+        scraperService.scrapeStore(scrapers.stream()
+                .filter(s -> s.getStoreName().equals("Supplementshop"))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Supplementshop scraper not found")));
+        return ResponseEntity.ok("Supplementshop scraping started");
+    }
+
 }

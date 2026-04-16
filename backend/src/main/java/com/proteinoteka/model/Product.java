@@ -24,6 +24,8 @@ public class Product {
     private String brand;
     private String price;
     private String imageUrl;
+
+    @Column(unique = true)
     private String url;
 
     @Column(name = "protein_per_100g")
