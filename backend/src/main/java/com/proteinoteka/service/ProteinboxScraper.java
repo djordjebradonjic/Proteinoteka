@@ -64,6 +64,7 @@ public class ProteinboxScraper implements StoreScraper {
     // -------------------- Detail page enrichment (SA ZAŠTITOM) --------------------
 
     private void enrichWithDetails(Page page, List<Product> products) {
+        page.route("**/*.{png,jpg,jpeg,gif,svg,css,woff2}", route -> route.abort());
         if (page.title().contains("Cloudflare") || page.title().contains("Attention Required")) {
             log.error("DETECTED BY FIREWALL! Stopping scraper to save IP reputation.");
             return;
@@ -115,9 +116,11 @@ public class ProteinboxScraper implements StoreScraper {
 
     private void enrichBrand(Document doc, Product p) {
         Element brandEl = doc.selectFirst("div.product-proizvodjaci a");
+        if (brandEl == null) {
+            brandEl = doc.selectFirst("a[href*='/proizvodjaci/']"); // Fallback
+        }
         if (brandEl != null) {
-            String brand = brandEl.text().trim();
-            if (!brand.isBlank()) p.setBrand(brand);
+            p.setBrand(brandEl.text().trim());
         }
     }
 
@@ -183,7 +186,7 @@ public class ProteinboxScraper implements StoreScraper {
         try {
             Elements rows = table.select("tr");
             int per100gColumnIndex = -1;
-            Elements headerCells = rows.get(0).select("td");
+            Elements headerCells = rows.get(0).select("th, td");
             for (int i = 0; i < headerCells.size(); i++) {
                 String cellText = headerCells.get(i).text().toLowerCase().replaceAll("\\s+", "");
                 if (cellText.contains("100g") || cellText.contains("100gr")) {
