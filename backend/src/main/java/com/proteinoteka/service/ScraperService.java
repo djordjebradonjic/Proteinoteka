@@ -80,10 +80,11 @@ public class ScraperService {
 
             BrowserContext context = browser.newContext(
                     new Browser.NewContextOptions()
-                            .setUserAgent("Mozilla/5.0")
+                            .setUserAgent(randomUA)
             );
 
             Page page = context.newPage();
+            page.route("**/*.{png,jpg,jpeg,gif,svg,css,woff2}", route -> route.abort());
 
             int currentPage = 0;
             boolean hasNext = true;
@@ -99,6 +100,7 @@ public class ScraperService {
 
                 page.navigate(url, new Page.NavigateOptions()
                         .setWaitUntil(WaitUntilState.NETWORKIDLE));
+                page.waitForTimeout(2000);
 
                 page.mouse().wheel(0, 500);
                 Thread.sleep(800); // Imitate mouse movement

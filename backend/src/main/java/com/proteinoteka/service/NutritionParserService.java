@@ -17,6 +17,19 @@ public class NutritionParserService {
 
         String text = Jsoup.parse(description).text();
 
+        Pattern p0 = Pattern.compile(
+                "(\\d+[.,]?\\d*)\\s*g\\s*/\\s*100\\s*g",
+                Pattern.CASE_INSENSITIVE
+        );
+        Matcher m0 = p0.matcher(text);
+        if (m0.find()) {
+            double val = parseDouble(m0.group(1));
+            if (val > 0 && val <= 100) {
+                log.info("Extracted protein per 100g (explicit notation): {}g/100g", val);
+                return val;
+            }
+        }
+
         // Pattern 1: "Proteini 22 g 75 g" → uzmi drugi broj (na 100g)
         // Pansport format: porcija prvo, pa 100g
         Pattern p1 = Pattern.compile(

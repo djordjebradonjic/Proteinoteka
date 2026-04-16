@@ -33,4 +33,14 @@ public class AdminController {
                 .orElseThrow(() -> new RuntimeException("Pansport scraper not found")));
         return ResponseEntity.ok("Pansport scraping started");
     }
+
+    @PostMapping("/scrape/proteinbox")
+    public ResponseEntity<String> scrapeProteinbox() {
+        scraperService.scrapeStore(scrapers.stream()
+                .filter(s -> s.getStoreName().equals("Proteinbox"))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Proteinbox scraper not found")));
+        return ResponseEntity.ok("Proteinbox scraping started");
+    }
+
 }
