@@ -52,4 +52,13 @@ public class AdminController {
         return ResponseEntity.ok("Supplementshop scraping started");
     }
 
+    @PostMapping("/scrape/ogistra")
+    public ResponseEntity<String> scrapeOgistra() {
+        scraperService.scrapeStore(scrapers.stream()
+                .filter(s -> s.getStoreName().equals("Ogistrashop"))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Ogistrashop scraper not found")));
+        return ResponseEntity.ok("Ogistrashop scraping started");
+    }
+
 }

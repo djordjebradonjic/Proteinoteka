@@ -16,4 +16,7 @@ public interface StoreScraper {
     boolean hasNextPage(Document doc);
 
     String buildPageUrl(int page);
+    default boolean usePlaywrightForListing() {
+        return true;
+    }
 }

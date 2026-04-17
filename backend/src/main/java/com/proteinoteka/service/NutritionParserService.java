@@ -30,6 +30,22 @@ public class NutritionParserService {
             }
         }
 
+        Pattern p05 = Pattern.compile(
+                "doz[ae]\\s+od\\s+(\\d+[.,]?\\d*)\\s*g.*?sadr[žz]i.*?(\\d+[.,]?\\d*)\\s*g.*?protein",
+                Pattern.CASE_INSENSITIVE
+        );
+        Matcher m05 = p05.matcher(text);
+        if (m05.find()) {
+            double servingSize = parseDouble(m05.group(1));
+            double proteinPerServing = parseDouble(m05.group(2));
+            if (servingSize > 0 && proteinPerServing > 0) {
+                double per100g = (proteinPerServing / servingSize) * 100.0;
+                if (per100g > 0 && per100g <= 100) {
+                    return Math.round(per100g * 10) / 10.0;
+                }
+            }
+        }
+
         // Pattern 1: "Proteini 22 g 75 g" → uzmi drugi broj (na 100g)
         // Pansport format: porcija prvo, pa 100g
         Pattern p1 = Pattern.compile(
