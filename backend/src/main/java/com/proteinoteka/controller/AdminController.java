@@ -61,4 +61,13 @@ public class AdminController {
         return ResponseEntity.ok("Ogistrashop scraping started");
     }
 
+    @PostMapping("/scrape/fitlab")
+    public ResponseEntity<String> scrapeFitLab() {
+        scraperService.scrapeStore(scrapers.stream()
+                .filter(s -> s.getStoreName().equals("FitLab"))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("FitLab scraper not found")));
+        return ResponseEntity.ok("FitLab scraping started");
+    }
+
 }
