@@ -11,6 +11,6 @@ export default function robots(): MetadataRoute.Robots {
         '/private/',
       ],
     },
-    sitemap: 'https://proteinoteka.vercel.app/sitemap.xml',
+    sitemap: 'https://proteinoteka.rs/sitemap.xml',
   };
 }
