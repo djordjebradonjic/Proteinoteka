@@ -12,7 +12,13 @@ import SortSelect from "@/components/SortSelect";
 import { useDebounce } from "use-debounce";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
-export default function HomeContent() {
+
+interface Props {
+  initialProducts: Product[];
+  initialTotalPages: number;
+}
+
+export default function HomeContent({ initialProducts, initialTotalPages }: Props) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const { replace } = useRouter();
@@ -22,8 +28,8 @@ export default function HomeContent() {
   const page = Number(searchParams.get("page")) || 0;
   const sort = searchParams.get("sort") || "id,desc";
 
-  const [products, setProducts] = useState<Product[]>([]);
-  const [totalPages, setTotalPages] = useState(0);
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [totalPages, setTotalPages] = useState(initialTotalPages);
   const [loading, setLoading] = useState(true);
 
   const stores = ["Sve", "Pansport", "Proteini.si"];
