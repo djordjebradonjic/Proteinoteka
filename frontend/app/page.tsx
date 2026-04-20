@@ -1,5 +1,6 @@
 import HomeContent from "@/components/HomeContent";
 import { Metadata } from "next";
+import { Suspense } from "react";
 
 
 export const metadata: Metadata = {
@@ -95,5 +96,7 @@ async function getInitialProducts() {
 
 export default async function Home() {
   const initialData = await getInitialProducts();
-  return <HomeContent initialProducts={initialData.content} initialTotalPages={initialData.totalPages} />;
+  return (<Suspense fallback={<div>Loading...</div>}>  
+            <HomeContent initialProducts={initialData.content} initialTotalPages={initialData.totalPages} />;
+          </Suspense>);
 }
