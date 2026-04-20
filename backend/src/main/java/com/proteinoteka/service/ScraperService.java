@@ -8,6 +8,7 @@ import com.proteinoteka.model.Store;
 import com.proteinoteka.repository.PriceHistoryRepository;
 import com.proteinoteka.repository.ProductRepository;
 import com.proteinoteka.repository.StoreRepository;
+import com.proteinoteka.util.PriceParser;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +33,7 @@ public class ScraperService {
     private final StoreRepository storeRepository;
     private final List<StoreScraper> scrapers;
     private final PriceHistoryRepository priceHistoryRepository;
+    private final PriceParser priceParser;
 
     @Autowired
     private NutritionParserService nutritionParser;
@@ -257,7 +259,7 @@ public class ScraperService {
     private void saveOrUpdateProduct(Product scrapedProduct, Store store) {
         Optional<Product> existingOpt = productRepository.findByUrl(scrapedProduct.getUrl());
 
-        Double numericPrice = parsePriceToNumeric(scrapedProduct.getPrice());
+        Double numericPrice = priceParser.parse(scrapedProduct.getPrice());
         Double valueScore = calculateValueScore(numericPrice, scrapedProduct);
 
         if (existingOpt.isPresent()) {
@@ -304,23 +306,6 @@ public class ScraperService {
         }
     }
 
-
-    private Double parsePriceToNumeric(String priceStr) {
-        if (priceStr == null || priceStr.trim().isEmpty()) return 0.0;
-
-        try {
-            String cleaned = priceStr
-                    .trim()
-                    .replace(".", "")           // "1.950,00" → "1950,00"
-                    .replace(",", ".")          // "1950,00" → "1950.00"
-                    .replaceAll("[^0-9.]", ""); // Ukloni sve osim cifara i tačke
-
-            return Double.parseDouble(cleaned);
-        } catch (Exception e) {
-            log.warn("Price conversion failed for '{}': {}", priceStr, e.getMessage());
-            return 0.0;
-        }
-    }
 
 
     private Double calculateValueScore(Double numericPrice, Product p) {
