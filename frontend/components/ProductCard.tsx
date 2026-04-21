@@ -19,7 +19,8 @@ export default function ProductCard({ product }: ProductCardProps) {
           <img
             src={product.imageUrl}
             alt={product.name}  
-            referrerPolicy="no-referrer-when-downgrade"
+            onError={(e) => (e.target as HTMLImageElement).src = '/placeholder-protein.png'}
+
             className="h-full object-contain"
           />
         ) : (
