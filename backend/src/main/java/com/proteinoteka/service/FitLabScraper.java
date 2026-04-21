@@ -165,6 +165,11 @@ public class FitLabScraper implements StoreScraper {
 
         for (Product p : products) {
             if (p.getUrl() == null || p.getUrl().isBlank()) continue;
+            if (baseEnricher.isNonProteinProduct(p.getName())) {
+                log.info("[{}] Skipping '{}' - not a protein product", STORE_NAME, p.getName());
+                continue;
+            }
+
 
             try {
                 long sleep = 10000 + ThreadLocalRandom.current().nextLong(10000);

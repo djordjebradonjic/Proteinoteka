@@ -71,35 +71,40 @@ public class AiNutritionService {
     }
 
     private String buildPrompt(String productName, String description, List<String> packageWeights) {
-        String trimmed = description.length() > 800
-                ? description.substring(0, 800)
+        String trimmed = description.length() > 2000
+                ? description.substring(0, 2000)
                 : description;
 
         String weights = packageWeights != null ? packageWeights.toString() : "unknown";
 
         return """
-            Analyze this protein supplement and extract nutrition data.
-            Return ONLY a JSON object, no explanation, no markdown.
-                        
-            JSON format:
-            {
-              "proteinPer100g": <number or null>,
-              "sugarPer100g": <number or null>,
-              "fatPer100g": <number or null>,
-              "caloriePer100g": <number or null>,
-              "proteinSource": <"whey_concentrate"|"whey_isolate"|"hydrolysate"|"vegan"|"casein"|"blend"|null>,
-              "primaryWeightGrams": <total package weight in grams as number or null>
-            }
-                        
-            Rules:
-            - proteinPer100g: grams of protein per 100g of product
-            - primaryWeightGrams: convert kg to grams (e.g. 2kg = 2000)
-            - proteinSource: best match from the allowed values only
-            - All values must be numbers, not strings
-                        
-            Product: %s
-            Package weights available: %s
-            Description: %s
-            """.formatted(productName, weights, trimmed);
+        Analyze this protein supplement and extract nutrition data.
+        Return ONLY a JSON object, no explanation, no markdown.
+                    
+        JSON format:
+        {
+          "proteinPer100g": <number or null>,
+          "sugarPer100g": <number or null>,
+          "fatPer100g": <number or null>,
+          "caloriePer100g": <number or null>,
+          "proteinSource": <"whey_concentrate"|"whey_isolate"|"hydrolysate"|"vegan"|"casein"|"blend"|null>,
+          "primaryWeightGrams": <total package weight in grams as number or null>
+        }
+                    
+        Rules:
+        - proteinPer100g: grams of protein per 100g of product
+        - primaryWeightGrams: convert kg to grams (e.g. 2kg = 2000)
+        - proteinSource: best match from the allowed values only
+        - All values must be numbers, not strings
+        - If multiple flavors exist with different values, use the AVERAGE across all flavors
+        - Extract values from "Na 100g" column, NOT "Na 30g" or per serving
+        - If nutrition is given per serving (not per 100g), convert: value / serving_weight_grams * 100
+        - If serving size is mentioned (e.g. "28g porcija", "1 merica 30g"), use it for conversion
+        - If no nutrition table exists at all, return null for all numeric fields
+                    
+        Product: %s
+        Package weights available: %s
+        Description: %s
+        """.formatted(productName, weights, trimmed);
     }
 }

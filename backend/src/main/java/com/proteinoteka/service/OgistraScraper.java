@@ -153,6 +153,11 @@ public class OgistraScraper implements StoreScraper {
         int count = 0;
         for (Product p : products) {
             if (p.getUrl() == null || p.getUrl().isBlank()) continue;
+            if (baseEnricher.isNonProteinProduct(p.getName())) {
+                log.info("[{}] Skipping '{}' - not a protein product", STORE_NAME, p.getName());
+                continue;
+            }
+
 
             try {
                 Thread.sleep(ThreadLocalRandom.current().nextLong(2500, 5000));

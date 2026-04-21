@@ -248,9 +248,18 @@ public class ScraperService {
 
     @Transactional
     public void saveOrUpdateProduct(Product scraped, Store store) {
+        Double numericPrice = priceParser.parse(scraped.getPrice());
+        if (numericPrice == null || numericPrice == 0) {
+            log.warn("[{}] Skipping '{}' - no valid price", store.getName(), scraped.getName());
+            return;
+        }
+        if (scraped.getProteinPer100g() == null || scraped.getProteinPer100g() < 5) {
+            log.warn("[{}] Skipping '{}' - no protein data (protein={})",
+                    store.getName(), scraped.getName(), scraped.getProteinPer100g());
+            return;
+        }
         Optional<Product> existingOpt = productRepository.findByUrl(scraped.getUrl());
 
-        Double numericPrice = priceParser.parse(scraped.getPrice());
         Double valueScore = calculateValueScore(numericPrice, scraped);
         double weightGrams = extractPackageGrams(scraped);
 

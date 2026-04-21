@@ -20,6 +20,13 @@ public class BaseScraperEnricher {
      * Call this after table parsing in every scraper.
      */
     public void enrichWithAiIfNeeded(Document doc, Product p, String storeName) {
+        if (isNonProteinProduct(p.getName())) {
+            log.info("[{}] '{}' -> Skipping AI - not a protein product", storeName, p.getName());
+            return;
+        }
+
+        calculateCaloriesIfPossible(p);
+
         if (allNutritionFieldsFilled(p)) return;
 
         String context = buildContext(doc, p);
@@ -74,11 +81,21 @@ public class BaseScraperEnricher {
     private String buildContext(Document doc, Product p) {
         StringBuilder context = new StringBuilder();
 
-        // Add description
+        // Add description - povećano na 2000
         if (p.getDescription() != null && !p.getDescription().isBlank()) {
-            int len = Math.min(p.getDescription().length(), 500);
+            int len = Math.min(p.getDescription().length(), 2000);
             context.append(p.getDescription(), 0, len);
             context.append("\n\n");
+        }
+
+        // Serving size hint - iz celog description, ne trimovanog
+        String desc = p.getDescription() != null ? p.getDescription() : "";
+        java.util.regex.Matcher m = java.util.regex.Pattern
+                .compile("(\\d+)\\s*g[^\\w]*(porcij|merici|serving|po porciji)",
+                        java.util.regex.Pattern.CASE_INSENSITIVE)
+                .matcher(desc);
+        if (m.find()) {
+            context.append("Serving size hint: ").append(m.group(1)).append("g\n\n");
         }
 
         // Add nutrition table text
@@ -96,4 +113,26 @@ public class BaseScraperEnricher {
 
         return context.toString().trim();
     }
+
+    public boolean isNonProteinProduct(String name) {
+        if (name == null) return true;
+        String lower = name.toLowerCase();
+        return lower.contains("cap") || lower.contains("kapsula") ||
+                lower.contains("tab") || lower.contains("tableta") ||
+                lower.contains("vitamin") || lower.contains("mineral") ||
+                lower.contains("omega") || lower.contains("zma") ||
+                lower.contains("thyro") || lower.contains("fat burn") ||
+                lower.contains("pre-workout") || lower.contains("preworkout");
+    }
+
+    private void calculateCaloriesIfPossible(Product p) {
+        if (p.getCaloriePer100g() != null) return;
+        if (p.getProteinPer100g() != null && p.getFatPer100g() != null && p.getSugarPer100g() != null) {
+            double calories = (p.getProteinPer100g() * 4) + (p.getFatPer100g() * 9) + (p.getSugarPer100g() * 4);
+            p.setCaloriePer100g(Math.round(calories * 10.0) / 10.0);
+            log.info("[{}] Calories calculated from formula: {}", p.getName(), p.getCaloriePer100g());
+        }
+    }
+
+
 }

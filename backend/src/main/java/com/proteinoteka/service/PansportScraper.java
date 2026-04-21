@@ -142,6 +142,11 @@ public class PansportScraper implements StoreScraper {
 
         for (Product p : products) {
             if (p.getUrl() == null || p.getUrl().isBlank()) continue;
+            if (baseEnricher.isNonProteinProduct(p.getName())) {
+                log.info("[{}] Skipping '{}' - not a protein product", STORE_NAME, p.getName());
+                continue;
+            }
+
 
             try {
                 long sleep = 4000 + ThreadLocalRandom.current().nextLong(4000);
