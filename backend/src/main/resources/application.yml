@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: backend
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/proteinoteka}
+    username: ${DATABASE_USERNAME:proteinoteka_2026}
+    password: ${DATABASE_PASSWORD:proteinoteka_19032026}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+  api-docs:
+    path: /api-docs
+  show-actuator: true
+
+task:
+  scheduling:
+    enabled: true
+
+server:
+  port: ${PORT:8080}
+
+playwright:
+  executable-path:
+
+anthropic:
+  api:
+    key: ${ANTHROPIC_API_KEY}
