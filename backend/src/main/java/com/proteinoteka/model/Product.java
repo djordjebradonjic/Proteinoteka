@@ -28,8 +28,7 @@ public class Product {
     @Column(unique = true)
     private String url;
 
-    @Column(name = "protein_per_100g")
-    private Double proteinPer100g;
+
 
     private Double valueScore;
 
@@ -37,15 +36,36 @@ public class Product {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "protein_per_100g")
+    private Double proteinPer100g;
+
+    @Column(name = "sugar_per_100g")
+    private Double sugarPer100g;
+
+    @Column(name = "fat_per_100g")
+    private Double fatPer100g;
+
+    @Column(name = "calorie_per_100g")
+    private Double caloriePer100g;
+
+    // Protein type
+    @Column(name = "protein_source")
+    private String proteinSource; // "whey_concentrate", "whey_isolate", "hydrolysate", "vegan", "casein"
+
+
     @ElementCollection
     @CollectionTable(name = "product_package_weights", joinColumns = @JoinColumn(name = "product_id"))
     @Column(name = "package_weight")
     private List<String> package_weight = new ArrayList<>();
 
+    @Column(name = "primary_weight_grams")
+    private Double primaryWeightGrams;
+
     @ElementCollection
     @CollectionTable(name = "product_flavours", joinColumns = @JoinColumn(name = "product_id"))
     @Column(name = "flavour")
     private List<String> flavours = new ArrayList<>();
+
     @ManyToOne
     @JoinColumn(name= "store_id")
     private Store store;

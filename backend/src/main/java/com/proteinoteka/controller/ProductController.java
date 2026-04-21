@@ -105,7 +105,12 @@ public class ProductController {
                 product.getDescription(),
                 product.getNumericPrice(),
                 product.getProteinPer100g(),
-                product.getValueScore()
+                product.getValueScore(),
+                product.getPrimaryWeightGrams(),
+                product.getSugarPer100g(),
+                product.getFatPer100g(),
+                product.getCaloriePer100g(),
+                product.getProteinSource()
         );
     }
 }
