@@ -41,15 +41,12 @@ public class PansportScraperTest {
     @Test
     void shouldScrapeAllProductsFromHtml() {
         List<Product> products = pansportScraper.scrape(null, mockDoc);
-
         assertNotNull(products);
         assertFalse(products.isEmpty(), "Lista proizvoda ne sme biti prazna!");
-
         Product firstProduct = products.get(0);
         assertNotNull(firstProduct.getName());
         assertNotNull(firstProduct.getPrice());
         assertTrue(firstProduct.getUrl().contains("pansport.rs"));
-
         System.out.println("Test uspešan! Pronađeno proizvoda: " + products.size());
     }
 }
