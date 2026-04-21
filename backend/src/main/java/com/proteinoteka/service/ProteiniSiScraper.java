@@ -23,6 +23,9 @@ import java.util.concurrent.ThreadLocalRandom;
 @Component
 @RequiredArgsConstructor
 public class ProteiniSiScraper implements StoreScraper {
+    private final BaseScraperEnricher baseEnricher;
+    private final NutritionParserService nutritionParser;
+
 
     private static final Map<String, String> FLAVOUR_MAP = Map.ofEntries(
             Map.entry("chocolate", "Čokolada"),
@@ -63,14 +66,10 @@ public class ProteiniSiScraper implements StoreScraper {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public String getStoreName() {
-        return STORE_NAME;
-    }
+    public String getStoreName() { return STORE_NAME; }
 
     @Override
-    public String getBaseUrl() {
-        return BASE_URL;
-    }
+    public String getBaseUrl() { return BASE_URL; }
 
     @Override
     public boolean hasNextPage(Document doc) {
@@ -91,11 +90,8 @@ public class ProteiniSiScraper implements StoreScraper {
 
         for (Element el : elements) {
             Product p = parseElement(el);
-            if (p != null) {
-                products.add(p);
-            } else {
-                log.warn("[{}] Failed to parse element, skipping", STORE_NAME);
-            }
+            if (p != null) products.add(p);
+            else log.warn("[{}] Failed to parse element, skipping", STORE_NAME);
         }
 
         if (page != null && !products.isEmpty()) {
@@ -113,24 +109,19 @@ public class ProteiniSiScraper implements StoreScraper {
         try {
             Product p = new Product();
 
-            // 1. Naziv i URL
             Element title = el.selectFirst("h3.wd-entities-title a");
             if (title == null) return null;
 
             p.setName(title.text().trim());
             p.setUrl(title.attr("href"));
 
-            // 2. Slika
             Element img = el.selectFirst("div.product-element-top img");
             if (img != null) {
                 String imgUrl = img.attr("src");
-                if (imgUrl.isBlank()) {
-                    imgUrl = img.attr("data-src"); // Lazy load fallback
-                }
+                if (imgUrl.isBlank()) imgUrl = img.attr("data-src");
                 p.setImageUrl(imgUrl);
             }
 
-            // 3. Cena
             Element price = el.selectFirst("span.woocommerce-Price-amount bdi");
             if (price != null) {
                 p.setPrice(price.text()
@@ -139,56 +130,31 @@ public class ProteiniSiScraper implements StoreScraper {
                         .trim());
             }
 
-            // 4. GTM data (opciono)
-            Element gtm = el.selectFirst("span.gtm4wp_productdata");
-            if (gtm != null) {
-                parseGtmData(gtm.attr("data-gtm4wp_product_data"), p);
-            }
-
-            // 5. Ekstrakcija iz naziva
             extractPackageWeightFromName(p);
             extractBrandFromName(p);
 
             return p;
-
         } catch (Exception e) {
             log.error("[{}] Error parsing element: {}", STORE_NAME, e.getMessage());
             return null;
         }
     }
 
-    private void parseGtmData(String json, Product p) {
-        try {
-            JsonNode data = objectMapper.readTree(json);
-            // Trenutno ne koristimo GTM data, ali može se aktivirati po potrebi
-        } catch (Exception e) {
-            log.warn("[{}] Failed to parse GTM data: {}", STORE_NAME, e.getMessage());
-        }
-    }
-
     private void extractPackageWeightFromName(Product p) {
         if (p.getName() == null || p.getName().isBlank()) return;
-
         java.util.regex.Matcher matcher = java.util.regex.Pattern
                 .compile("(\\d+[.,]?\\d*\\s?(kg|g))", java.util.regex.Pattern.CASE_INSENSITIVE)
                 .matcher(p.getName());
-
         while (matcher.find()) {
             String weight = matcher.group().trim().replaceAll("\\s+", "");
-            if (!p.getPackage_weight().contains(weight)) {
-                p.getPackage_weight().add(weight);
-            }
+            if (!p.getPackage_weight().contains(weight)) p.getPackage_weight().add(weight);
         }
     }
 
     private void extractBrandFromName(Product p) {
         if (p.getName() == null || p.getName().isBlank()) return;
-
-        // Prvi segment naziva je obično brend
         String[] parts = p.getName().split("\\s+");
-        if (parts.length > 0) {
-            p.setBrand(parts[0].trim());
-        }
+        if (parts.length > 0) p.setBrand(parts[0].trim());
     }
 
     // -------------------- Detail page enrichment --------------------
@@ -200,137 +166,183 @@ public class ProteiniSiScraper implements StoreScraper {
             if (p.getUrl() == null || p.getUrl().isBlank()) continue;
 
             try {
-                // ANTI-BAN: Random sleep 4-10s između proizvoda
                 long sleep = 4000 + ThreadLocalRandom.current().nextLong(6000);
-                log.info("[{}] Sleeping {}s before '{}'...",
-                        STORE_NAME, sleep / 1000, p.getName());
+                log.info("[{}] Sleeping {}s before '{}'...", STORE_NAME, sleep / 1000, p.getName());
                 Thread.sleep(sleep);
 
-                // Navigacija sa retry
                 boolean success = navigateWithRetry(page, p.getUrl(), 3);
                 if (!success) {
-                    log.error("[{}] Failed to load {} after retries, skipping",
-                            STORE_NAME, p.getUrl());
+                    log.error("[{}] Failed to load {} after retries, skipping", STORE_NAME, p.getUrl());
                     continue;
                 }
 
-                // Firewall check
                 if (isBlockedByFirewall(page)) {
                     log.error("[{}] FIREWALL DETECTED! Stopping scraper.", STORE_NAME);
                     return;
                 }
 
-                // Human behavior simulation
                 simulateHumanBehavior(page);
 
-                // Click description tab (sa error handling)
                 try {
                     page.click("li.description_tab a", new Page.ClickOptions().setTimeout(3000));
-                    page.waitForSelector("div#tab-description",
-                            new Page.WaitForSelectorOptions().setTimeout(5000));
+                    page.waitForSelector("div#tab-description", new Page.WaitForSelectorOptions().setTimeout(5000));
                 } catch (Exception e) {
                     log.warn("[{}] Description tab not found for {}", STORE_NAME, p.getName());
                 }
 
-                // Click nutrition tab (opciono)
                 try {
                     page.click("li.hranljive_tab_tab a", new Page.ClickOptions().setTimeout(3000));
-                    page.waitForSelector("div#tab-hranljive_tab",
-                            new Page.WaitForSelectorOptions().setTimeout(5000));
+                    page.waitForSelector("div#tab-hranljive_tab", new Page.WaitForSelectorOptions().setTimeout(5000));
                 } catch (Exception e) {
                     log.debug("[{}] No nutrition tab for {}", STORE_NAME, p.getName());
                 }
 
-                // Parse enriched data
                 Document doc = Jsoup.parse(page.content());
+
                 enrichVariations(doc, p);
                 enrichDescription(doc, p);
-                enrichProtein(doc, p);
+                enrichNutrition(doc, p);
 
-                log.info("[{}] ✓ Enriched '{}' -> flavours={}, protein={}g/100g",
-                        STORE_NAME, p.getName(), p.getFlavours().size(), p.getProteinPer100g());
+                log.info("[{}] Enriched '{}' -> flavours={}, protein={}, fat={}, sugar={}, cal={}",
+                        STORE_NAME, p.getName(), p.getFlavours().size(),
+                        p.getProteinPer100g(), p.getFatPer100g(),
+                        p.getSugarPer100g(), p.getCaloriePer100g());
 
                 count++;
 
-                // ANTI-BAN: Batch pause svakih 10 proizvoda
                 if (count % 10 == 0) {
                     long batchSleep = 40000 + ThreadLocalRandom.current().nextLong(20000);
-                    log.info("[{}] ⏸ Batch pause after {} products: {}s...",
-                            STORE_NAME, count, batchSleep / 1000);
+                    log.info("[{}] Batch pause after {} products: {}s...", STORE_NAME, count, batchSleep / 1000);
                     Thread.sleep(batchSleep);
                 }
 
             } catch (Exception e) {
-                log.error("[{}] Failed to enrich {}: {}",
-                        STORE_NAME, p.getName(), e.getMessage());
+                log.error("[{}] Failed to enrich {}: {}", STORE_NAME, p.getName(), e.getMessage());
                 safeSleep(5000);
             }
         }
     }
 
-    /**
-     * Navigacija sa retry logikom i exponential backoff.
-     */
-    private boolean navigateWithRetry(Page page, String url, int maxRetries) {
-        for (int i = 0; i < maxRetries; i++) {
-            try {
-                page.navigate(url, new Page.NavigateOptions()
-                        .setWaitUntil(WaitUntilState.DOMCONTENTLOADED)
-                        .setTimeout(25000));
+    // -------------------- Nutrition extraction --------------------
 
-                page.waitForTimeout(500 + ThreadLocalRandom.current().nextInt(1000));
-                return true;
+    private void enrichNutrition(Document doc, Product p) {
+        extractNutritionFromTable(doc, p);
 
-            } catch (Exception e) {
-                log.warn("[{}] Navigate retry {}/{} for {}: {}",
-                        STORE_NAME, i + 1, maxRetries, url, e.getMessage());
-                if (i < maxRetries - 1) {
-                    safeSleep(2000 * (i + 1)); // Exponential backoff
+        // Fallback for protein only
+        if (p.getProteinPer100g() == null) {
+            log.warn("[{}] '{}' -> protein not found", STORE_NAME, p.getName());
+        }
+
+        baseEnricher.enrichWithAiIfNeeded(doc, p, STORE_NAME);
+
+        log.info("[{}] '{}' -> protein: {}, sugar: {}, fat: {}, cal: {}",
+                STORE_NAME, p.getName(),
+                p.getProteinPer100g(), p.getSugarPer100g(),
+                p.getFatPer100g(), p.getCaloriePer100g());
+    }
+
+    private void extractNutritionFromTable(Document doc, Product p) {
+        try {
+            Element nutritionTab = doc.selectFirst("div#tab-hranljive_tab");
+            if (nutritionTab == null) return;
+
+            // Also enrich description with nutrition tab text
+            if (p.getDescription() == null || p.getDescription().isBlank()) {
+                Element descTab = doc.selectFirst("div#tab-description div.ckeditor");
+                if (descTab != null) {
+                    p.setDescription(descTab.text().trim());
                 }
             }
-        }
-        return false;
-    }
 
-    /**
-     * Provera firewall/Cloudflare blokade.
-     */
-    private boolean isBlockedByFirewall(Page page) {
-        try {
-            String title = page.title();
-            String bodyText = page.textContent("body");
+            Elements tables = nutritionTab.select("table");
+            if (tables.isEmpty()) return;
 
-            return title.contains("Cloudflare")
-                    || title.contains("Just a moment")
-                    || title.contains("Attention Required")
-                    || bodyText.contains("Access denied");
+            for (Element table : tables) {
+                String tableText = table.text().toLowerCase();
+                if (!tableText.contains("proteini") && !tableText.contains("protein")) continue;
+
+                Elements rows = table.select("tr");
+                if (rows.isEmpty()) continue;
+
+                // Detect 100g column
+                // Proteini.si format: | Nutritivna vrednost | 100g proizvoda... | Jedan obrok... | RU% |
+                int per100gCol = -1;
+                Elements headerCells = rows.get(0).select("td, th");
+                for (int i = 0; i < headerCells.size(); i++) {
+                    String cellText = headerCells.get(i).text().toLowerCase().replaceAll("\\s+", "");
+                    if (cellText.contains("100g") || cellText.contains("100gr")
+                            || cellText.contains("na100") || cellText.contains("per100")) {
+                        per100gCol = i;
+                        break;
+                    }
+                }
+
+                if (per100gCol < 1) continue;
+
+                for (Element row : rows) {
+                    Elements cells = row.select("td");
+                    if (cells.size() <= per100gCol) continue;
+
+                    String label = cells.get(0).text().trim().toLowerCase()
+                            .replaceAll("<[^>]*>", "") // strip any html tags
+                            .replaceAll("\\*", "")     // strip asterisks
+                            .trim();
+
+                    String rawValue = cells.get(per100gCol).text()
+                            .replaceAll("[^0-9,.]", "").replace(",", ".").trim();
+
+                    if (rawValue.isBlank()) continue;
+
+                    double value;
+                    try { value = Double.parseDouble(rawValue); }
+                    catch (Exception e) { continue; }
+
+                    if (value < 0 || value > 10000) continue;
+
+                    // Protein
+                    if ((label.contains("proteini") || label.contains("belančevine"))
+                            && !label.contains("koncentrat") && !label.contains("graška")
+                            && !label.contains("pirinča") && !label.contains("izvor")) {
+                        if (value <= 100) p.setProteinPer100g(value);
+                    }
+                    // Fat — samo "Masti", ne "zasićene"
+                    else if ((label.equals("masti") || label.equals("fat"))
+                            && !label.contains("zasić") && !label.contains("kojih")) {
+                        if (value <= 100) p.setFatPer100g(value);
+                    }
+                    // Sugar — "od kojih seceri" ili "od čega šećeri"
+                    else if ((label.contains("šećeri") || label.contains("seceri")
+                            || label.contains("sugar"))
+                            && !label.contains("bez")) {
+                        if (value <= 100) p.setSugarPer100g(value);
+                    }
+                    // Calories — "1716 kJ/405 kcal" format
+                    else if (label.contains("energetska") || label.contains("kalorij")
+                            || label.contains("energy")) {
+                        String rawCell = cells.get(per100gCol).text();
+                        java.util.regex.Matcher m = java.util.regex.Pattern
+                                .compile("(\\d+[.,]?\\d*)\\s*kcal",
+                                        java.util.regex.Pattern.CASE_INSENSITIVE)
+                                .matcher(rawCell);
+                        if (m.find()) {
+                            try {
+                                p.setCaloriePer100g(Double.parseDouble(
+                                        m.group(1).replace(",", ".")));
+                            } catch (Exception ignored) {}
+                        }
+                    }
+                }
+
+                if (p.getProteinPer100g() != null) break;
+            }
+
         } catch (Exception e) {
-            return false;
+            log.warn("[{}] Failed to extract nutrition from table: {}", STORE_NAME, e.getMessage());
         }
     }
 
-    /**
-     * Simulacija ljudskog ponašanja - scroll, random pauze.
-     */
-    private void simulateHumanBehavior(Page page) {
-        try {
-            // Random scroll
-            page.mouse().wheel(0, 200 + ThreadLocalRandom.current().nextInt(300));
-            Thread.sleep(300 + ThreadLocalRandom.current().nextInt(400));
+    // -------------------- Other enrichment --------------------
 
-            page.mouse().wheel(0, 300 + ThreadLocalRandom.current().nextInt(200));
-            Thread.sleep(200 + ThreadLocalRandom.current().nextInt(300));
-
-            // Scroll nazad
-            page.mouse().wheel(0, -150 - ThreadLocalRandom.current().nextInt(100));
-            Thread.sleep(200 + ThreadLocalRandom.current().nextInt(200));
-
-        } catch (Exception ignored) {}
-    }
-
-    /**
-     * Ekstraktuje varijacije (ukuse) iz WooCommerce data-product_variations JSON-a.
-     */
     private void enrichVariations(Document doc, Product p) {
         try {
             Element form = doc.selectFirst("form.variations_form");
@@ -345,151 +357,72 @@ public class ProteiniSiScraper implements StoreScraper {
                         .path("attributes")
                         .path("attribute_pa_izaberi-ukus")
                         .asText("");
-
                 if (!flavour.isBlank()) {
                     String normalized = normalizeFlavour(flavour);
-                    if (!p.getFlavours().contains(normalized)) {
-                        p.getFlavours().add(normalized);
-                    }
+                    if (!p.getFlavours().contains(normalized)) p.getFlavours().add(normalized);
                 }
             }
-
         } catch (Exception e) {
-            log.warn("[{}] Failed to parse variations for {}: {}",
-                    STORE_NAME, p.getName(), e.getMessage());
+            log.warn("[{}] Failed to parse variations for {}: {}", STORE_NAME, p.getName(), e.getMessage());
         }
     }
 
-    /**
-     * Ekstraktuje opis iz description tab-a.
-     */
     private void enrichDescription(Document doc, Product p) {
         try {
             Element descriptionEl = doc.selectFirst("div#tab-description div.ckeditor");
             if (descriptionEl != null) {
                 String cleanDescription = HtmlCleaner.cleanDescription(descriptionEl.html());
-                if (!cleanDescription.isBlank()) {
-                    p.setDescription(cleanDescription);
-                }
+                if (!cleanDescription.isBlank()) p.setDescription(cleanDescription);
             }
         } catch (Exception e) {
-            log.warn("[{}] Failed to extract description for {}: {}",
-                    STORE_NAME, p.getName(), e.getMessage());
+            log.warn("[{}] Failed to extract description for {}: {}", STORE_NAME, p.getName(), e.getMessage());
         }
     }
 
-    /**
-     * Ekstraktuje protein na 100g iz nutritivne tabele.
-     */
-    private void enrichProtein(Document doc, Product p) {
+    private boolean navigateWithRetry(Page page, String url, int maxRetries) {
+        for (int i = 0; i < maxRetries; i++) {
+            try {
+                page.navigate(url, new Page.NavigateOptions()
+                        .setWaitUntil(WaitUntilState.DOMCONTENTLOADED)
+                        .setTimeout(25000));
+                page.waitForTimeout(500 + ThreadLocalRandom.current().nextInt(1000));
+                return true;
+            } catch (Exception e) {
+                log.warn("[{}] Navigate retry {}/{} for {}: {}", STORE_NAME, i + 1, maxRetries, url, e.getMessage());
+                if (i < maxRetries - 1) safeSleep(2000 * (i + 1));
+            }
+        }
+        return false;
+    }
+
+    private boolean isBlockedByFirewall(Page page) {
         try {
-            Double protein = extractProteinFromNutritionTable(doc);
-            if (protein != null) {
-                p.setProteinPer100g(protein);
-                log.info("[{}] '{}' -> protein: {}g/100g",
-                        STORE_NAME, p.getName(), protein);
-            } else {
-                log.warn("[{}] '{}' -> protein not found",
-                        STORE_NAME, p.getName());
-            }
+            String title = page.title();
+            String bodyText = page.textContent("body");
+            return title.contains("Cloudflare") || title.contains("Just a moment")
+                    || title.contains("Attention Required") || bodyText.contains("Access denied");
         } catch (Exception e) {
-            log.warn("[{}] Failed to extract protein for {}: {}",
-                    STORE_NAME, p.getName(), e.getMessage());
+            return false;
         }
     }
 
-    /**
-     * Parsira nutritivnu tabelu.
-     *
-     * Proteini.si ima 2 formata:
-     *   A) | Nutrient | 100g | Po porciji |  → kolona 1 je 100g
-     *   B) | Nutrient | Po porciji | 100g |  → kolona 2 je 100g
-     *
-     * Detektujemo format iz header reda.
-     */
-    private Double extractProteinFromNutritionTable(Document doc) {
+    private void simulateHumanBehavior(Page page) {
         try {
-            Element nutritionTab = doc.selectFirst("div#tab-hranljive_tab");
-            if (nutritionTab == null) return null;
-
-            Elements rows = nutritionTab.select("table tr");
-            if (rows.isEmpty()) return null;
-
-            // Detektuj indeks "100g" kolone iz header reda
-            int per100gCol = -1;
-            for (Element row : rows) {
-                Elements cells = row.select("td, th");
-                if (cells.size() < 2) continue;
-
-                for (int i = 0; i < cells.size(); i++) {
-                    String cellText = cells.get(i).text()
-                            .toLowerCase()
-                            .replaceAll("\\s+", "");
-                    if (cellText.contains("100g")
-                            || cellText.contains("na100")
-                            || cellText.contains("per100")) {
-                        per100gCol = i;
-                        break;
-                    }
-                }
-
-                if (per100gCol >= 0) break;
-            }
-
-            if (per100gCol < 1) {
-                log.debug("[{}] No '100g' column found in nutrition table", STORE_NAME);
-                return null;
-            }
-
-            // Nađi red sa proteinima
-            for (Element row : rows) {
-                Elements cells = row.select("td");
-                if (cells.size() <= per100gCol) continue;
-
-                String label = cells.get(0).text().trim().toLowerCase();
-
-                boolean isProteinRow = (label.contains("proteini")
-                        || label.contains("belančevine"))
-                        && !label.contains("koncentrat")
-                        && !label.contains("graška")
-                        && !label.contains("pirinča")
-                        && !label.contains("izvor");
-
-                if (isProteinRow) {
-                    String val = cells.get(per100gCol).text()
-                            .replaceAll("[^0-9,.]", "")
-                            .replace(",", ".")
-                            .trim();
-
-                    if (!val.isBlank()) {
-                        double protein = Double.parseDouble(val);
-                        if (protein > 0 && protein <= 100) {
-                            return protein;
-                        }
-                    }
-                }
-            }
-
-        } catch (Exception e) {
-            log.warn("[{}] Failed to extract protein from table: {}",
-                    STORE_NAME, e.getMessage());
-        }
-
-        return null;
+            page.mouse().wheel(0, 200 + ThreadLocalRandom.current().nextInt(300));
+            Thread.sleep(300 + ThreadLocalRandom.current().nextInt(400));
+            page.mouse().wheel(0, 300 + ThreadLocalRandom.current().nextInt(200));
+            Thread.sleep(200 + ThreadLocalRandom.current().nextInt(300));
+            page.mouse().wheel(0, -150 - ThreadLocalRandom.current().nextInt(100));
+            Thread.sleep(200 + ThreadLocalRandom.current().nextInt(200));
+        } catch (Exception ignored) {}
     }
 
-    /**
-     * Normalizuje slug ukusa u čitljiv naziv.
-     */
     private String normalizeFlavour(String flavour) {
         return FLAVOUR_MAP.getOrDefault(flavour.toLowerCase(), flavour);
     }
 
     private void safeSleep(long ms) {
-        try {
-            Thread.sleep(ms);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        try { Thread.sleep(ms); }
+        catch (InterruptedException e) { Thread.currentThread().interrupt(); }
     }
 }

@@ -4,43 +4,59 @@ import lombok.Builder;
 import lombok.Data;
 import java.util.List;
 
-    @Data
-    @Builder
-    public class DataQualityReport {
-        private int totalProducts;
+@Data
+@Builder
+public class DataQualityReport {
+    private int totalProducts;
 
-        // Nutrition
-        private int withProteinPer100g;
-        private int withoutProteinPer100g;
-        private double proteinCoveragePercent;
+    // Nutrition - protein
+    private int withProteinPer100g;
+    private int withoutProteinPer100g;
+    private double proteinCoveragePercent;
 
-        // Value Score
-        private int withValueScore;
-        private int withoutValueScore;
-        private double valueScoreCoveragePercent;
+    // Nutrition - new fields
+    private int withSugarPer100g;
+    private int withoutSugarPer100g;
+    private double sugarCoveragePercent;
 
-        // Images
-        private int withImage;
-        private int withoutImage;
-        private double imageCoveragePercent;
+    private int withFatPer100g;
+    private int withoutFatPer100g;
+    private double fatCoveragePercent;
 
-        // Prices (numericPrice field)
-        private int zeroPriceEntries;
-        private int suspiciouslyHighPriceEntries;
-        private int validPriceEntries;
-        private int nullNumericPriceEntries;
+    private int withCaloriePer100g;
+    private int withoutCaloriePer100g;
+    private double calorieCoveragePercent;
 
-        // Price/String mismatch
-        private int priceStringNullOrEmpty;
+    private int withProteinSource;
+    private int withoutProteinSource;
+    private double proteinSourceCoveragePercent;
 
-        // Duplicates
-        private int duplicateGroups;
+    private int withPrimaryWeightGrams;
+    private int withoutPrimaryWeightGrams;
+    private double primaryWeightCoveragePercent;
 
-        // Stores
-        private int withoutStoreEntries;
+    // Value Score
+    private int withValueScore;
+    private int withoutValueScore;
+    private double valueScoreCoveragePercent;
 
-        // Summary
-        private String summary;
-        private List<String> warnings;
-    }
+    // Images
+    private int withImage;
+    private int withoutImage;
+    private double imageCoveragePercent;
 
+    // Prices
+    private int zeroPriceEntries;
+    private int nullNumericPriceEntries;
+    private int suspiciouslyHighPriceEntries;
+    private int validPriceEntries;
+    private int priceStringNullOrEmpty;
+
+    // Other
+    private int withoutStoreEntries;
+    private int duplicateGroups;
+
+    // Summary
+    private String summary;
+    private List<String> warnings;
+}

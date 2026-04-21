@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -48,23 +49,25 @@ public class ScraperService {
             "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1"
     );
 
-    /**
-     * Scrape sve prodavnice redosledom.
-     * Stavlja 30s pauzu između store-ova.
-     */
-    public List<Product> scrapeAll() {
+    // -------------------- Public API --------------------
+
+    public List<Product> scrapeAll(boolean testMode) {
         List<Product> allProducts = new ArrayList<>();
 
         for (StoreScraper scraper : scrapers) {
             try {
-                log.info("========== Starting scrape for {} ==========", scraper.getStoreName());
-                List<Product> storeProducts = scrapeStore(scraper);
+                log.info("========== Starting scrape for {} {} ==========",
+                        scraper.getStoreName(), testMode ? "[TEST MODE - first page only]" : "");
+
+                List<Product> storeProducts = scrapeStore(scraper, testMode);
                 allProducts.addAll(storeProducts);
+
                 log.info("========== Finished scrape for {} ({} products) ==========",
                         scraper.getStoreName(), storeProducts.size());
 
-                // Pauza između store-ova
-                Thread.sleep(30_000);
+                // No pause between stores in test mode
+                if (!testMode) Thread.sleep(30_000);
+
             } catch (Exception e) {
                 log.error("Failed to scrape {}: {}", scraper.getStoreName(), e.getMessage(), e);
             }
@@ -73,10 +76,12 @@ public class ScraperService {
         return allProducts;
     }
 
-    /**
-     * Scrape jednu prodavnicu sa kompletnom anti-ban zaštitom.
-     */
-    public List<Product> scrapeStore(StoreScraper scraper) {
+    // Overload for backward compatibility
+    public List<Product> scrapeAll() {
+        return scrapeAll(false);
+    }
+
+    public List<Product> scrapeStore(StoreScraper scraper, boolean testMode) {
         Store store = storeRepository.findByName(scraper.getStoreName())
                 .orElseThrow(() -> new RuntimeException("Store not found: " + scraper.getStoreName()));
 
@@ -108,52 +113,43 @@ public class ScraperService {
 
                 try {
                     Page page = context.newPage();
-
-                    // Blokiraj SAMO slike (ne CSS/fonts)
                     page.route("**/*.{png,jpg,jpeg,gif,svg,webp}", route -> route.abort());
 
                     int currentPage = 0;
 
                     while (true) {
-                        // Human-like delay između stranica
-                        long delay = humanDelay();
+                        long delay = testMode ? 500 : humanDelay();
                         log.info("[{}] Waiting {}ms before next page...", scraper.getStoreName(), delay);
                         Thread.sleep(delay);
 
                         String url = scraper.buildPageUrl(currentPage);
                         log.info("[{}] Scraping page {}: {}", scraper.getStoreName(), currentPage, url);
 
-                        // Navigacija sa retry logikom
                         if (!navigateWithRetry(page, url, 3)) {
                             log.error("[{}] Failed to load page after retries, stopping scraper",
                                     scraper.getStoreName());
                             break;
                         }
 
-                        // Firewall detekcija
                         if (isBlockedByFirewall(page)) {
                             log.error("[{}] FIREWALL DETECTED! Stopping scraper.", scraper.getStoreName());
                             break;
                         }
 
-                        // Simulacija ljudskog ponašanja
                         simulateHumanScroll(page);
 
-                        // Parsiranje
                         Document doc = Jsoup.parse(page.content());
                         List<Product> pageProducts = scraper.scrape(page, doc);
 
                         log.info("[{}] Found {} products on page {}",
                                 scraper.getStoreName(), pageProducts.size(), currentPage);
 
-                        // Sačuvaj proizvode
                         for (Product p : pageProducts) {
                             p.setStore(store);
                             saveOrUpdateProduct(p, store);
                             products.add(p);
                         }
 
-                        // Proveri da li ima sledeća stranica
                         if (!scraper.hasNextPage(doc)) {
                             log.info("[{}] No more pages found", scraper.getStoreName());
                             break;
@@ -161,7 +157,12 @@ public class ScraperService {
 
                         currentPage++;
 
-                        // Sigurnosna mreža
+                        // TEST MODE — stop after first page
+                        if (testMode) {
+                            log.info("[{}] TEST MODE: Stopping after first page", scraper.getStoreName());
+                            break;
+                        }
+
                         if (currentPage > 50) {
                             log.warn("[{}] Reached max page limit (50), stopping", scraper.getStoreName());
                             break;
@@ -184,8 +185,12 @@ public class ScraperService {
         return products;
     }
 
-    // -------------------- ANTI-BAN HELPERS --------------------
+    // Overload for backward compatibility
+    public List<Product> scrapeStore(StoreScraper scraper) {
+        return scrapeStore(scraper, false);
+    }
 
+    // -------------------- ANTI-BAN HELPERS --------------------
 
     private boolean navigateWithRetry(Page page, String url, int maxRetries) {
         for (int i = 0; i < maxRetries; i++) {
@@ -193,15 +198,12 @@ public class ScraperService {
                 page.navigate(url, new Page.NavigateOptions()
                         .setWaitUntil(WaitUntilState.DOMCONTENTLOADED)
                         .setTimeout(25000));
-
-                // Random wait posle učitavanja
-                page.waitForTimeout(500 + (int) (Math.random() * 1000));
+                page.waitForTimeout(500 + (int)(Math.random() * 1000));
                 return true;
-
             } catch (Exception e) {
                 log.warn("Navigate retry {}/{} for {}: {}", i + 1, maxRetries, url, e.getMessage());
                 try {
-                    Thread.sleep(2000 * (i + 1)); // Exponential backoff
+                    Thread.sleep(2000 * (i + 1));
                 } catch (InterruptedException ie) {
                     Thread.currentThread().interrupt();
                 }
@@ -209,7 +211,6 @@ public class ScraperService {
         }
         return false;
     }
-
 
     private boolean isBlockedByFirewall(Page page) {
         try {
@@ -223,7 +224,6 @@ public class ScraperService {
         }
     }
 
-
     private void simulateHumanScroll(Page page) {
         try {
             page.mouse().wheel(0, 400);
@@ -232,81 +232,99 @@ public class ScraperService {
             Thread.sleep(200);
             page.mouse().wheel(0, -300);
             Thread.sleep(150);
-        } catch (Exception ignored) {
-        }
+        } catch (Exception ignored) {}
     }
-
 
     private long humanDelay() {
-        // Log-normal: medijana ~4s, range 1-20s
-        double base = Math.exp(
-                ThreadLocalRandom.current().nextGaussian() * 0.6 + 1.4
-        );
-        return (long) (base * 1000);
+        double base = Math.exp(ThreadLocalRandom.current().nextGaussian() * 0.6 + 1.4);
+        return (long)(base * 1000);
     }
 
-    /**
-     * Random User-Agent iz pool-a.
-     */
     private String getRandomUserAgent() {
-        return USER_AGENTS.get(
-                ThreadLocalRandom.current().nextInt(USER_AGENTS.size())
-        );
+        return USER_AGENTS.get(ThreadLocalRandom.current().nextInt(USER_AGENTS.size()));
     }
 
+    // -------------------- Save / Update --------------------
 
     @Transactional
-    private void saveOrUpdateProduct(Product scrapedProduct, Store store) {
-        Optional<Product> existingOpt = productRepository.findByUrl(scrapedProduct.getUrl());
+    public void saveOrUpdateProduct(Product scraped, Store store) {
+        Optional<Product> existingOpt = productRepository.findByUrl(scraped.getUrl());
 
-        Double numericPrice = priceParser.parse(scrapedProduct.getPrice());
-        Double valueScore = calculateValueScore(numericPrice, scrapedProduct);
+        Double numericPrice = priceParser.parse(scraped.getPrice());
+        Double valueScore = calculateValueScore(numericPrice, scraped);
+        double weightGrams = extractPackageGrams(scraped);
 
         if (existingOpt.isPresent()) {
             Product existing = existingOpt.get();
+
+            // Price history tracking
             String oldPrice = existing.getPrice();
-            String newPrice = scrapedProduct.getPrice();
-
-            // Price change tracking
-            if (!oldPrice.equals(newPrice)) {
+            if (oldPrice != null && !oldPrice.equals(scraped.getPrice())) {
                 log.info("[{}] Price change for '{}': {} -> {}",
-                        store.getName(), existing.getName(), oldPrice, newPrice);
-
+                        store.getName(), existing.getName(), oldPrice, scraped.getPrice());
                 PriceHistory history = new PriceHistory();
                 history.setProduct(existing);
                 history.setPrice(oldPrice);
-                history.setTimestamp(java.time.LocalDateTime.now());
+                history.setTimestamp(LocalDateTime.now());
                 priceHistoryRepository.save(history);
-
-                existing.setPrice(newPrice);
-                existing.setLastUpdated(java.time.LocalDateTime.now());
             }
 
-            // Update fields
+            // GROUP 1 — Always update (changes frequently)
+            existing.setPrice(scraped.getPrice());
             existing.setNumericPrice(numericPrice);
-            existing.setBrand(scrapedProduct.getBrand());
-            existing.setFlavours(scrapedProduct.getFlavours());
-            existing.setPackage_weight(scrapedProduct.getPackage_weight());
-            existing.setName(scrapedProduct.getName());
-            existing.setProteinPer100g(scrapedProduct.getProteinPer100g());
             existing.setValueScore(valueScore);
-            existing.setImageUrl(scrapedProduct.getImageUrl());
-            existing.setDescription(scrapedProduct.getDescription());
+            existing.setLastUpdated(LocalDateTime.now());
+
+            // GROUP 2 — Update only if new value exists (changes rarely)
+            if (scraped.getName() != null && !scraped.getName().isBlank())
+                existing.setName(scraped.getName());
+
+            if (scraped.getBrand() != null && !scraped.getBrand().isBlank())
+                existing.setBrand(scraped.getBrand());
+
+            if (scraped.getImageUrl() != null && !scraped.getImageUrl().isBlank())
+                existing.setImageUrl(scraped.getImageUrl());
+
+            if (scraped.getDescription() != null && !scraped.getDescription().isBlank())
+                existing.setDescription(scraped.getDescription());
+
+            if (scraped.getPackage_weight() != null && !scraped.getPackage_weight().isEmpty())
+                existing.setPackage_weight(scraped.getPackage_weight());
+
+            if (scraped.getFlavours() != null && !scraped.getFlavours().isEmpty())
+                existing.setFlavours(scraped.getFlavours());
+
+            if (weightGrams > 0)
+                existing.setPrimaryWeightGrams(weightGrams);
+
+            // GROUP 3 — Update only if null in DB (never changes)
+            if (existing.getProteinPer100g() == null && scraped.getProteinPer100g() != null)
+                existing.setProteinPer100g(scraped.getProteinPer100g());
+
+            if (existing.getFatPer100g() == null && scraped.getFatPer100g() != null)
+                existing.setFatPer100g(scraped.getFatPer100g());
+
+            if (existing.getSugarPer100g() == null && scraped.getSugarPer100g() != null)
+                existing.setSugarPer100g(scraped.getSugarPer100g());
+
+            if (existing.getCaloriePer100g() == null && scraped.getCaloriePer100g() != null)
+                existing.setCaloriePer100g(scraped.getCaloriePer100g());
+
+            if (existing.getProteinSource() == null && scraped.getProteinSource() != null)
+                existing.setProteinSource(scraped.getProteinSource());
 
             productRepository.save(existing);
 
         } else {
-            // Novi proizvod
-            scrapedProduct.setStore(store);
-            scrapedProduct.setNumericPrice(numericPrice);
-            scrapedProduct.setValueScore(valueScore);
-            productRepository.save(scrapedProduct);
-
-            log.info("[{}] New product saved: '{}'", store.getName(), scrapedProduct.getName());
+            // New product
+            scraped.setStore(store);
+            scraped.setNumericPrice(numericPrice);
+            scraped.setValueScore(valueScore);
+            if (weightGrams > 0) scraped.setPrimaryWeightGrams(weightGrams);
+            productRepository.save(scraped);
+            log.info("[{}] New product saved: '{}'", store.getName(), scraped.getName());
         }
     }
-
-
 
     private Double calculateValueScore(Double numericPrice, Product p) {
         if (numericPrice == null || numericPrice == 0) return null;
@@ -320,14 +338,8 @@ public class ScraperService {
         if (totalProteinGrams == 0) return null;
 
         double score = numericPrice / totalProteinGrams;
-        double rounded = Math.round(score * 100.0) / 100.0;
-
-        log.debug("ValueScore for '{}': {}g package, {}g/100g protein, {}RSD → {} RSD/g protein",
-                p.getName(), packageGrams, p.getProteinPer100g(), numericPrice, rounded);
-
-        return rounded;
+        return Math.round(score * 100.0) / 100.0;
     }
-
 
     private double extractPackageGrams(Product p) {
         if (p.getPackage_weight() == null || p.getPackage_weight().isEmpty()) return 0;
@@ -338,14 +350,9 @@ public class ScraperService {
 
         try {
             if (weight.contains("kg")) {
-                double kg = Double.parseDouble(
-                        weight.replace("kg", "").replace(",", ".")
-                );
-                return kg * 1000;
+                return Double.parseDouble(weight.replace("kg", "").replace(",", ".")) * 1000;
             } else if (weight.contains("g")) {
-                return Double.parseDouble(
-                        weight.replace("g", "").replace(",", ".")
-                );
+                return Double.parseDouble(weight.replace("g", "").replace(",", "."));
             }
         } catch (Exception e) {
             log.warn("Cannot parse package weight: '{}'", weight);

@@ -1,13 +1,10 @@
 package com.proteinoteka.controller;
 
-
 import com.proteinoteka.service.ScraperService;
 import com.proteinoteka.service.StoreScraper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -20,54 +17,65 @@ public class AdminController {
     private final List<StoreScraper> scrapers;
 
     @PostMapping("/scrape")
-    public ResponseEntity<String> triggerScrape() {
-        scraperService.scrapeAll();
-        return ResponseEntity.ok("Scraping started");
+    public ResponseEntity<String> triggerScrape(
+            @RequestParam(defaultValue = "false") boolean testMode) {
+        scraperService.scrapeAll(testMode);
+        return ResponseEntity.ok("Scraping started" + (testMode ? " [TEST MODE]" : ""));
+    }
+
+    @PostMapping("/scrape/run")
+    public ResponseEntity<String> runScraper(
+            @RequestParam(defaultValue = "false") boolean testMode) {
+        scraperService.scrapeAll(testMode);
+        return ResponseEntity.ok("Scraper started" + (testMode ? " [TEST MODE]" : ""));
     }
 
     @PostMapping("/scrape/pansport")
-    public ResponseEntity<String> scrapePansport() {
-        scraperService.scrapeStore(scrapers.stream()
-                .filter(s -> s.getStoreName().equals("Pansport"))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Pansport scraper not found")));
-        return ResponseEntity.ok("Pansport scraping started");
+    public ResponseEntity<String> scrapePansport(
+            @RequestParam(defaultValue = "false") boolean testMode) {
+        scraperService.scrapeStore(findScraper("Pansport"), testMode);
+        return ResponseEntity.ok("Pansport scraping started" + (testMode ? " [TEST MODE]" : ""));
     }
 
     @PostMapping("/scrape/proteinbox")
-    public ResponseEntity<String> scrapeProteinbox() {
-        scraperService.scrapeStore(scrapers.stream()
-                .filter(s -> s.getStoreName().equals("Proteinbox"))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Proteinbox scraper not found")));
-        return ResponseEntity.ok("Proteinbox scraping started");
+    public ResponseEntity<String> scrapeProteinbox(
+            @RequestParam(defaultValue = "false") boolean testMode) {
+        scraperService.scrapeStore(findScraper("Proteinbox"), testMode);
+        return ResponseEntity.ok("Proteinbox scraping started" + (testMode ? " [TEST MODE]" : ""));
     }
 
     @PostMapping("/scrape/supplementshop")
-    public ResponseEntity<String> scrapeSupplementShop() {
-        scraperService.scrapeStore(scrapers.stream()
-                .filter(s -> s.getStoreName().equals("Supplementshop"))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Supplementshop scraper not found")));
-        return ResponseEntity.ok("Supplementshop scraping started");
+    public ResponseEntity<String> scrapeSupplementShop(
+            @RequestParam(defaultValue = "false") boolean testMode) {
+        scraperService.scrapeStore(findScraper("Supplementshop"), testMode);
+        return ResponseEntity.ok("Supplementshop scraping started" + (testMode ? " [TEST MODE]" : ""));
     }
 
     @PostMapping("/scrape/ogistra")
-    public ResponseEntity<String> scrapeOgistra() {
-        scraperService.scrapeStore(scrapers.stream()
-                .filter(s -> s.getStoreName().equals("Ogistrashop"))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Ogistrashop scraper not found")));
-        return ResponseEntity.ok("Ogistrashop scraping started");
+    public ResponseEntity<String> scrapeOgistra(
+            @RequestParam(defaultValue = "false") boolean testMode) {
+        scraperService.scrapeStore(findScraper("Ogistrashop"), testMode);
+        return ResponseEntity.ok("Ogistrashop scraping started" + (testMode ? " [TEST MODE]" : ""));
     }
 
     @PostMapping("/scrape/fitlab")
-    public ResponseEntity<String> scrapeFitLab() {
-        scraperService.scrapeStore(scrapers.stream()
-                .filter(s -> s.getStoreName().equals("FitLab"))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("FitLab scraper not found")));
-        return ResponseEntity.ok("FitLab scraping started");
+    public ResponseEntity<String> scrapeFitLab(
+            @RequestParam(defaultValue = "false") boolean testMode) {
+        scraperService.scrapeStore(findScraper("FitLab"), testMode);
+        return ResponseEntity.ok("FitLab scraping started" + (testMode ? " [TEST MODE]" : ""));
     }
 
+    @PostMapping("/scrape/proteinisi")
+    public ResponseEntity<String> scrapeProteiniSi(
+            @RequestParam(defaultValue = "false") boolean testMode) {
+        scraperService.scrapeStore(findScraper("Proteini.si"), testMode);
+        return ResponseEntity.ok("Proteini.si scraping started" + (testMode ? " [TEST MODE]" : ""));
+    }
+
+    private StoreScraper findScraper(String name) {
+        return scrapers.stream()
+                .filter(s -> s.getStoreName().equals(name))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException(name + " scraper not found"));
+    }
 }

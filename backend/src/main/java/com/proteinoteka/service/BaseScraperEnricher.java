@@ -1,0 +1,99 @@
+package com.proteinoteka.service;
+
+import com.proteinoteka.dto.NutritionDataDTO;
+import com.proteinoteka.model.Product;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.springframework.stereotype.Component;
+
+@Component
+@RequiredArgsConstructor
+@Slf4j
+public class BaseScraperEnricher {
+
+    private final AiNutritionService aiNutritionService;
+
+    /**
+     * Fills null nutrition fields using AI.
+     * Call this after table parsing in every scraper.
+     */
+    public void enrichWithAiIfNeeded(Document doc, Product p, String storeName) {
+        if (allNutritionFieldsFilled(p)) return;
+
+        String context = buildContext(doc, p);
+        if (context.isBlank()) {
+            log.warn("[{}] '{}' -> No context for AI enrichment", storeName, p.getName());
+            return;
+        }
+
+        log.info("[{}] '{}' -> Calling AI to fill missing fields", storeName, p.getName());
+
+        try {
+            NutritionDataDTO data = aiNutritionService.extractNutritionData(
+                    p.getName(), context, p.getPackage_weight()
+            );
+
+            if (data == null) {
+                log.warn("[{}] '{}' -> AI returned null", storeName, p.getName());
+                return;
+            }
+
+            if (p.getProteinPer100g() == null && data.getProteinPer100g() != null)
+                p.setProteinPer100g(data.getProteinPer100g());
+
+            if (p.getSugarPer100g() == null && data.getSugarPer100g() != null)
+                p.setSugarPer100g(data.getSugarPer100g());
+
+            if (p.getFatPer100g() == null && data.getFatPer100g() != null)
+                p.setFatPer100g(data.getFatPer100g());
+
+            if (p.getCaloriePer100g() == null && data.getCaloriePer100g() != null)
+                p.setCaloriePer100g(data.getCaloriePer100g());
+
+            if (p.getProteinSource() == null && data.getProteinSource() != null)
+                p.setProteinSource(data.getProteinSource());
+
+            if (p.getPrimaryWeightGrams() == null && data.getPrimaryWeightGrams() != null)
+                p.setPrimaryWeightGrams(data.getPrimaryWeightGrams());
+
+        } catch (Exception e) {
+            log.error("[{}] '{}' -> AI enrichment failed: {}", storeName, p.getName(), e.getMessage());
+        }
+    }
+
+    private boolean allNutritionFieldsFilled(Product p) {
+        return p.getProteinPer100g() != null
+                && p.getSugarPer100g() != null
+                && p.getFatPer100g() != null
+                && p.getCaloriePer100g() != null
+                && p.getProteinSource() != null;
+    }
+
+    private String buildContext(Document doc, Product p) {
+        StringBuilder context = new StringBuilder();
+
+        // Add description
+        if (p.getDescription() != null && !p.getDescription().isBlank()) {
+            int len = Math.min(p.getDescription().length(), 500);
+            context.append(p.getDescription(), 0, len);
+            context.append("\n\n");
+        }
+
+        // Add nutrition table text
+        for (Element table : doc.select("table")) {
+            String tableText = table.text();
+            if (tableText.toLowerCase().contains("protein")
+                    || tableText.toLowerCase().contains("nutritiv")
+                    || tableText.toLowerCase().contains("energetska")) {
+                int len = Math.min(tableText.length(), 600);
+                context.append(tableText, 0, len);
+                context.append("\n");
+                break;
+            }
+        }
+
+        return context.toString().trim();
+    }
+}

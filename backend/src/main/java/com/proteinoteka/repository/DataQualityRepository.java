@@ -43,6 +43,25 @@ public interface DataQualityRepository extends JpaRepository<Product, Long> {
     @Query("SELECT COUNT(p) FROM products p WHERE p.store IS NULL")
     int countWithoutStore();
 
+    @Query("SELECT COUNT(p) FROM products p WHERE p.sugarPer100g IS NULL")
+    int countWithoutSugar();
+
+    // Fat
+    @Query("SELECT COUNT(p) FROM products p WHERE p.fatPer100g IS NULL")
+    int countWithoutFat();
+
+    // Calories
+    @Query("SELECT COUNT(p) FROM products p WHERE p.caloriePer100g IS NULL")
+    int countWithoutCalories();
+
+    // Protein source
+    @Query("SELECT COUNT(p) FROM products p WHERE p.proteinSource IS NULL OR p.proteinSource = ''")
+    int countWithoutProteinSource();
+
+    // Primary weight grams
+    @Query("SELECT COUNT(p) FROM products p WHERE p.primaryWeightGrams IS NULL OR p.primaryWeightGrams = 0")
+    int countWithoutPrimaryWeight();
+
     // Duplikati po imenu
     @Query(value = """
 

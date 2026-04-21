@@ -18,13 +18,29 @@ public class DataQualityService {
     private final DataQualityRepository repo;
 
     public DataQualityReport generateReport() {
-        log.info("Pokretanje Data Quality izveštaja...");
+        log.info("Generating Data Quality Report...");
 
         int total = (int) repo.count();
 
-        // Nutrition
+        // Nutrition - protein
         int withoutProtein = repo.countWithoutProtein();
         int withProtein = total - withoutProtein;
+
+        // Nutrition - new fields
+        int withoutSugar = repo.countWithoutSugar();
+        int withSugar = total - withoutSugar;
+
+        int withoutFat = repo.countWithoutFat();
+        int withFat = total - withoutFat;
+
+        int withoutCalories = repo.countWithoutCalories();
+        int withCalories = total - withoutCalories;
+
+        int withoutProteinSource = repo.countWithoutProteinSource();
+        int withProteinSource = total - withoutProteinSource;
+
+        int withoutPrimaryWeight = repo.countWithoutPrimaryWeight();
+        int withPrimaryWeight = total - withoutPrimaryWeight;
 
         // Value Score
         int withoutValueScore = repo.countWithoutValueScore();
@@ -41,32 +57,34 @@ public class DataQualityService {
         int validPrice = repo.countValidNumericPrice();
         int emptyPriceString = repo.countEmptyPriceString();
 
-        // Ostalo
+        // Other
         int withoutStore = repo.countWithoutStore();
         int duplicateGroups = repo.countDuplicateGroups();
 
-        // Debug log — top duplikati
         repo.findTopDuplicates().forEach(row ->
-                log.warn("Duplikat: '{}' pojavljuje se {} puta", row[0], row[1])
+                log.warn("Duplicate: '{}' appears {} times", row[0], row[1])
         );
 
         List<String> warnings = buildWarnings(
                 total, withoutProtein, withoutValueScore, withoutImage,
                 zeroPrice, nullNumericPrice, highPrice, emptyPriceString,
-                withoutStore, duplicateGroups
+                withoutStore, duplicateGroups, withoutSugar, withoutFat,
+                withoutCalories, withoutProteinSource, withoutPrimaryWeight
         );
 
         String summary = String.format(
-                "%d proizvoda | protein: %.1f%% | slika: %.1f%% | valueScore: %.1f%% | duplikati: %d | nulte cene: %d",
+                "%d products | protein: %.1f%% | sugar: %.1f%% | fat: %.1f%% | calories: %.1f%% | source: %.1f%% | weight: %.1f%% | valueScore: %.1f%%",
                 total,
                 pct(withProtein, total),
-                pct(withImage, total),
-                pct(withValueScore, total),
-                duplicateGroups,
-                zeroPrice
+                pct(withSugar, total),
+                pct(withFat, total),
+                pct(withCalories, total),
+                pct(withProteinSource, total),
+                pct(withPrimaryWeight, total),
+                pct(withValueScore, total)
         );
 
-        log.info("Izveštaj: {}", summary);
+        log.info("Report: {}", summary);
         warnings.forEach(w -> log.warn(w));
 
         return DataQualityReport.builder()
@@ -74,6 +92,21 @@ public class DataQualityService {
                 .withProteinPer100g(withProtein)
                 .withoutProteinPer100g(withoutProtein)
                 .proteinCoveragePercent(pct(withProtein, total))
+                .withSugarPer100g(withSugar)
+                .withoutSugarPer100g(withoutSugar)
+                .sugarCoveragePercent(pct(withSugar, total))
+                .withFatPer100g(withFat)
+                .withoutFatPer100g(withoutFat)
+                .fatCoveragePercent(pct(withFat, total))
+                .withCaloriePer100g(withCalories)
+                .withoutCaloriePer100g(withoutCalories)
+                .calorieCoveragePercent(pct(withCalories, total))
+                .withProteinSource(withProteinSource)
+                .withoutProteinSource(withoutProteinSource)
+                .proteinSourceCoveragePercent(pct(withProteinSource, total))
+                .withPrimaryWeightGrams(withPrimaryWeight)
+                .withoutPrimaryWeightGrams(withoutPrimaryWeight)
+                .primaryWeightCoveragePercent(pct(withPrimaryWeight, total))
                 .withValueScore(withValueScore)
                 .withoutValueScore(withoutValueScore)
                 .valueScoreCoveragePercent(pct(withValueScore, total))
@@ -95,35 +128,43 @@ public class DataQualityService {
     private List<String> buildWarnings(int total, int withoutProtein, int withoutValueScore,
                                        int withoutImage, int zeroPrice, int nullNumericPrice,
                                        int highPrice, int emptyPriceString, int withoutStore,
-                                       int duplicateGroups) {
+                                       int duplicateGroups, int withoutSugar, int withoutFat,
+                                       int withoutCalories, int withoutProteinSource,
+                                       int withoutPrimaryWeight) {
         List<String> w = new ArrayList<>();
 
         if (pct(withoutProtein, total) > 20)
-            w.add("⚠️ " + withoutProtein + " proizvoda nema proteinPer100g (" + pct(withoutProtein, total) + "%) — ValueScore neće biti tačan");
+            w.add("⚠️ " + withoutProtein + " products missing proteinPer100g (" + pct(withoutProtein, total) + "%) - ValueScore will be inaccurate");
 
         if (pct(withoutValueScore, total) > 30)
-            w.add("⚠️ " + withoutValueScore + " proizvoda nema ValueScore — sortiranje po vrednosti neće raditi");
+            w.add("⚠️ " + withoutValueScore + " products missing ValueScore - sorting by value won't work");
 
         if (pct(withoutImage, total) > 25)
-            w.add("🖼️ " + withoutImage + " proizvoda nema sliku (" + pct(withoutImage, total) + "%) — loš UX");
+            w.add("🖼️ " + withoutImage + " products missing image (" + pct(withoutImage, total) + "%) - bad UX");
 
         if (zeroPrice > 0)
-            w.add("🚨 " + zeroPrice + " proizvoda ima numericPrice = 0 — ne smeju biti prikazani!");
+            w.add("🚨 " + zeroPrice + " products have numericPrice = 0 - must not be displayed!");
 
         if (nullNumericPrice > 0)
-            w.add("🚨 " + nullNumericPrice + " proizvoda ima numericPrice = NULL");
+            w.add("🚨 " + nullNumericPrice + " products have numericPrice = NULL");
 
         if (emptyPriceString > 0)
-            w.add("⚠️ " + emptyPriceString + " proizvoda ima prazan price string — scraper možda nije parsovao");
+            w.add("⚠️ " + emptyPriceString + " products have empty price string - scraper may have failed");
 
         if (highPrice > 0)
-            w.add("🔍 " + highPrice + " proizvoda ima cenu > 100.000 RSD — proveri ručno");
+            w.add("🔍 " + highPrice + " products have price > 100,000 RSD - check manually");
 
         if (withoutStore > 0)
-            w.add("🏪 " + withoutStore + " proizvoda nema prodavnicu — orphan records");
+            w.add("🏪 " + withoutStore + " products have no store - orphan records");
 
         if (duplicateGroups > 5)
-            w.add("🔁 " + duplicateGroups + " grupa duplikata — isti proizvod na više prodavnica bez merge-a");
+            w.add("🔁 " + duplicateGroups + " duplicate groups - same product on multiple stores without merge");
+
+        if (pct(withoutPrimaryWeight, total) > 30)
+            w.add("⚖️ " + withoutPrimaryWeight + " products missing primaryWeightGrams (" + pct(withoutPrimaryWeight, total) + "%) - ValueScore will be inaccurate");
+
+        if (pct(withoutProteinSource, total) > 50)
+            w.add("🏷️ " + withoutProteinSource + " products missing proteinSource (" + pct(withoutProteinSource, total) + "%) - filtering by type won't work");
 
         return w;
     }
