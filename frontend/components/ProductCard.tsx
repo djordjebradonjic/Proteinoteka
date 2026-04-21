@@ -19,12 +19,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           <img
             src={product.imageUrl}
             alt={product.name}  
-            
-           onError={(e) => {
-  (e.target as HTMLImageElement).onerror = null; // spreči loop
-  (e.target as HTMLImageElement).src = '/placeholder-protein.png';
-}}
-
+            referrerPolicy="no-referrer-when-downgrade"
             className="h-full object-contain"
           />
         ) : (
