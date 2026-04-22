@@ -31,6 +31,8 @@ export default function HomeContent({ initialProducts, initialTotalPages }: Prop
 
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [totalPages, setTotalPages] = useState(initialTotalPages);
+  const [totalItems, setTotalItems] = useState(0);
+
   const [loading, setLoading] = useState(true);
 
   const stores = ["Sve", "Pansport", "Proteini.si"];
@@ -82,6 +84,8 @@ export default function HomeContent({ initialProducts, initialTotalPages }: Prop
       const res = await api.get(url);
       setProducts(res.data.content);
       setTotalPages(res.data.page.totalPages);
+      setTotalPages(res.data.page.totalPages);
+      setTotalItems(res.data.page.totalElements);
     } catch (error) {
       console.error("Greška pri učitavanju:", error);
     } finally {
@@ -120,17 +124,17 @@ export default function HomeContent({ initialProducts, initialTotalPages }: Prop
       />
 
       <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between mb-4">
-          <SortSelect
-            value={sort}
-            onSortChange={(val) => updateFilters("sort", val)}
-          />
-          {!loading && (
-            <p className="text-sm text-slate-500">
-              Stranica <span className="font-semibold text-slate-700">{page + 1}</span> od {totalPages}
-            </p>
-          )}
-        </div>
+       <div className="flex items-center justify-between mb-4 relative">
+  <SortSelect
+    value={sort}
+    onSortChange={(val) => updateFilters("sort", val)}
+  />
+  {!loading && (
+    <p className="text-base text-slate-500 absolute left-1/2 -translate-x-1/2">
+      <span className="font-semibold text-slate-700">{totalItems}</span> proizvoda — stranica <span className="font-semibold text-slate-700">{page + 1}</span> od {totalPages}
+    </p>
+  )}
+</div>
         <ProductGrid
           products={products}
           loading={loading}
