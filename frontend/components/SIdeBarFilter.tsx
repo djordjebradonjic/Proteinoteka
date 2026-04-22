@@ -148,7 +148,8 @@ export default function SidebarFilter({
   const [selectedUkus, setSelectedUkus] = useState("Sve");
 
   return (
-    <aside className="w-64 shrink-0">
+  
+      <aside className="hidden md:block w-64 shrink-0">
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
         <div className="flex items-center justify-between mb-2">
           <span className="text-base font-bold text-slate-800">Filteri</span>
