@@ -11,6 +11,7 @@ import ProductGrid from "@/components/ProductGrid";
 import SortSelect from "@/components/SortSelect";
 import { useDebounce } from "use-debounce";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import SidebarFilter from "./SIdeBarFilter";
 
 
 interface Props {
@@ -96,43 +97,40 @@ export default function HomeContent({ initialProducts, initialTotalPages }: Prop
     replace(pathname);
   };
 
-  return (
-    <main className="min-h-screen bg-slate-50">
-      <Header
-        searchValue={search}
-        onSearchChange={(val) => updateFilters("query", val)}
-        wishlistCount={0}
-        cartCount={0}
+ return (
+  <main className="min-h-screen bg-slate-50">
+    <Header
+      searchValue={search}
+      onSearchChange={(val) => updateFilters("query", val)}
+    />
+    <div className="max-w-7xl mx-auto px-4 py-8 flex gap-6 items-start">
+      
+      <SidebarFilter
+        brands={brands}
+        selectedStore={selectedStore}
+        selectedBrand={searchParams.get("brand") || "Sve"}
+        minPrice={minPrice}
+        maxPrice={maxPrice}
+        onStoreChange={(val) => updateFilters("store", val)}
+        onBrandChange={(val) => updateFilters("brand", val)}
+        onMinChange={(val) => updateFilters("minPrice", val)}
+        onMaxChange={(val) => updateFilters("maxPrice", val)}
+        onReset={handleReset}
+        hasActiveFilters={selectedStore !== "Sve" || !!search || sort !== "id,desc"}
       />
-      <div className="max-w-6xl mx-auto px-4 py-8">
-       
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-          <StoreFilter
-            stores={stores}
-            brands={brands}
-            selectedStore={selectedStore}
-            selectedBrand={searchParams.get("brand") || "Sve"}
-            onStoreChange={(val) => updateFilters("store", val)}
-            onBrandChange={(val) => updateFilters("brand", val)}
-            onReset={handleReset}
-            hasActiveFilters={selectedStore !== "Sve" || !!search || sort !== "id,desc"}
-          />
-          <PriceFilter
-            minPrice={minPrice}
-            maxPrice={maxPrice}
-            onMinChange={(val) => updateFilters("minPrice", val)}
-            onMaxChange={(val) => updateFilters("maxPrice", val)}
-          />
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between mb-4">
           <SortSelect
             value={sort}
             onSortChange={(val) => updateFilters("sort", val)}
           />
+          {!loading && (
+            <p className="text-sm text-slate-500">
+              Stranica <span className="font-semibold text-slate-700">{page + 1}</span> od {totalPages}
+            </p>
+          )}
         </div>
-        {!loading && (
-          <p className="text-sm text-slate-500 mb-4">
-            Stranica <span className="font-semibold text-slate-700">{page + 1}</span> od {totalPages}
-          </p>
-        )}
         <ProductGrid
           products={products}
           loading={loading}
@@ -145,6 +143,8 @@ export default function HomeContent({ initialProducts, initialTotalPages }: Prop
           }}
         />
       </div>
-    </main>
-  );
+
+    </div>
+  </main>
+);
 }

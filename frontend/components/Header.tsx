@@ -14,7 +14,7 @@ function Logo() {
         viewBox="0 0 690 210"
         role="img"
         xmlns="http://www.w3.org/2000/svg"
-        className="h-16 w-auto"
+        className="h-20 w-auto"
       >
         <title>Proteinoteka logo</title>
         <rect width="690" height="210" fill="transparent" />
