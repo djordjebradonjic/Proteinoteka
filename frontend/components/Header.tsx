@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { ShoppingCart, Heart, Search } from "lucide-react";
+import { useAppSelector } from "@/store/hooks";
 
 function Logo() {
   return (
@@ -101,19 +102,15 @@ function IconButton({
   );
 }
 
-interface HeaderProps {
-  searchValue?: string;
-  onSearchChange?: (v: string) => void;
-  wishlistCount?: number;
-  cartCount?: number;
-}
-
 export default function Header({
   searchValue = "",
   onSearchChange,
-  wishlistCount = 0,
-  cartCount = 0,
-}: HeaderProps) {
+}: {
+  searchValue?: string;
+  onSearchChange?: (v: string) => void;
+}) {
+  const wishlistCount = useAppSelector((state) => (state as any).wishlist.count) as number;
+  const cartCount = useAppSelector((state) => (state as any).cart.count) as number;
   const [localSearch, setLocalSearch] = useState(searchValue);
 
   const handleSearch = (v: string) => {
@@ -161,20 +158,6 @@ export default function Header({
             count={cartCount}
             icon={<ShoppingCart className="w-6 h-6" strokeWidth={1.8} />}
           />
-        </div>
-      </div>
-
-      <div className="border-t border-white/10" style={{ backgroundColor: "#1a2433" }}>
-        <div className="max-w-7xl mx-auto px-4 h-9 flex items-center gap-6">
-          <Link href="/" className="text-xs text-slate-300 hover:text-[#FF9900] transition-colors">🏠 Početna</Link>
-          <Link href="/?sort=valueScore,desc" className="text-xs text-slate-300 hover:text-[#FF9900] transition-colors">🏆 Najisplativiji</Link>
-          <Link href="/?sort=price,asc" className="text-xs text-slate-300 hover:text-[#FF9900] transition-colors">💰 Najjeftiniji</Link>
-          <Link href="/?query=izolat" className="text-xs text-slate-300 hover:text-[#FF9900] transition-colors">🧪 Izolati</Link>
-          <Link href="/?query=kreatin" className="text-xs text-slate-300 hover:text-[#FF9900] transition-colors">⚡ Kreatin</Link>
-          <div className="ml-auto flex md:hidden gap-4">
-            <NavLink href="/blog">Blog</NavLink>
-            <NavLink href="/kontakt">Kontakt</NavLink>
-          </div>
         </div>
       </div>
     </header>
