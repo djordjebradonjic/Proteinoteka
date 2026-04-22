@@ -14,7 +14,7 @@ interface FilterSection {
 }
 
 function FilterGroup({ label, options, selected, onChange }: Omit<FilterSection, "key">) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
 
   return (
     <div className="border-b border-slate-200 py-3">
