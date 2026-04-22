@@ -14,7 +14,7 @@ function Logo() {
         viewBox="0 0 690 210"
         role="img"
         xmlns="http://www.w3.org/2000/svg"
-        className="h-20 w-auto"
+        className="h-14 w-auto md:h-20"
       >
         <title>Proteinoteka logo</title>
         <rect width="690" height="210" fill="transparent" />
@@ -149,7 +149,8 @@ export default function Header({
             icon={<ShoppingCart className="w-6 h-6" strokeWidth={1.8} />}
           />
         </nav>
-        <div className="flex md:hidden items-center gap-4 ml-auto">
+            
+        <div className="flex md:hidden items-center gap-4 ml-auto shrink-0">
           <IconButton
             href="/wishlist"
             label="Lista željenih"
