@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Plus, Minus } from "lucide-react";
+import {  useEffect } from "react";
+
 
 interface FilterSection {
   key: string;
@@ -56,11 +58,16 @@ interface PriceRangeProps {
   onMinChange: (val: string) => void;
   onMaxChange: (val: string) => void;
 }
-
 function PriceRange({ minPrice, maxPrice, onMinChange, onMaxChange }: PriceRangeProps) {
   const [open, setOpen] = useState(true);
+  const [localMin, setLocalMin] = useState(minPrice);
+  const [localMax, setLocalMax] = useState(maxPrice);
 
-  return (
+  const handleApply = () => {
+    onMinChange(localMin);
+    onMaxChange(localMax);
+  };
+return (
     <div className="border-b border-slate-200 py-3">
       <button
         onClick={() => setOpen(!open)}
@@ -75,25 +82,36 @@ function PriceRange({ minPrice, maxPrice, onMinChange, onMaxChange }: PriceRange
       </button>
 
       {open && (
-        <div className="mt-2 flex gap-2 items-center">
-          <input
-            type="number"
-            placeholder="Od"
-            value={minPrice}
-            onChange={(e) => onMinChange(e.target.value)}
-            className="w-full border border-slate-200 rounded px-2 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FF9900]"          />
-          <span className="text-slate-400 text-sm">–</span>
-          <input
-            type="number"
-            placeholder="Do"
-            value={maxPrice}
-            onChange={(e) => onMaxChange(e.target.value)}
-            className="w-full border border-slate-200 rounded px-2 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FF9900]"          />
+        <div className="mt-2 flex flex-col gap-2">
+          <div className="flex gap-2 items-center">
+            <input
+              type="number"
+              placeholder="Od"
+              value={localMin}
+              onChange={(e) => setLocalMin(e.target.value)}
+              className="w-full border border-slate-200 rounded px-2 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FF9900]"
+            />
+            <span className="text-slate-400 text-sm">–</span>
+            <input
+              type="number"
+              placeholder="Do"
+              value={localMax}
+              onChange={(e) => setLocalMax(e.target.value)}
+              className="w-full border border-slate-200 rounded px-2 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FF9900]"
+            />
+          </div>
+          <button
+            onClick={handleApply}
+            className="w-full bg-[#FF9900] hover:bg-[#e68a00] text-[#131921] text-sm font-semibold py-1.5 rounded transition-colors"
+          >
+            Primeni
+          </button>
         </div>
       )}
     </div>
   );
 }
+
 
 interface SidebarFilterProps {
   brands: string[];
