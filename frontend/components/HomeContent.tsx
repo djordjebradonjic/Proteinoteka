@@ -125,13 +125,13 @@ export default function HomeContent({ initialProducts, initialTotalPages }: Prop
       />
 
       <div className="flex-1 min-w-0">
-       <div className="flex items-center justify-between mb-4 relative">
+       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
   <SortSelect
     value={sort}
     onSortChange={(val) => updateFilters("sort", val)}
   />
   {!loading && (
-    <p className="text-base text-slate-500 absolute left-1/2 -translate-x-1/2">
+    <p className="text-base text-slate-500 ">
       <span className="font-semibold text-slate-700">{totalItems}</span> proizvoda — stranica <span className="font-semibold text-slate-700">{page + 1}</span> od {totalPages}
     </p>
   )}
