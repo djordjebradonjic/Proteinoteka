@@ -119,10 +119,14 @@ export default function Header({
   };
 
   return (
-    <header className="sticky top-0 z-50 shadow-lg" style={{ backgroundColor: "#131921" }}>
-      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center gap-3">
-        <Logo />
-        <SearchBarHeader value={localSearch} onChange={handleSearch} />
+    
+        <header className="sticky top-0 z-50 shadow-lg" style={{ backgroundColor: "#131921" }}>
+          <div className="max-w-7xl mx-auto px-4 h-16 flex items-center gap-3">
+            <Logo />
+              <div className="hidden md:flex flex-1">
+              <SearchBarHeader value={localSearch} onChange={handleSearch} />
+          </div>
+    <nav className="hidden md:flex items-center gap-5"></nav>
         <nav className="hidden md:flex items-center gap-5">
           <NavLink href="/blog">Blog</NavLink>
           <NavLink href="/kontakt">Kontakt</NavLink>
@@ -160,6 +164,9 @@ export default function Header({
           />
         </div>
       </div>
+       <div className="md:hidden px-4 pb-3" style={{ backgroundColor: "#131921" }}>
+      <SearchBarHeader value={localSearch} onChange={handleSearch} />
+    </div>
     </header>
   );
 }
