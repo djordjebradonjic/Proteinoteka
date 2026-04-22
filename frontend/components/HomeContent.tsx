@@ -5,7 +5,7 @@ import { useEffect, useState, useCallback } from "react";
 import api from "@/lib/axios";
 import { Product } from "@/types/product";
 import Header from "@/components/Header";
-import SearchBar from "@/components/SearchBar";
+
 import StoreFilter from "@/components/StoreFilter";
 import ProductGrid from "@/components/ProductGrid";
 import SortSelect from "@/components/SortSelect";
@@ -98,12 +98,14 @@ export default function HomeContent({ initialProducts, initialTotalPages }: Prop
 
   return (
     <main className="min-h-screen bg-slate-50">
-      <Header />
+      <Header
+        searchValue={search}
+        onSearchChange={(val) => updateFilters("query", val)}
+        wishlistCount={0}
+        cartCount={0}
+      />
       <div className="max-w-6xl mx-auto px-4 py-8">
-        <SearchBar
-          value={search}
-          onChange={(val) => updateFilters("query", val)}
-        />
+       
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <StoreFilter
             stores={stores}
