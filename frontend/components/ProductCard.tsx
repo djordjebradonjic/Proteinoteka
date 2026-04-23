@@ -61,7 +61,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
       {/* Sadržaj */}
       <div className="flex flex-col flex-1 px-3 md:px-4 pt-3 pb-3 md:pb-4 gap-1.5 md:gap-2">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between h-5">
           {product.brand && (
             <p className="text-[11px] font-semibold text-[#8A8A9A] uppercase tracking-widest">
               {product.brand}
@@ -73,12 +73,12 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
 
         {/* Naziv */}
-        <h3 className="font-semibold text-[#1A1A2E] text-sm leading-snug line-clamp-2 min-h-[40px]">
+        <h3 className="font-semibold text-[#1A1A2E] text-sm leading-snug line-clamp-2 h-10">
           {product.name}
         </h3>
 
         {/* Cena */}
-        <p className="text-lg md:text-2xl font-black text-[#1B2B4B] leading-none">
+        <p className="text-lg md:text-2xl font-black text-[#1B2B4B] leading-none h-8 flex items-center">
           {product.price.toLocaleString()}{" "}
           <span className="text-sm font-semibold text-[#8A8A9A]">RSD</span>
         </p>
