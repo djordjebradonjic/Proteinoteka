@@ -7,13 +7,28 @@ interface FilterSection {
   key: string;
   label: string;
   options: string[];
-  selected: string;
-  onChange: (val: string) => void;
+  selected: string | string[];
+  onChange: (val: string | string[]) => void;
   defaultOpen?: boolean;
+  multi?: boolean;
 }
 
-function FilterGroup({ label, options, selected, onChange, defaultOpen = false }: Omit<FilterSection, "key">) {
+function FilterGroup({ label, options, selected, onChange, defaultOpen = false, multi = false }: Omit<FilterSection, "key">) {
   const [open, setOpen] = useState(defaultOpen);
+
+  const selectedArr = multi ? (Array.isArray(selected) ? selected : []) : [];
+
+  const handleClick = (opt: string) => {
+    if (!multi) {
+      onChange(opt === selected ? "Sve" : opt);
+      return;
+    }
+    if (selectedArr.includes(opt)) {
+      onChange(selectedArr.filter((s) => s !== opt));
+    } else {
+      onChange([...selectedArr, opt]);
+    }
+  };
 
   return (
     <div className="border-b border-slate-200 py-3">
@@ -26,19 +41,23 @@ function FilterGroup({ label, options, selected, onChange, defaultOpen = false }
       </button>
       {open && (
         <div className="mt-2 flex flex-col gap-1">
-          {options.map((opt) => (
-            <button
-              key={opt}
-              onClick={() => onChange(opt === selected ? "Sve" : opt)}
-              className={`text-left text-base px-2 py-1.5 rounded transition-colors ${
-                selected === opt
-                  ? "bg-[#FF9900]/15 text-[#b36b00] font-medium"
-                  : "text-slate-600 hover:bg-slate-100"
-              }`}
-            >
-              {opt}
-            </button>
-          ))}
+          {options.map((opt) => {
+            const isSelected = multi ? selectedArr.includes(opt) : selected === opt;
+            return (
+              <button
+                key={opt}
+                onClick={() => handleClick(opt)}
+                className={`text-left text-base px-2 py-1.5 rounded transition-colors flex items-center justify-between ${
+                  isSelected
+                    ? "bg-[#FF9900]/15 text-[#b36b00] font-medium"
+                    : "text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                {opt}
+                {isSelected && <span className="text-[#FF9900] text-xs">✓</span>}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
@@ -119,24 +138,53 @@ function FilterContent({
   brands, selectedStore, selectedBrand, minPrice, maxPrice,
   onStoreChange, onBrandChange, onMinChange, onMaxChange, onReset, hasActiveFilters,
 }: SidebarFilterProps) {
-  const [selectedKategorija, setSelectedKategorija] = useState("Sve");
-  const [selectedUkus, setSelectedUkus] = useState("Sve");
+  const [selectedKategorije, setSelectedKategorije] = useState<string[]>([]);
+  const [selectedUkusi, setSelectedUkusi] = useState<string[]>([]);
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 border-l-4 border-l-[#FF9900]">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-base font-bold text-slate-800">Filteri</span>
+        <span className="text-lg font-black text-[#1B2B4B] tracking-tight">Filteri</span>
         {hasActiveFilters && (
           <button onClick={onReset} className="text-xs text-[#FF9900] hover:underline">
             Resetuj
           </button>
         )}
       </div>
-      <FilterGroup label="Kategorija" options={KATEGORIJE} selected={selectedKategorija} onChange={setSelectedKategorija} defaultOpen={true} />
-      <FilterGroup label="Prodavnica" options={STORES} selected={selectedStore} onChange={onStoreChange} defaultOpen={true} />
-      <FilterGroup label="Brend" options={brands.slice(0, 10)} selected={selectedBrand} onChange={onBrandChange} />
-      <PriceRange minPrice={minPrice} maxPrice={maxPrice} onMinChange={onMinChange} onMaxChange={onMaxChange} />
-      <FilterGroup label="Ukus" options={UKUSI} selected={selectedUkus} onChange={setSelectedUkus} />
+
+      <FilterGroup
+        label="Kategorija"
+        options={KATEGORIJE}
+        selected={selectedKategorije}
+        onChange={(val) => setSelectedKategorije(val as string[])}
+        defaultOpen={true}
+        multi
+      />
+      <FilterGroup
+        label="Prodavnica"
+        options={STORES}
+        selected={selectedStore}
+        onChange={(val) => onStoreChange(val as string)}
+      />
+      <FilterGroup
+        label="Brend"
+        options={brands.slice(0, 10)}
+        selected={selectedBrand}
+        onChange={(val) => onBrandChange(val as string)}
+      />
+      <PriceRange
+        minPrice={minPrice}
+        maxPrice={maxPrice}
+        onMinChange={onMinChange}
+        onMaxChange={onMaxChange}
+      />
+      <FilterGroup
+        label="Ukus"
+        options={UKUSI}
+        selected={selectedUkusi}
+        onChange={(val) => setSelectedUkusi(val as string[])}
+        multi
+      />
     </div>
   );
 }
@@ -167,15 +215,13 @@ export default function SidebarFilter(props: SidebarFilterProps) {
         </button>
       </div>
 
-      {/* Mobilni drawer overlay */}
+      {/* Mobilni drawer */}
       {drawerOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
-          {/* Pozadina */}
           <div
             className="absolute inset-0 bg-black/40"
             onClick={() => setDrawerOpen(false)}
           />
-          {/* Drawer */}
           <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
               <span className="text-base font-bold text-slate-800">Filteri</span>
