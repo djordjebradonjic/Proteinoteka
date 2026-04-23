@@ -1,29 +1,29 @@
 import { Product } from "@/types/product";
 import ProductCard from "./ProductCard";
-import { Button } from "./ui/button";
 
 interface ProductGridProps {
   products: Product[];
   loading: boolean;
   searchQuery: string;
-  currentPage:number,
-  totalPages: number,
-  onPageChange: (page : number) => void;
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
 }
 
-export default function ProductGrid({ 
+export default function ProductGrid({
   products,
   loading,
   searchQuery,
   currentPage,
   totalPages,
-  onPageChange }: ProductGridProps) {
+  onPageChange,
+}: ProductGridProps) {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-4">
         {[...Array(8)].map((_, i) => (
-          <div key={i} className="h-72 bg-slate-200 rounded-lg animate-pulse" />
+          <div key={i} className="h-56 md:h-72 bg-slate-200 rounded-lg animate-pulse" />
         ))}
       </div>
     );
@@ -40,41 +40,66 @@ export default function ProductGrid({
 
   return (
     <>
-    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-      {products.map((p) => (
-      <ProductCard key={p.productUrl} product={p} />
-
-      ))}
-    </div>
-    <div className="flex flex-col items-center justify-center gap-4 py-8 border-t border-slate-100">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onPageChange(currentPage - 1)}
-            disabled={currentPage === 0}
-          >
-            ← Prethodna
-          </Button>
-
-          <div className="px-4 py-2 text-sm font-medium bg-slate-50 rounded-md border border-slate-200">
-            Stranica <span className="text-blue-600">{currentPage + 1}</span> od {totalPages}
-          </div>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onPageChange(currentPage + 1)}
-            disabled={currentPage >= totalPages - 1}
-          >
-            Sledeća →
-          </Button>
-        </div>
-        
-        <p className="text-xs text-slate-400 italic">
-          Prikazano 12 proizvoda po stranici
-        </p>
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-4">
+        {products.map((p) => (
+          <ProductCard key={p.productUrl} product={p} />
+        ))}
       </div>
-  </>
+
+      <div className="flex items-center justify-center gap-1 py-8 border-t border-slate-100 flex-wrap">
+
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 0}
+          className="px-3 py-2 text-sm font-medium rounded-md border border-[#E2E8F0] text-[#1B2B4B] hover:bg-[#FFF8EC] hover:border-[#FFD980] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          ←
+        </button>
+
+        {Array.from({ length: totalPages }, (_, i) => {
+          const showPage =
+            i === 0 ||
+            i === totalPages - 1 ||
+            Math.abs(i - currentPage) <= 1;
+
+          const showDots =
+            (i === 1 && currentPage > 3) ||
+            (i === totalPages - 2 && currentPage < totalPages - 4);
+
+          if (showDots) {
+            return (
+              <span key={i} className="px-2 text-slate-400 text-sm">
+                ...
+              </span>
+            );
+          }
+
+          if (!showPage) return null;
+
+          return (
+            <button
+              key={i}
+              onClick={() => onPageChange(i)}
+              className={`min-w-[36px] h-9 text-sm font-medium rounded-md border transition-colors ${
+                currentPage === i
+                  ? "bg-[#1B2B4B] text-white border-[#1B2B4B]"
+                  : "border-[#E2E8F0] text-[#1B2B4B] hover:bg-[#FFF8EC] hover:border-[#FFD980]"
+              }`}
+            >
+              {i + 1}
+            </button>
+          );
+        })}
+
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage >= totalPages - 1}
+          className="px-3 py-2 text-sm font-medium rounded-md border border-[#E2E8F0] text-[#1B2B4B] hover:bg-[#FFF8EC] hover:border-[#FFD980] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          →
+        </button>
+
+      </div>
+    </>
   );
 }

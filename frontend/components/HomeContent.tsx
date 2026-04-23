@@ -35,7 +35,6 @@ export default function HomeContent({ initialProducts, initialTotalPages }: Prop
 
   const [loading, setLoading] = useState(true);
 
-  const stores = ["Sve", "Pansport", "Proteini.si"];
 
   const minPrice = searchParams.get("minPrice") || "";
   const maxPrice = searchParams.get("maxPrice") || "";
@@ -83,7 +82,6 @@ export default function HomeContent({ initialProducts, initialTotalPages }: Prop
       if (maxPrice) url += `&maxPrice=${maxPrice}`;
       const res = await api.get(url);
       setProducts(res.data.content);
-      setTotalPages(res.data.page.totalPages);
       setTotalPages(res.data.page.totalPages);
       setTotalItems(res.data.page.totalElements);
     } catch (error) {

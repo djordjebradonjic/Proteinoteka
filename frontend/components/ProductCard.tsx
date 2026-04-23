@@ -30,7 +30,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
        <div className="group flex flex-col bg-[#FFFDF7] rounded-xl border border-[#F0EDE6] transition-all duration-200 hover:-translate-y-1 overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_28px_rgba(255,153,0,0.12)]">
       {/* Slika */}
-      <div className="relative p-4 flex items-center justify-center h-44 bg-white">
+      <div className="relative p-3 md:p-4 flex items-center justify-center h-36 md:h-44 bg-white">
         {product.imageUrl ? (
           <img
             src={product.imageUrl}
@@ -60,7 +60,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       </div>
 
       {/* Sadržaj */}
-      <div className="flex flex-col flex-1 px-4 pt-3 pb-4 gap-2">
+      <div className="flex flex-col flex-1 px-3 md:px-4 pt-3 pb-3 md:pb-4 gap-1.5 md:gap-2"></div>
 
        <div className="flex items-center justify-between">
           {product.brand && (
@@ -80,7 +80,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         </h3>
 
         {/* Cena */}
-        <p className="text-2xl font-black text-[#1B2B4B] leading-none">
+        <p className="text-lg md:text-2xl font-black text-[#1B2B4B] leading-none">
           {product.price.toLocaleString()} <span className="text-sm font-semibold text-[#8A8A9A]">RSD</span>
         </p>
 
@@ -97,10 +97,10 @@ export default function ProductCard({ product }: ProductCardProps) {
           </p>
         )}
 
-        {/* Prodavnica */}
+       
        
 
-       <div className="flex flex-col gap-2 mt-1">
+       <div className="flex flex-col gap-2 mt-auto pt-2">
           <Link
             href={`/product/${product.id}`}
             className="w-full bg-[#1B2B4B] text-white font-bold text-sm py-2 rounded-md text-center hover:bg-[#243860] transition-colors"
@@ -113,6 +113,6 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
 
       </div>
-    </div>
+    
   );
 }

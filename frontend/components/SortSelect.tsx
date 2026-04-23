@@ -20,7 +20,7 @@ export default function SortSelect({ value, onSortChange }: SortSelectProps) {
         Sortiraj:
       </span>
       <Select value={value} onValueChange={onSortChange}>
-        <SelectTrigger className="w-[180px] bg-white border-slate-200 rounded-xl shadow-sm focus:ring-blue-500">
+          <SelectTrigger className="w-full sm:w-[180px] bg-white border-slate-200 rounded-xl shadow-sm focus:ring-[#FF9900]">
           <SelectValue placeholder="Izaberi sortiranje" />
         </SelectTrigger>
         <SelectContent>

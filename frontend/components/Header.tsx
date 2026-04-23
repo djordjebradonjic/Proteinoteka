@@ -128,7 +128,6 @@ export default function Header({
               <div className="hidden md:flex flex-1">
               <SearchBarHeader value={localSearch} onChange={handleSearch} />
           </div>
-    <nav className="hidden md:flex items-center gap-5"></nav>
         <nav className="hidden md:flex items-center gap-5">
           <NavLink href="/blog">Blog</NavLink>
           <NavLink href="/kontakt">Kontakt</NavLink>
