@@ -95,8 +95,8 @@ export default function ProductCard({ product }: ProductCardProps) {
           <Heart
             className="w-4 h-4 md:w-5 md:h-5"
             strokeWidth={1.8}
-            fill={wished ? "#ef4444" : "none"}
-            color={wished ? "#ef4444" : "#CBD5E1"}
+            fill={wished ? "#FF6B00" : "none"}
+            color={wished ? "#FF6B00" : "#CBD5E1"}
           />
         </button>
       </div>

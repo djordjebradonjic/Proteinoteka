@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Minus, SlidersHorizontal, X } from "lucide-react";
 
 interface FilterSection {
@@ -163,6 +163,7 @@ interface SidebarFilterProps {
   onMaxChange: (val: string) => void;
   onReset: () => void;
   hasActiveFilters: boolean;
+  activeCount?: number;
 }
 
 const STORES = [
@@ -202,27 +203,38 @@ function FilterContent({
   onMaxChange,
   onReset,
   hasActiveFilters,
-}: SidebarFilterProps) {
+  activeCount,
+  onTotalCountChange,
+}: SidebarFilterProps & { onTotalCountChange?: (count: number) => void }) {
   const [selectedKategorije, setSelectedKategorije] = useState<string[]>([]);
   const [selectedUkusi, setSelectedUkusi] = useState<string[]>([]);
 
+  const localCount = selectedKategorije.length + selectedUkusi.length;
+  const totalCount = (activeCount ?? 0) + localCount;
+
+  useEffect(() => {
+    onTotalCountChange?.(totalCount);
+  }, [totalCount]);
+
   return (
     <div className="p-0">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2 mb-4">
+      <div className="mb-4">
+        <div className="flex items-center gap-2 mb-3">
           <SlidersHorizontal className="w-4 h-4 text-[#1A1A1A]" />
           <span className="text-sm font-bold text-[#1A1A1A] uppercase tracking-widest">
             Filteri
           </span>
         </div>
-        {hasActiveFilters && (
-          <button
-            onClick={onReset}
-            className="text-xs text-[#FF9900] hover:underline"
-          >
-            Resetuj
-          </button>
-        )}
+        <button
+          onClick={onReset}
+          className={`w-full text-sm font-medium py-2 rounded-md border transition-colors ${
+            hasActiveFilters
+              ? "text-[#FF9900] border-[#FF9900] hover:bg-[#FF9900] hover:text-[#1B2B4B] cursor-pointer"
+              : "text-transparent border-transparent cursor-default pointer-events-none"
+          }`}
+        >
+          Resetuj filtere
+        </button>
       </div>
 
       <FilterGroup
@@ -264,12 +276,43 @@ function FilterContent({
 
 export default function SidebarFilter(props: SidebarFilterProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const [resetKey, setResetKey] = useState(0);
+  const [localHasActive, setLocalHasActive] = useState(props.hasActiveFilters);
+
+  useEffect(() => {
+    setLocalHasActive(props.hasActiveFilters);
+  }, [props.hasActiveFilters]);
+
+  useEffect(() => {
+    if (drawerOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [drawerOpen]);
+
+  const handleReset = () => {
+    props.onReset();
+    setResetKey((k) => k + 1);
+    setTotalCount(0);
+    setLocalHasActive(false);
+  };
 
   return (
     <>
       {/* Desktop sidebar */}
       <aside className="hidden md:block w-64 shrink-0">
-        <FilterContent {...props} />
+        <FilterContent
+          {...props}
+          key={resetKey}
+          onReset={handleReset}
+          hasActiveFilters={localHasActive}
+          onTotalCountChange={setTotalCount}
+        />
       </aside>
 
       {/* Mobilno dugme */}
@@ -280,9 +323,9 @@ export default function SidebarFilter(props: SidebarFilterProps) {
         >
           <SlidersHorizontal className="w-4 h-4" />
           Filteri
-          {props.hasActiveFilters && (
+          {totalCount > 0 && (
             <span className="ml-1 bg-[#FF9900] text-[#1B2B4B] text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-              •
+              {totalCount}
             </span>
           )}
         </button>
@@ -290,13 +333,16 @@ export default function SidebarFilter(props: SidebarFilterProps) {
 
       {/* Mobilni drawer */}
       {drawerOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
+        <div
+          className="fixed inset-0 z-50 md:hidden"
+          style={{ touchAction: "none" }}
+        >
           <div
             className="absolute inset-0 bg-black/40"
             onClick={() => setDrawerOpen(false)}
           />
-          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[85vh] overflow-y-auto">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 shrink-0">
               <span className="text-base font-bold text-slate-800">
                 Filteri
               </span>
@@ -304,8 +350,29 @@ export default function SidebarFilter(props: SidebarFilterProps) {
                 <X className="w-5 h-5 text-slate-500" />
               </button>
             </div>
-            <div className="px-4 pb-8">
-              <FilterContent {...props} />
+
+            <div className="flex-1 overflow-y-auto px-4 py-2">
+              <FilterContent
+                {...props}
+                key={resetKey}
+                onReset={handleReset}
+                hasActiveFilters={localHasActive}
+                onTotalCountChange={setTotalCount}
+              />
+            </div>
+
+            <div className="shrink-0 px-4 py-3 border-t border-slate-100 bg-white">
+              <button
+                onClick={() => setDrawerOpen(false)}
+                className="w-full bg-[#1B2B4B] text-white font-bold py-3 rounded-md text-sm uppercase tracking-wide"
+              >
+                Primeni
+                {totalCount > 0 && (
+                  <span className="ml-2 bg-[#FF9900] text-[#1B2B4B] text-xs font-bold px-2 py-0.5 rounded-full">
+                    {totalCount}
+                  </span>
+                )}
+              </button>
             </div>
           </div>
         </div>

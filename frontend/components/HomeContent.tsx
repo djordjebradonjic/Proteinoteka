@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from "react";
 import api from "@/lib/axios";
 import { Product } from "@/types/product";
 import Header from "@/components/Header";
-
 import ProductGrid from "@/components/ProductGrid";
 import SortSelect from "@/components/SortSelect";
 import { useDebounce } from "use-debounce";
@@ -33,7 +32,6 @@ export default function HomeContent({
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [totalPages, setTotalPages] = useState(initialTotalPages);
   const [totalItems, setTotalItems] = useState(0);
-
   const [loading, setLoading] = useState(true);
 
   const minPrice = searchParams.get("minPrice") || "";
@@ -112,6 +110,13 @@ export default function HomeContent({
     replace(pathname);
   };
 
+  const activeCount = [
+    selectedStore !== "Sve" ? 1 : 0,
+    searchParams.get("brand") ? 1 : 0,
+    minPrice ? 1 : 0,
+    maxPrice ? 1 : 0,
+  ].reduce((a, b) => a + b, 0);
+
   return (
     <main className="min-h-screen bg-white">
       <Header
@@ -134,6 +139,7 @@ export default function HomeContent({
           hasActiveFilters={
             selectedStore !== "Sve" || !!search || sort !== "id,desc"
           }
+          activeCount={activeCount}
         />
 
         <div className="flex-1 min-w-0">
@@ -143,7 +149,7 @@ export default function HomeContent({
               onSortChange={(val) => updateFilters("sort", val)}
             />
             {!loading && (
-              <p className="text-base text-slate-500 ">
+              <p className="text-base text-slate-500">
                 <span className="font-semibold text-slate-700">
                   {totalItems}
                 </span>{" "}
