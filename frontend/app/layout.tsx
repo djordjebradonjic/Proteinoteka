@@ -4,6 +4,7 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import { DM_Sans } from "next/font/google";
+import Footer from "@/components/Footer";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -91,7 +92,9 @@ export default function RootLayout({
       className={`${dmSans.variable} h-full antialiased font-[family-name:var(--font-dm-sans)]`}
     >
       <body className="min-h-full flex flex-col">
-        <Providers>{children}</Providers>
+        <Providers>
+          {children} <Footer />
+        </Providers>
         <Analytics />
         <GoogleAnalytics gaId="G-JR077S64MV" />
       </body>
