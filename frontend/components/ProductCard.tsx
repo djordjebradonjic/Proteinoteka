@@ -28,7 +28,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-       <div className="group flex flex-col bg-[#FFFDF7] rounded-xl border border-[#F0EDE6] transition-all duration-200 hover:-translate-y-1 overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_28px_rgba(255,153,0,0.12)]">
+    <div className="group flex flex-col bg-[#FFFDF7] rounded-xl border border-[#F0EDE6] transition-all duration-200 hover:-translate-y-1 overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_28px_rgba(255,153,0,0.12)]">
       {/* Slika */}
       <div className="relative p-3 md:p-4 flex items-center justify-center h-36 md:h-44 bg-white">
         {product.imageUrl ? (
@@ -60,19 +60,17 @@ export default function ProductCard({ product }: ProductCardProps) {
       </div>
 
       {/* Sadržaj */}
-      <div className="flex flex-col flex-1 px-3 md:px-4 pt-3 pb-3 md:pb-4 gap-1.5 md:gap-2"></div>
-
-       <div className="flex items-center justify-between">
+      <div className="flex flex-col flex-1 px-3 md:px-4 pt-3 pb-3 md:pb-4 gap-1.5 md:gap-2">
+        <div className="flex items-center justify-between">
           {product.brand && (
-           <p className="text-[11px] font-semibold text-[#8A8A9A] uppercase tracking-widest">
-             {product.brand}
-           </p>
-           )}
+            <p className="text-[11px] font-semibold text-[#8A8A9A] uppercase tracking-widest">
+              {product.brand}
+            </p>
+          )}
           <span className="text-[11px] font-medium text-[#5A6478] bg-[#F1F5F9] border border-[#E2E8F0] px-2 py-0.5 rounded">
-           {product.storeName}
-        </span>
-      </div>
-
+            {product.storeName}
+          </span>
+        </div>
 
         {/* Naziv */}
         <h3 className="font-semibold text-[#1A1A2E] text-sm leading-snug line-clamp-2 min-h-[40px]">
@@ -81,38 +79,44 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         {/* Cena */}
         <p className="text-lg md:text-2xl font-black text-[#1B2B4B] leading-none">
-          {product.price.toLocaleString()} <span className="text-sm font-semibold text-[#8A8A9A]">RSD</span>
+          {product.price.toLocaleString()}{" "}
+          <span className="text-sm font-semibold text-[#8A8A9A]">RSD</span>
         </p>
 
         {/* Value score badge */}
-        {product.valueScore && (
-        <div className="inline-flex items-center gap-1 bg-[#FFF8EC] text-[#b36b00] text-xs font-semibold px-2 py-1 rounded-md w-fit border border-[#FFD980]">            ⚡ {product.valueScore} RSD/g proteina
-          </div>
-        )}
+        <div className="h-7">
+          {product.valueScore && (
+            <div className="inline-flex items-center gap-1 bg-[#FFF8EC] text-[#b36b00] text-xs font-semibold px-2 py-1 rounded-md w-fit border border-[#FFD980]">
+              ⚡ {product.valueScore} RSD/g proteina
+            </div>
+          )}
+        </div>
 
-        {/* Proteini */}
-        {product.proteinPer100g && (
-          <p className="text-xs text-[#4A5568]">
-            🥩 {product.proteinPer100g}g proteina/100g
-          </p>
-        )}
+        <div className="h-5">
+          {product.proteinPer100g && (
+            <p className="text-xs text-[#4A5568]">
+              🥩 {product.proteinPer100g}g proteina/100g
+            </p>
+          )}
+        </div>
 
-       
-       
-
-       <div className="flex flex-col gap-2 mt-auto pt-2">
+        <div className="flex flex-col gap-2 mt-auto pt-2">
           <Link
             href={`/product/${product.id}`}
             className="w-full bg-[#1B2B4B] text-white font-bold text-sm py-2 rounded-md text-center hover:bg-[#243860] transition-colors"
           >
             Detalji
           </Link>
-          <a href={product.productUrl} target="_blank" rel="noopener noreferrer" className="w-full bg-[#FFF3DC] hover:bg-[#FFE5A0] text-[#a86800] text-sm py-2 rounded-md text-center transition-colors border border-[#FFD580]">
+          <a
+            href={product.productUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full bg-[#FFF3DC] hover:bg-[#FFE5A0] text-[#a86800] text-sm py-2 rounded-md text-center transition-colors border border-[#FFD580]"
+          >
             Kupi
           </a>
         </div>
-
       </div>
-    
+    </div>
   );
 }

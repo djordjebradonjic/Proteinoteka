@@ -13,7 +13,14 @@ interface FilterSection {
   multi?: boolean;
 }
 
-function FilterGroup({ label, options, selected, onChange, defaultOpen = false, multi = false }: Omit<FilterSection, "key">) {
+function FilterGroup({
+  label,
+  options,
+  selected,
+  onChange,
+  defaultOpen = false,
+  multi = false,
+}: Omit<FilterSection, "key">) {
   const [open, setOpen] = useState(defaultOpen);
 
   const selectedArr = multi ? (Array.isArray(selected) ? selected : []) : [];
@@ -37,12 +44,18 @@ function FilterGroup({ label, options, selected, onChange, defaultOpen = false, 
         className="flex items-center justify-between w-full text-left"
       >
         <span className="text-base font-semibold text-slate-700">{label}</span>
-        {open ? <Minus className="w-4 h-4 text-slate-400" /> : <Plus className="w-4 h-4 text-slate-400" />}
+        {open ? (
+          <Minus className="w-4 h-4 text-slate-400" />
+        ) : (
+          <Plus className="w-4 h-4 text-slate-400" />
+        )}
       </button>
       {open && (
         <div className="mt-2 flex flex-col gap-1">
           {options.map((opt) => {
-            const isSelected = multi ? selectedArr.includes(opt) : selected === opt;
+            const isSelected = multi
+              ? selectedArr.includes(opt)
+              : selected === opt;
             return (
               <button
                 key={opt}
@@ -54,7 +67,9 @@ function FilterGroup({ label, options, selected, onChange, defaultOpen = false, 
                 }`}
               >
                 {opt}
-                {isSelected && <span className="text-[#FF9900] text-xs">✓</span>}
+                {isSelected && (
+                  <span className="text-[#FF9900] text-xs">✓</span>
+                )}
               </button>
             );
           })}
@@ -71,7 +86,12 @@ interface PriceRangeProps {
   onMaxChange: (val: string) => void;
 }
 
-function PriceRange({ minPrice, maxPrice, onMinChange, onMaxChange }: PriceRangeProps) {
+function PriceRange({
+  minPrice,
+  maxPrice,
+  onMinChange,
+  onMaxChange,
+}: PriceRangeProps) {
   const [open, setOpen] = useState(false);
   const [localMin, setLocalMin] = useState(minPrice);
   const [localMax, setLocalMax] = useState(maxPrice);
@@ -82,8 +102,14 @@ function PriceRange({ minPrice, maxPrice, onMinChange, onMaxChange }: PriceRange
         onClick={() => setOpen(!open)}
         className="flex items-center justify-between w-full text-left"
       >
-        <span className="text-base font-semibold text-slate-700">Cena (RSD)</span>
-        {open ? <Minus className="w-4 h-4 text-slate-400" /> : <Plus className="w-4 h-4 text-slate-400" />}
+        <span className="text-base font-semibold text-slate-700">
+          Cena (RSD)
+        </span>
+        {open ? (
+          <Minus className="w-4 h-4 text-slate-400" />
+        ) : (
+          <Plus className="w-4 h-4 text-slate-400" />
+        )}
       </button>
       {open && (
         <div className="mt-2 flex flex-col gap-2">
@@ -105,7 +131,10 @@ function PriceRange({ minPrice, maxPrice, onMinChange, onMaxChange }: PriceRange
             />
           </div>
           <button
-            onClick={() => { onMinChange(localMin); onMaxChange(localMax); }}
+            onClick={() => {
+              onMinChange(localMin);
+              onMaxChange(localMax);
+            }}
             className="w-full bg-[#FF9900] hover:bg-[#e68a00] text-[#1B2B4B] text-sm font-semibold py-1.5 rounded transition-colors"
           >
             Primeni
@@ -130,13 +159,43 @@ interface SidebarFilterProps {
   hasActiveFilters: boolean;
 }
 
-const STORES = ["Pansport", "Proteini.si", "Proteinbox", "Supplementshop", "FitLab", "Ogistrashop"];
-const KATEGORIJE = ["Whey protein", "Izolat", "Kazein", "Vegan protein", "Kreatin", "Amino kiseline"];
-const UKUSI = ["Čokolada", "Vanila", "Jagoda", "Bez ukusa", "Karamel", "Lešnik"];
+const STORES = [
+  "Pansport",
+  "Proteini.si",
+  "Proteinbox",
+  "Supplementshop",
+  "FitLab",
+  "Ogistrashop",
+];
+const KATEGORIJE = [
+  "Whey protein",
+  "Izolat",
+  "Kazein",
+  "Vegan protein",
+  "Kreatin",
+  "Amino kiseline",
+];
+const UKUSI = [
+  "Čokolada",
+  "Vanila",
+  "Jagoda",
+  "Bez ukusa",
+  "Karamel",
+  "Lešnik",
+];
 
 function FilterContent({
-  brands, selectedStore, selectedBrand, minPrice, maxPrice,
-  onStoreChange, onBrandChange, onMinChange, onMaxChange, onReset, hasActiveFilters,
+  brands,
+  selectedStore,
+  selectedBrand,
+  minPrice,
+  maxPrice,
+  onStoreChange,
+  onBrandChange,
+  onMinChange,
+  onMaxChange,
+  onReset,
+  hasActiveFilters,
 }: SidebarFilterProps) {
   const [selectedKategorije, setSelectedKategorije] = useState<string[]>([]);
   const [selectedUkusi, setSelectedUkusi] = useState<string[]>([]);
@@ -144,9 +203,14 @@ function FilterContent({
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 border-l-4 border-l-[#FF9900]">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-lg font-black text-[#1B2B4B] tracking-tight">Filteri</span>
+        <span className="text-lg font-black text-[#1B2B4B] tracking-tight">
+          Filteri
+        </span>
         {hasActiveFilters && (
-          <button onClick={onReset} className="text-xs text-[#FF9900] hover:underline">
+          <button
+            onClick={onReset}
+            className="text-xs text-[#FF9900] hover:underline"
+          >
             Resetuj
           </button>
         )}
@@ -224,7 +288,9 @@ export default function SidebarFilter(props: SidebarFilterProps) {
           />
           <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-              <span className="text-base font-bold text-slate-800">Filteri</span>
+              <span className="text-base font-bold text-slate-800">
+                Filteri
+              </span>
               <button onClick={() => setDrawerOpen(false)}>
                 <X className="w-5 h-5 text-slate-500" />
               </button>
