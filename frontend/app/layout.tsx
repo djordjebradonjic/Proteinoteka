@@ -1,40 +1,30 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { Analytics } from '@vercel/analytics/react';
-import { GoogleAnalytics } from '@next/third-parties/google';
+import { Analytics } from "@vercel/analytics/react";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
+import { DM_Sans } from "next/font/google";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-// ─── Viewport podešavanja (Odvojeno od Metadata) ────────────
 export const viewport: Viewport = {
-  themeColor: "#0f172a", // Zameni bojom svog brenda (npr. tamno plava iz Tailwind-a)
+  themeColor: "#1B2B4B",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 5, // Dozvoljava zoom radi pristupačnosti (Accessibility - SEO plus)
+  maximumScale: 5,
 };
 
-
-
 export const metadata: Metadata = {
-  // ─── Osnovno ────────────────────────────────────────────────
   title: {
     default: "Proteinoteka | Uporedi cene proteina i suplemenata u Srbiji",
-    template: "%s | Proteinoteka", 
+    template: "%s | Proteinoteka",
   },
   description:
     "Pronađi najjeftiniji whey protein, izolat i kreatin u Srbiji. Upoređujemo aktuelne cene suplemenata (Pansport, Proteini.si) i računamo isplativost u RSD po gramu proteina.",
-  
-  // ─── Ključne reči (Google ih manje gleda, ali vrede za druge pretraživače)
   keywords: [
     "proteini srbija",
     "whey protein cena",
@@ -44,16 +34,12 @@ export const metadata: Metadata = {
     "proteini.si",
     "cena proteina po gramu",
   ],
-
   authors: [{ name: "Proteinoteka", url: "https://proteinoteka.rs" }],
   creator: "Proteinoteka",
   metadataBase: new URL("https://proteinoteka.rs"),
-  
   alternates: {
     canonical: "/",
   },
-
-  // ─── Open Graph (Za deljenje na Viberu, Instagramu, FB-u) ────
   openGraph: {
     type: "website",
     locale: "sr_RS",
@@ -71,16 +57,12 @@ export const metadata: Metadata = {
       },
     ],
   },
-
-  // ─── Twitter/X Card ─────────────────────────────────────────
   twitter: {
     card: "summary_large_image",
     title: "Najbolje cene proteina u Srbiji | Proteinoteka",
     description: "Prestani da preplaćuješ suplemente. Uporedi cene odmah.",
     images: ["/og-image.png"],
   },
-
-  // ─── Robots i Indeksiranje ──────────────────────────────────
   robots: {
     index: true,
     follow: true,
@@ -93,11 +75,9 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  
- 
-   verification: {
+  verification: {
     google: "KG3Xm4xm-dKMX6kadJDsoEYZKUx8a_0LqrF98S-Cl4g",
-  }, 
+  },
 };
 
 export default function RootLayout({
@@ -107,13 +87,14 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="sr" 
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      lang="sr"
+      className={`${dmSans.variable} h-full antialiased font-[family-name:var(--font-dm-sans)]`}
     >
-      <body className="min-h-full flex flex-col"><Providers>{children}</Providers>
-
+      <body className="min-h-full flex flex-col">
+        <Providers>{children}</Providers>
         <Analytics />
-        <GoogleAnalytics gaId="G-JR077S64MV" /></body>
+        <GoogleAnalytics gaId="G-JR077S64MV" />
+      </body>
     </html>
   );
 }

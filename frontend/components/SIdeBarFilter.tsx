@@ -43,7 +43,9 @@ function FilterGroup({
         onClick={() => setOpen(!open)}
         className="flex items-center justify-between w-full text-left"
       >
-        <span className="text-base font-semibold text-slate-700">{label}</span>
+        <span className="text-sm font-bold text-[#1A1A1A] uppercase tracking-wide">
+          {label}
+        </span>
         {open ? (
           <Minus className="w-4 h-4 text-slate-400" />
         ) : (
@@ -60,16 +62,20 @@ function FilterGroup({
               <button
                 key={opt}
                 onClick={() => handleClick(opt)}
-                className={`text-left text-base px-2 py-1.5 rounded transition-colors flex items-center justify-between ${
-                  isSelected
-                    ? "bg-[#FF9900]/15 text-[#b36b00] font-medium"
-                    : "text-slate-600 hover:bg-slate-100"
-                }`}
+                className="text-left text-sm px-0 py-1.5 flex items-center gap-2 text-[#1A1A1A] hover:text-[#FF9900] transition-colors"
               >
+                <span
+                  className={`w-4 h-4 border rounded flex items-center justify-center shrink-0 ${
+                    isSelected
+                      ? "bg-[#1B2B4B] border-[#1B2B4B]"
+                      : "border-slate-300"
+                  }`}
+                >
+                  {isSelected && (
+                    <span className="text-white text-[10px]">✓</span>
+                  )}
+                </span>
                 {opt}
-                {isSelected && (
-                  <span className="text-[#FF9900] text-xs">✓</span>
-                )}
               </button>
             );
           })}
@@ -201,11 +207,14 @@ function FilterContent({
   const [selectedUkusi, setSelectedUkusi] = useState<string[]>([]);
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 border-l-4 border-l-[#FF9900]">
+    <div className="p-0">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-lg font-black text-[#1B2B4B] tracking-tight">
-          Filteri
-        </span>
+        <div className="flex items-center gap-2 mb-4">
+          <SlidersHorizontal className="w-4 h-4 text-[#1A1A1A]" />
+          <span className="text-sm font-bold text-[#1A1A1A] uppercase tracking-widest">
+            Filteri
+          </span>
+        </div>
         {hasActiveFilters && (
           <button
             onClick={onReset}

@@ -18,12 +18,16 @@ export default function ProductGrid({
   totalPages,
   onPageChange,
 }: ProductGridProps) {
-
   if (loading) {
     return (
-      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-4">
+      <div className="flex flex-wrap gap-3 md:gap-4">
         {[...Array(8)].map((_, i) => (
-          <div key={i} className="h-56 md:h-72 bg-slate-200 rounded-lg animate-pulse" />
+          <div
+            key={i}
+            className="w-[calc(50%-6px)] lg:w-[calc(33.333%-10px)] xl:w-[calc(25%-12px)]"
+          >
+            <div className="h-56 md:h-72 bg-slate-200 animate-pulse rounded-lg" />
+          </div>
         ))}
       </div>
     );
@@ -40,14 +44,18 @@ export default function ProductGrid({
 
   return (
     <>
-      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-4">
+      <div className="flex flex-wrap gap-3 md:gap-4">
         {products.map((p) => (
-          <ProductCard key={p.productUrl} product={p} />
+          <div
+            key={p.productUrl}
+            className="w-[calc(50%-6px)] lg:w-[calc(33.333%-10px)] xl:w-[calc(25%-12px)]"
+          >
+            <ProductCard product={p} />
+          </div>
         ))}
       </div>
 
-      <div className="flex items-center justify-center gap-1 py-8 border-t border-slate-100 flex-wrap">
-
+      <div className="flex items-center justify-center gap-1 py-8 border-t border-slate-100 flex-wrap mt-6">
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 0}
@@ -58,9 +66,7 @@ export default function ProductGrid({
 
         {Array.from({ length: totalPages }, (_, i) => {
           const showPage =
-            i === 0 ||
-            i === totalPages - 1 ||
-            Math.abs(i - currentPage) <= 1;
+            i === 0 || i === totalPages - 1 || Math.abs(i - currentPage) <= 1;
 
           const showDots =
             (i === 1 && currentPage > 3) ||
@@ -98,7 +104,6 @@ export default function ProductGrid({
         >
           →
         </button>
-
       </div>
     </>
   );

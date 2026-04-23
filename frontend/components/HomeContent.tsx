@@ -112,7 +112,7 @@ export default function HomeContent({
   };
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="min-h-screen bg-white">
       <Header
         searchValue={search}
         onSearchChange={(val) => updateFilters("query", val)}
