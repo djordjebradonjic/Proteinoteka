@@ -102,7 +102,7 @@ return (
           </div>
           <button
             onClick={handleApply}
-            className="w-full bg-[#FF9900] hover:bg-[#e68a00] text-[#131921] text-sm font-semibold py-1.5 rounded transition-colors"
+            className="w-full bg-[#FF9900] hover:bg-[#e68a00] text-[#1B2B4B] text-sm font-semibold py-1.5 rounded transition-colors"
           >
             Primeni
           </button>

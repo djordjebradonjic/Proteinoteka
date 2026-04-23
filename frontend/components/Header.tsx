@@ -5,6 +5,8 @@ import { useState } from "react";
 import { ShoppingCart, Heart, Search } from "lucide-react";
 import { useAppSelector } from "@/store/hooks";
 
+
+
 function Logo() {
   return (
     <Link href="/" className="flex items-center shrink-0 group">
@@ -94,10 +96,10 @@ function IconButton({
         {icon}
       </span>
       {count > 0 && (
-        <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-[#FF9900] text-[#131921] text-[10px] font-bold flex items-center justify-center leading-none">
-          {count > 99 ? "99+" : count}
-        </span>
-      )}
+  <span className="absolute -top-1.5 -right-1.5 min-w-[15px] h-[15px] px-0.5 rounded-full bg-[#FF9900] text-[#1B2B4B] text-[9px] font-bold flex items-center justify-center leading-none">
+    {count > 99 ? "99+" : count}
+  </span>
+)}
     </Link>
   );
 }

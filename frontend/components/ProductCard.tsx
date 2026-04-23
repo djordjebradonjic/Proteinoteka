@@ -1,7 +1,6 @@
 "use client";
 
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Product } from "@/types/product";
 import Link from "next/link";
@@ -29,79 +28,91 @@ export default function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <Card className="flex flex-col hover:shadow-md transition-shadow bg-white relative">
-
-      {/* Srce — gornji desni ugao */}
-      <button
-        onClick={toggleWish}
-        className="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-white/80 hover:bg-white transition-colors shadow-sm"
-        aria-label="Dodaj u wish listu"
-      >
-        <Heart
-          className="w-5 h-5 transition-colors"
-          strokeWidth={1.8}
-          fill={wished ? "#ef4444" : "none"}
-          color={wished ? "#ef4444" : "#94a3b8"}
-        />
-      </button>
-
+       <div className="group flex flex-col bg-[#FFFDF7] rounded-xl border border-[#F0EDE6] transition-all duration-200 hover:-translate-y-1 overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_28px_rgba(255,153,0,0.12)]">
       {/* Slika */}
-      <div className="p-4 flex items-center justify-center h-44 bg-white rounded-t-lg">
+      <div className="relative p-4 flex items-center justify-center h-44 bg-white">
         {product.imageUrl ? (
           <img
             src={product.imageUrl}
             alt={product.name}
             referrerPolicy="no-referrer-when-downgrade"
-            className="h-full object-contain"
+            className="h-full object-contain transition-transform duration-200 group-hover:scale-105"
           />
         ) : (
-          <div className="w-full h-full bg-slate-100 rounded flex items-center justify-center text-slate-400">
+          <div className="w-full h-full bg-slate-100 rounded flex items-center justify-center text-slate-400 text-sm">
             Nema slike
           </div>
         )}
+
+        {/* Srce */}
+        <button
+          onClick={toggleWish}
+          className="absolute top-2 right-2 p-1.5 rounded-full bg-white shadow-sm hover:scale-110 transition-transform"
+          aria-label="Dodaj u wish listu"
+        >
+          <Heart
+            className="w-5 h-5 transition-colors"
+            strokeWidth={1.8}
+            fill={wished ? "#ef4444" : "none"}
+            color={wished ? "#ef4444" : "#CBD5E1"}
+          />
+        </button>
       </div>
 
-      <CardContent className="flex-1 px-4 pb-2">
-        {product.brand && (
-          <p className="text-xs text-slate-400 uppercase tracking-wide mb-1">
-            {product.brand}
-          </p>
-        )}
-        <h3 className="font-semibold text-slate-800 text-sm leading-snug mb-2 line-clamp-2">
+      {/* Sadržaj */}
+      <div className="flex flex-col flex-1 px-4 pt-3 pb-4 gap-2">
+
+       <div className="flex items-center justify-between">
+          {product.brand && (
+           <p className="text-[11px] font-semibold text-[#8A8A9A] uppercase tracking-widest">
+             {product.brand}
+           </p>
+           )}
+          <span className="text-[11px] font-medium text-[#5A6478] bg-[#F1F5F9] border border-[#E2E8F0] px-2 py-0.5 rounded">
+           {product.storeName}
+        </span>
+      </div>
+
+
+        {/* Naziv */}
+        <h3 className="font-semibold text-[#1A1A2E] text-sm leading-snug line-clamp-2 min-h-[40px]">
           {product.name}
         </h3>
-        <p className="text-xl font-bold text-green-600">
-          {product.price} RSD
+
+        {/* Cena */}
+        <p className="text-2xl font-black text-[#1B2B4B] leading-none">
+          {product.price.toLocaleString()} <span className="text-sm font-semibold text-[#8A8A9A]">RSD</span>
         </p>
+
+        {/* Value score badge */}
         {product.valueScore && (
-          <p className="text-sm text-green-700 font-medium mt-1">
-            ⚡ {product.valueScore} RSD/g proteina
-          </p>
+        <div className="inline-flex items-center gap-1 bg-[#FFF8EC] text-[#b36b00] text-xs font-semibold px-2 py-1 rounded-md w-fit border border-[#FFD980]">            ⚡ {product.valueScore} RSD/g proteina
+          </div>
         )}
+
+        {/* Proteini */}
         {product.proteinPer100g && (
-          <p className="text-sm text-slate-500 mt-0.5">
+          <p className="text-xs text-[#4A5568]">
             🥩 {product.proteinPer100g}g proteina/100g
           </p>
         )}
 
-        <Badge variant="outline" className="mt-2 text-xs">
-          {product.storeName}
-        </Badge>
-      </CardContent>
+        {/* Prodavnica */}
+       
 
-      <CardFooter className="px-4 pb-4 gap-2 flex flex-col">
-        <Button asChild className="w-full" size="sm">
-          <a href={product.productUrl} target="_blank" rel="noopener noreferrer">
-            Kupi →
-          </a>
-        </Button>
-        <Button variant="outline" asChild className="w-full" size="sm">
-          <Link href={`/product/${product.id}`}>
+       <div className="flex flex-col gap-2 mt-1">
+          <Link
+            href={`/product/${product.id}`}
+            className="w-full bg-[#1B2B4B] text-white font-bold text-sm py-2 rounded-md text-center hover:bg-[#243860] transition-colors"
+          >
             Detalji
           </Link>
-        </Button>
-      </CardFooter>
+          <a href={product.productUrl} target="_blank" rel="noopener noreferrer" className="w-full bg-[#FFF3DC] hover:bg-[#FFE5A0] text-[#a86800] text-sm py-2 rounded-md text-center transition-colors border border-[#FFD580]">
+            Kupi
+          </a>
+        </div>
 
-    </Card>
+      </div>
+    </div>
   );
 }
