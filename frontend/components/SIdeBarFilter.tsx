@@ -305,7 +305,7 @@ export default function SidebarFilter(props: SidebarFilterProps) {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden md:block w-64 shrink-0">
+      <aside className="hidden md:block w-64 shrink-0 self-start sticky top-24">
         <FilterContent
           {...props}
           key={resetKey}

@@ -123,8 +123,7 @@ export default function HomeContent({
         searchValue={search}
         onSearchChange={(val) => updateFilters("query", val)}
       />
-
-      <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col md:flex-row gap-6 items-start">
+      <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col md:flex-row gap-6 items-start relative">
         <SidebarFilter
           brands={brands}
           selectedStore={selectedStore}
