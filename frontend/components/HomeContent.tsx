@@ -10,6 +10,7 @@ import { useDebounce } from "use-debounce";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import SidebarFilter from "./SIdeBarFilter";
 import CompareBar from "./CompareBar";
+import KontaktSekcija from "./KontaktFoma";
 
 interface Props {
   initialProducts: Product[];
@@ -172,6 +173,7 @@ export default function HomeContent({
         </div>
       </div>
       <CompareBar />
+      <KontaktSekcija />
     </main>
   );
 }

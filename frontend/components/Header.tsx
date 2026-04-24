@@ -176,7 +176,7 @@ export default function Header({
 
         <nav className="hidden md:flex items-center gap-5">
           <NavLink href="/blog">Blog</NavLink>
-          <NavLink href="/kontakt">Kontakt</NavLink>
+          <NavLink href="/#kontakt">Kontakt</NavLink>
           <IconButton
             href="/wishlist"
             label="Lista željenih"
