@@ -72,6 +72,23 @@ public class ProductController {
         return spec;
     }
 
+    @GetMapping("/search")
+    public List<ProductDTO> searchAutocomplete(
+            @RequestParam String query,
+            @RequestParam(defaultValue = "20") int size) {
+
+        if (query == null || query.trim().length() < 2) return List.of();
+
+        Pageable pageable = PageRequest.of(0, size);
+
+        return productRepository
+                .findByNameContainingIgnoreCase(query.trim(), pageable)  // ← već postoji!
+                .stream()
+                .map(this::convertToDTO)
+                .sorted(Comparator.comparingDouble(
+                        p -> p.valueScore() != null ? p.valueScore() : Double.MAX_VALUE))
+                .toList();
+    }
 
 
     @GetMapping("/{id}")

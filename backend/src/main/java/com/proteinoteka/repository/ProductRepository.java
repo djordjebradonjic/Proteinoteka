@@ -30,4 +30,6 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @Query("SELECT p FROM products p WHERE p.proteinPer100g IS NULL")
     List<Product> findByProteinPer100gIsNull();
 
+
+
 }
