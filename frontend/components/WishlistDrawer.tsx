@@ -7,7 +7,7 @@ import {
   closeWishlist,
 } from "@/store/wishlistSlice";
 import { addToCompare, removeFromCompare } from "@/store/compareSlice";
-import { X, Heart, ExternalLink, Trash2 } from "lucide-react";
+import { X, Heart, ExternalLink, ShoppingCart, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -224,6 +224,15 @@ export default function WishlistDrawer() {
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
                       </Link>
+                      <a
+                        href={`${process.env.NEXT_PUBLIC_API_URL}/api/v1/products/${product.id}/buy`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1.5 rounded-lg bg-[#E8845A] hover:bg-[#d4714a] text-white transition-colors"
+                        aria-label="Kupi"
+                      >
+                        <ShoppingCart className="w-3.5 h-3.5" />
+                      </a>
                       <button
                         onClick={() => dispatch(removeFromWishlist(product.id))}
                         className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors"

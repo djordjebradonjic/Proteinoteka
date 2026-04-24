@@ -88,8 +88,8 @@ export default function ProductPage() {
               </div>
             </div>
 
-            <Button asChild size="lg" className="w-full bg-blue-600 hover:bg-blue-700 text-lg h-14 rounded-xl shadow-lg shadow-blue-100">
-              <a href={product.productUrl} target="_blank" rel="noopener noreferrer">Poseti prodavnicu →</a>
+            <Button asChild size="lg" className="w-full bg-[#E8845A] hover:bg-[#d4714a] text-lg h-14 rounded-xl shadow-lg shadow-orange-100">
+              <a href={`${process.env.NEXT_PUBLIC_API_URL}/api/v1/products/${id}/buy`} target="_blank" rel="noopener noreferrer">Kupi →</a>
             </Button>
           </div>
         </div>

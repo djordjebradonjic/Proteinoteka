@@ -3,18 +3,26 @@ package com.proteinoteka.controller;
 import com.proteinoteka.ProductSpecifications;
 import com.proteinoteka.dto.PriceHistoryDTO;
 import com.proteinoteka.dto.ProductDTO;
+import com.proteinoteka.model.AffiliateLink;
+import com.proteinoteka.model.ClickEvent;
 import com.proteinoteka.model.Product;
+import com.proteinoteka.repository.AffiliateLinkRepository;
+import com.proteinoteka.repository.ClickEventRepository;
 import com.proteinoteka.repository.ProductRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 @RestController
 @RequestMapping("/api/v1/products")
 @RequiredArgsConstructor
@@ -26,6 +34,8 @@ import java.util.List;
 public class ProductController {
 
     private final ProductRepository productRepository;
+    private final ClickEventRepository clickEventRepository;
+    private final AffiliateLinkRepository affiliateLinkRepository;
 
     @GetMapping
     public Page<ProductDTO> getProducts(
@@ -101,6 +111,51 @@ public class ProductController {
                 .map(this::convertToDTO)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{id}/buy")
+    public ResponseEntity<Void> buyProduct(
+            @PathVariable Long id,
+            HttpServletRequest request) {
+
+        Optional<Product> productOpt = productRepository.findById(id);
+        if (productOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Product product = productOpt.get();
+        String storeName = product.getStore() != null ? product.getStore().getName() : null;
+
+        ClickEvent event = new ClickEvent();
+        event.setProductId(id);
+        event.setStoreName(storeName);
+        event.setIpAddress(getClientIp(request));
+        event.setUserAgent(request.getHeader("User-Agent"));
+        event.setReferrer(request.getHeader("Referer"));
+        clickEventRepository.save(event);
+
+        String redirectUrl = product.getUrl();
+        if (storeName != null) {
+            Optional<AffiliateLink> link = affiliateLinkRepository.findByStoreNameAndIsActiveTrue(storeName);
+            if (link.isPresent() && link.get().getAffiliateUrlPattern() != null) {
+                String pattern = link.get().getAffiliateUrlPattern();
+                redirectUrl = pattern.contains("{url}")
+                        ? pattern.replace("{url}", product.getUrl())
+                        : pattern;
+            }
+        }
+
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .header(HttpHeaders.LOCATION, redirectUrl)
+                .build();
+    }
+
+    private String getClientIp(HttpServletRequest request) {
+        String xff = request.getHeader("X-Forwarded-For");
+        if (xff != null && !xff.isEmpty()) {
+            return xff.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 
     @GetMapping("/brands")
