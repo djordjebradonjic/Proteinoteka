@@ -6,6 +6,7 @@ import {
   clearWishlist,
   closeWishlist,
 } from "@/store/wishlistSlice";
+import { addToCompare, removeFromCompare } from "@/store/compareSlice";
 import { X, Heart, ExternalLink, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -47,6 +48,10 @@ export default function WishlistDrawer() {
     (state) => (state as any).wishlist.items,
   ) as any[];
   const isOpen = useAppSelector((state) => (state as any).wishlist.isOpen);
+  const compareIds = useAppSelector(
+    (state) => (state as any).compare.ids,
+  ) as number[];
+  const compareCount = compareIds.length;
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -68,6 +73,14 @@ export default function WishlistDrawer() {
       document.body.style.overflow = "";
     };
   }, [isOpen]);
+
+  const toggleCompare = (productId: number) => {
+    if (compareIds.includes(productId)) {
+      dispatch(removeFromCompare(productId));
+    } else if (compareCount < 4) {
+      dispatch(addToCompare(productId));
+    }
+  };
 
   return (
     <>
@@ -120,67 +133,108 @@ export default function WishlistDrawer() {
             </div>
           ) : (
             <ul className="divide-y divide-slate-100">
-              {items.map((product: any) => (
-                <li
-                  key={product.id}
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors"
-                >
-                  {/* Slika */}
-                  <div className="w-14 h-14 shrink-0 bg-slate-50 rounded-lg flex items-center justify-center overflow-hidden border border-slate-100">
-                    {product.imageUrl ? (
-                      <img
-                        src={product.imageUrl}
-                        alt={product.name}
-                        className="w-full h-full object-contain"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <Heart className="w-5 h-5 text-slate-300" />
-                    )}
-                  </div>
+              {items.map((product: any) => {
+                const isComparing = compareIds.includes(product.id);
+                const isDisabled = compareCount >= 4 && !isComparing;
 
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-slate-800 truncate leading-tight">
-                      {product.name}
-                    </p>
-                    <p className="text-[10px] text-slate-400 truncate mt-0.5">
-                      {product.brand && <span>{product.brand}</span>}
-                      {product.brand && product.storeName && (
-                        <span className="mx-1">·</span>
-                      )}
-                      {product.storeName && <span>{product.storeName}</span>}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      <span className="text-xs font-bold text-slate-800">
-                        {product.price}
-                      </span>
-                      {product.valueScore != null && (
-                        <ValueBadge score={product.valueScore} />
+                return (
+                  <li
+                    key={product.id}
+                    className={`flex items-center gap-3 px-4 py-3 transition-colors ${
+                      isComparing
+                        ? "bg-[#FFF3DC] shadow-[inset_0_0_0_2px_rgba(255,180,0,0.4)]"
+                        : "hover:bg-slate-50"
+                    }`}
+                  >
+                    {/* Slika */}
+                    <div className="w-14 h-14 shrink-0 bg-slate-50 rounded-lg flex items-center justify-center overflow-hidden border border-slate-100">
+                      {product.imageUrl ? (
+                        <img
+                          src={product.imageUrl}
+                          alt={product.name}
+                          className="w-full h-full object-contain"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <Heart className="w-5 h-5 text-slate-300" />
                       )}
                     </div>
-                  </div>
 
-                  {/* Akcije */}
-                  <div className="flex flex-col items-center gap-1.5 shrink-0">
-                    <Link
-                      href={`/product/${product.id}`}
-                      onClick={() => dispatch(closeWishlist())}
-                      className="p-1.5 rounded-lg bg-[#131921] hover:bg-[#243860] text-white transition-colors"
-                      aria-label="Pogledaj detalje"
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </Link>
-                    <button
-                      onClick={() => dispatch(removeFromWishlist(product.id))}
-                      className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors"
-                      aria-label="Ukloni"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </li>
-              ))}
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-slate-800 truncate leading-tight">
+                        {product.name}
+                      </p>
+                      <p className="text-[10px] text-slate-400 truncate mt-0.5">
+                        {product.brand && <span>{product.brand}</span>}
+                        {product.brand && product.storeName && (
+                          <span className="mx-1">·</span>
+                        )}
+                        {product.storeName && <span>{product.storeName}</span>}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <span className="text-xs font-bold text-slate-800">
+                          {product.price}
+                        </span>
+                        {product.valueScore != null && (
+                          <ValueBadge score={product.valueScore} />
+                        )}
+                      </div>
+
+                      {/* Compare dugme */}
+                      <button
+                        onClick={() => toggleCompare(product.id)}
+                        disabled={isDisabled}
+                        className={`mt-1.5 flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold transition-all border ${
+                          isComparing
+                            ? "bg-white text-[#FF9900] border-[#FF9900]"
+                            : isDisabled
+                              ? "bg-slate-100 text-slate-300 border-transparent cursor-not-allowed"
+                              : "bg-white text-slate-500 border-slate-200 hover:text-[#FF9900] hover:border-[#FF9900]"
+                        }`}
+                      >
+                        <span
+                          className={`w-3.5 h-3.5 border rounded-sm flex items-center justify-center shrink-0 ${
+                            isComparing
+                              ? "bg-[#FF9900] border-[#FF9900]"
+                              : "border-slate-400"
+                          }`}
+                        >
+                          {isComparing && (
+                            <span className="text-white text-[8px] font-black">
+                              ✓
+                            </span>
+                          )}
+                        </span>
+                        {isComparing
+                          ? "U poređenju"
+                          : isDisabled
+                            ? "Maksimum 4"
+                            : "Uporedi"}
+                      </button>
+                    </div>
+
+                    {/* Akcije */}
+                    <div className="flex flex-col items-center gap-1.5 shrink-0">
+                      <Link
+                        href={`/product/${product.id}`}
+                        onClick={() => dispatch(closeWishlist())}
+                        className="p-1.5 rounded-lg bg-[#131921] hover:bg-[#243860] text-white transition-colors"
+                        aria-label="Pogledaj detalje"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </Link>
+                      <button
+                        onClick={() => dispatch(removeFromWishlist(product.id))}
+                        className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors"
+                        aria-label="Ukloni"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
@@ -197,6 +251,11 @@ export default function WishlistDrawer() {
             </button>
             <span className="text-xs text-slate-400">
               {items.length} {items.length === 1 ? "proizvod" : "proizvoda"}
+              {compareIds.length > 0 && (
+                <span className="ml-2 text-[#FF9900] font-semibold">
+                  · {compareIds.length} u poređenju
+                </span>
+              )}
             </span>
           </div>
         )}

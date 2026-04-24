@@ -8,6 +8,7 @@ import {
   addToWishlist,
   removeFromWishlist,
   openWishlist,
+  closeWishlist,
 } from "@/store/wishlistSlice";
 import { addToCompare, removeFromCompare } from "@/store/compareSlice";
 
@@ -36,6 +37,9 @@ export default function ProductCard({ product }: ProductCardProps) {
     } else {
       dispatch(addToWishlist(product));
       dispatch(openWishlist());
+      setTimeout(() => {
+        dispatch(closeWishlist());
+      }, 1500);
     }
   };
 
