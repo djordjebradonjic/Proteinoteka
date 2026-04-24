@@ -2,9 +2,11 @@ package com.proteinoteka.service;
 
 import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.WaitUntilState;
+import com.proteinoteka.model.BrandReputation;
 import com.proteinoteka.model.PriceHistory;
 import com.proteinoteka.model.Product;
 import com.proteinoteka.model.Store;
+import com.proteinoteka.repository.BrandReputationRepository;
 import com.proteinoteka.repository.PriceHistoryRepository;
 import com.proteinoteka.repository.ProductRepository;
 import com.proteinoteka.repository.StoreRepository;
@@ -35,6 +37,8 @@ public class ScraperService {
     private final List<StoreScraper> scrapers;
     private final PriceHistoryRepository priceHistoryRepository;
     private final PriceParser priceParser;
+    private final BrandReputationRepository brandReputationRepository;
+    private final BrandNormalizerService brandNormalizer;
 
     @Autowired
     private NutritionParserService nutritionParser;
@@ -65,7 +69,6 @@ public class ScraperService {
                 log.info("========== Finished scrape for {} ({} products) ==========",
                         scraper.getStoreName(), storeProducts.size());
 
-                // No pause between stores in test mode
                 if (!testMode) Thread.sleep(30_000);
 
             } catch (Exception e) {
@@ -76,7 +79,6 @@ public class ScraperService {
         return allProducts;
     }
 
-    // Overload for backward compatibility
     public List<Product> scrapeAll() {
         return scrapeAll(false);
     }
@@ -157,7 +159,6 @@ public class ScraperService {
 
                         currentPage++;
 
-                        // TEST MODE — stop after first page
                         if (testMode) {
                             log.info("[{}] TEST MODE: Stopping after first page", scraper.getStoreName());
                             break;
@@ -185,7 +186,6 @@ public class ScraperService {
         return products;
     }
 
-    // Overload for backward compatibility
     public List<Product> scrapeStore(StoreScraper scraper) {
         return scrapeStore(scraper, false);
     }
@@ -248,25 +248,57 @@ public class ScraperService {
 
     @Transactional
     public void saveOrUpdateProduct(Product scraped, Store store) {
+
+        // 1. Normalizuj brend
+        if (scraped.getBrand() != null) {
+            scraped.setBrand(brandNormalizer.normalize(scraped.getBrand()));
+        }
+
+        // 2. Validacija nutritivnih vrednosti
+        if (scraped.getProteinPer100g() != null) {
+            if (scraped.getProteinPer100g() < 15 || scraped.getProteinPer100g() > 100) {
+                log.warn("[{}] Invalid protein value for '{}': {}g/100g — setting null",
+                        store.getName(), scraped.getName(), scraped.getProteinPer100g());
+                scraped.setProteinPer100g(null);
+            }
+        }
+        if (scraped.getSugarPer100g() != null && scraped.getSugarPer100g() > 100) {
+            log.warn("[{}] Invalid sugar value for '{}': {}g/100g — setting null",
+                    store.getName(), scraped.getName(), scraped.getSugarPer100g());
+            scraped.setSugarPer100g(null);
+        }
+        if (scraped.getFatPer100g() != null && scraped.getFatPer100g() > 100) {
+            log.warn("[{}] Invalid fat value for '{}': {}g/100g — setting null",
+                    store.getName(), scraped.getName(), scraped.getFatPer100g());
+            scraped.setFatPer100g(null);
+        }
+        if (scraped.getCaloriePer100g() != null && scraped.getCaloriePer100g() > 900) {
+            log.warn("[{}] Invalid calorie value for '{}': {}kcal/100g — setting null",
+                    store.getName(), scraped.getName(), scraped.getCaloriePer100g());
+            scraped.setCaloriePer100g(null);
+        }
+
+        // 3. Validacija cene
         Double numericPrice = priceParser.parse(scraped.getPrice());
         if (numericPrice == null || numericPrice == 0) {
             log.warn("[{}] Skipping '{}' - no valid price", store.getName(), scraped.getName());
             return;
         }
-        if (scraped.getProteinPer100g() == null || scraped.getProteinPer100g() < 5) {
-            log.warn("[{}] Skipping '{}' - no protein data (protein={})",
+
+        // 4. Validacija proteina
+        if (scraped.getProteinPer100g() == null || scraped.getProteinPer100g() < 15) {
+            log.warn("[{}] Skipping '{}' - no valid protein data (protein={})",
                     store.getName(), scraped.getName(), scraped.getProteinPer100g());
             return;
         }
-        Optional<Product> existingOpt = productRepository.findByUrl(scraped.getUrl());
 
+        Optional<Product> existingOpt = productRepository.findByUrl(scraped.getUrl());
         Double valueScore = calculateValueScore(numericPrice, scraped);
         double weightGrams = extractPackageGrams(scraped);
 
         if (existingOpt.isPresent()) {
             Product existing = existingOpt.get();
 
-            // Price history tracking
             String oldPrice = existing.getPrice();
             if (oldPrice != null && !oldPrice.equals(scraped.getPrice())) {
                 log.info("[{}] Price change for '{}': {} -> {}",
@@ -278,54 +310,46 @@ public class ScraperService {
                 priceHistoryRepository.save(history);
             }
 
-            // GROUP 1 — Always update (changes frequently)
+            // GROUP 1 — uvek ažuriraj
             existing.setPrice(scraped.getPrice());
             existing.setNumericPrice(numericPrice);
             existing.setValueScore(valueScore);
             existing.setLastUpdated(LocalDateTime.now());
 
-            // GROUP 2 — Update only if new value exists (changes rarely)
+            // GROUP 2 — ažuriraj samo ako postoji nova vrednost
             if (scraped.getName() != null && !scraped.getName().isBlank())
                 existing.setName(scraped.getName());
-
             if (scraped.getBrand() != null && !scraped.getBrand().isBlank())
                 existing.setBrand(scraped.getBrand());
-
             if (scraped.getImageUrl() != null && !scraped.getImageUrl().isBlank())
                 existing.setImageUrl(scraped.getImageUrl());
-
             if (scraped.getDescription() != null && !scraped.getDescription().isBlank())
                 existing.setDescription(scraped.getDescription());
-
             if (scraped.getPackage_weight() != null && !scraped.getPackage_weight().isEmpty())
                 existing.setPackage_weight(scraped.getPackage_weight());
-
             if (scraped.getFlavours() != null && !scraped.getFlavours().isEmpty())
                 existing.setFlavours(scraped.getFlavours());
-
             if (weightGrams > 0)
                 existing.setPrimaryWeightGrams(weightGrams);
 
-            // GROUP 3 — Update only if null in DB (never changes)
-            if (existing.getProteinPer100g() == null && scraped.getProteinPer100g() != null)
-                existing.setProteinPer100g(scraped.getProteinPer100g());
-
+            // GROUP 3 — ažuriraj samo ako je null u bazi
+            if (scraped.getProteinPer100g() != null) {
+                if (existing.getProteinPer100g() == null || existing.getProteinPer100g() < 15) {
+                    existing.setProteinPer100g(scraped.getProteinPer100g());
+                }
+            }
             if (existing.getFatPer100g() == null && scraped.getFatPer100g() != null)
                 existing.setFatPer100g(scraped.getFatPer100g());
-
             if (existing.getSugarPer100g() == null && scraped.getSugarPer100g() != null)
                 existing.setSugarPer100g(scraped.getSugarPer100g());
-
             if (existing.getCaloriePer100g() == null && scraped.getCaloriePer100g() != null)
                 existing.setCaloriePer100g(scraped.getCaloriePer100g());
-
             if (existing.getProteinSource() == null && scraped.getProteinSource() != null)
                 existing.setProteinSource(scraped.getProteinSource());
 
             productRepository.save(existing);
 
         } else {
-            // New product
             scraped.setStore(store);
             scraped.setNumericPrice(numericPrice);
             scraped.setValueScore(valueScore);
@@ -335,19 +359,107 @@ public class ScraperService {
         }
     }
 
-    private Double calculateValueScore(Double numericPrice, Product p) {
-        if (numericPrice == null || numericPrice == 0) return null;
+    // -------------------- Score calculation --------------------
+
+    public Double calculateValueScore(Double numericPrice, Product p) {
+        if (numericPrice == null || numericPrice <= 0) return null;
         if (p.getProteinPer100g() == null) return null;
-        if (p.getPackage_weight() == null || p.getPackage_weight().isEmpty()) return null;
-
         double packageGrams = extractPackageGrams(p);
-        if (packageGrams == 0) return null;
+        if (packageGrams <= 0) return null;
 
-        double totalProteinGrams = (p.getProteinPer100g() / 100.0) * packageGrams;
-        if (totalProteinGrams == 0) return null;
+        // 1. VALUE FOR MONEY (0-10) - weight 0.40
+        double proteinTotalGrams = (p.getProteinPer100g() / 100.0) * packageGrams;
+        if (proteinTotalGrams <= 0) return null;
+        double pricePerGramProtein = numericPrice / proteinTotalGrams;
+        if (pricePerGramProtein > 50) return null;
+        double benchmark = getCategoryBenchmark(p.getProteinSource());
+        double ratio = pricePerGramProtein / benchmark;
 
-        double score = numericPrice / totalProteinGrams;
-        return Math.round(score * 100.0) / 100.0;
+        double valueMoney = 10.0 / (1.0 + Math.exp(3.5 * (ratio - 1.2)));
+        valueMoney = Math.max(0, Math.min(10, valueMoney));
+
+        // 2. PROTEIN PURITY (0-10) - weight 0.20
+        double proteinPct = p.getProteinPer100g();
+        double proteinPurity = 10 * Math.pow(Math.max(0, (proteinPct - 60) / 40.0), 0.7);
+        proteinPurity = Math.max(0, Math.min(10, proteinPurity));
+
+        // 3. DIGESTIBILITY (0-10) - weight 0.15
+        double digestibility = 7.0;
+        if (p.getProteinSource() != null) {
+            String src = p.getProteinSource().toLowerCase();
+            if (src.contains("hydro"))           digestibility = 10.0;
+            else if (src.contains("cfm"))        digestibility = 9.7;
+            else if (src.contains("isolat"))     digestibility = 9.3;
+            else if (src.contains("casein"))     digestibility = 8.0;
+            else if (src.contains("concentrat")) digestibility = 7.5;
+            else if (src.contains("vegan"))      digestibility = 6.5;
+            if (src.contains("lactose"))         digestibility = Math.min(10, digestibility + 0.3);
+        }
+
+        // 4. INGREDIENTS (0-10) - weight 0.15
+        double ingredients = 10.0;
+        if (p.getSugarPer100g() != null) {
+            double sugar = p.getSugarPer100g();
+            if (sugar > 10)     ingredients -= 3.0;
+            else if (sugar > 5) ingredients -= 1.5;
+        }
+        if (p.getDescription() != null) {
+            String desc = p.getDescription().toLowerCase();
+            if (desc.contains("aspartam") || desc.contains("acesulfam"))
+                ingredients -= 1.5;
+            if (desc.contains("artificial") || desc.contains("color")  ||
+                    desc.contains("emulsifier") || desc.contains("boja")   ||
+                    desc.contains("emulgator")  || desc.contains("aroma"))
+                ingredients -= 1.0;
+        }
+        ingredients = Math.max(0, ingredients);
+
+        // 5. BRAND REPUTATION (0-10) - weight 0.10
+        double brandScore = 4.5;
+        if (p.getBrand() != null && !p.getBrand().isBlank()) {
+            brandScore = brandReputationRepository
+                    .findByBrandNameIgnoreCase(p.getBrand())
+                    .map(BrandReputation::getScore)
+                    .orElse(4.5);
+        }
+
+        // Penal: skupo + nepoznat brend
+        if (brandScore < 6.0 && ratio > 1.2) {
+            valueMoney *= 0.85;
+        }
+
+        // 6. CONFIDENCE PENALTY
+        int missing = 0;
+        if (p.getSugarPer100g() == null)  missing++;
+        if (p.getFatPer100g() == null)    missing++;
+        if (p.getDescription() == null || p.getDescription().isBlank()) missing++;
+        if (p.getProteinSource() == null) missing++;
+        double confidencePenalty = Math.max(0.84, 1.0 - (missing * 0.04));
+
+        // FINAL SCORE
+        double total =
+                (0.40 * valueMoney)    +
+                        (0.20 * proteinPurity) +
+                        (0.15 * digestibility) +
+                        (0.15 * ingredients)   +
+                        (0.10 * brandScore);
+
+        total *= confidencePenalty;
+
+        return Math.round(total * 10.0) / 10.0;
+    }
+
+    private double getCategoryBenchmark(String proteinSource) {
+        if (proteinSource == null) return 6.5;
+        String src = proteinSource.toLowerCase();
+        if (src.contains("hydro"))       return 6.5;
+        if (src.contains("cfm"))         return 6.8;
+        if (src.contains("isolat"))      return 6.8;
+        if (src.contains("casein"))      return 4.9;
+        if (src.contains("vegan"))       return 7.0;
+        if (src.contains("blend"))       return 5.8;
+        if (src.contains("concentrat"))  return 5.5;
+        return 6.5;
     }
 
     private double extractPackageGrams(Product p) {

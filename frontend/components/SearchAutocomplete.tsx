@@ -24,8 +24,28 @@ function debounce<T extends (...args: any[]) => void>(fn: T, delay: number): T {
 }
 
 function ValueBadge({ score }: { score: number }) {
-  const color = score >= 8 ? "#22c55e" : score >= 5.5 ? "#FF9900" : "#ef4444";
-  const label = score >= 8 ? "Odlično" : score >= 5.5 ? "Dobro" : "Skupo";
+  const color =
+    score >= 9.0
+      ? "#22c55e"
+      : score >= 8.0
+        ? "#16a34a"
+        : score >= 7.0
+          ? "#FF9900"
+          : score >= 6.0
+            ? "#f97316"
+            : "#ef4444";
+
+  const label =
+    score >= 9.0
+      ? "Best in class"
+      : score >= 8.0
+        ? "Odlična kupovina"
+        : score >= 7.0
+          ? "Dobar izbor"
+          : score >= 6.0
+            ? "Prosečno"
+            : "Ne preporučuje se";
+
   return (
     <span
       className="text-[10px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap"

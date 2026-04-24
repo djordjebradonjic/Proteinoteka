@@ -1,5 +1,7 @@
 package com.proteinoteka.controller;
 
+import com.proteinoteka.model.Product;
+import com.proteinoteka.repository.ProductRepository;
 import com.proteinoteka.service.ScraperService;
 import com.proteinoteka.service.StoreScraper;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +17,8 @@ public class AdminController {
 
     private final ScraperService scraperService;
     private final List<StoreScraper> scrapers;
+    private final ProductRepository productRepository;
+
 
     @PostMapping("/scrape")
     public ResponseEntity<String> triggerScrape(
@@ -77,5 +81,20 @@ public class AdminController {
                 .filter(s -> s.getStoreName().equals(name))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException(name + " scraper not found"));
+    }
+
+    @PostMapping("/recalculate-scores")
+    public ResponseEntity<String> recalculateScores() {
+        List<Product> all = productRepository.findAll();
+        int updated = 0;
+        for (Product p : all) {
+            Double newScore = scraperService.calculateValueScore(p.getNumericPrice(), p);
+            if (newScore != null) {
+                p.setValueScore(newScore);
+                productRepository.save(p);
+                updated++;
+            }
+        }
+        return ResponseEntity.ok("Updated " + updated + " products");
     }
 }

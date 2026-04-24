@@ -18,7 +18,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/products")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {
+        "http://localhost:3000",
+        "https://proteinoteka.rs",
+        "https://www.proteinoteka.rs"
+})
 public class ProductController {
 
     private final ProductRepository productRepository;

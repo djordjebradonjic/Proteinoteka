@@ -78,33 +78,35 @@ public class AiNutritionService {
         String weights = packageWeights != null ? packageWeights.toString() : "unknown";
 
         return """
-        Analyze this protein supplement and extract nutrition data.
-        Return ONLY a JSON object, no explanation, no markdown.
-                    
-        JSON format:
-        {
-          "proteinPer100g": <number or null>,
-          "sugarPer100g": <number or null>,
-          "fatPer100g": <number or null>,
-          "caloriePer100g": <number or null>,
-          "proteinSource": <"whey_concentrate"|"whey_isolate"|"hydrolysate"|"vegan"|"casein"|"blend"|null>,
-          "primaryWeightGrams": <total package weight in grams as number or null>
-        }
-                    
-        Rules:
-        - proteinPer100g: grams of protein per 100g of product
-        - primaryWeightGrams: convert kg to grams (e.g. 2kg = 2000)
-        - proteinSource: best match from the allowed values only
-        - All values must be numbers, not strings
-        - If multiple flavors exist with different values, use the AVERAGE across all flavors
-        - Extract values from "Na 100g" column, NOT "Na 30g" or per serving
-        - If nutrition is given per serving (not per 100g), convert: value / serving_weight_grams * 100
-        - If serving size is mentioned (e.g. "28g porcija", "1 merica 30g"), use it for conversion
-        - If no nutrition table exists at all, return null for all numeric fields
-                    
-        Product: %s
-        Package weights available: %s
-        Description: %s
-        """.formatted(productName, weights, trimmed);
+    Analyze this protein supplement and extract nutrition data.
+    Return ONLY a JSON object, no explanation, no markdown.
+                
+    JSON format:
+    {
+      "proteinPer100g": <number or null>,
+      "sugarPer100g": <number or null>,
+      "fatPer100g": <number or null>,
+      "caloriePer100g": <number or null>,
+      "proteinSource": <"whey_concentrate"|"whey_isolate"|"hydrolysate"|"vegan"|"casein"|"blend"|null>,
+      "primaryWeightGrams": <total package weight in grams as number or null>
+    }
+                
+    CRITICAL RULES — read carefully:
+    - proteinPer100g MUST be per 100g of product, NOT per serving
+    - Valid range for proteinPer100g: 15–95g. If result is outside this range, you made an error.
+    - If you see "Na 100g" column → use that value directly
+    - If you see only per-serving values → divide by serving size and multiply by 100
+      Example: 24g protein per 30g serving → (24/30)*100 = 80g per 100g
+    - If serving size is NOT mentioned and value looks like per-serving (e.g. 20-30g protein) → convert assuming 30g serving
+    - NEVER return values like 22, 24, 25 for proteinPer100g — these are per-serving values
+    - primaryWeightGrams: total package weight in grams (e.g. 2kg = 2000, 908g = 908)
+    - proteinSource: best match from allowed values only
+    - All values must be numbers, not strings
+    - If no nutrition data exists at all, return null for all numeric fields
+                
+    Product: %s
+    Package weights available: %s
+    Description: %s
+    """.formatted(productName, weights, trimmed);
     }
 }
