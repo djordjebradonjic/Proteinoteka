@@ -11,6 +11,7 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import SidebarFilter from "./SIdeBarFilter";
 import CompareBar from "./CompareBar";
 import KontaktSekcija from "./KontaktFoma";
+import WishlistDrawer from "./WishlistDrawer";
 
 interface Props {
   initialProducts: Product[];
@@ -174,6 +175,7 @@ export default function HomeContent({
       </div>
       <CompareBar />
       <KontaktSekcija />
+      <WishlistDrawer />
     </main>
   );
 }

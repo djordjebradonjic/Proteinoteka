@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ShoppingCart, Heart } from "lucide-react";
-import { useAppSelector } from "@/store/hooks";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import { toggleWishlist } from "@/store/wishlistSlice";
 import SearchAutocomplete from "@/components/SearchAutocomplete";
 
 function Logo() {
@@ -149,6 +150,7 @@ export default function Header({
   searchValue?: string;
   onSearchChange?: (v: string) => void;
 }) {
+  const dispatch = useAppDispatch();
   const wishlistCount = useAppSelector(
     (state) => (state as any).wishlist.count,
   ) as number;
@@ -156,6 +158,14 @@ export default function Header({
     (state) => (state as any).cart.count,
   ) as number;
   const [localSearch, setLocalSearch] = useState(searchValue);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const displayCount = mounted ? wishlistCount : 0;
+  const displayFill = mounted && wishlistCount > 0 ? "#FF9900" : "none";
 
   const handleSearch = (v: string) => {
     setLocalSearch(v);
@@ -177,18 +187,23 @@ export default function Header({
         <nav className="hidden md:flex items-center gap-5">
           <NavLink href="/blog">Blog</NavLink>
           <NavLink href="/#kontakt">Kontakt</NavLink>
-          <IconButton
-            href="/wishlist"
-            label="Lista željenih"
-            count={wishlistCount}
-            icon={
-              <Heart
-                className="w-6 h-6"
-                strokeWidth={1.8}
-                fill={wishlistCount > 0 ? "#FF9900" : "none"}
-              />
-            }
-          />
+
+          {/* Desktop Wishlist */}
+          <button
+            onClick={() => dispatch(toggleWishlist())}
+            className="relative flex items-center group"
+            aria-label="Lista željenih"
+          >
+            <span className="text-slate-200 group-hover:text-[#FF9900] transition-colors">
+              <Heart className="w-6 h-6" strokeWidth={1.8} fill={displayFill} />
+            </span>
+            {mounted && displayCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 min-w-[15px] h-[15px] px-0.5 rounded-full bg-[#FF9900] text-[#1B2B4B] text-[9px] font-bold flex items-center justify-center leading-none">
+                {displayCount > 99 ? "99+" : displayCount}
+              </span>
+            )}
+          </button>
+
           <IconButton
             href="/korpa"
             label="Korpa"
@@ -197,13 +212,23 @@ export default function Header({
           />
         </nav>
 
+        {/* Mobile */}
         <div className="flex md:hidden items-center gap-4 ml-auto shrink-0">
-          <IconButton
-            href="/wishlist"
-            label="Lista željenih"
-            count={wishlistCount}
-            icon={<Heart className="w-6 h-6" strokeWidth={1.8} />}
-          />
+          <button
+            onClick={() => dispatch(toggleWishlist())}
+            className="relative flex items-center group"
+            aria-label="Lista željenih"
+          >
+            <span className="text-slate-200 group-hover:text-[#FF9900] transition-colors">
+              <Heart className="w-6 h-6" strokeWidth={1.8} fill={displayFill} />
+            </span>
+            {mounted && displayCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 min-w-[15px] h-[15px] px-0.5 rounded-full bg-[#FF9900] text-[#1B2B4B] text-[9px] font-bold flex items-center justify-center leading-none">
+                {displayCount > 99 ? "99+" : displayCount}
+              </span>
+            )}
+          </button>
+
           <IconButton
             href="/korpa"
             label="Korpa"

@@ -3,9 +3,12 @@
 import { Product } from "@/types/product";
 import Link from "next/link";
 import { Heart } from "lucide-react";
-import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { increment, decrement } from "@/store/wishlistSlice";
+import {
+  addToWishlist,
+  removeFromWishlist,
+  openWishlist,
+} from "@/store/wishlistSlice";
 import { addToCompare, removeFromCompare } from "@/store/compareSlice";
 
 interface ProductCardProps {
@@ -13,8 +16,12 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const [wished, setWished] = useState(false);
   const dispatch = useAppDispatch();
+
+  const wishlistItems = useAppSelector(
+    (state) => (state as any).wishlist.items,
+  ) as any[];
+  const wished = wishlistItems.some((p: any) => p.id === product.id);
 
   const compareIds = useAppSelector(
     (state) => (state as any).compare.ids,
@@ -24,9 +31,12 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const toggleWish = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (wished) dispatch(decrement());
-    else dispatch(increment());
-    setWished(!wished);
+    if (wished) {
+      dispatch(removeFromWishlist(product.id));
+    } else {
+      dispatch(addToWishlist(product));
+      dispatch(openWishlist());
+    }
   };
 
   const toggleCompare = (e: React.MouseEvent) => {
