@@ -2,12 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, BarChart2, Package, Zap } from "lucide-react";
-import SearchAutocomplete from "@/components/SearchAutocomplete";
 import { CATEGORIES } from "@/lib/categories";
 
 interface HeroProps {
-  searchValue: string;
-  onSearchChange: (val: string) => void;
   selectedCategory: string;
   onCategoryChange: (val: string) => void;
 }
@@ -54,8 +51,6 @@ const DOTS = [
 ];
 
 export default function HeroSection({
-  searchValue,
-  onSearchChange,
   selectedCategory,
   onCategoryChange,
 }: HeroProps) {
@@ -182,11 +177,6 @@ export default function HeroSection({
               </span>
             </div>
           ))}
-        </div>
-
-        {/* Search bar */}
-        <div className="flex justify-center mb-5">
-          <SearchAutocomplete value={searchValue} onChange={onSearchChange} />
         </div>
 
         {/* Category pills */}

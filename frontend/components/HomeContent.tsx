@@ -179,8 +179,6 @@ export default function HomeContent({
 
       {!initialCategory && (
         <HeroSection
-          searchValue={search}
-          onSearchChange={(val) => updateFilters("query", val)}
           selectedCategory={selectedCategory}
           onCategoryChange={(val) => updateFilters("category", val)}
         />
