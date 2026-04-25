@@ -4,8 +4,7 @@ export interface PriceHistory {
 }
 
 export interface Product {
-  
-  id: number
+  id: number;
   name: string;
   brand: string | null;
   price: string;
@@ -15,9 +14,13 @@ export interface Product {
   weights: string[];
   flavours: string[];
   priceHistory: PriceHistory[];
-  description: string;
+  description: string | null;
   numericPrice: number;
-  valueScore: number;
-  proteinPer100g:number;
-  
+  valueScore: number | null;
+  proteinPer100g: number | null;
+  sugarPer100g: number | null;
+  fatPer100g: number | null;
+  caloriePer100g: number | null;
+  proteinSource: string | null;
+  primaryWeightGrams: number | null;
 }

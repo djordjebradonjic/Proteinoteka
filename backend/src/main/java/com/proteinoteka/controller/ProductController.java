@@ -160,6 +160,11 @@ public class ProductController {
         return request.getRemoteAddr();
     }
 
+    @GetMapping("/ids")
+    List<Long> getAllIds() {
+        return productRepository.findAllIds();
+    }
+
     @GetMapping("/brands")
     List<String> getAllBrands() {
         return productRepository.findAllUniqueBrands();
