@@ -176,33 +176,29 @@ export default function HeroSection({ selectedCategory, onCategoryChange }: Hero
         </p>
 
         {/* Trust badges */}
-        <div className="flex flex-wrap justify-center gap-3 mb-10">
+        <div className="flex items-center justify-center gap-0 mb-10 max-w-xs mx-auto sm:max-w-sm">
           {[
-            { icon: Store,        text: "6 prodavnica",        delay: 0.35 },
-            { icon: Package,      text: "250+ proizvoda",      delay: 0.45 },
-            { icon: TrendingDown, text: "Mi pratimo. Ti štediš.", delay: 0.55 },
-          ].map(({ icon: Icon, text, delay }) => (
+            { icon: Store,        value: "6",          label: "prodavnica",  delay: 0.35 },
+            { icon: Package,      value: "250+",       label: "proizvoda",   delay: 0.45 },
+            { icon: TrendingDown, value: "Mi pratimo.", label: "Ti štediš.", delay: 0.55 },
+          ].map(({ icon: Icon, value, label, delay }, i) => (
             <div
-              key={text}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full cursor-default select-none transition-all duration-200"
+              key={label}
+              className="flex-1 flex flex-col items-center py-3 px-2"
               style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,153,0,0.22)",
+                borderLeft: i > 0 ? "1px solid rgba(255,255,255,0.07)" : "none",
                 ...(visible
                   ? { animation: `heroBadge 0.45s cubic-bezier(0.16,1,0.3,1) ${delay}s both` }
                   : { opacity: 0 }),
               }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.background = "rgba(255,153,0,0.08)";
-                (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,153,0,0.45)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)";
-                (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,153,0,0.22)";
-              }}
             >
-              <Icon className="w-3.5 h-3.5 shrink-0" style={{ color: "#FF9900" }} strokeWidth={2.2} />
-              <span className="text-sm font-semibold text-white whitespace-nowrap">{text}</span>
+              <Icon className="w-3.5 h-3.5 text-[#FF9900] mb-1.5" strokeWidth={2.2} />
+              <span className="text-lg font-extrabold text-white tabular-nums leading-none">
+                {value}
+              </span>
+              <span className="text-[10px] text-slate-500 mt-1 uppercase tracking-widest font-medium">
+                {label}
+              </span>
             </div>
           ))}
         </div>
