@@ -1,6 +1,8 @@
 package com.proteinoteka;
 
 import com.proteinoteka.model.Product;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.ListJoin;
 import org.springframework.data.jpa.domain.Specification;
 
 public class ProductSpecifications {
@@ -25,5 +27,19 @@ public class ProductSpecifications {
     public static Specification<Product> priceLessThan(Double maxPrice) {
         return (root, query, cb) -> maxPrice == null ?
                 cb.conjunction() : cb.lessThanOrEqualTo(root.get("numericPrice"), maxPrice);
+    }
+
+    public static Specification<Product> hasFlavour(String flavour) {
+        return (root, query, cb) -> {
+            if (flavour == null || flavour.isEmpty()) return cb.conjunction();
+            query.distinct(true);
+            ListJoin<Product, String> join = root.joinList("flavours", JoinType.INNER);
+            return cb.equal(cb.lower(join), flavour.toLowerCase());
+        };
+    }
+
+    public static Specification<Product> hasProteinSource(String proteinSource) {
+        return (root, query, cb) -> proteinSource == null || proteinSource.isEmpty() ?
+                cb.conjunction() : cb.equal(root.get("proteinSource"), proteinSource);
     }
 }

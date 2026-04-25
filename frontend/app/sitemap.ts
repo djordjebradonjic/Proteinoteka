@@ -1,10 +1,18 @@
 import { MetadataRoute } from "next";
+import { CATEGORIES } from "@/lib/categories";
 
 // Keširaj sitemap na 1 sat da ne bi stalno udarao na Railway API
-export const revalidate = 3600; 
+export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://proteinoteka.rs";
+
+  const categoryPages: MetadataRoute.Sitemap = CATEGORIES.map((c) => ({
+    url: `${baseUrl}/kategorija/${c.slug}`,
+    lastModified: new Date(),
+    changeFrequency: "daily",
+    priority: 0.9,
+  }));
 
   const staticPages: MetadataRoute.Sitemap = [
     {
@@ -13,6 +21,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily",
       priority: 1,
     },
+    ...categoryPages,
   ];
 
   try {

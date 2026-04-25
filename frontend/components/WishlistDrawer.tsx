@@ -228,7 +228,7 @@ export default function WishlistDrawer() {
                         href={`${process.env.NEXT_PUBLIC_API_URL}/api/v1/products/${product.id}/buy`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-1.5 rounded-lg bg-[#E8845A] hover:bg-[#d4714a] text-white transition-colors"
+                        className="p-1.5 rounded-lg bg-[#FF9900] hover:bg-[#e68a00] text-white transition-colors"
                         aria-label="Kupi"
                       >
                         <ShoppingCart className="w-3.5 h-3.5" />

@@ -2,16 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Plus, Minus, SlidersHorizontal, X } from "lucide-react";
-
-interface FilterSection {
-  key: string;
-  label: string;
-  options: string[];
-  selected: string | string[];
-  onChange: (val: string | string[]) => void;
-  defaultOpen?: boolean;
-  multi?: boolean;
-}
+import { CATEGORIES } from "@/lib/categories";
 
 function FilterGroup({
   label,
@@ -19,28 +10,19 @@ function FilterGroup({
   selected,
   onChange,
   defaultOpen = false,
-  multi = false,
-}: Omit<FilterSection, "key">) {
+}: {
+  label: string;
+  options: string[];
+  selected: string;
+  onChange: (val: string) => void;
+  defaultOpen?: boolean;
+}) {
   const [open, setOpen] = useState(defaultOpen);
-
-  const selectedArr = multi ? (Array.isArray(selected) ? selected : []) : [];
-
-  const handleClick = (opt: string) => {
-    if (!multi) {
-      onChange(opt === selected ? "Sve" : opt);
-      return;
-    }
-    if (selectedArr.includes(opt)) {
-      onChange(selectedArr.filter((s) => s !== opt));
-    } else {
-      onChange([...selectedArr, opt]);
-    }
-  };
 
   return (
     <div className="border-b border-slate-200 py-3">
       <button
-        onClick={() => setOpen(!open)}
+        onClick={() => setOpen((o) => !o)}
         className="flex items-center justify-between w-full text-left"
       >
         <span className="text-sm font-bold text-[#1A1A1A] uppercase tracking-wide">
@@ -53,19 +35,20 @@ function FilterGroup({
         )}
       </button>
       {open && (
-        <div className="mt-2 flex flex-col gap-1">
+        <div className="mt-2 flex flex-col gap-0.5 max-h-[260px] overflow-y-auto pr-1">
+          {options.length === 0 && (
+            <p className="text-xs text-slate-400 py-1">Učitavanje...</p>
+          )}
           {options.map((opt) => {
-            const isSelected = multi
-              ? selectedArr.includes(opt)
-              : selected === opt;
+            const isSelected = selected === opt;
             return (
               <button
                 key={opt}
-                onClick={() => handleClick(opt)}
+                onClick={() => onChange(isSelected ? "Sve" : opt)}
                 className="text-left text-sm px-0 py-1.5 flex items-center gap-2 text-[#1A1A1A] hover:text-[#FF9900] transition-colors"
               >
                 <span
-                  className={`w-4 h-4 border rounded flex items-center justify-center shrink-0 ${
+                  className={`w-4 h-4 border rounded flex items-center justify-center shrink-0 transition-colors ${
                     isSelected
                       ? "bg-[#1B2B4B] border-[#1B2B4B]"
                       : "border-slate-300"
@@ -85,31 +68,47 @@ function FilterGroup({
   );
 }
 
-interface PriceRangeProps {
-  minPrice: string;
-  maxPrice: string;
-  onMinChange: (val: string) => void;
-  onMaxChange: (val: string) => void;
-}
-
 function PriceRange({
   minPrice,
   maxPrice,
   onMinChange,
   onMaxChange,
-}: PriceRangeProps) {
+}: {
+  minPrice: string;
+  maxPrice: string;
+  onMinChange: (val: string) => void;
+  onMaxChange: (val: string) => void;
+}) {
   const [open, setOpen] = useState(false);
   const [localMin, setLocalMin] = useState(minPrice);
   const [localMax, setLocalMax] = useState(maxPrice);
 
+  // Sync inputs when URL params change (reset or shared link)
+  useEffect(() => setLocalMin(minPrice), [minPrice]);
+  useEffect(() => setLocalMax(maxPrice), [maxPrice]);
+
+  const min = localMin !== "" ? Number(localMin) : null;
+  const max = localMax !== "" ? Number(localMax) : null;
+  const isInvalid = min !== null && max !== null && min > max;
+  const isActive = minPrice !== "" || maxPrice !== "";
+
+  const apply = () => {
+    if (isInvalid) return;
+    onMinChange(localMin);
+    onMaxChange(localMax);
+  };
+
   return (
     <div className="border-b border-slate-200 py-3">
       <button
-        onClick={() => setOpen(!open)}
+        onClick={() => setOpen((o) => !o)}
         className="flex items-center justify-between w-full text-left"
       >
-        <span className="text-base font-semibold text-slate-700">
+        <span className="text-sm font-bold text-[#1A1A1A] uppercase tracking-wide flex items-center gap-2">
           Cena (RSD)
+          {isActive && (
+            <span className="w-1.5 h-1.5 rounded-full bg-[#FF9900] shrink-0" />
+          )}
         </span>
         {open ? (
           <Minus className="w-4 h-4 text-slate-400" />
@@ -124,24 +123,37 @@ function PriceRange({
               type="number"
               placeholder="Od"
               value={localMin}
+              min={0}
               onChange={(e) => setLocalMin(e.target.value)}
-              className="w-full border border-slate-200 rounded px-2 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FF9900]"
+              className={`w-full border rounded px-2 py-2 text-sm outline-none focus:ring-1 ${
+                isInvalid
+                  ? "border-red-300 focus:ring-red-300"
+                  : "border-slate-200 focus:ring-[#FF9900]"
+              }`}
             />
-            <span className="text-slate-400 text-sm">–</span>
+            <span className="text-slate-400 text-sm shrink-0">–</span>
             <input
               type="number"
               placeholder="Do"
               value={localMax}
+              min={0}
               onChange={(e) => setLocalMax(e.target.value)}
-              className="w-full border border-slate-200 rounded px-2 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FF9900]"
+              className={`w-full border rounded px-2 py-2 text-sm outline-none focus:ring-1 ${
+                isInvalid
+                  ? "border-red-300 focus:ring-red-300"
+                  : "border-slate-200 focus:ring-[#FF9900]"
+              }`}
             />
           </div>
+          {isInvalid && (
+            <p className="text-[11px] text-red-500">
+              Minimalna cena ne može biti veća od maksimalne.
+            </p>
+          )}
           <button
-            onClick={() => {
-              onMinChange(localMin);
-              onMaxChange(localMax);
-            }}
-            className="w-full bg-[#FF9900] hover:bg-[#e68a00] text-[#1B2B4B] text-sm font-semibold py-1.5 rounded transition-colors"
+            onClick={apply}
+            disabled={isInvalid}
+            className="w-full bg-[#FF9900] hover:bg-[#e68a00] disabled:opacity-40 disabled:cursor-not-allowed text-[#1B2B4B] text-sm font-semibold py-1.5 rounded transition-colors"
           >
             Primeni
           </button>
@@ -151,19 +163,24 @@ function PriceRange({
   );
 }
 
-interface SidebarFilterProps {
+export interface SidebarFilterProps {
   brands: string[];
+  flavours: string[];
   selectedStore: string;
   selectedBrand: string;
+  selectedFlavour: string;
+  selectedCategory: string;
   minPrice: string;
   maxPrice: string;
   onStoreChange: (val: string) => void;
   onBrandChange: (val: string) => void;
+  onFlavourChange: (val: string) => void;
+  onCategoryChange: (val: string) => void;
   onMinChange: (val: string) => void;
   onMaxChange: (val: string) => void;
   onReset: () => void;
   hasActiveFilters: boolean;
-  activeCount?: number;
+  activeCount: number;
 }
 
 const STORES = [
@@ -174,88 +191,94 @@ const STORES = [
   "FitLab",
   "Ogistrashop",
 ];
-const KATEGORIJE = [
-  "Whey protein",
-  "Izolat",
-  "Kazein",
-  "Vegan protein",
-  "Kreatin",
-  "Amino kiseline",
-];
-const UKUSI = [
-  "Čokolada",
-  "Vanila",
-  "Jagoda",
-  "Bez ukusa",
-  "Karamel",
-  "Lešnik",
-];
 
 function FilterContent({
   brands,
+  flavours,
   selectedStore,
   selectedBrand,
+  selectedFlavour,
+  selectedCategory,
   minPrice,
   maxPrice,
   onStoreChange,
   onBrandChange,
+  onFlavourChange,
+  onCategoryChange,
   onMinChange,
   onMaxChange,
   onReset,
   hasActiveFilters,
   activeCount,
-  onTotalCountChange,
-}: SidebarFilterProps & { onTotalCountChange?: (count: number) => void }) {
-  const [selectedKategorije, setSelectedKategorije] = useState<string[]>([]);
-  const [selectedUkusi, setSelectedUkusi] = useState<string[]>([]);
-
-  const localCount = selectedKategorije.length + selectedUkusi.length;
-  const totalCount = (activeCount ?? 0) + localCount;
-
-  useEffect(() => {
-    onTotalCountChange?.(totalCount);
-  }, [totalCount]);
-
+}: SidebarFilterProps) {
   return (
-    <div className="p-0">
-      <div className="mb-4">
-        <div className="flex items-center gap-2 mb-3">
+    <div>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
           <SlidersHorizontal className="w-4 h-4 text-[#1A1A1A]" />
           <span className="text-sm font-bold text-[#1A1A1A] uppercase tracking-widest">
             Filteri
           </span>
+          {activeCount > 0 && (
+            <span className="bg-[#FF9900] text-[#1B2B4B] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+              {activeCount}
+            </span>
+          )}
         </div>
-        <button
-          onClick={onReset}
-          className={`w-full text-sm font-medium py-2 rounded-md border transition-colors ${
-            hasActiveFilters
-              ? "text-[#FF9900] border-[#FF9900] hover:bg-[#FF9900] hover:text-[#1B2B4B] cursor-pointer"
-              : "text-transparent border-transparent cursor-default pointer-events-none"
-          }`}
-        >
-          Resetuj filtere
-        </button>
+        {hasActiveFilters && (
+          <button
+            onClick={onReset}
+            className="text-xs text-[#FF9900] hover:text-[#e68a00] font-semibold transition-colors"
+          >
+            Resetuj sve
+          </button>
+        )}
       </div>
 
-      <FilterGroup
-        label="Kategorija"
-        options={KATEGORIJE}
-        selected={selectedKategorije}
-        onChange={(val) => setSelectedKategorije(val as string[])}
-        defaultOpen={true}
-        multi
-      />
+      {/* Category pills */}
+      <div className="border-b border-slate-200 pb-4 mb-1">
+        <p className="text-sm font-bold text-[#1A1A1A] uppercase tracking-wide mb-2">
+          Kategorija
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {CATEGORIES.map((cat) => {
+            const isActive = selectedCategory === cat.value;
+            return (
+              <button
+                key={cat.value}
+                onClick={() => onCategoryChange(isActive ? "" : cat.value)}
+                className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-all border ${
+                  isActive
+                    ? "bg-[#1B2B4B] text-white border-[#1B2B4B]"
+                    : "bg-white text-slate-600 border-slate-200 hover:border-[#1B2B4B] hover:text-[#1B2B4B]"
+                }`}
+              >
+                {cat.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <FilterGroup
         label="Prodavnica"
         options={STORES}
         selected={selectedStore}
-        onChange={(val) => onStoreChange(val as string)}
+        onChange={onStoreChange}
+        defaultOpen
       />
       <FilterGroup
         label="Brend"
-        options={brands.slice(0, 10)}
+        options={brands.slice(0, 20)}
         selected={selectedBrand}
-        onChange={(val) => onBrandChange(val as string)}
+        onChange={onBrandChange}
+      />
+      <FilterGroup
+        label="Ukus"
+        options={flavours}
+        selected={selectedFlavour}
+        onChange={onFlavourChange}
       />
       <PriceRange
         minPrice={minPrice}
@@ -263,59 +286,28 @@ function FilterContent({
         onMinChange={onMinChange}
         onMaxChange={onMaxChange}
       />
-      <FilterGroup
-        label="Ukus"
-        options={UKUSI}
-        selected={selectedUkusi}
-        onChange={(val) => setSelectedUkusi(val as string[])}
-        multi
-      />
     </div>
   );
 }
 
 export default function SidebarFilter(props: SidebarFilterProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [totalCount, setTotalCount] = useState(0);
-  const [resetKey, setResetKey] = useState(0);
-  const [localHasActive, setLocalHasActive] = useState(props.hasActiveFilters);
 
   useEffect(() => {
-    setLocalHasActive(props.hasActiveFilters);
-  }, [props.hasActiveFilters]);
-
-  useEffect(() => {
-    if (drawerOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = drawerOpen ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
   }, [drawerOpen]);
 
-  const handleReset = () => {
-    props.onReset();
-    setResetKey((k) => k + 1);
-    setTotalCount(0);
-    setLocalHasActive(false);
-  };
-
   return (
     <>
       {/* Desktop sidebar */}
       <aside className="hidden md:block w-64 shrink-0 self-start sticky top-24">
-        <FilterContent
-          {...props}
-          key={resetKey}
-          onReset={handleReset}
-          hasActiveFilters={localHasActive}
-          onTotalCountChange={setTotalCount}
-        />
+        <FilterContent {...props} />
       </aside>
 
-      {/* Mobilno dugme */}
+      {/* Mobile trigger */}
       <div className="md:hidden w-full mb-2">
         <button
           onClick={() => setDrawerOpen(true)}
@@ -323,15 +315,15 @@ export default function SidebarFilter(props: SidebarFilterProps) {
         >
           <SlidersHorizontal className="w-4 h-4" />
           Filteri
-          {totalCount > 0 && (
-            <span className="ml-1 bg-[#FF9900] text-[#1B2B4B] text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-              {totalCount}
+          {props.activeCount > 0 && (
+            <span className="ml-1 bg-[#FF9900] text-[#1B2B4B] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+              {props.activeCount}
             </span>
           )}
         </button>
       </div>
 
-      {/* Mobilni drawer */}
+      {/* Mobile drawer */}
       {drawerOpen && (
         <div
           className="fixed inset-0 z-50 md:hidden"
@@ -350,26 +342,18 @@ export default function SidebarFilter(props: SidebarFilterProps) {
                 <X className="w-5 h-5 text-slate-500" />
               </button>
             </div>
-
             <div className="flex-1 overflow-y-auto px-4 py-2">
-              <FilterContent
-                {...props}
-                key={resetKey}
-                onReset={handleReset}
-                hasActiveFilters={localHasActive}
-                onTotalCountChange={setTotalCount}
-              />
+              <FilterContent {...props} />
             </div>
-
             <div className="shrink-0 px-4 py-3 border-t border-slate-100 bg-white">
               <button
                 onClick={() => setDrawerOpen(false)}
                 className="w-full bg-[#1B2B4B] text-white font-bold py-3 rounded-md text-sm uppercase tracking-wide"
               >
-                Primeni
-                {totalCount > 0 && (
+                Prikaži rezultate
+                {props.activeCount > 0 && (
                   <span className="ml-2 bg-[#FF9900] text-[#1B2B4B] text-xs font-bold px-2 py-0.5 rounded-full">
-                    {totalCount}
+                    {props.activeCount}
                   </span>
                 )}
               </button>

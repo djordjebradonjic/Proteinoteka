@@ -42,36 +42,34 @@ public class ProductController {
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String storeName,
             @RequestParam(required = false) String brand,
+            @RequestParam(required = false) String flavour,
+            @RequestParam(required = false) String category,
             @RequestParam(required = false) Double minPrice,
             @RequestParam(required = false) Double maxPrice,
             Pageable pageable) {
 
-        // ← ZAMENI stari nullsLast blok sa ovim
         boolean sortByValue = pageable.getSort().stream()
                 .anyMatch(o -> o.getProperty().equals("valueScore"));
 
         if (sortByValue) {
-            // Ukloni valueScore sort, fetchuj bez sorta pa sortiraj u memoriji
             Pageable unsorted = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
-
-            Specification<Product> spec = buildSpec(name, storeName, brand, minPrice, maxPrice);
-
+            Specification<Product> spec = buildSpec(name, storeName, brand, flavour, category, minPrice, maxPrice);
             List<ProductDTO> sorted = productRepository.findAll(spec, unsorted)
                     .stream()
                     .map(this::convertToDTO)
                     .sorted(Comparator.comparingDouble(
                             p -> p.valueScore() != null ? p.valueScore() : Double.MAX_VALUE))
                     .toList();
-
             return new PageImpl<>(sorted, pageable, sorted.size());
         }
 
-        Specification<Product> spec = buildSpec(name, storeName, brand, minPrice, maxPrice);
+        Specification<Product> spec = buildSpec(name, storeName, brand, flavour, category, minPrice, maxPrice);
         return productRepository.findAll(spec, pageable).map(this::convertToDTO);
     }
 
-    private Specification<Product> buildSpec(String name, String storeName,
-                                             String brand, Double minPrice, Double maxPrice) {
+    private Specification<Product> buildSpec(String name, String storeName, String brand,
+                                             String flavour, String category,
+                                             Double minPrice, Double maxPrice) {
         Specification<Product> spec = Specification.where(null);
         if (name != null && !name.isEmpty())
             spec = spec.and(ProductSpecifications.hasName(name));
@@ -79,6 +77,10 @@ public class ProductController {
             spec = spec.and(ProductSpecifications.hasStoreName(storeName));
         if (brand != null && !brand.isEmpty())
             spec = spec.and(ProductSpecifications.hasBrand(brand));
+        if (flavour != null && !flavour.isEmpty())
+            spec = spec.and(ProductSpecifications.hasFlavour(flavour));
+        if (category != null && !category.isEmpty())
+            spec = spec.and(ProductSpecifications.hasProteinSource(category));
         if (minPrice != null)
             spec = spec.and(ProductSpecifications.priceGreaterThan(minPrice));
         if (maxPrice != null)
@@ -159,8 +161,13 @@ public class ProductController {
     }
 
     @GetMapping("/brands")
-    List<String> getAllBrands(){
+    List<String> getAllBrands() {
         return productRepository.findAllUniqueBrands();
+    }
+
+    @GetMapping("/flavours")
+    List<String> getAllFlavours() {
+        return productRepository.findAllUniqueFlavours();
     }
 
     private ProductDTO convertToDTO(Product product) {

@@ -27,6 +27,9 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @Query("SELECT DISTINCT p.brand from products p WHERE p.brand IS NOT NULL ORDER BY p.brand ASC")
     List<String> findAllUniqueBrands();
 
+    @Query(value = "SELECT DISTINCT flavour FROM product_flavours WHERE flavour IS NOT NULL ORDER BY flavour ASC", nativeQuery = true)
+    List<String> findAllUniqueFlavours();
+
     @Query("SELECT p FROM products p WHERE p.proteinPer100g IS NULL")
     List<Product> findByProteinPer100gIsNull();
 

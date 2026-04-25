@@ -81,10 +81,10 @@ export const metadata: Metadata = {
 async function getInitialProducts() {
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/products?page=0&size=12&sort=id,desc`,
-      { next: { revalidate: 3600 } } // cache 1h
+      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/products?page=0&size=12&sort=id,desc`,
+      { next: { revalidate: 3600 } },
     );
- const data = await res.json();
+    const data = await res.json();
     return {
       content: data.content ?? [],
       totalPages: data.page?.totalPages ?? 0,
@@ -96,7 +96,12 @@ async function getInitialProducts() {
 
 export default async function Home() {
   const initialData = await getInitialProducts();
-  return (<Suspense fallback={<div>Loading...</div>}>  
-            <HomeContent initialProducts={initialData.content} initialTotalPages={initialData.totalPages} />;
-          </Suspense>);
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HomeContent
+        initialProducts={initialData.content}
+        initialTotalPages={initialData.totalPages}
+      />
+    </Suspense>
+  );
 }
