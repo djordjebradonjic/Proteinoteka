@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, BarChart2, Package, Zap } from "lucide-react";
+import { Store, Package, RefreshCw, ArrowDown, GitCompare } from "lucide-react";
 import { CATEGORIES } from "@/lib/categories";
 
 interface HeroProps {
@@ -16,66 +16,84 @@ function useCounter(target: number, duration = 1400) {
 
   useEffect(() => {
     startRef.current = null;
-    const step = (ts: number) => {
+    const tick = (ts: number) => {
       if (!startRef.current) startRef.current = ts;
       const p = Math.min((ts - startRef.current) / duration, 1);
-      const eased = 1 - (1 - p) ** 3;
-      setVal(Math.round(eased * target));
-      if (p < 1) rafRef.current = requestAnimationFrame(step);
+      setVal(Math.round((1 - (1 - p) ** 3) * target));
+      if (p < 1) rafRef.current = requestAnimationFrame(tick);
     };
-    rafRef.current = requestAnimationFrame(step);
+    rafRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafRef.current);
   }, [target, duration]);
 
   return val;
 }
 
-// Deterministic dots — no Math.random() to avoid hydration mismatch
+// Deterministic positions — no Math.random() to avoid hydration mismatch
 const DOTS = [
-  { x: 8,  y: 12, size: 3, dur: 7,  del: 0   },
-  { x: 22, y: 55, size: 2, dur: 9,  del: 1.2 },
-  { x: 35, y: 28, size: 4, dur: 6,  del: 0.4 },
-  { x: 48, y: 70, size: 2, dur: 11, del: 2.1 },
-  { x: 61, y: 18, size: 3, dur: 8,  del: 0.8 },
-  { x: 74, y: 45, size: 2, dur: 7,  del: 1.6 },
-  { x: 88, y: 30, size: 4, dur: 10, del: 0.2 },
-  { x: 15, y: 80, size: 2, dur: 9,  del: 3.0 },
-  { x: 92, y: 72, size: 3, dur: 6,  del: 1.0 },
-  { x: 55, y: 88, size: 2, dur: 8,  del: 2.5 },
-  { x: 5,  y: 45, size: 3, dur: 12, del: 0.6 },
-  { x: 82, y: 10, size: 2, dur: 7,  del: 1.8 },
-  { x: 40, y: 60, size: 3, dur: 9,  del: 3.3 },
-  { x: 68, y: 82, size: 2, dur: 8,  del: 0.3 },
-  { x: 28, y: 35, size: 4, dur: 11, del: 2.8 },
-  { x: 95, y: 52, size: 2, dur: 7,  del: 1.4 },
+  { x: 7,  y: 15, s: 2, dur: 8,  del: 0.0 },
+  { x: 18, y: 60, s: 3, dur: 10, del: 1.3 },
+  { x: 30, y: 30, s: 2, dur: 7,  del: 0.5 },
+  { x: 45, y: 75, s: 3, dur: 9,  del: 2.2 },
+  { x: 60, y: 20, s: 2, dur: 11, del: 0.9 },
+  { x: 72, y: 50, s: 3, dur: 7,  del: 1.7 },
+  { x: 85, y: 35, s: 2, dur: 9,  del: 0.3 },
+  { x: 12, y: 82, s: 3, dur: 12, del: 3.1 },
+  { x: 90, y: 70, s: 2, dur: 8,  del: 1.0 },
+  { x: 52, y: 88, s: 2, dur: 10, del: 2.6 },
+  { x: 4,  y: 48, s: 3, dur: 7,  del: 0.7 },
+  { x: 80, y: 12, s: 2, dur: 9,  del: 1.9 },
+  { x: 38, y: 55, s: 2, dur: 8,  del: 3.4 },
+  { x: 65, y: 80, s: 3, dur: 11, del: 0.4 },
+  { x: 25, y: 38, s: 2, dur: 7,  del: 2.9 },
+  { x: 93, y: 55, s: 2, dur: 9,  del: 1.5 },
+  { x: 55, y: 10, s: 3, dur: 13, del: 0.2 },
+  { x: 42, y: 42, s: 2, dur: 8,  del: 2.0 },
 ];
 
-export default function HeroSection({
-  selectedCategory,
-  onCategoryChange,
-}: HeroProps) {
+function scrollToGrid() {
+  document.getElementById("product-grid")?.scrollIntoView({ behavior: "smooth" });
+}
+
+export default function HeroSection({ selectedCategory, onCategoryChange }: HeroProps) {
   const storeCount   = useCounter(6,   900);
   const productCount = useCounter(500, 1600);
+  const [visible, setVisible] = useState(false);
 
-  const scrollToGrid = () => {
-    document.getElementById("product-grid")?.scrollIntoView({ behavior: "smooth" });
+  useEffect(() => {
+    // Tiny delay so the animation triggers after first paint
+    const t = setTimeout(() => setVisible(true), 60);
+    return () => clearTimeout(t);
+  }, []);
+
+  const handleCategoryClick = (value: string, isActive: boolean) => {
+    onCategoryChange(isActive ? "" : value);
+    scrollToGrid();
   };
 
   return (
-    <section className="relative overflow-hidden" style={{ background: "#131921" }}>
+    <section
+      className="relative overflow-hidden"
+      aria-label="Hero sekcija"
+      style={{ background: "#131921" }}
+    >
       <style>{`
         @keyframes heroFloat {
-          0%   { transform: translateY(0)    scale(1);    opacity: 0.25; }
-          100% { transform: translateY(-18px) scale(1.5); opacity: 0.6;  }
+          0%   { transform: translateY(0px)  scale(1);    opacity: 0.2; }
+          100% { transform: translateY(-16px) scale(1.4); opacity: 0.55; }
         }
         @keyframes heroPulse {
-          0%, 100% { opacity: 0.06; }
-          50%       { opacity: 0.12; }
+          0%, 100% { opacity: 0.07; }
+          50%       { opacity: 0.14; }
+        }
+        @keyframes heroIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to   { opacity: 1; transform: translateY(0);    }
         }
       `}</style>
 
-      {/* Floating dots */}
-      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+      {/* ── Background layer ────────────────────────────── */}
+      <div className="absolute inset-0 pointer-events-none select-none" aria-hidden="true">
         {DOTS.map((d, i) => (
           <span
             key={i}
@@ -83,46 +101,58 @@ export default function HeroSection({
               position: "absolute",
               left: `${d.x}%`,
               top: `${d.y}%`,
-              width: d.size,
-              height: d.size,
+              width: d.s,
+              height: d.s,
               borderRadius: "50%",
               background: "#FF9900",
               animation: `heroFloat ${d.dur}s ease-in-out ${d.del}s infinite alternate`,
             }}
           />
         ))}
-
-        {/* Radial glow behind headline */}
+        {/* Soft radial glow */}
         <div
           style={{
             position: "absolute",
-            top: "10%",
+            top: "0%",
             left: "50%",
             transform: "translateX(-50%)",
-            width: "700px",
-            height: "400px",
+            width: "800px",
+            height: "480px",
             background:
-              "radial-gradient(ellipse at center, rgba(255,153,0,0.10) 0%, transparent 70%)",
-            animation: "heroPulse 5s ease-in-out infinite",
+              "radial-gradient(ellipse at 50% 30%, rgba(255,153,0,0.09) 0%, transparent 65%)",
+            animation: "heroPulse 6s ease-in-out infinite",
           }}
         />
       </div>
 
-      {/* Main content */}
-      <div className="relative max-w-4xl mx-auto px-4 pt-14 pb-0 text-center">
-
+      {/* ── Main content ────────────────────────────────── */}
+      <div
+        className="relative max-w-3xl mx-auto px-5 pt-16 pb-0 text-center"
+        style={
+          visible
+            ? { animation: "heroIn 0.55s cubic-bezier(0.16,1,0.3,1) both" }
+            : { opacity: 0 }
+        }
+      >
         {/* Live badge */}
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#FF9900]/30 bg-[#FF9900]/10 text-[#FF9900] text-xs font-semibold mb-6 select-none">
+        <div
+          className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-7 select-none"
+          style={{
+            border: "1px solid rgba(255,153,0,0.28)",
+            background: "rgba(255,153,0,0.08)",
+            color: "#FF9900",
+          }}
+        >
           <span className="w-1.5 h-1.5 rounded-full bg-[#FF9900] animate-pulse" />
           Ažurirano danas
         </div>
 
-        {/* Headline */}
-        <h1 className="text-4xl sm:text-5xl md:text-[3.75rem] font-extrabold text-white leading-tight tracking-tight mb-4">
-          Pronađi najjeftiniji{" "}
+        {/* H1 */}
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white leading-[1.08] tracking-tight mb-5">
+          Ne preplaćuj{" "}
           <span
             style={{
-              background: "linear-gradient(90deg, #FF9900 0%, #ffcc55 100%)",
+              background: "linear-gradient(90deg, #FF9900 0%, #ffc84a 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
@@ -130,105 +160,145 @@ export default function HeroSection({
           >
             protein
           </span>
-          <br className="hidden sm:block" /> u Srbiji
         </h1>
 
         {/* Subheadline */}
-        <p className="text-base sm:text-lg text-slate-400 max-w-xl mx-auto mb-8 leading-relaxed">
-          Poredimo cene iz{" "}
-          <span className="text-white font-semibold">6 prodavnica</span> u realnom
-          vremenu. Uštedi do{" "}
-          <span className="text-[#FF9900] font-semibold">40%</span> na omiljenim
-          brendovima.
+        <p className="text-base sm:text-lg text-slate-400 max-w-lg mx-auto leading-relaxed mb-4">
+          Pronađi najjeftiniju ponudu u Srbiji za par sekundi i uštedi do{" "}
+          <span className="text-white font-semibold">40%</span>
         </p>
 
-        {/* Trust stats */}
-        <div className="flex items-stretch justify-center gap-0 mb-10 max-w-sm mx-auto">
+        {/* Value line */}
+        <p className="inline-flex items-center gap-2 text-sm font-semibold text-[#FF9900] mb-10">
+          <span aria-hidden="true">💰</span>
+          Uštedi do 40% na istom proizvodu
+        </p>
+
+        {/* Trust badges */}
+        <div className="flex items-center justify-center gap-0 mb-10 max-w-xs mx-auto sm:max-w-sm">
           {[
-            {
-              icon: BarChart2,
-              value: `${storeCount}`,
-              label: "prodavnica",
-            },
-            {
-              icon: Package,
-              value: `${productCount}+`,
-              label: "proizvoda",
-            },
-            {
-              icon: Zap,
-              value: "Dnevno",
-              label: "ažuriranje",
-            },
+            { icon: Store,      value: `${storeCount}`,    label: "prodavnica"   },
+            { icon: Package,    value: `${productCount}+`, label: "proizvoda"    },
+            { icon: RefreshCw,  value: "Dnevno",           label: "ažuriranje"   },
           ].map(({ icon: Icon, value, label }, i) => (
             <div
               key={label}
-              className="flex-1 flex flex-col items-center justify-center py-3 px-2"
-              style={{
-                borderLeft: i > 0 ? "1px solid rgba(255,255,255,0.08)" : "none",
-              }}
+              className="flex-1 flex flex-col items-center py-3 px-2"
+              style={{ borderLeft: i > 0 ? "1px solid rgba(255,255,255,0.07)" : "none" }}
             >
-              <Icon className="w-4 h-4 text-[#FF9900] mb-1" strokeWidth={2} />
-              <span className="text-xl font-extrabold text-white tabular-nums leading-none">
+              <Icon className="w-3.5 h-3.5 text-[#FF9900] mb-1.5" strokeWidth={2.2} />
+              <span className="text-lg font-extrabold text-white tabular-nums leading-none">
                 {value}
               </span>
-              <span className="text-[11px] text-slate-500 mt-0.5 uppercase tracking-wide font-medium">
+              <span className="text-[10px] text-slate-500 mt-1 uppercase tracking-widest font-medium">
                 {label}
               </span>
             </div>
           ))}
         </div>
 
-        {/* Category pills */}
-        <div className="flex flex-wrap justify-center gap-2 mb-8">
+        {/* CTA buttons */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-10">
+          {/* Primary */}
+          <button
+            onClick={scrollToGrid}
+            aria-label="Pronađi najjeftinije proteine"
+            className="group inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full font-bold text-[#131921] text-sm transition-all duration-150 active:scale-[0.97]"
+            style={{
+              background: "linear-gradient(135deg, #FF9900 0%, #e68a00 100%)",
+              boxShadow: "0 4px 28px rgba(255,153,0,0.35)",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.boxShadow = "0 6px 36px rgba(255,153,0,0.55)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 28px rgba(255,153,0,0.35)";
+            }}
+          >
+            Pronađi najjeftinije
+            <ArrowDown className="w-4 h-4 transition-transform duration-200 group-hover:translate-y-0.5" />
+          </button>
+
+          {/* Secondary */}
+          <button
+            onClick={scrollToGrid}
+            aria-label="Uporedi proizvode"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold text-slate-300 transition-all duration-150 hover:text-white active:scale-[0.97]"
+            style={{
+              border: "1px solid rgba(255,255,255,0.15)",
+              background: "rgba(255,255,255,0.05)",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.10)";
+              (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.25)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)";
+              (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.15)";
+            }}
+          >
+            <GitCompare className="w-3.5 h-3.5" />
+            Uporedi proizvode
+          </button>
+        </div>
+
+        {/* Category quick links */}
+        <div
+          className="flex gap-2 overflow-x-auto pb-1 justify-center flex-wrap sm:flex-nowrap mb-2"
+          role="navigation"
+          aria-label="Kategorije proteina"
+        >
           {CATEGORIES.map((cat) => {
             const active = selectedCategory === cat.value;
             return (
               <button
                 key={cat.value}
-                onClick={() => onCategoryChange(active ? "" : cat.value)}
-                className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-150 border ${
+                onClick={() => handleCategoryClick(cat.value, active)}
+                aria-pressed={active}
+                className="shrink-0 px-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-150 whitespace-nowrap"
+                style={
                   active
-                    ? "bg-[#FF9900] border-[#FF9900] text-[#131921] shadow-[0_0_16px_rgba(255,153,0,0.4)]"
-                    : "bg-white/8 border-white/15 text-slate-300 hover:bg-white/15 hover:border-white/30 hover:text-white"
-                }`}
-                style={!active ? { backgroundColor: "rgba(255,255,255,0.06)" } : undefined}
+                    ? {
+                        background: "#FF9900",
+                        color: "#131921",
+                        border: "1px solid #FF9900",
+                        boxShadow: "0 0 14px rgba(255,153,0,0.35)",
+                      }
+                    : {
+                        background: "rgba(255,255,255,0.06)",
+                        color: "#cbd5e1",
+                        border: "1px solid rgba(255,255,255,0.12)",
+                      }
+                }
+                onMouseEnter={(e) => {
+                  if (!active) {
+                    (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.12)";
+                    (e.currentTarget as HTMLElement).style.color = "#fff";
+                    (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.25)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!active) {
+                    (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)";
+                    (e.currentTarget as HTMLElement).style.color = "#cbd5e1";
+                    (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.12)";
+                  }
+                }}
               >
                 {cat.label}
               </button>
             );
           })}
         </div>
-
-        {/* CTA */}
-        <button
-          onClick={scrollToGrid}
-          className="inline-flex items-center gap-2 px-8 py-3 rounded-full font-bold text-sm uppercase tracking-wider transition-all duration-150 active:scale-95"
-          style={{
-            background: "linear-gradient(135deg, #FF9900, #e68a00)",
-            color: "#131921",
-            boxShadow: "0 4px 24px rgba(255,153,0,0.30)",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.boxShadow =
-              "0 6px 32px rgba(255,153,0,0.50)";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.boxShadow =
-              "0 4px 24px rgba(255,153,0,0.30)";
-          }}
-        >
-          Uporedi cene
-          <ChevronDown className="w-4 h-4" />
-        </button>
       </div>
 
-      {/* Gradient fade to white */}
+      {/* Gradient fade into product grid */}
       <div
-        className="relative h-20 mt-10"
+        className="h-24 mt-10"
+        aria-hidden="true"
         style={{
           background:
-            "linear-gradient(180deg, #131921 0%, rgba(19,25,33,0.6) 50%, #ffffff 100%)",
+            "linear-gradient(180deg, #131921 0%, rgba(19,25,33,0.55) 55%, #ffffff 100%)",
         }}
       />
     </section>
