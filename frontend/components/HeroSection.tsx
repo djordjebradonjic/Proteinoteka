@@ -196,7 +196,7 @@ export default function HeroSection({ selectedCategory, onCategoryChange }: Hero
               <span className="text-lg font-extrabold text-white tabular-nums leading-none">
                 {value}
               </span>
-              <span className="text-[10px] text-slate-500 mt-1 uppercase tracking-widest font-medium">
+              <span className="text-xs text-slate-300 mt-1 uppercase tracking-widest font-medium">
                 {label}
               </span>
             </div>
