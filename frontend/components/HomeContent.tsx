@@ -11,8 +11,9 @@ import SidebarFilter from "./SIdeBarFilter";
 import CompareBar from "./CompareBar";
 import KontaktSekcija from "./KontaktFoma";
 import WishlistDrawer from "./WishlistDrawer";
+import HeroSection from "./HeroSection";
 import { X } from "lucide-react";
-import { CATEGORIES, getCategoryByValue } from "@/lib/categories";
+import { getCategoryByValue } from "@/lib/categories";
 
 interface Props {
   initialProducts: Product[];
@@ -176,31 +177,16 @@ export default function HomeContent({
         onSearchChange={(val) => updateFilters("query", val)}
       />
 
-      {/* Category quick-links */}
-      <div className="border-b border-slate-100 bg-white">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex gap-2 overflow-x-auto py-3 scrollbar-none">
-            {CATEGORIES.map((cat) => {
-              const isActive = selectedCategory === cat.value;
-              return (
-                <button
-                  key={cat.value}
-                  onClick={() => updateFilters("category", isActive ? "" : cat.value)}
-                  className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all border whitespace-nowrap ${
-                    isActive
-                      ? "bg-[#1B2B4B] text-white border-[#1B2B4B]"
-                      : "bg-white text-slate-600 border-slate-200 hover:border-[#1B2B4B] hover:text-[#1B2B4B]"
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+      {!initialCategory && (
+        <HeroSection
+          searchValue={search}
+          onSearchChange={(val) => updateFilters("query", val)}
+          selectedCategory={selectedCategory}
+          onCategoryChange={(val) => updateFilters("category", val)}
+        />
+      )}
 
-      <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col md:flex-row gap-6 items-start relative">
+      <div id="product-grid" className="max-w-7xl mx-auto px-4 py-8 flex flex-col md:flex-row gap-6 items-start relative">
         <SidebarFilter
           brands={brands}
           flavours={flavours}
