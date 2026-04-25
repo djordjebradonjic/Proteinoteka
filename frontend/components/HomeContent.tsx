@@ -18,11 +18,14 @@ import { getCategoryByValue } from "@/lib/categories";
 interface Props {
   initialProducts: Product[];
   initialTotalPages: number;
-  /** When set (on /kategorija/[slug] pages), this category is always applied even without a URL param. */
   initialCategory?: string;
 }
 
 type Chip = { key: string; label: string; onRemove: () => void };
+
+function parseList(raw: string | null): string[] {
+  return (raw || "").split(",").filter(Boolean);
+}
 
 export default function HomeContent({
   initialProducts,
@@ -34,26 +37,27 @@ export default function HomeContent({
   const { replace } = useRouter();
 
   const search          = searchParams.get("query")    || "";
-  const selectedStore   = searchParams.get("store")    || "Sve";
-  const selectedBrand   = searchParams.get("brand")    || "Sve";
-  const selectedFlavour = searchParams.get("flavour")  || "Sve";
-  const categoryFromUrl = searchParams.get("category") || "";
+  const selectedStores  = parseList(searchParams.get("store"));
+  const selectedBrands  = parseList(searchParams.get("brand"));
+  const selectedFlavours = parseList(searchParams.get("flavour"));
+  const urlCategories   = parseList(searchParams.get("category"));
   const minPrice        = searchParams.get("minPrice") || "";
   const maxPrice        = searchParams.get("maxPrice") || "";
   const page            = Number(searchParams.get("page")) || 0;
   const sort            = searchParams.get("sort")     || "id,desc";
 
-  // Effective category: URL param wins, falls back to page-level locked category
-  const selectedCategory = categoryFromUrl || initialCategory;
+  // Effective categories for display (URL + locked page category)
+  const selectedCategories =
+    initialCategory && !urlCategories.includes(initialCategory)
+      ? [initialCategory, ...urlCategories]
+      : urlCategories;
 
-  // Only flash skeleton when URL has extra filters on top of what initialProducts already covers.
-  // On /kategorija/[slug] pages, initialProducts are pre-filtered, so no skeleton on first paint.
   const hasUrlFilters =
     !!search ||
-    selectedStore  !== "Sve" ||
-    selectedBrand  !== "Sve" ||
-    selectedFlavour !== "Sve" ||
-    !!categoryFromUrl ||          // URL-level category override
+    selectedStores.length > 0 ||
+    selectedBrands.length > 0 ||
+    selectedFlavours.length > 0 ||
+    urlCategories.length > 0 ||
     !!minPrice ||
     !!maxPrice ||
     !!searchParams.get("page") ||
@@ -66,14 +70,28 @@ export default function HomeContent({
   const [brands,     setBrands]     = useState<string[]>([]);
   const [flavours,   setFlavours]   = useState<string[]>([]);
 
+  // Toggle one value in a comma-separated URL param
+  const toggleFilter = useCallback(
+    (name: string, value: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      const current = parseList(params.get(name));
+      const next = current.includes(value)
+        ? current.filter((v) => v !== value)
+        : [...current, value];
+      if (next.length === 0) params.delete(name);
+      else params.set(name, next.join(","));
+      params.delete("page");
+      replace(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [searchParams, pathname, replace],
+  );
+
+  // For non-multi fields: query, sort, page, minPrice, maxPrice
   const updateFilters = useCallback(
     (name: string, value: string | number) => {
       const params = new URLSearchParams(searchParams.toString());
-      if (value !== "" && value !== "Sve") {
-        params.set(name, value.toString());
-      } else {
-        params.delete(name);
-      }
+      if (value !== "" && value !== "Sve") params.set(name, value.toString());
+      else params.delete(name);
       if (name !== "page") params.delete("page");
       replace(`${pathname}?${params.toString()}`, { scroll: false });
     },
@@ -97,17 +115,22 @@ export default function HomeContent({
       const store   = searchParams.get("store");
       const brand   = searchParams.get("brand");
       const flavour = searchParams.get("flavour");
-      const cat     = searchParams.get("category") || initialCategory;
       const min     = searchParams.get("minPrice");
       const max     = searchParams.get("maxPrice");
 
-      if (name)                       params.set("name",      name);
-      if (store   && store   !== "Sve") params.set("storeName", store);
-      if (brand   && brand   !== "Sve") params.set("brand",     brand);
-      if (flavour && flavour !== "Sve") params.set("flavour",   flavour);
-      if (cat)                          params.set("category",  cat);
-      if (min)                          params.set("minPrice",  min);
-      if (max)                          params.set("maxPrice",  max);
+      // Merge URL categories with locked page category
+      const urlCatList = parseList(searchParams.get("category"));
+      const allCats = initialCategory && !urlCatList.includes(initialCategory)
+        ? [...urlCatList, initialCategory]
+        : urlCatList;
+
+      if (name)          params.set("name",      name);
+      if (store)         params.set("storeName", store);
+      if (brand)         params.set("brand",     brand);
+      if (flavour)       params.set("flavour",   flavour);
+      if (allCats.length) params.set("category", allCats.join(","));
+      if (min)           params.set("minPrice",  min);
+      if (max)           params.set("maxPrice",  max);
 
       const res = await api.get(`/products?${params.toString()}`);
       setProducts(res.data.content);
@@ -124,49 +147,47 @@ export default function HomeContent({
     fetchProducts();
   }, [fetchProducts]);
 
-  const handleReset = () => {
-    if (initialCategory) {
-      // On category pages, keep the path, just strip query params
-      replace(pathname);
-    } else {
-      replace(pathname);
-    }
-  };
+  const handleReset = () => replace(pathname, { scroll: false });
 
-  // activeCount: count URL-driven filters only (initialCategory is the page's base, not a "filter")
-  const activeCount = [
-    selectedStore !== "Sve",
-    selectedBrand !== "Sve",
-    selectedFlavour !== "Sve",
-    !!categoryFromUrl,
-    !!minPrice,
-    !!maxPrice,
-  ].filter(Boolean).length;
+  const activeCount =
+    selectedStores.length +
+    selectedBrands.length +
+    selectedFlavours.length +
+    urlCategories.length +
+    (minPrice ? 1 : 0) +
+    (maxPrice ? 1 : 0);
 
   const hasActiveFilters = activeCount > 0 || !!search;
 
   const chips: Chip[] = [
     search
-      ? { key: "query",    label: `"${search}"`,                        onRemove: () => updateFilters("query",    "") }
+      ? { key: "query", label: `"${search}"`, onRemove: () => updateFilters("query", "") }
       : null,
-    selectedStore !== "Sve"
-      ? { key: "store",    label: selectedStore,                        onRemove: () => updateFilters("store",    "Sve") }
-      : null,
-    selectedBrand !== "Sve"
-      ? { key: "brand",    label: selectedBrand,                        onRemove: () => updateFilters("brand",    "Sve") }
-      : null,
-    selectedFlavour !== "Sve"
-      ? { key: "flavour",  label: `Ukus: ${selectedFlavour}`,           onRemove: () => updateFilters("flavour",  "Sve") }
-      : null,
-    categoryFromUrl
-      ? { key: "category", label: getCategoryByValue(categoryFromUrl)?.label ?? categoryFromUrl,
-                                                                         onRemove: () => updateFilters("category", "") }
-      : null,
+    ...selectedStores.map((s) => ({
+      key: `store-${s}`,
+      label: s,
+      onRemove: () => toggleFilter("store", s),
+    })),
+    ...selectedBrands.map((b) => ({
+      key: `brand-${b}`,
+      label: b,
+      onRemove: () => toggleFilter("brand", b),
+    })),
+    ...selectedFlavours.map((f) => ({
+      key: `flavour-${f}`,
+      label: `Ukus: ${f}`,
+      onRemove: () => toggleFilter("flavour", f),
+    })),
+    ...urlCategories.map((c) => ({
+      key: `cat-${c}`,
+      label: getCategoryByValue(c)?.label ?? c,
+      onRemove: () => toggleFilter("category", c),
+    })),
     minPrice
-      ? { key: "minPrice", label: `od ${minPrice} RSD`,                 onRemove: () => updateFilters("minPrice", "") }
+      ? { key: "minPrice", label: `od ${minPrice} RSD`, onRemove: () => updateFilters("minPrice", "") }
       : null,
     maxPrice
-      ? { key: "maxPrice", label: `do ${maxPrice} RSD`,                 onRemove: () => updateFilters("maxPrice", "") }
+      ? { key: "maxPrice", label: `do ${maxPrice} RSD`, onRemove: () => updateFilters("maxPrice", "") }
       : null,
   ].filter(Boolean) as Chip[];
 
@@ -179,8 +200,8 @@ export default function HomeContent({
 
       {!initialCategory && (
         <HeroSection
-          selectedCategory={selectedCategory}
-          onCategoryChange={(val) => updateFilters("category", val)}
+          selectedCategories={selectedCategories}
+          onCategoryToggle={(val) => toggleFilter("category", val)}
         />
       )}
 
@@ -188,16 +209,16 @@ export default function HomeContent({
         <SidebarFilter
           brands={brands}
           flavours={flavours}
-          selectedStore={selectedStore}
-          selectedBrand={selectedBrand}
-          selectedFlavour={selectedFlavour}
-          selectedCategory={selectedCategory}
+          selectedStore={selectedStores}
+          selectedBrand={selectedBrands}
+          selectedFlavour={selectedFlavours}
+          selectedCategory={selectedCategories}
           minPrice={minPrice}
           maxPrice={maxPrice}
-          onStoreChange={(val)    => updateFilters("store",    val)}
-          onBrandChange={(val)    => updateFilters("brand",    val)}
-          onFlavourChange={(val)  => updateFilters("flavour",  val)}
-          onCategoryChange={(val) => updateFilters("category", val)}
+          onStoreChange={(val)    => toggleFilter("store",    val)}
+          onBrandChange={(val)    => toggleFilter("brand",    val)}
+          onFlavourChange={(val)  => toggleFilter("flavour",  val)}
+          onCategoryChange={(val) => toggleFilter("category", val)}
           onMinChange={(val)      => updateFilters("minPrice",  val)}
           onMaxChange={(val)      => updateFilters("maxPrice",  val)}
           onReset={handleReset}
@@ -206,7 +227,6 @@ export default function HomeContent({
         />
 
         <div className="flex-1 min-w-0">
-          {/* Sort + count row */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 gap-2">
             <SortSelect
               value={sort}
@@ -222,7 +242,6 @@ export default function HomeContent({
             )}
           </div>
 
-          {/* Active filter chips */}
           {chips.length > 0 && (
             <div className="flex flex-wrap items-center gap-2 mb-4">
               {chips.map((chip) => (

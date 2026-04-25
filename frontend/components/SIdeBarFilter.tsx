@@ -13,7 +13,7 @@ function FilterGroup({
 }: {
   label: string;
   options: string[];
-  selected: string;
+  selected: string[];
   onChange: (val: string) => void;
   defaultOpen?: boolean;
 }) {
@@ -25,8 +25,13 @@ function FilterGroup({
         onClick={() => setOpen((o) => !o)}
         className="flex items-center justify-between w-full text-left"
       >
-        <span className="text-sm font-bold text-[#1A1A1A] uppercase tracking-wide">
+        <span className="text-sm font-bold text-[#1A1A1A] uppercase tracking-wide flex items-center gap-2">
           {label}
+          {selected.length > 0 && (
+            <span className="bg-[#FF9900] text-[#1B2B4B] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+              {selected.length}
+            </span>
+          )}
         </span>
         {open ? (
           <Minus className="w-4 h-4 text-slate-400" />
@@ -40,11 +45,11 @@ function FilterGroup({
             <p className="text-xs text-slate-400 py-1">Učitavanje...</p>
           )}
           {options.map((opt) => {
-            const isSelected = selected === opt;
+            const isSelected = selected.includes(opt);
             return (
               <button
                 key={opt}
-                onClick={() => onChange(isSelected ? "Sve" : opt)}
+                onClick={() => onChange(opt)}
                 className="text-left text-sm px-0 py-1.5 flex items-center gap-2 text-[#1A1A1A] hover:text-[#FF9900] transition-colors"
               >
                 <span
@@ -166,10 +171,10 @@ function PriceRange({
 export interface SidebarFilterProps {
   brands: string[];
   flavours: string[];
-  selectedStore: string;
-  selectedBrand: string;
-  selectedFlavour: string;
-  selectedCategory: string;
+  selectedStore: string[];
+  selectedBrand: string[];
+  selectedFlavour: string[];
+  selectedCategory: string[];
   minPrice: string;
   maxPrice: string;
   onStoreChange: (val: string) => void;
@@ -243,11 +248,11 @@ function FilterContent({
         </p>
         <div className="flex flex-wrap gap-1.5">
           {CATEGORIES.map((cat) => {
-            const isActive = selectedCategory === cat.value;
+            const isActive = selectedCategory.includes(cat.value);
             return (
               <button
                 key={cat.value}
-                onClick={() => onCategoryChange(isActive ? "" : cat.value)}
+                onClick={() => onCategoryChange(cat.value)}
                 className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-all border ${
                   isActive
                     ? "bg-[#1B2B4B] text-white border-[#1B2B4B]"

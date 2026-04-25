@@ -5,8 +5,8 @@ import { Store, Package, TrendingDown, ArrowDown, GitCompare } from "lucide-reac
 import { CATEGORIES } from "@/lib/categories";
 
 interface HeroProps {
-  selectedCategory: string;
-  onCategoryChange: (val: string) => void;
+  selectedCategories: string[];
+  onCategoryToggle: (val: string) => void;
 }
 
 // Deterministic positions — no Math.random() to avoid hydration mismatch
@@ -41,7 +41,7 @@ function scrollToGrid() {
   document.getElementById("product-grid")?.scrollIntoView({ behavior: "smooth" });
 }
 
-export default function HeroSection({ selectedCategory, onCategoryChange }: HeroProps) {
+export default function HeroSection({ selectedCategories, onCategoryToggle }: HeroProps) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -49,8 +49,8 @@ export default function HeroSection({ selectedCategory, onCategoryChange }: Hero
     return () => clearTimeout(t);
   }, []);
 
-  const handleCategoryClick = (value: string, isActive: boolean) => {
-    onCategoryChange(isActive ? "" : value);
+  const handleCategoryClick = (value: string) => {
+    onCategoryToggle(value);
     scrollToGrid();
   };
 
@@ -233,11 +233,11 @@ export default function HeroSection({ selectedCategory, onCategoryChange }: Hero
           aria-label="Kategorije proteina"
         >
           {CATEGORIES.map((cat) => {
-            const active = selectedCategory === cat.value;
+            const active = selectedCategories.includes(cat.value);
             return (
               <button
                 key={cat.value}
-                onClick={() => handleCategoryClick(cat.value, active)}
+                onClick={() => handleCategoryClick(cat.value)}
                 aria-pressed={active}
                 className="shrink-0 px-3.5 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all duration-150 whitespace-nowrap"
                 style={
