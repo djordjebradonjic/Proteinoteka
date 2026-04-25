@@ -24,6 +24,10 @@ task:
   scheduling:
     enabled: true
 
+scraping:
+  schedule:
+    enabled: true
+
 server:
   port: ${PORT:8080}
 

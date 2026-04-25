@@ -1,7 +1,9 @@
 package com.proteinoteka.controller;
 
 import com.proteinoteka.model.Product;
+import com.proteinoteka.model.ScrapeLog;
 import com.proteinoteka.repository.ProductRepository;
+import com.proteinoteka.scheduler.ScrapingSchedulerService;
 import com.proteinoteka.service.ScraperService;
 import com.proteinoteka.service.StoreScraper;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -18,6 +21,7 @@ public class AdminController {
     private final ScraperService scraperService;
     private final List<StoreScraper> scrapers;
     private final ProductRepository productRepository;
+    private final ScrapingSchedulerService schedulerService;
 
 
     @PostMapping("/scrape")
@@ -81,6 +85,20 @@ public class AdminController {
                 .filter(s -> s.getStoreName().equals(name))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException(name + " scraper not found"));
+    }
+
+    @PostMapping("/scrape/store/{storeName}")
+    public ResponseEntity<ScrapeLog> triggerStoreScrape(@PathVariable String storeName) {
+        ScrapeLog result = schedulerService.scrapeStoreNow(storeName);
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/scrape/status")
+    public ResponseEntity<?> scrapeStatus() {
+        return ResponseEntity.ok(Map.of(
+                "cycleDay", schedulerService.currentCycleDay(),
+                "stores",   schedulerService.getStatus()
+        ));
     }
 
     @PostMapping("/recalculate-scores")
