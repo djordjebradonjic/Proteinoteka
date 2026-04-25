@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Store, Package, RefreshCw, ArrowDown, GitCompare } from "lucide-react";
+import { Store, Package, TrendingDown, ArrowDown, GitCompare } from "lucide-react";
 import { CATEGORIES } from "@/lib/categories";
 
 interface HeroProps {
@@ -56,8 +56,6 @@ function scrollToGrid() {
 }
 
 export default function HeroSection({ selectedCategory, onCategoryChange }: HeroProps) {
-  const storeCount   = useCounter(6,   900);
-  const productCount = useCounter(500, 1600);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -89,6 +87,14 @@ export default function HeroSection({ selectedCategory, onCategoryChange }: Hero
         @keyframes heroIn {
           from { opacity: 0; transform: translateY(20px); }
           to   { opacity: 1; transform: translateY(0);    }
+        }
+        @keyframes heroInSub {
+          from { opacity: 0; transform: translateY(12px); }
+          to   { opacity: 1; transform: translateY(0);    }
+        }
+        @keyframes heroBadge {
+          from { opacity: 0; transform: translateY(8px) scale(0.96); }
+          to   { opacity: 1; transform: translateY(0)   scale(1);    }
         }
       `}</style>
 
@@ -126,14 +132,7 @@ export default function HeroSection({ selectedCategory, onCategoryChange }: Hero
       </div>
 
       {/* ── Main content ────────────────────────────────── */}
-      <div
-        className="relative max-w-3xl mx-auto px-5 pt-16 pb-0 text-center"
-        style={
-          visible
-            ? { animation: "heroIn 0.55s cubic-bezier(0.16,1,0.3,1) both" }
-            : { opacity: 0 }
-        }
-      >
+      <div className="relative max-w-3xl mx-auto px-5 pt-16 pb-0 text-center">
         {/* Live badge */}
         <div
           className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-7 select-none"
@@ -148,51 +147,62 @@ export default function HeroSection({ selectedCategory, onCategoryChange }: Hero
         </div>
 
         {/* H1 */}
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white leading-[1.08] tracking-tight mb-5">
-          Ne preplaćuj{" "}
+        <h1
+          className="text-[2.6rem] sm:text-5xl md:text-6xl font-extrabold text-white leading-[1.1] tracking-tight mb-5"
+          style={visible ? { animation: "heroIn 0.5s cubic-bezier(0.16,1,0.3,1) both" } : { opacity: 0 }}
+        >
+          Pronađi{" "}
           <span
             style={{
-              background: "linear-gradient(90deg, #FF9900 0%, #ffc84a 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
+              color: "#FF9900",
+              textShadow: "0 0 32px rgba(255,153,0,0.45), 0 0 8px rgba(255,153,0,0.2)",
             }}
           >
-            protein
-          </span>
+            najjeftiniji
+          </span>{" "}
+          protein u Srbiji.
         </h1>
 
         {/* Subheadline */}
-        <p className="text-base sm:text-lg text-slate-400 max-w-lg mx-auto leading-relaxed mb-4">
-          Pronađi najjeftiniju ponudu u Srbiji za par sekundi i uštedi do{" "}
-          <span className="text-white font-semibold">40%</span>
-        </p>
-
-        {/* Value line */}
-        <p className="inline-flex items-center gap-2 text-sm font-semibold text-[#FF9900] mb-10">
-          <span aria-hidden="true">💰</span>
-          Uštedi do 40% na istom proizvodu
+        <p
+          className="text-base sm:text-lg text-slate-300 font-normal max-w-lg mx-auto leading-relaxed mb-10"
+          style={
+            visible
+              ? { animation: "heroInSub 0.5s cubic-bezier(0.16,1,0.3,1) 0.2s both" }
+              : { opacity: 0 }
+          }
+        >
+          Upoređujemo cene iz 6 vodećih prodavnica i pronalazimo najbolju ponudu.
         </p>
 
         {/* Trust badges */}
-        <div className="flex items-center justify-center gap-0 mb-10 max-w-xs mx-auto sm:max-w-sm">
+        <div className="flex flex-wrap justify-center gap-3 mb-10">
           {[
-            { icon: Store,      value: `${storeCount}`,    label: "prodavnica"   },
-            { icon: Package,    value: `${productCount}+`, label: "proizvoda"    },
-            { icon: RefreshCw,  value: "Dnevno",           label: "ažuriranje"   },
-          ].map(({ icon: Icon, value, label }, i) => (
+            { icon: Store,        text: "6 prodavnica",        delay: 0.35 },
+            { icon: Package,      text: "250+ proizvoda",      delay: 0.45 },
+            { icon: TrendingDown, text: "Mi pratimo. Ti štediš.", delay: 0.55 },
+          ].map(({ icon: Icon, text, delay }) => (
             <div
-              key={label}
-              className="flex-1 flex flex-col items-center py-3 px-2"
-              style={{ borderLeft: i > 0 ? "1px solid rgba(255,255,255,0.07)" : "none" }}
+              key={text}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full cursor-default select-none transition-all duration-200"
+              style={{
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,153,0,0.22)",
+                ...(visible
+                  ? { animation: `heroBadge 0.45s cubic-bezier(0.16,1,0.3,1) ${delay}s both` }
+                  : { opacity: 0 }),
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.background = "rgba(255,153,0,0.08)";
+                (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,153,0,0.45)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)";
+                (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,153,0,0.22)";
+              }}
             >
-              <Icon className="w-3.5 h-3.5 text-[#FF9900] mb-1.5" strokeWidth={2.2} />
-              <span className="text-lg font-extrabold text-white tabular-nums leading-none">
-                {value}
-              </span>
-              <span className="text-[10px] text-slate-500 mt-1 uppercase tracking-widest font-medium">
-                {label}
-              </span>
+              <Icon className="w-3.5 h-3.5 shrink-0" style={{ color: "#FF9900" }} strokeWidth={2.2} />
+              <span className="text-sm font-semibold text-white whitespace-nowrap">{text}</span>
             </div>
           ))}
         </div>
