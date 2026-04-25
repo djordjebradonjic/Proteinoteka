@@ -64,9 +64,9 @@ function NutritionRow({ label, value, unit, icon }: {
 function ScoreBar({ label, pct, score }: { label: string; pct: number; score: string }) {
   return (
     <div>
-      <div className="flex justify-between text-xs text-slate-500 mb-1">
-        <span>{label}</span>
-        <span className="font-semibold text-slate-700">{score}</span>
+      <div className="flex justify-between text-xs text-slate-500 mb-1 gap-2">
+        <span className="min-w-0 truncate">{label}</span>
+        <span className="font-semibold text-slate-700 shrink-0">{score}</span>
       </div>
       <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
         <div
@@ -175,7 +175,7 @@ export default function ProductPage() {
         <div className="grid md:grid-cols-2 gap-6 mb-8">
 
           {/* Image */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-8 flex items-center justify-center aspect-square shadow-sm">
+          <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-8 flex items-center justify-center h-64 sm:h-80 md:aspect-square md:h-auto shadow-sm">
             {product.imageUrl ? (
               <img
                 src={product.imageUrl}
