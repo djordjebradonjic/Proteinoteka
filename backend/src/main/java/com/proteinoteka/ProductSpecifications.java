@@ -19,26 +19,24 @@ public class ProductSpecifications {
     public static Specification<Product> hasStoreName(String storeNames) {
         return (root, query, cb) -> {
             if (storeNames == null || storeNames.isEmpty()) return cb.conjunction();
-            List<String> names = Arrays.stream(storeNames.split(","))
-                    .map(s -> s.trim().toLowerCase())
+            Predicate[] predicates = Arrays.stream(storeNames.split(","))
+                    .map(String::trim)
                     .filter(s -> !s.isEmpty())
-                    .toList();
-            if (names.size() == 1)
-                return cb.equal(cb.lower(root.get("store").get("name")), names.get(0));
-            return cb.lower(root.get("store").get("name")).in(names);
+                    .map(s -> cb.equal(cb.lower(root.get("store").get("name")), s.toLowerCase()))
+                    .toArray(Predicate[]::new);
+            return predicates.length == 1 ? predicates[0] : cb.or(predicates);
         };
     }
 
     public static Specification<Product> hasBrand(String brands) {
         return (root, query, cb) -> {
             if (brands == null || brands.isEmpty()) return cb.conjunction();
-            List<String> list = Arrays.stream(brands.split(","))
+            Predicate[] predicates = Arrays.stream(brands.split(","))
                     .map(String::trim)
                     .filter(s -> !s.isEmpty())
-                    .toList();
-            if (list.size() == 1)
-                return cb.equal(root.get("brand"), list.get(0));
-            return root.get("brand").in(list);
+                    .map(s -> cb.equal(root.get("brand"), s))
+                    .toArray(Predicate[]::new);
+            return predicates.length == 1 ? predicates[0] : cb.or(predicates);
         };
     }
 
@@ -70,13 +68,12 @@ public class ProductSpecifications {
     public static Specification<Product> hasProteinSource(String proteinSources) {
         return (root, query, cb) -> {
             if (proteinSources == null || proteinSources.isEmpty()) return cb.conjunction();
-            List<String> list = Arrays.stream(proteinSources.split(","))
+            Predicate[] predicates = Arrays.stream(proteinSources.split(","))
                     .map(String::trim)
                     .filter(s -> !s.isEmpty())
-                    .toList();
-            if (list.size() == 1)
-                return cb.equal(root.get("proteinSource"), list.get(0));
-            return root.get("proteinSource").in(list);
+                    .map(s -> cb.equal(root.get("proteinSource"), s))
+                    .toArray(Predicate[]::new);
+            return predicates.length == 1 ? predicates[0] : cb.or(predicates);
         };
     }
 }
