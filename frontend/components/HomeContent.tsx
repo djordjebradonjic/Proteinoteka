@@ -75,7 +75,7 @@ export default function HomeContent({
         params.delete(name);
       }
       if (name !== "page") params.delete("page");
-      replace(`${pathname}?${params.toString()}`);
+      replace(`${pathname}?${params.toString()}`, { scroll: false });
     },
     [searchParams, pathname, replace],
   );
