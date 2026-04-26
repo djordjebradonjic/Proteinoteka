@@ -99,7 +99,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               <span className="text-[#1B2B4B] text-xs font-black">✓</span>
             )}
           </span>
-          <span className="hidden sm:inline text-xs">Uporedi</span>
+          <span className="text-[10px]">Uporedi</span>
         </button>
 
         {/* Gornji desni — Wishlist */}
