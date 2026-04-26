@@ -8,7 +8,8 @@ import { X } from "lucide-react";
 export default function CompareBar() {
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const ids = useAppSelector((state) => (state as any).compare.ids) as number[];
+  const ids   = useAppSelector((state) => (state as any).compare.ids)   as number[];
+  const items = useAppSelector((state) => (state as any).compare.items) as { id: number; name: string }[];
 
   if (ids.length === 0) return null;
 
@@ -25,13 +26,15 @@ export default function CompareBar() {
             {ids.length === 1 ? "proizvod" : "proizvoda"}
           </span>
           <div className="flex gap-1">
-            {ids.map((id) => (
+            {items.map((item) => (
               <button
-                key={id}
-                onClick={() => dispatch(removeFromCompare(id))}
-                className="flex items-center gap-0.5 bg-white/20 hover:bg-white/30 px-2 py-0.5 rounded text-xs transition-colors"
+                key={item.id}
+                onClick={() => dispatch(removeFromCompare(item.id))}
+                className="flex items-center gap-0.5 bg-white/20 hover:bg-white/30 px-2 py-0.5 rounded text-xs transition-colors max-w-[140px]"
+                title={item.name}
               >
-                #{id} <X className="w-3 h-3" />
+                <span className="truncate">{item.name.length > 20 ? item.name.slice(0, 18) + "…" : item.name}</span>
+                <X className="w-3 h-3 shrink-0" />
               </button>
             ))}
           </div>

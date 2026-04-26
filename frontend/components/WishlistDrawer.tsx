@@ -74,11 +74,11 @@ export default function WishlistDrawer() {
     };
   }, [isOpen]);
 
-  const toggleCompare = (productId: number) => {
+  const toggleCompare = (productId: number, productName: string) => {
     if (compareIds.includes(productId)) {
       dispatch(removeFromCompare(productId));
     } else if (compareCount < 4) {
-      dispatch(addToCompare(productId));
+      dispatch(addToCompare({ id: productId, name: productName }));
     }
   };
 
@@ -183,7 +183,7 @@ export default function WishlistDrawer() {
 
                       {/* Compare dugme */}
                       <button
-                        onClick={() => toggleCompare(product.id)}
+                        onClick={() => toggleCompare(product.id, product.name)}
                         disabled={isDisabled}
                         className={`mt-1.5 flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold transition-all border ${
                           isComparing

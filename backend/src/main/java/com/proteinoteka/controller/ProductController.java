@@ -1,6 +1,7 @@
 package com.proteinoteka.controller;
 
 import com.proteinoteka.ProductSpecifications;
+import com.proteinoteka.dto.CompareProductDTO;
 import com.proteinoteka.dto.PriceHistoryDTO;
 import com.proteinoteka.dto.ProductDTO;
 import com.proteinoteka.model.AffiliateLink;
@@ -173,6 +174,35 @@ public class ProductController {
     @GetMapping("/flavours")
     List<String> getAllFlavours() {
         return productRepository.findAllUniqueFlavours();
+    }
+
+    @GetMapping("/compare")
+    public List<CompareProductDTO> compare(@RequestParam List<Long> ids) {
+        List<Long> safeIds = ids.size() > 4 ? ids.subList(0, 4) : ids;
+        return productRepository.findAllById(safeIds).stream()
+                .map(this::toCompareDTO)
+                .toList();
+    }
+
+    private CompareProductDTO toCompareDTO(Product p) {
+        Double pricePerKg = null;
+        Double pricePerProtein = null;
+        if (p.getNumericPrice() != null && p.getPrimaryWeightGrams() != null && p.getPrimaryWeightGrams() > 0) {
+            pricePerKg = (p.getNumericPrice() / p.getPrimaryWeightGrams()) * 1000.0;
+        }
+        if (p.getNumericPrice() != null && p.getProteinPer100g() != null
+                && p.getProteinPer100g() > 0 && p.getPrimaryWeightGrams() != null) {
+            double totalProteinG = (p.getProteinPer100g() / 100.0) * p.getPrimaryWeightGrams();
+            if (totalProteinG > 0) pricePerProtein = p.getNumericPrice() / totalProteinG;
+        }
+        return new CompareProductDTO(
+                p.getId(), p.getName(), p.getBrand(), p.getPrice(), p.getImageUrl(),
+                p.getStore() != null ? p.getStore().getName() : "Unknown",
+                p.getUrl(), p.getNumericPrice(), p.getValueScore(),
+                p.getProteinPer100g(), p.getSugarPer100g(), p.getFatPer100g(),
+                p.getCaloriePer100g(), p.getProteinSource(), p.getPrimaryWeightGrams(),
+                pricePerKg, pricePerProtein
+        );
     }
 
     private ProductDTO convertToDTO(Product product) {

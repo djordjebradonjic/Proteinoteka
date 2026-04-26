@@ -49,7 +49,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     if (isComparing) {
       dispatch(removeFromCompare(product.id));
     } else if (compareCount < 4) {
-      dispatch(addToCompare(product.id));
+      dispatch(addToCompare({ id: product.id, name: product.name }));
       trackEvent({ eventType: "COMPARE_CLICK", productId: product.id, store: product.storeName });
     }
   };
