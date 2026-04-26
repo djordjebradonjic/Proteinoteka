@@ -177,8 +177,11 @@ public class ProductController {
     }
 
     @GetMapping("/compare")
-    public List<CompareProductDTO> compare(@RequestParam List<Long> ids) {
-        List<Long> safeIds = ids.size() > 4 ? ids.subList(0, 4) : ids;
+    public List<CompareProductDTO> compare(@RequestParam String ids) {
+        List<Long> parsed = java.util.Arrays.stream(ids.split(","))
+                .map(String::trim).filter(s -> !s.isEmpty())
+                .map(Long::parseLong).toList();
+        List<Long> safeIds = parsed.size() > 4 ? parsed.subList(0, 4) : parsed;
         return productRepository.findAllById(safeIds).stream()
                 .map(this::toCompareDTO)
                 .toList();
