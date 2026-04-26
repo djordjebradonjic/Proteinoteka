@@ -199,11 +199,47 @@ function ComparePage() {
 
   useEffect(() => {
     if (!idsParam) { setLoading(false); return; }
-    fetch(`${API_BASE}/api/v1/products/compare?ids=${idsParam}`)
-      .then(r => r.json())
-      .then(data => setProducts(Array.isArray(data) ? data : []))
-      .catch(() => setProducts([]))
-      .finally(() => setLoading(false));
+
+    const ids = idsParam.split(",").map(s => s.trim()).filter(Boolean);
+
+    async function load() {
+      // Try dedicated compare endpoint first
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/products/compare?ids=${idsParam}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            setProducts(data);
+            return;
+          }
+        }
+      } catch {}
+
+      // Fallback: fetch each product individually using existing endpoint
+      try {
+        const results = await Promise.all(
+          ids.map(id =>
+            fetch(`${API_BASE}/api/v1/products/${id}`)
+              .then(r => r.ok ? r.json() : null)
+              .catch(() => null)
+          )
+        );
+        const valid = results.filter(Boolean).map((p: any) => ({
+          ...p,
+          pricePerKg: p.primaryWeightGrams > 0
+            ? (p.numericPrice / p.primaryWeightGrams) * 1000
+            : null,
+          pricePerProtein: p.proteinPer100g > 0 && p.primaryWeightGrams > 0
+            ? p.numericPrice / ((p.proteinPer100g / 100) * p.primaryWeightGrams)
+            : null,
+        }));
+        setProducts(valid);
+      } catch {
+        setProducts([]);
+      }
+    }
+
+    load().finally(() => setLoading(false));
   }, [idsParam]);
 
   function removeProduct(id: number) {
