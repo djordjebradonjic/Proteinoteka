@@ -11,6 +11,7 @@ import {
   Tooltip, ResponsiveContainer,
 } from "recharts";
 import { ShoppingCart, ArrowLeft, Package, Zap, Droplets, Flame } from "lucide-react";
+import { trackEvent } from "@/lib/trackEvent";
 
 const CATEGORY_LABELS: Record<string, string> = {
   whey_concentrate: "Whey Concentrate",
@@ -255,6 +256,7 @@ export default function ProductPage() {
               href={`${process.env.NEXT_PUBLIC_API_URL}/api/v1/products/${id}/buy`}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackEvent({ eventType: "CLICK_OUT", productId: product.id, store: product.storeName })}
               className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl font-bold text-base text-[#131921] transition-all duration-150 active:scale-[0.98] shadow-lg"
               style={{
                 background: "linear-gradient(135deg, #FF9900, #e68a00)",

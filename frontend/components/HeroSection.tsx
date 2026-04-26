@@ -118,19 +118,6 @@ export default function HeroSection({ selectedCategories, onCategoryToggle }: He
       {/* Content */}
       <div className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-10 sm:pt-14 pb-0 text-center">
 
-        {/* Live badge */}
-        <div
-          className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-5 sm:mb-7 select-none"
-          style={{
-            border: "1px solid rgba(255,153,0,0.28)",
-            background: "rgba(255,153,0,0.08)",
-            color: "#FF9900",
-          }}
-        >
-          <span className="w-1.5 h-1.5 rounded-full bg-[#FF9900] animate-pulse" />
-          Ažurirano danas
-        </div>
-
         {/* H1 */}
         <h1
           className="text-[2rem] xs:text-[2.4rem] sm:text-5xl md:text-6xl font-extrabold text-white leading-[1.1] tracking-tight mb-4 sm:mb-5"
