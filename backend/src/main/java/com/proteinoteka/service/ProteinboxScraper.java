@@ -42,13 +42,30 @@ public class ProteinboxScraper implements StoreScraper {
 
     @Override
     public void waitForListing(Page page) {
-        // Proteinbox uses Elementor which re-renders the WooCommerce product grid
-        // via JavaScript after DOMContentLoaded — wait for li.product to appear
+        // Proteinbox serves a stripped page to headless browsers (bot detection).
+        // If li.product doesn't appear in 8s, fall back to a plain JSoup HTTP fetch
+        // and inject the real HTML into the Playwright page so the rest of the pipeline
+        // (scrape, hasNextPage) works normally with accurate content.
         try {
             page.waitForSelector("li.product",
-                    new Page.WaitForSelectorOptions().setTimeout(10000));
+                    new Page.WaitForSelectorOptions().setTimeout(8000));
         } catch (Exception e) {
-            log.warn("[{}] li.product selector not found within timeout — parsing anyway", STORE_NAME);
+            log.warn("[{}] Playwright blocked — falling back to JSoup for listing: {}", STORE_NAME, page.url());
+            try {
+                String html = Jsoup.connect(page.url())
+                        .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36")
+                        .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
+                        .header("Accept-Language", "sr-RS,sr;q=0.9,en-US;q=0.8,en;q=0.7")
+                        .header("Accept-Encoding", "gzip, deflate, br")
+                        .referrer("https://www.google.com/")
+                        .timeout(15000)
+                        .get()
+                        .html();
+                page.setContent(html);
+                log.info("[{}] JSoup fallback succeeded — injected real HTML into page", STORE_NAME);
+            } catch (Exception jsoupEx) {
+                log.error("[{}] JSoup fallback also failed: {}", STORE_NAME, jsoupEx.getMessage());
+            }
         }
     }
 
