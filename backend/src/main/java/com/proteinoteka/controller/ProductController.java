@@ -4,6 +4,7 @@ import com.proteinoteka.ProductSpecifications;
 import com.proteinoteka.dto.CompareProductDTO;
 import com.proteinoteka.dto.PriceHistoryDTO;
 import com.proteinoteka.dto.ProductDTO;
+import com.proteinoteka.dto.StorePriceDTO;
 import com.proteinoteka.model.AffiliateLink;
 import com.proteinoteka.model.ClickEvent;
 import com.proteinoteka.model.Product;
@@ -159,6 +160,24 @@ public class ProductController {
             return xff.split(",")[0].trim();
         }
         return request.getRemoteAddr();
+    }
+
+    @GetMapping("/by-name")
+    public List<StorePriceDTO> getByName(
+            @RequestParam String name,
+            @RequestParam(required = false) String brand) {
+
+        return productRepository.findSameProductAcrossStores(name, brand)
+                .stream()
+                .map(p -> new StorePriceDTO(
+                        p.getId(),
+                        p.getStore() != null ? p.getStore().getName() : "Unknown",
+                        p.getPrice(),
+                        p.getNumericPrice()
+                ))
+                .sorted(Comparator.comparingDouble(
+                        p -> p.numericPrice() != null ? p.numericPrice() : Double.MAX_VALUE))
+                .toList();
     }
 
     @GetMapping("/ids")

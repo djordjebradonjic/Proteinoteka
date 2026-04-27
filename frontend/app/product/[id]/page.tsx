@@ -10,7 +10,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer,
 } from "recharts";
-import { ShoppingCart, ArrowLeft, Package, Zap, Droplets, Flame } from "lucide-react";
+import { ShoppingCart, ArrowLeft, Package, Zap, Droplets, Flame, Store } from "lucide-react";
 import { trackEvent } from "@/lib/trackEvent";
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -83,8 +83,11 @@ export default function ProductPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
 
+  interface StorePrice { id: number; storeName: string; price: string; numericPrice: number | null; }
+
   const [product, setProduct] = useState<Product | null>(null);
   const [similar, setSimilar] = useState<Product[]>([]);
+  const [storePrices, setStorePrices] = useState<StorePrice[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -102,6 +105,13 @@ export default function ProductPage() {
             .then((r) => setSimilar(
               (r.data.content as Product[]).filter((p) => p.id !== res.data.id).slice(0, 6)
             ))
+            .catch(() => {});
+        }
+        const name = res.data.name;
+        const brand = res.data.brand;
+        if (name) {
+          api.get(`/products/by-name`, { params: { name, brand } })
+            .then((r) => setStorePrices(r.data))
             .catch(() => {});
         }
       })
@@ -273,6 +283,74 @@ export default function ProductPage() {
             </a>
           </div>
         </div>
+
+        {/* ── Cross-store prices ────────────────────────────────────── */}
+        {storePrices.length > 1 && (() => {
+          const cheapest = storePrices[0]?.numericPrice;
+          return (
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm mb-6 overflow-hidden">
+              <div className="flex items-center gap-2 px-6 py-4 border-b border-slate-100">
+                <Store className="w-4 h-4 text-[#FF9900]" />
+                <h2 className="text-base font-bold text-slate-900">Cena po prodavnicama</h2>
+              </div>
+              <ul>
+                {storePrices.map((sp, i) => {
+                  const isCheapest = i === 0;
+                  const diff = (cheapest != null && sp.numericPrice != null && !isCheapest)
+                    ? Math.round(sp.numericPrice - cheapest)
+                    : null;
+                  const isCurrent = sp.id === product.id;
+                  return (
+                    <li
+                      key={sp.id}
+                      className={`flex items-center gap-3 px-6 py-4 border-b border-slate-100 last:border-0 ${
+                        isCheapest ? "bg-green-50" : "hover:bg-slate-50"
+                      } transition-colors`}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={`text-sm font-semibold ${isCurrent ? "text-[#FF9900]" : "text-slate-800"}`}>
+                            {sp.storeName}
+                          </span>
+                          {isCheapest && (
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-green-100 text-green-700">
+                              Najjeftinije
+                            </span>
+                          )}
+                          {isCurrent && (
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-100">
+                              Trenutno gledaš
+                            </span>
+                          )}
+                        </div>
+                        {diff != null && (
+                          <p className="text-xs text-slate-400 mt-0.5">+{diff.toLocaleString("sr-RS")} RSD skuplje</p>
+                        )}
+                      </div>
+                      <span className={`text-base font-black shrink-0 ${isCheapest ? "text-green-700" : "text-slate-900"}`}>
+                        {sp.price}
+                      </span>
+                      <a
+                        href={`${process.env.NEXT_PUBLIC_API_URL}/api/v1/products/${sp.id}/buy`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => trackEvent({ eventType: "CLICK_OUT", productId: sp.id, store: sp.storeName })}
+                        className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
+                          isCheapest
+                            ? "bg-green-600 hover:bg-green-700 text-white"
+                            : "bg-slate-900 hover:bg-[#243860] text-white"
+                        }`}
+                      >
+                        <ShoppingCart className="w-3.5 h-3.5" />
+                        Kupi
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          );
+        })()}
 
         {/* ── Score breakdown ────────────────────────────────────────── */}
         {score != null && (
