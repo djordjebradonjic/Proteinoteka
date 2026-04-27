@@ -54,7 +54,8 @@ public class ProteinboxScraper implements StoreScraper {
 
     @Override
     public String buildPageUrl(int page) {
-        return page == 0 ? BASE_URL : BASE_URL + "page/" + page + "/";
+        // Proteinbox uses /page/2/, /page/3/ etc. (1-indexed), scraper uses 0-indexed
+        return page == 0 ? BASE_URL : BASE_URL + "page/" + (page + 1) + "/";
     }
 
     @Override
