@@ -41,6 +41,18 @@ public class ProteinboxScraper implements StoreScraper {
     }
 
     @Override
+    public void waitForListing(Page page) {
+        // Proteinbox uses Elementor which re-renders the WooCommerce product grid
+        // via JavaScript after DOMContentLoaded — wait for li.product to appear
+        try {
+            page.waitForSelector("li.product",
+                    new Page.WaitForSelectorOptions().setTimeout(10000));
+        } catch (Exception e) {
+            log.warn("[{}] li.product selector not found within timeout — parsing anyway", STORE_NAME);
+        }
+    }
+
+    @Override
     public String buildPageUrl(int page) {
         return page == 0 ? BASE_URL : BASE_URL + "page/" + page + "/";
     }

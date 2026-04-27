@@ -159,6 +159,7 @@ public class ScraperService {
                         }
 
                         simulateHumanScroll(page);
+                        scraper.waitForListing(page);
 
                         Document doc = Jsoup.parse(page.content());
                         List<Product> pageProducts = scraper.scrape(page, doc);

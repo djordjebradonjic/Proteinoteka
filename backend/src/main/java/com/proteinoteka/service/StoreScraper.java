@@ -19,4 +19,7 @@ public interface StoreScraper {
     default boolean usePlaywrightForListing() {
         return true;
     }
+
+    // Override in scrapers where the product grid is rendered by JS after DOMContentLoaded
+    default void waitForListing(Page page) {}
 }
