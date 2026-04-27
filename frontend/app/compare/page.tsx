@@ -200,7 +200,10 @@ function ComparePage() {
   useEffect(() => {
     if (!idsParam) { setLoading(false); return; }
 
-    const ids = idsParam.split(",").map(s => s.trim()).filter(Boolean);
+    const ids = idsParam
+      .split(",")
+      .map((s) => s.trim())
+      .filter((s) => s && s !== "undefined" && s !== "null" && /^\d+$/.test(s));
 
     async function load() {
       // Try dedicated compare endpoint first

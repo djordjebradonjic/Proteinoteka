@@ -12,7 +12,12 @@ const loadFromStorage = (): Product[] => {
   if (typeof window === "undefined") return [];
   try {
     const saved = localStorage.getItem("wishlist");
-    return saved ? JSON.parse(saved) : [];
+    if (!saved) return [];
+    const parsed = JSON.parse(saved);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (item: any) => item && typeof item.id === "number" && Number.isFinite(item.id),
+    );
   } catch {
     return [];
   }

@@ -10,6 +10,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,6 +40,11 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @Query("SELECT p FROM products p WHERE p.proteinPer100g IS NULL")
     List<Product> findByProteinPer100gIsNull();
 
+    @Query("SELECT p.url FROM products p WHERE p.store.name = :storeName")
+    List<String> findUrlsByStoreName(@Param("storeName") String storeName);
 
-
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM products p WHERE p.url IN :urls")
+    void deleteByUrlIn(@Param("urls") Collection<String> urls);
 }

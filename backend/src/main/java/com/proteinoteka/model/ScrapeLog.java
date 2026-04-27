@@ -32,6 +32,9 @@ public class ScrapeLog {
     @Column(nullable = false)
     private ScrapeStatus status;
 
+    @Column(name = "products_removed")
+    private Integer productsRemoved;
+
     @Column(name = "error_message")
     private String errorMessage;
 

@@ -14,7 +14,9 @@ export default function CompareBar() {
   if (ids.length === 0) return null;
 
   const handleCompare = () => {
-    router.push(`/compare?ids=${ids.join(",")}`);
+    const validIds = ids.filter((id) => id != null && Number.isFinite(id));
+    if (validIds.length < 2) return;
+    router.push(`/compare?ids=${validIds.join(",")}`);
   };
 
   return (

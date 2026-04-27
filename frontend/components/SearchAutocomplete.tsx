@@ -266,15 +266,15 @@ export default function SearchAutocomplete({
             </div>
           )}
 
-          {results.map((product, idx) => (
+          {results.filter((p) => p.id != null).map((product, idx) => (
             <Link
               key={product.id}
-              href={`/proizvod/${product.id}`}
+              href={`/product/${product.id}`}
               onClick={() => {
                 setQuery(product.name);
                 onChange(product.name);
                 setOpen(false);
-                trackEvent({ eventType: "SEARCH", query: product.name, productId: product.id, store: product.storeName });
+                if (product.id) trackEvent({ eventType: "SEARCH", query: product.name, productId: product.id, store: product.storeName });
               }}
               className="flex items-center gap-3 px-3 transition-colors"
               style={{

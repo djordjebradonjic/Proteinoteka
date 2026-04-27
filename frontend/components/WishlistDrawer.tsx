@@ -133,7 +133,7 @@ export default function WishlistDrawer() {
             </div>
           ) : (
             <ul className="divide-y divide-slate-100">
-              {items.map((product: any) => {
+              {items.filter((product: any) => product?.id != null).map((product: any) => {
                 const isComparing = compareIds.includes(product.id);
                 const isDisabled = compareCount >= 4 && !isComparing;
 
@@ -217,7 +217,7 @@ export default function WishlistDrawer() {
                     {/* Akcije */}
                     <div className="flex flex-col items-center gap-1.5 shrink-0">
                       <Link
-                        href={`/product/${product.id}`}
+                        href={product.id ? `/product/${product.id}` : "/"}
                         onClick={() => dispatch(closeWishlist())}
                         className="p-1.5 rounded-lg bg-[#131921] hover:bg-[#243860] text-white transition-colors"
                         aria-label="Pogledaj detalje"
@@ -225,7 +225,7 @@ export default function WishlistDrawer() {
                         <ExternalLink className="w-3.5 h-3.5" />
                       </Link>
                       <a
-                        href={`${process.env.NEXT_PUBLIC_API_URL}/api/v1/products/${product.id}/buy`}
+                        href={product.id ? `${process.env.NEXT_PUBLIC_API_URL}/api/v1/products/${product.id}/buy` : "#"}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="p-1.5 rounded-lg bg-[#FF9900] hover:bg-[#e68a00] text-white transition-colors"

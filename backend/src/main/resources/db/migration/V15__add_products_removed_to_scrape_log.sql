@@ -1,0 +1,1 @@
+ALTER TABLE scrape_log ADD COLUMN IF NOT EXISTS products_removed INT DEFAULT 0;

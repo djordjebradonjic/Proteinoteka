@@ -88,6 +88,11 @@ export default function ProductPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!id || id === "undefined" || isNaN(Number(id))) {
+      setLoading(false);
+      return;
+    }
+
     api.get(`/products/${id}`)
       .then((res) => {
         setProduct(res.data);

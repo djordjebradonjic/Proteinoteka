@@ -27,6 +27,9 @@ task:
 scraping:
   schedule:
     enabled: true
+  stale:
+    enabled: true
+    max-removal-percent: 50
 
 server:
   port: ${PORT:8080}

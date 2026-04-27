@@ -9,6 +9,7 @@ import com.proteinoteka.model.Store;
 import com.proteinoteka.repository.BrandReputationRepository;
 import com.proteinoteka.repository.PriceHistoryRepository;
 import com.proteinoteka.repository.ProductRepository;
+import com.proteinoteka.repository.ScrapeLogRepository;
 import com.proteinoteka.repository.StoreRepository;
 import com.proteinoteka.util.PriceParser;
 import jakarta.transaction.Transactional;
@@ -23,8 +24,10 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
@@ -39,12 +42,19 @@ public class ScraperService {
     private final PriceParser priceParser;
     private final BrandReputationRepository brandReputationRepository;
     private final BrandNormalizerService brandNormalizer;
+    private final ScrapeLogRepository scrapeLogRepository;
 
     @Autowired
     private NutritionParserService nutritionParser;
 
     @Value("${playwright.executable-path:}")
     private String playwrightExecutablePath;
+
+    @Value("${scraping.stale.enabled:true}")
+    private boolean staleEnabled;
+
+    @Value("${scraping.stale.max-removal-percent:50}")
+    private int maxRemovalPercent;
 
     private static final List<String> USER_AGENTS = List.of(
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
@@ -87,7 +97,16 @@ public class ScraperService {
         Store store = storeRepository.findByName(scraper.getStoreName())
                 .orElseThrow(() -> new RuntimeException("Store not found: " + scraper.getStoreName()));
 
+        Set<String> existingUrlSet = new HashSet<>();
+        if (staleEnabled && !testMode) {
+            List<String> existingUrls = productRepository.findUrlsByStoreName(store.getName());
+            existingUrlSet.addAll(existingUrls);
+            log.info("[{}] Stale detection: {} existing products tracked", scraper.getStoreName(), existingUrlSet.size());
+        }
+
+        Set<String> foundUrls = new HashSet<>();
         List<Product> products = new ArrayList<>();
+        boolean wasBlocked = false;
 
         try (Playwright playwright = Playwright.create()) {
             Browser browser = playwright.chromium().launch(
@@ -135,6 +154,7 @@ public class ScraperService {
 
                         if (isBlockedByFirewall(page)) {
                             log.error("[{}] FIREWALL DETECTED! Stopping scraper.", scraper.getStoreName());
+                            wasBlocked = true;
                             break;
                         }
 
@@ -148,8 +168,11 @@ public class ScraperService {
 
                         for (Product p : pageProducts) {
                             p.setStore(store);
-                            saveOrUpdateProduct(p, store);
+                            boolean saved = saveOrUpdateProduct(p, store);
                             products.add(p);
+                            if (saved && p.getUrl() != null) {
+                                foundUrls.add(p.getUrl());
+                            }
                         }
 
                         if (!scraper.hasNextPage(doc)) {
@@ -180,6 +203,11 @@ public class ScraperService {
 
         } catch (Exception e) {
             log.error("[{}] Critical error during scraping: {}", scraper.getStoreName(), e.getMessage(), e);
+            wasBlocked = true;
+        }
+
+        if (staleEnabled && !testMode && !wasBlocked && !existingUrlSet.isEmpty()) {
+            removeStaleProducts(store.getName(), existingUrlSet, foundUrls);
         }
 
         log.info("[{}] Scraping complete. Total products: {}", scraper.getStoreName(), products.size());
@@ -188,6 +216,41 @@ public class ScraperService {
 
     public List<Product> scrapeStore(StoreScraper scraper) {
         return scrapeStore(scraper, false);
+    }
+
+    // -------------------- Stale product cleanup --------------------
+
+    private void removeStaleProducts(String storeName, Set<String> existingUrlSet, Set<String> foundUrls) {
+        if (foundUrls.isEmpty()) {
+            log.warn("[{}] Stale removal skipped — scrape found 0 valid products (possible block or scrape error)", storeName);
+            return;
+        }
+
+        Set<String> missingUrls = new HashSet<>(existingUrlSet);
+        missingUrls.removeAll(foundUrls);
+
+        if (missingUrls.isEmpty()) {
+            log.info("[{}] No stale products detected", storeName);
+            return;
+        }
+
+        double removalPercent = (double) missingUrls.size() / existingUrlSet.size() * 100;
+        if (removalPercent > maxRemovalPercent) {
+            log.warn("[{}] Safety check FAILED — skipping stale removal. Found: {}, Missing: {} ({}% would be removed, threshold {}%)",
+                    storeName, foundUrls.size(), missingUrls.size(), (int) removalPercent, maxRemovalPercent);
+            return;
+        }
+
+        log.info("[{}] Removing {} stale products ({}% of existing): {}",
+                storeName, missingUrls.size(), (int) removalPercent, missingUrls);
+        productRepository.deleteByUrlIn(missingUrls);
+
+        scrapeLogRepository.findFirstByStoreNameOrderByStartedAtDesc(storeName).ifPresent(entry -> {
+            entry.setProductsRemoved(missingUrls.size());
+            scrapeLogRepository.save(entry);
+        });
+
+        log.info("[{}] Stale removal complete — {} products removed", storeName, missingUrls.size());
     }
 
     // -------------------- ANTI-BAN HELPERS --------------------
@@ -247,7 +310,7 @@ public class ScraperService {
     // -------------------- Save / Update --------------------
 
     @Transactional
-    public void saveOrUpdateProduct(Product scraped, Store store) {
+    public boolean saveOrUpdateProduct(Product scraped, Store store) {
 
         // 1. Normalizuj brend
         if (scraped.getBrand() != null) {
@@ -282,14 +345,14 @@ public class ScraperService {
         Double numericPrice = priceParser.parse(scraped.getPrice());
         if (numericPrice == null || numericPrice == 0) {
             log.warn("[{}] Skipping '{}' - no valid price", store.getName(), scraped.getName());
-            return;
+            return false;
         }
 
         // 4. Validacija proteina
         if (scraped.getProteinPer100g() == null || scraped.getProteinPer100g() < 15) {
             log.warn("[{}] Skipping '{}' - no valid protein data (protein={})",
                     store.getName(), scraped.getName(), scraped.getProteinPer100g());
-            return;
+            return false;
         }
 
         Optional<Product> existingOpt = productRepository.findByUrl(scraped.getUrl());
@@ -348,6 +411,7 @@ public class ScraperService {
                 existing.setProteinSource(scraped.getProteinSource());
 
             productRepository.save(existing);
+            return true;
 
         } else {
             scraped.setStore(store);
@@ -356,6 +420,7 @@ public class ScraperService {
             if (weightGrams > 0) scraped.setPrimaryWeightGrams(weightGrams);
             productRepository.save(scraped);
             log.info("[{}] New product saved: '{}'", store.getName(), scraped.getName());
+            return true;
         }
     }
 
