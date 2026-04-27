@@ -10,6 +10,7 @@ import { addToCompare, removeFromCompare } from "@/store/compareSlice";
 import { X, Heart, ExternalLink, ShoppingCart, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { trackEvent } from "@/lib/trackEvent";
 
 function ValueBadge({ score }: { score: number }) {
   const color =
@@ -228,6 +229,7 @@ export default function WishlistDrawer() {
                         href={product.id ? `${process.env.NEXT_PUBLIC_API_URL}/api/v1/products/${product.id}/buy` : "#"}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={() => trackEvent({ eventType: "CLICK_OUT", productId: product.id, store: product.storeName })}
                         className="p-1.5 rounded-lg bg-[#FF9900] hover:bg-[#e68a00] text-white transition-colors"
                         aria-label="Kupi"
                       >

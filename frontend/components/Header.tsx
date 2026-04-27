@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { ShoppingCart, Heart } from "lucide-react";
+import { Heart } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { toggleWishlist } from "@/store/wishlistSlice";
 import SearchAutocomplete from "@/components/SearchAutocomplete";
@@ -114,34 +114,6 @@ function NavLink({
   );
 }
 
-function IconButton({
-  href,
-  icon,
-  count,
-  label,
-}: {
-  href: string;
-  icon: React.ReactNode;
-  count: number;
-  label: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className="relative flex items-center group"
-      aria-label={label}
-    >
-      <span className="text-slate-200 group-hover:text-[#FF9900] transition-colors">
-        {icon}
-      </span>
-      {count > 0 && (
-        <span className="absolute -top-1.5 -right-1.5 min-w-[15px] h-[15px] px-0.5 rounded-full bg-[#FF9900] text-[#1B2B4B] text-[9px] font-bold flex items-center justify-center leading-none">
-          {count > 99 ? "99+" : count}
-        </span>
-      )}
-    </Link>
-  );
-}
 
 export default function Header({
   searchValue = "",
@@ -153,9 +125,6 @@ export default function Header({
   const dispatch = useAppDispatch();
   const wishlistCount = useAppSelector(
     (state) => (state as any).wishlist.count,
-  ) as number;
-  const cartCount = useAppSelector(
-    (state) => (state as any).cart.count,
   ) as number;
   const [localSearch, setLocalSearch] = useState(searchValue);
   const [mounted, setMounted] = useState(false);
@@ -203,13 +172,6 @@ export default function Header({
               </span>
             )}
           </button>
-
-          <IconButton
-            href="/korpa"
-            label="Korpa"
-            count={cartCount}
-            icon={<ShoppingCart className="w-6 h-6" strokeWidth={1.8} />}
-          />
         </nav>
 
         {/* Mobile */}
@@ -228,13 +190,6 @@ export default function Header({
               </span>
             )}
           </button>
-
-          <IconButton
-            href="/korpa"
-            label="Korpa"
-            count={cartCount}
-            icon={<ShoppingCart className="w-6 h-6" strokeWidth={1.8} />}
-          />
         </div>
       </div>
 

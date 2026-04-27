@@ -51,7 +51,7 @@ export const metadata: Metadata = {
       "Uštedi na suplementaciji. Uporedi cene svih brendova i saznaj koji whey protein nudi najviše za tvoj novac.",
     images: [
       {
-        url: "/og-image.png",
+        url: "/opengraph-image.png",
         width: 1200,
         height: 630,
         alt: "Proteinoteka grafika sa uporednim cenama suplemenata",
@@ -62,7 +62,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Najbolje cene proteina u Srbiji | Proteinoteka",
     description: "Prestani da preplaćuješ suplemente. Uporedi cene odmah.",
-    images: ["/og-image.png"],
+    images: ["/opengraph-image.png"],
   },
   robots: {
     index: true,
