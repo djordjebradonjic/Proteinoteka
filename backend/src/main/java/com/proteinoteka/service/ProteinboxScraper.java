@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -87,8 +88,15 @@ public class ProteinboxScraper implements StoreScraper {
 
 
             try {
-                page.navigate(p.getUrl(), new Page.NavigateOptions()
-                        .setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
+                if (!navigateWithRetry(page, p.getUrl(), 3)) {
+                    log.error("[{}] Failed to load {} after retries, skipping", STORE_NAME, p.getUrl());
+                    continue;
+                }
+
+                if (isBlocked(page)) {
+                    log.error("[{}] FIREWALL DETECTED on {}! Stopping.", STORE_NAME, p.getUrl());
+                    return;
+                }
 
                 page.waitForTimeout(500 + (long)(Math.random() * 1000));
 
@@ -110,10 +118,11 @@ public class ProteinboxScraper implements StoreScraper {
                 count++;
 
                 if (count % 20 == 0) {
-                    log.info("[{}] Batch of 20 done, sleeping 40s...", STORE_NAME);
-                    Thread.sleep(40_000);
+                    long batchSleep = ThreadLocalRandom.current().nextLong(35_000, 55_000);
+                    log.info("[{}] Batch of 20 done, sleeping {}s...", STORE_NAME, batchSleep / 1000);
+                    Thread.sleep(batchSleep);
                 } else {
-                    long sleepTime = 3000 + (long)(Math.random() * 4000);
+                    long sleepTime = ThreadLocalRandom.current().nextLong(4000, 8000);
                     Thread.sleep(sleepTime);
                 }
 
@@ -376,6 +385,30 @@ public class ProteinboxScraper implements StoreScraper {
         } catch (Exception e) {
             log.warn("[{}] Could not click Sastav tab: {}", STORE_NAME, e.getMessage());
         }
+    }
+
+    private boolean navigateWithRetry(Page page, String url, int maxRetries) {
+        for (int i = 0; i < maxRetries; i++) {
+            try {
+                page.navigate(url, new Page.NavigateOptions()
+                        .setWaitUntil(WaitUntilState.DOMCONTENTLOADED)
+                        .setTimeout(25000));
+                page.waitForTimeout(300 + (long)(Math.random() * 500));
+                return true;
+            } catch (Exception e) {
+                log.warn("[{}] Navigate retry {}/{} for {}: {}", STORE_NAME, i + 1, maxRetries, url, e.getMessage());
+                try { Thread.sleep(3000L * (i + 1)); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
+            }
+        }
+        return false;
+    }
+
+    private boolean isBlocked(Page page) {
+        try {
+            String title = page.title();
+            return title.contains("Cloudflare") || title.contains("Attention Required")
+                    || title.contains("Just a moment") || title.contains("Access denied");
+        } catch (Exception e) { return false; }
     }
 
     private Product parseElement(Element el) {

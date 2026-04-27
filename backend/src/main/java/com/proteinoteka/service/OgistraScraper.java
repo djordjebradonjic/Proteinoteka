@@ -162,9 +162,10 @@ public class OgistraScraper implements StoreScraper {
             try {
                 Thread.sleep(ThreadLocalRandom.current().nextLong(2500, 5000));
 
-                page.navigate(p.getUrl(), new Page.NavigateOptions()
-                        .setWaitUntil(WaitUntilState.DOMCONTENTLOADED)
-                        .setTimeout(25000));
+                if (!navigateWithRetry(page, p.getUrl(), 3)) {
+                    log.error("[{}] Failed to load {} after retries, skipping", STORE_NAME, p.getUrl());
+                    continue;
+                }
 
                 String title = page.title();
                 if (title.contains("Cloudflare") || title.contains("Attention Required")
@@ -479,6 +480,22 @@ public class OgistraScraper implements StoreScraper {
         Element shortDesc = doc.selectFirst("div.product-description-short");
         if (shortDesc != null && !shortDesc.text().isBlank())
             p.setDescription(shortDesc.text().trim());
+    }
+
+    private boolean navigateWithRetry(Page page, String url, int maxRetries) {
+        for (int i = 0; i < maxRetries; i++) {
+            try {
+                page.navigate(url, new Page.NavigateOptions()
+                        .setWaitUntil(WaitUntilState.DOMCONTENTLOADED)
+                        .setTimeout(25000));
+                page.waitForTimeout(300 + (long)(Math.random() * 500));
+                return true;
+            } catch (Exception e) {
+                log.warn("[{}] Navigate retry {}/{} for {}: {}", STORE_NAME, i + 1, maxRetries, url, e.getMessage());
+                try { Thread.sleep(3000L * (i + 1)); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
+            }
+        }
+        return false;
     }
 
     private void safeSleep(long ms) {

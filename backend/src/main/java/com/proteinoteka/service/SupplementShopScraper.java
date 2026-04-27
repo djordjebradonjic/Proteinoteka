@@ -140,10 +140,12 @@ public class SupplementShopScraper implements StoreScraper {
 
 
             try {
-                Thread.sleep(ThreadLocalRandom.current().nextLong(2000, 4500));
+                Thread.sleep(ThreadLocalRandom.current().nextLong(4000, 7000));
 
-                page.navigate(p.getUrl(), new Page.NavigateOptions()
-                        .setWaitUntil(WaitUntilState.NETWORKIDLE));
+                if (!navigateWithRetry(page, p.getUrl(), 3)) {
+                    log.error("[{}] Failed to load {} after retries, skipping", STORE_NAME, p.getUrl());
+                    continue;
+                }
 
                 if (isBlocked(page)) {
                     log.error("[{}] DETECTED BY FIREWALL on {}! Stopping scraper.", STORE_NAME, p.getUrl());
@@ -404,6 +406,22 @@ public class SupplementShopScraper implements StoreScraper {
             page.mouse().wheel(0, ThreadLocalRandom.current().nextInt(300, 600));
             page.waitForTimeout(ThreadLocalRandom.current().nextInt(1000, 2000));
         } catch (Exception ignored) {}
+    }
+
+    private boolean navigateWithRetry(Page page, String url, int maxRetries) {
+        for (int i = 0; i < maxRetries; i++) {
+            try {
+                page.navigate(url, new Page.NavigateOptions()
+                        .setWaitUntil(WaitUntilState.NETWORKIDLE)
+                        .setTimeout(30000));
+                page.waitForTimeout(300 + (long)(Math.random() * 500));
+                return true;
+            } catch (Exception e) {
+                log.warn("[{}] Navigate retry {}/{} for {}: {}", STORE_NAME, i + 1, maxRetries, url, e.getMessage());
+                try { Thread.sleep(3000L * (i + 1)); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
+            }
+        }
+        return false;
     }
 
     private void safeSleep(long ms) {
