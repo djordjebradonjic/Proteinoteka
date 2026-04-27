@@ -306,7 +306,9 @@ export default function HomeContent({
             totalPages={totalPages}
             onPageChange={(newPage) => {
               updateFilters("page", newPage);
-              window.scrollTo({ top: 0, behavior: "smooth" });
+              document
+                .getElementById("product-grid")
+                ?.scrollIntoView({ behavior: "smooth", block: "start" });
             }}
           />
         </div>
