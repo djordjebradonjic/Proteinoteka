@@ -241,7 +241,7 @@ export default function HomeContent({
           selectedCategory={selectedCategories}
           minPrice={minPrice}
           maxPrice={maxPrice}
-          onStoreChange={(val) => updateFilters("store", selectedStores[0] === val ? "" : val)}
+          onStoreChange={(val) => toggleFilter("store", val)}
           onBrandChange={(val) => toggleFilter("brand", val)}
           onFlavourChange={(val) => toggleFilter("flavour", val)}
           onCategoryChange={(val) => toggleFilter("category", val)}
