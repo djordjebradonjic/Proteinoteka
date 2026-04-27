@@ -48,7 +48,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     e.preventDefault();
     if (isComparing) {
       dispatch(removeFromCompare(product.id));
-    } else if (compareCount < 4 && product.id) {
+    } else if (compareCount < 4 && product.id && typeof product.id === "number") {
       dispatch(addToCompare({ id: product.id, name: product.name }));
       trackEvent({ eventType: "COMPARE_CLICK", productId: product.id, store: product.storeName });
     }
@@ -160,7 +160,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       <div className="flex flex-col gap-1.5 mt-auto px-2 pb-2 pt-3">
         <Link
           href={product.id ? `/product/${product.id}` : "/"}
-          onClick={() => { if (product.id) trackEvent({ eventType: "PRODUCT_VIEW", productId: product.id, store: product.storeName }); }}
+          onClick={() => { if (product.id && typeof product.id === "number") trackEvent({ eventType: "PRODUCT_VIEW", productId: product.id, store: product.storeName }); }}
           className="w-full bg-[#1B2B4B] text-white font-bold text-xs md:text-sm py-2.5 md:py-3 text-center hover:bg-[#243860] transition-colors uppercase tracking-wide rounded-md"
         >
           Detalji

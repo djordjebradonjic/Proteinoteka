@@ -394,7 +394,7 @@ function ComparePage() {
                       href={`${API_BASE}/api/v1/products/${p.id}/buy`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      onClick={() => trackEvent({ eventType: "CLICK_OUT", productId: p.id, store: p.storeName })}
+                      onClick={() => { if (p.id && typeof p.id === "number") trackEvent({ eventType: "CLICK_OUT", productId: p.id, store: p.storeName }); }}
                       className="flex items-center justify-center gap-1.5 py-2.5 rounded-lg font-bold text-xs text-[#131921] transition-all active:scale-[0.98]"
                       style={{ background: "linear-gradient(135deg,#FF9900,#e68a00)", boxShadow: "0 2px 12px rgba(255,153,0,0.3)" }}
                     >

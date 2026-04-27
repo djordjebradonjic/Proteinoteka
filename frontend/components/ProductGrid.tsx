@@ -47,7 +47,7 @@ export default function ProductGrid({
       <div className="flex flex-wrap gap-3 md:gap-4">
         {products.map((p) => (
           <div
-            key={p.productUrl}
+            key={p.id}
             className="w-[calc(50%-6px)] lg:w-[calc(33.333%-10px)] xl:w-[calc(25%-12px)]"
           >
             <ProductCard product={p} />

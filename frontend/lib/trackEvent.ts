@@ -9,6 +9,19 @@ interface TrackPayload {
 
 export function trackEvent(payload: TrackPayload): void {
   if (!API_BASE) return;
+
+  // Never send if productId is present but not a valid finite number.
+  // Catches null, NaN, undefined coerced to number, and wrong types at runtime.
+  if (payload.productId !== undefined) {
+    if (
+      payload.productId === null ||
+      typeof payload.productId !== "number" ||
+      !Number.isFinite(payload.productId)
+    ) {
+      return;
+    }
+  }
+
   fetch(`${API_BASE}/api/track`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
