@@ -42,7 +42,14 @@ public class FitLabScraper implements StoreScraper {
 
     @Override
     public boolean hasNextPage(Document doc) {
-        return false;
+        // Pagination div: flex justify-end items-center gap-2 py-4
+        // Last button in it is the → button — disabled attr means no next page
+        Element pagination = doc.selectFirst("div.flex.justify-end.items-center");
+        if (pagination == null) return false;
+        Elements buttons = pagination.select("button");
+        if (buttons.isEmpty()) return false;
+        Element nextBtn = buttons.last();
+        return !nextBtn.hasAttr("disabled");
     }
 
     @Override
@@ -52,10 +59,7 @@ public class FitLabScraper implements StoreScraper {
         Elements elements = doc.select("div[data-index]");
         log.info("[{}] Found {} products on listing page", STORE_NAME, elements.size());
 
-        int maxProducts = Math.min(elements.size(), 20);
-        log.info("[{}] Processing only first {} products (anti-ban limit)", STORE_NAME, maxProducts);
-
-        for (int i = 0; i < maxProducts; i++) {
+        for (int i = 0; i < elements.size(); i++) {
             Product p = parseElement(elements.get(i));
             if (p != null) products.add(p);
         }
