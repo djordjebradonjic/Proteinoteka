@@ -55,6 +55,14 @@ const NAV_LINKS = [
   { label: "Poređenje cena",       href: "/?sort=valueScore,desc"     },
 ];
 
+const SEO_GUIDES = [
+  { label: "Najbolji whey protein u Srbiji", href: "/najbolji-whey-protein-srbija" },
+  { label: "Najjeftiniji whey protein",      href: "/najjeftiniji-whey-protein"    },
+  { label: "Whey protein cena",              href: "/whey-protein-cena"            },
+  { label: "Whey izolat u Srbiji",           href: "/whey-isolate-srbija"          },
+  { label: "Protein za masu",                href: "/protein-za-masu"              },
+];
+
 function ColHeading({ children }: { children: React.ReactNode }) {
   return (
     <h4 className="text-[11px] font-bold uppercase tracking-widest mb-4"
@@ -142,8 +150,16 @@ export default function Footer() {
           {/* Col 3 — Brzi linkovi */}
           <div>
             <ColHeading>Brzi linkovi</ColHeading>
-            <ul className="flex flex-col gap-2.5">
+            <ul className="flex flex-col gap-2.5 mb-6">
               {NAV_LINKS.map((l) => (
+                <FooterLink key={l.href} href={l.href}>
+                  {l.label}
+                </FooterLink>
+              ))}
+            </ul>
+            <ColHeading>Vodiči</ColHeading>
+            <ul className="flex flex-col gap-2.5">
+              {SEO_GUIDES.map((l) => (
                 <FooterLink key={l.href} href={l.href}>
                   {l.label}
                 </FooterLink>
