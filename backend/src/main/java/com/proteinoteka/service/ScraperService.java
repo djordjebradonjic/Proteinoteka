@@ -147,9 +147,24 @@ public class ScraperService {
                         log.info("[{}] Scraping page {}: {}", scraper.getStoreName(), currentPage, url);
 
                         if (!navigateWithRetry(page, url, 3)) {
-                            log.error("[{}] Failed to load page after retries, stopping scraper",
-                                    scraper.getStoreName());
-                            break;
+                            log.warn("[{}] Playwright navigation failed — trying JSoup direct fetch for {}",
+                                    scraper.getStoreName(), url);
+                            try {
+                                String html = Jsoup.connect(url)
+                                        .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36")
+                                        .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
+                                        .header("Accept-Language", "sr-RS,sr;q=0.9,en-US;q=0.8,en;q=0.7")
+                                        .referrer("https://www.google.com/")
+                                        .timeout(15000)
+                                        .get()
+                                        .html();
+                                page.setContent(html);
+                                log.info("[{}] JSoup direct fetch succeeded for {}", scraper.getStoreName(), url);
+                            } catch (Exception jsoupEx) {
+                                log.error("[{}] JSoup fallback also failed: {} — stopping scraper",
+                                        scraper.getStoreName(), jsoupEx.getMessage());
+                                break;
+                            }
                         }
 
                         if (isBlockedByFirewall(page)) {
@@ -261,7 +276,7 @@ public class ScraperService {
             try {
                 page.navigate(url, new Page.NavigateOptions()
                         .setWaitUntil(WaitUntilState.DOMCONTENTLOADED)
-                        .setTimeout(25000));
+                        .setTimeout(10000));
                 page.waitForTimeout(500 + (int)(Math.random() * 1000));
                 return true;
             } catch (Exception e) {
