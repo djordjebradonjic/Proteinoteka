@@ -162,6 +162,32 @@ public class ProductController {
         return request.getRemoteAddr();
     }
 
+    @GetMapping("/top")
+    public List<ProductDTO> getTopProducts(
+            @RequestParam(required = false) String category,
+            @RequestParam(defaultValue = "valueScore") String sortBy,
+            @RequestParam(defaultValue = "10") int limit) {
+
+        int safeLimit = Math.min(limit, 30);
+
+        Specification<Product> spec = (root, query, cb) -> cb.and(
+                cb.isNotNull(root.get("valueScore")),
+                cb.greaterThan(root.get("numericPrice"), 0.0)
+        );
+        if (category != null && !category.isBlank()) {
+            spec = spec.and(ProductSpecifications.hasProteinSource(category));
+        }
+
+        Sort sort = "price".equals(sortBy)
+                ? Sort.by("numericPrice").ascending()
+                : Sort.by("valueScore").descending();
+
+        return productRepository.findAll(spec, PageRequest.of(0, safeLimit, sort))
+                .stream()
+                .map(this::convertToDTO)
+                .toList();
+    }
+
     @GetMapping("/by-name")
     public List<StorePriceDTO> getByName(
             @RequestParam String name,
