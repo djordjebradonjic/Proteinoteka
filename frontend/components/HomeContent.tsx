@@ -36,15 +36,15 @@ export default function HomeContent({
   const pathname = usePathname();
   const { replace } = useRouter();
 
-  const search          = searchParams.get("query")    || "";
-  const selectedStores  = parseList(searchParams.get("store"));
-  const selectedBrands  = parseList(searchParams.get("brand"));
+  const search = searchParams.get("query") || "";
+  const selectedStores = parseList(searchParams.get("store"));
+  const selectedBrands = parseList(searchParams.get("brand"));
   const selectedFlavours = parseList(searchParams.get("flavour"));
-  const urlCategories   = parseList(searchParams.get("category"));
-  const minPrice        = searchParams.get("minPrice") || "";
-  const maxPrice        = searchParams.get("maxPrice") || "";
-  const page            = Number(searchParams.get("page")) || 0;
-  const sort            = searchParams.get("sort")     || "id,desc";
+  const urlCategories = parseList(searchParams.get("category"));
+  const minPrice = searchParams.get("minPrice") || "";
+  const maxPrice = searchParams.get("maxPrice") || "";
+  const page = Number(searchParams.get("page")) || 0;
+  const sort = searchParams.get("sort") || "id,desc";
 
   // Effective categories for display (URL + locked page category)
   const selectedCategories =
@@ -63,12 +63,16 @@ export default function HomeContent({
     !!searchParams.get("page") ||
     sort !== "id,desc";
 
-  const [products,   setProducts]   = useState<Product[]>(hasUrlFilters ? [] : initialProducts);
-  const [totalPages, setTotalPages] = useState(hasUrlFilters ? 0 : initialTotalPages);
+  const [products, setProducts] = useState<Product[]>(
+    hasUrlFilters ? [] : initialProducts,
+  );
+  const [totalPages, setTotalPages] = useState(
+    hasUrlFilters ? 0 : initialTotalPages,
+  );
   const [totalItems, setTotalItems] = useState(0);
-  const [loading,    setLoading]    = useState(hasUrlFilters);
-  const [brands,     setBrands]     = useState<string[]>([]);
-  const [flavours,   setFlavours]   = useState<string[]>([]);
+  const [loading, setLoading] = useState(hasUrlFilters);
+  const [brands, setBrands] = useState<string[]>([]);
+  const [flavours, setFlavours] = useState<string[]>([]);
 
   // Toggle one value in a comma-separated URL param
   const toggleFilter = useCallback(
@@ -99,8 +103,14 @@ export default function HomeContent({
   );
 
   useEffect(() => {
-    api.get("/products/brands").then((res) => setBrands(res.data)).catch(() => {});
-    api.get("/products/flavours").then((res) => setFlavours(res.data)).catch(() => {});
+    api
+      .get("/products/brands")
+      .then((res) => setBrands(res.data))
+      .catch(() => {});
+    api
+      .get("/products/flavours")
+      .then((res) => setFlavours(res.data))
+      .catch(() => {});
   }, []);
 
   const fetchProducts = useCallback(async () => {
@@ -111,26 +121,27 @@ export default function HomeContent({
       params.set("size", "12");
       params.set("sort", searchParams.get("sort") || "id,desc");
 
-      const name    = searchParams.get("query");
-      const store   = searchParams.get("store");
-      const brand   = searchParams.get("brand");
+      const name = searchParams.get("query");
+      const store = searchParams.get("store");
+      const brand = searchParams.get("brand");
       const flavour = searchParams.get("flavour");
-      const min     = searchParams.get("minPrice");
-      const max     = searchParams.get("maxPrice");
+      const min = searchParams.get("minPrice");
+      const max = searchParams.get("maxPrice");
 
       // Merge URL categories with locked page category
       const urlCatList = parseList(searchParams.get("category"));
-      const allCats = initialCategory && !urlCatList.includes(initialCategory)
-        ? [...urlCatList, initialCategory]
-        : urlCatList;
+      const allCats =
+        initialCategory && !urlCatList.includes(initialCategory)
+          ? [...urlCatList, initialCategory]
+          : urlCatList;
 
-      if (name)          params.set("name",      name);
-      if (store)         params.set("storeName", store);
-      if (brand)         params.set("brand",     brand);
-      if (flavour)       params.set("flavour",   flavour);
+      if (name) params.set("name", name);
+      if (store) params.set("storeName", store);
+      if (brand) params.set("brand", brand);
+      if (flavour) params.set("flavour", flavour);
       if (allCats.length) params.set("category", allCats.join(","));
-      if (min)           params.set("minPrice",  min);
-      if (max)           params.set("maxPrice",  max);
+      if (min) params.set("minPrice", min);
+      if (max) params.set("maxPrice", max);
 
       const res = await api.get(`/products?${params.toString()}`);
       setProducts(res.data.content);
@@ -161,7 +172,11 @@ export default function HomeContent({
 
   const chips: Chip[] = [
     search
-      ? { key: "query", label: `"${search}"`, onRemove: () => updateFilters("query", "") }
+      ? {
+          key: "query",
+          label: `"${search}"`,
+          onRemove: () => updateFilters("query", ""),
+        }
       : null,
     ...selectedStores.map((s) => ({
       key: `store-${s}`,
@@ -184,10 +199,18 @@ export default function HomeContent({
       onRemove: () => toggleFilter("category", c),
     })),
     minPrice
-      ? { key: "minPrice", label: `od ${minPrice} RSD`, onRemove: () => updateFilters("minPrice", "") }
+      ? {
+          key: "minPrice",
+          label: `od ${minPrice} RSD`,
+          onRemove: () => updateFilters("minPrice", ""),
+        }
       : null,
     maxPrice
-      ? { key: "maxPrice", label: `do ${maxPrice} RSD`, onRemove: () => updateFilters("maxPrice", "") }
+      ? {
+          key: "maxPrice",
+          label: `do ${maxPrice} RSD`,
+          onRemove: () => updateFilters("maxPrice", ""),
+        }
       : null,
   ].filter(Boolean) as Chip[];
 
@@ -205,7 +228,10 @@ export default function HomeContent({
         />
       )}
 
-      <div id="product-grid" className="max-w-7xl mx-auto px-4 py-8 flex flex-col md:flex-row gap-6 items-start relative">
+      <div
+        id="product-grid"
+        className="max-w-7xl mx-auto px-4 py-8 flex flex-col md:flex-row gap-6 items-start relative"
+      >
         <SidebarFilter
           brands={brands}
           flavours={flavours}
@@ -215,12 +241,12 @@ export default function HomeContent({
           selectedCategory={selectedCategories}
           minPrice={minPrice}
           maxPrice={maxPrice}
-          onStoreChange={(val)    => toggleFilter("store",    val)}
-          onBrandChange={(val)    => toggleFilter("brand",    val)}
-          onFlavourChange={(val)  => toggleFilter("flavour",  val)}
+          onStoreChange={(val) => updateFilters("store", selectedStores[0] === val ? "" : val)}
+          onBrandChange={(val) => toggleFilter("brand", val)}
+          onFlavourChange={(val) => toggleFilter("flavour", val)}
           onCategoryChange={(val) => toggleFilter("category", val)}
-          onMinChange={(val)      => updateFilters("minPrice",  val)}
-          onMaxChange={(val)      => updateFilters("maxPrice",  val)}
+          onMinChange={(val) => updateFilters("minPrice", val)}
+          onMaxChange={(val) => updateFilters("maxPrice", val)}
           onReset={handleReset}
           hasActiveFilters={hasActiveFilters}
           activeCount={activeCount}
@@ -234,7 +260,9 @@ export default function HomeContent({
             />
             {!loading && totalItems > 0 && (
               <p className="text-sm text-slate-500">
-                <span className="font-semibold text-slate-700">{totalItems}</span>{" "}
+                <span className="font-semibold text-slate-700">
+                  {totalItems}
+                </span>{" "}
                 proizvoda — stranica{" "}
                 <span className="font-semibold text-slate-700">{page + 1}</span>{" "}
                 od {totalPages}
