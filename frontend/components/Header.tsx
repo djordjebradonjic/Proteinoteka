@@ -119,7 +119,7 @@ function GuidesDropdown({ mobile = false }: { mobile?: boolean }) {
   }, []);
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="relative z-50">
       <button
         onClick={() => setOpen(o => !o)}
         className="flex items-center gap-0.5 text-sm font-medium text-slate-200 hover:text-[#FF9900] transition-colors whitespace-nowrap px-1 cursor-pointer"
