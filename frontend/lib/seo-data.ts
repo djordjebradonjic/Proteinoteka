@@ -14,7 +14,7 @@ export async function fetchTopProducts(params: {
     if (params.sortBy)   url.searchParams.set("sortBy",   params.sortBy);
     if (params.limit)    url.searchParams.set("limit",    String(params.limit));
 
-    const res = await fetch(url.toString(), { next: { revalidate: 3600 } });
+    const res = await fetch(url.toString(), { next: { revalidate: 300 } });
     if (!res.ok) return [];
     return res.json();
   } catch {
