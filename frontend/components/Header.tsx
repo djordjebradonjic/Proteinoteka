@@ -242,6 +242,22 @@ export default function Header({
       >
         <SearchAutocomplete value={localSearch} onChange={handleSearch} />
       </div>
+
+      {/* Mobile guides row */}
+      <div
+        className="md:hidden flex items-center gap-2 px-4 pb-2.5 overflow-x-auto scrollbar-none"
+        style={{ backgroundColor: "#131921" }}
+      >
+        {GUIDES.map((g) => (
+          <Link
+            key={g.href}
+            href={g.href}
+            className="shrink-0 text-[11px] font-semibold text-slate-300 hover:text-[#FF9900] bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-full transition-colors whitespace-nowrap"
+          >
+            {g.label}
+          </Link>
+        ))}
+      </div>
     </header>
   );
 }
