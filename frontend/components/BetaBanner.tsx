@@ -6,11 +6,13 @@ import { X } from "lucide-react";
 const STORAGE_KEY = "beta-banner-dismissed";
 
 export default function BetaBanner() {
-  const [visible, setVisible] = useState(false);
+  // Start visible so the banner is in SSR HTML — no pop-in CLS for new users.
+  // Returning visitors (who dismissed) get an immediate hide on mount instead.
+  const [visible, setVisible] = useState(true);
   const [hiding, setHiding] = useState(false);
 
   useEffect(() => {
-    if (!localStorage.getItem(STORAGE_KEY)) setVisible(true);
+    if (localStorage.getItem(STORAGE_KEY)) setVisible(false);
   }, []);
 
   const dismiss = () => {
@@ -18,6 +20,7 @@ export default function BetaBanner() {
     setTimeout(() => {
       localStorage.setItem(STORAGE_KEY, "1");
       setVisible(false);
+      setHiding(false);
     }, 300);
   };
 

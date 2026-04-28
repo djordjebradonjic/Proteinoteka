@@ -14,7 +14,8 @@ import { X } from "lucide-react";
 import { getCategoryByValue } from "@/lib/categories";
 
 const CompareBar = dynamic(() => import("./CompareBar"), { ssr: false });
-const KontaktSekcija = dynamic(() => import("./KontaktFoma"), { ssr: false });
+// KontaktSekcija uses ssr:true (default) — must be in SSR HTML so Footer doesn't shift when it appears
+const KontaktSekcija = dynamic(() => import("./KontaktFoma"));
 const WishlistDrawer = dynamic(() => import("./WishlistDrawer"), { ssr: false });
 const ProteinCalculatorWizard = dynamic(() => import("@/components/ProteinCalculatorWizard"), { ssr: false });
 

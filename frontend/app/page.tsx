@@ -2,6 +2,12 @@ import HomeContent from "@/components/HomeContent";
 import { Metadata } from "next";
 import { Suspense } from "react";
 
+// useSearchParams() in HomeContent bails out of SSR on statically-generated pages.
+// force-dynamic makes the route render on every request so useSearchParams() gets
+// real URL params during SSR, eliminating the BAILOUT_TO_CLIENT_SIDE_RENDERING
+// that caused the entire page to arrive as <div>Loading...</div> → CLS 0.97.
+export const dynamic = "force-dynamic";
+
 
 export const metadata: Metadata = {
   title: {
@@ -44,7 +50,7 @@ export const metadata: Metadata = {
       "Poredimo cene whey proteina, izolata i kreatina iz svih srpskih prodavnica. Videćeš tačno koliko platiš po gramu proteina i gde je najisplativija kupovina.",
     images: [
       {
-        url: "/opengraph-image.png",
+        url: "/opengraph-image.jpg",
         width: 1200,
         height: 630,
         alt: "Proteinoteka – Poređenje cena proteina u Srbiji",
@@ -57,7 +63,7 @@ export const metadata: Metadata = {
     title: "Proteinoteka – Najisplativiji protein u Srbiji",
     description:
       "Poredimo cene proteina iz svih prodavnica i računamo RSD/g proteina. Znaćeš uvek gde je najpametnije kupiti.",
-    images: ["/opengraph-image.png"],
+    images: ["/opengraph-image.jpg"],
   },
 
   robots: {
@@ -97,7 +103,7 @@ async function getInitialProducts() {
 export default async function Home() {
   const initialData = await getInitialProducts();
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div className="min-h-screen" />}>
       <HomeContent
         initialProducts={initialData.content}
         initialTotalPages={initialData.totalPages}
