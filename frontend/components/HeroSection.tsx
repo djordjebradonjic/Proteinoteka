@@ -1,12 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useCallback } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Store, Package, TrendingDown, ArrowDown, GitCompare } from "lucide-react";
 import { CATEGORIES } from "@/lib/categories";
 
+// Reads ?category param and syncs into HeroSection's local state.
+// Inside its own <Suspense> so the outer HeroSection is always SSR'd.
+function CategorySync({ onCategories }: { onCategories: (cats: string[]) => void }) {
+  const params = useSearchParams();
+  const stable = useCallback(onCategories, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const cats = (params.get("category") ?? "").split(",").filter(Boolean);
+    stable(cats);
+  }, [params, stable]);
+  return null;
+}
+
 interface HeroProps {
-  selectedCategories: string[];
-  onCategoryToggle: (val: string) => void;
+  // Props are optional — HeroSection is now self-contained and reads URL internally.
+  // Category pages that don't render HeroSection at all don't need to pass these.
+  selectedCategories?: string[];
+  onCategoryToggle?: (val: string) => void;
 }
 
 // Deterministic positions — no Math.random() to avoid hydration mismatch
@@ -41,8 +56,14 @@ function scrollToGrid() {
   document.getElementById("product-grid")?.scrollIntoView({ behavior: "smooth" });
 }
 
-export default function HeroSection({ selectedCategories, onCategoryToggle }: HeroProps) {
+export default function HeroSection({ selectedCategories: propCategories, onCategoryToggle }: HeroProps) {
+  const router = useRouter();
+  const pathname = usePathname();
   const [visible, setVisible] = useState(false);
+  const [urlCategories, setUrlCategories] = useState<string[]>([]);
+
+  // Props take precedence (category pages pass them); otherwise use URL-synced state
+  const selectedCategories = propCategories ?? urlCategories;
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 60);
@@ -50,7 +71,20 @@ export default function HeroSection({ selectedCategories, onCategoryToggle }: He
   }, []);
 
   const handleCategoryClick = (value: string) => {
-    onCategoryToggle(value);
+    if (onCategoryToggle) {
+      onCategoryToggle(value);
+    } else {
+      // Self-contained URL navigation
+      const params = new URLSearchParams(window.location.search);
+      const current = (params.get("category") ?? "").split(",").filter(Boolean);
+      const next = current.includes(value)
+        ? current.filter((v) => v !== value)
+        : [...current, value];
+      if (next.length === 0) params.delete("category");
+      else params.set("category", next.join(","));
+      params.delete("page");
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    }
     scrollToGrid();
   };
 
@@ -60,6 +94,12 @@ export default function HeroSection({ selectedCategories, onCategoryToggle }: He
       aria-label="Hero sekcija"
       style={{ background: "#131921" }}
     >
+      {/* CategorySync keeps category pills reactive to URL without causing SSR bailout */}
+      {!propCategories && (
+        <Suspense fallback={null}>
+          <CategorySync onCategories={setUrlCategories} />
+        </Suspense>
+      )}
       <style>{`
         @keyframes heroFloat {
           0%   { transform: translateY(0px)   scale(1);    opacity: 0.2;  }

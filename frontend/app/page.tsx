@@ -2,11 +2,10 @@ import HomeContent from "@/components/HomeContent";
 import { Metadata } from "next";
 import { Suspense } from "react";
 
-// useSearchParams() in HomeContent bails out of SSR on statically-generated pages.
-// force-dynamic makes the route render on every request so useSearchParams() gets
-// real URL params during SSR, eliminating the BAILOUT_TO_CLIENT_SIDE_RENDERING
-// that caused the entire page to arrive as <div>Loading...</div> → CLS 0.97.
-export const dynamic = "force-dynamic";
+// useSearchParams() now lives only inside ProductSection (wrapped in its own Suspense)
+// and inside mini SearchSync/CategorySync components (each in their own Suspense).
+// The outer page and HomeContent are free of useSearchParams → static generation works.
+export const revalidate = 60;
 
 
 export const metadata: Metadata = {
@@ -88,7 +87,7 @@ async function getInitialProducts() {
   try {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/api/v1/products?page=0&size=12&sort=id,desc`,
-      { next: { revalidate: 3600 } },
+      { next: { revalidate: 60 } },
     );
     const data = await res.json();
     return {
