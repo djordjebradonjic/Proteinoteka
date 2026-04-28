@@ -6,6 +6,7 @@ import { Heart, ChevronDown } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { toggleWishlist } from "@/store/wishlistSlice";
 import SearchAutocomplete from "@/components/SearchAutocomplete";
+import BetaBanner from "@/components/BetaBanner";
 
 function Logo() {
   return (
@@ -185,6 +186,7 @@ export default function Header({
       className="sticky top-0 z-50 shadow-lg"
       style={{ backgroundColor: "#131921" }}
     >
+      <BetaBanner />
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center gap-3">
         <Logo />
 
