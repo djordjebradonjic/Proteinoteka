@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Heart, ChevronDown } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { toggleWishlist } from "@/store/wishlistSlice";
@@ -106,27 +106,35 @@ const GUIDES = [
   { label: "Protein za masu",          href: "/protein-za-masu"              },
 ];
 
-function GuidesDropdown() {
+function GuidesDropdown({ mobile = false }: { mobile?: boolean }) {
   const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
   return (
-    <div
-      className="relative"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-    >
+    <div ref={ref} className="relative">
       <button
+        onClick={() => setOpen(o => !o)}
         className="flex items-center gap-0.5 text-sm font-medium text-slate-200 hover:text-[#FF9900] transition-colors whitespace-nowrap px-1 cursor-pointer"
         aria-expanded={open}
       >
         Vodiči <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-150 ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div className="absolute top-full left-0 w-52 pt-2 z-50">
+        <div className={`absolute ${mobile ? "right-0" : "left-0"} top-full w-52 pt-2 z-50`}>
           <div className="bg-white rounded-xl shadow-xl border border-slate-100 py-1">
             {GUIDES.map((g) => (
               <Link
                 key={g.href}
                 href={g.href}
+                onClick={() => setOpen(false)}
                 className="block px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-[#FF9900] transition-colors"
               >
                 {g.label}
@@ -219,6 +227,7 @@ export default function Header({
 
         {/* Mobile */}
         <div className="flex md:hidden items-center gap-4 ml-auto shrink-0">
+          <GuidesDropdown mobile />
           <button
             onClick={() => dispatch(toggleWishlist())}
             className="relative flex items-center group"
@@ -241,22 +250,6 @@ export default function Header({
         style={{ backgroundColor: "#131921" }}
       >
         <SearchAutocomplete value={localSearch} onChange={handleSearch} />
-      </div>
-
-      {/* Mobile guides row */}
-      <div
-        className="md:hidden flex items-center gap-2 px-4 pb-2.5 overflow-x-auto scrollbar-none"
-        style={{ backgroundColor: "#131921" }}
-      >
-        {GUIDES.map((g) => (
-          <Link
-            key={g.href}
-            href={g.href}
-            className="shrink-0 text-[11px] font-semibold text-slate-300 hover:text-[#FF9900] bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-full transition-colors whitespace-nowrap"
-          >
-            {g.label}
-          </Link>
-        ))}
       </div>
     </header>
   );
