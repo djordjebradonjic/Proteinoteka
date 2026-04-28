@@ -20,11 +20,12 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
-  const products = await fetchTopProducts({
+  const raw = await fetchTopProducts({
     category: "whey_concentrate",
     sortBy: "price",
     limit: 15,
   });
+  const products = raw.filter(p => p.primaryWeightGrams != null && p.primaryWeightGrams >= 500);
 
   const top = products[0];
   const bestValue = products.length > 0
