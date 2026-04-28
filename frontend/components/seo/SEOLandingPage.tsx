@@ -43,9 +43,21 @@ function CompareShortcut({ products }: { products: Product[] }) {
           <Link
             key={p.id}
             href={`/product/${p.id}`}
-            className="bg-white/10 hover:bg-white/20 rounded-lg p-4 text-center transition-colors"
+            className="bg-white/10 hover:bg-white/20 rounded-lg p-4 text-center transition-colors flex flex-col items-center"
           >
-            <div className="text-2xl mb-1">{medals[i]}</div>
+            {p.imageUrl ? (
+              <div className="w-20 h-20 mb-2 flex items-center justify-center bg-white/10 rounded-lg p-1">
+                <img
+                  src={p.imageUrl}
+                  alt={p.name}
+                  referrerPolicy="no-referrer-when-downgrade"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            ) : (
+              <div className="text-2xl mb-2">{medals[i]}</div>
+            )}
+            <div className="text-lg mb-1">{medals[i]}</div>
             <p className="text-xs font-semibold line-clamp-2 leading-snug mb-2">{p.name}</p>
             <p className="text-base font-black text-[#FF9900]">{p.price}</p>
             {p.valueScore != null && (
