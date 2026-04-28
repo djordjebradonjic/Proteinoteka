@@ -106,7 +106,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
                 : "bg-white/90 text-slate-500 hover:bg-white hover:text-[#FF9900] shadow-sm border-transparent hover:border-[#FF9900]"
           }`}
           disabled={compareCount >= 4 && !isComparing}
-          aria-label="Dodaj u poređenje"
+          aria-label={`Uporedi: ${product.name}`}
         >
           <span
             className={`w-5 h-5 border-2 rounded-sm flex items-center justify-center shrink-0 ${
