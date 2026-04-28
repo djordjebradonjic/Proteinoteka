@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Heart } from "lucide-react";
+import { Heart, ChevronDown } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { toggleWishlist } from "@/store/wishlistSlice";
 import SearchAutocomplete from "@/components/SearchAutocomplete";
@@ -97,6 +97,45 @@ function Logo() {
   );
 }
 
+const GUIDES = [
+  { label: "Najbolji whey protein",   href: "/najbolji-whey-protein-srbija" },
+  { label: "Najjeftiniji whey",        href: "/najjeftiniji-whey-protein"    },
+  { label: "Whey protein cena",        href: "/whey-protein-cena"            },
+  { label: "Whey izolat Srbija",       href: "/whey-isolate-srbija"          },
+  { label: "Protein za masu",          href: "/protein-za-masu"              },
+];
+
+function GuidesDropdown() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div
+      className="relative"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <button
+        className="flex items-center gap-0.5 text-sm font-medium text-slate-200 hover:text-[#FF9900] transition-colors whitespace-nowrap px-1"
+        aria-expanded={open}
+      >
+        Vodiči <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-150 ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="absolute top-full left-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-slate-100 py-1 z-50">
+          {GUIDES.map((g) => (
+            <Link
+              key={g.href}
+              href={g.href}
+              className="block px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-[#FF9900] transition-colors"
+            >
+              {g.label}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function NavLink({
   href,
   children,
@@ -154,6 +193,7 @@ export default function Header({
         </div>
 
         <nav className="hidden md:flex items-center gap-5">
+          <GuidesDropdown />
           <NavLink href="/blog">Blog</NavLink>
           <NavLink href="/#kontakt">Kontakt</NavLink>
 
