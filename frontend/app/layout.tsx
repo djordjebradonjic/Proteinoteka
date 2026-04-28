@@ -1,15 +1,16 @@
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/react";
-import { GoogleAnalytics } from "@next/third-parties/google";
+import Script from "next/script";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import { DM_Sans } from "next/font/google";
 import Footer from "@/components/Footer";
 
+// Variable font: one file covers all weights instead of 5 separate requests
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
 });
 
 export const viewport: Viewport = {
@@ -96,7 +97,24 @@ export default function RootLayout({
           {children} <Footer />
         </Providers>
         <Analytics />
-        <GoogleAnalytics gaId="G-JR077S64MV" />
+        {/* lazyOnload: no <link rel="preload"> injected, fires after idle — keeps GA off the critical path */}
+        <Script
+          id="ga-init"
+          strategy="lazyOnload"
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-JR077S64MV');
+            `,
+          }}
+        />
+        <Script
+          id="ga-src"
+          strategy="lazyOnload"
+          src="https://www.googletagmanager.com/gtag/js?id=G-JR077S64MV"
+        />
       </body>
     </html>
   );
