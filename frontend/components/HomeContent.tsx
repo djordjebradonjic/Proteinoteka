@@ -14,6 +14,7 @@ import WishlistDrawer from "./WishlistDrawer";
 import HeroSection from "./HeroSection";
 import { X } from "lucide-react";
 import { getCategoryByValue } from "@/lib/categories";
+import ProteinCalculatorWizard from "@/components/ProteinCalculatorWizard";
 
 interface Props {
   initialProducts: Product[];
@@ -316,6 +317,7 @@ export default function HomeContent({
       <CompareBar />
       <KontaktSekcija />
       <WishlistDrawer />
+      <ProteinCalculatorWizard />
     </main>
   );
 }
