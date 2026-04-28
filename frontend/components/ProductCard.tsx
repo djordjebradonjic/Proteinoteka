@@ -54,14 +54,22 @@ export default function ProductCard({ product }: ProductCardProps) {
     }
   };
 
+  const productHref = product.id ? `/product/${product.id}` : "/";
+
   return (
     <div
-      className={`group flex flex-col overflow-hidden transition-all duration-200 h-full rounded-lg ${
+      className={`group relative flex flex-col overflow-hidden transition-all duration-200 h-full rounded-lg cursor-pointer ${
         isComparing
           ? "bg-[#FFF3DC] shadow-[0_0_0_3px_rgba(255,180,0,0.4),0_4px_16px_rgba(255,153,0,0.2)] scale-[1.02]"
           : "bg-white"
       }`}
     >
+      <Link
+        href={productHref}
+        className="absolute inset-0 z-0"
+        aria-label={product.name}
+        onClick={() => { if (product.id && typeof product.id === "number") trackEvent({ eventType: "PRODUCT_VIEW", productId: product.id, store: product.storeName }); }}
+      />
       {/* Slika */}
       <div className="relative flex items-center justify-center bg-[#F5F5F5] p-4 md:p-6 h-40 md:h-56">
         {product.imageUrl ? (
@@ -80,7 +88,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         {/* Gornji levi — Compare */}
         <button
           onClick={toggleCompare}
-          className={`absolute top-2 left-2 flex items-center gap-1 px-1.5 py-1 rounded text-[10px] font-semibold transition-all border-2 ${
+          className={`absolute top-2 left-2 z-10 flex items-center gap-1 px-1.5 py-1 rounded text-[10px] font-semibold transition-all border-2 ${
             isComparing
               ? "bg-white/90 text-[#FF9900] border-[#FF9900]"
               : compareCount >= 4
@@ -105,7 +113,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         {/* Gornji desni — Wishlist */}
         <button
           onClick={toggleWish}
-          className="absolute top-2 right-2 p-1.5 rounded-full bg-white shadow-sm hover:scale-110 transition-transform"
+          className="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-white shadow-sm hover:scale-110 transition-transform"
           aria-label="Dodaj u wish listu"
         >
           <Heart
@@ -157,9 +165,9 @@ export default function ProductCard({ product }: ProductCardProps) {
       </div>
 
       {/* Dugme */}
-      <div className="flex flex-col gap-1.5 mt-auto px-2 pb-2 pt-3">
+      <div className="relative z-10 flex flex-col gap-1.5 mt-auto px-2 pb-2 pt-3">
         <Link
-          href={product.id ? `/product/${product.id}` : "/"}
+          href={productHref}
           onClick={() => { if (product.id && typeof product.id === "number") trackEvent({ eventType: "PRODUCT_VIEW", productId: product.id, store: product.storeName }); }}
           className="w-full bg-[#1B2B4B] text-white font-bold text-xs md:text-sm py-2.5 md:py-3 text-center hover:bg-[#243860] transition-colors uppercase tracking-wide rounded-md"
         >

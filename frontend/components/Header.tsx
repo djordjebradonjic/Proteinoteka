@@ -115,22 +115,24 @@ function GuidesDropdown() {
       onMouseLeave={() => setOpen(false)}
     >
       <button
-        className="flex items-center gap-0.5 text-sm font-medium text-slate-200 hover:text-[#FF9900] transition-colors whitespace-nowrap px-1"
+        className="flex items-center gap-0.5 text-sm font-medium text-slate-200 hover:text-[#FF9900] transition-colors whitespace-nowrap px-1 cursor-pointer"
         aria-expanded={open}
       >
         Vodiči <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-150 ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div className="absolute top-full left-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-slate-100 py-1 z-50">
-          {GUIDES.map((g) => (
-            <Link
-              key={g.href}
-              href={g.href}
-              className="block px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-[#FF9900] transition-colors"
-            >
-              {g.label}
-            </Link>
-          ))}
+        <div className="absolute top-full left-0 w-52 pt-2 z-50">
+          <div className="bg-white rounded-xl shadow-xl border border-slate-100 py-1">
+            {GUIDES.map((g) => (
+              <Link
+                key={g.href}
+                href={g.href}
+                className="block px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-[#FF9900] transition-colors"
+              >
+                {g.label}
+              </Link>
+            ))}
+          </div>
         </div>
       )}
     </div>
