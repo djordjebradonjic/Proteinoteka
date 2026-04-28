@@ -197,7 +197,7 @@ export default function Header({
       style={{ backgroundColor: "#131921" }}
     >
       <BetaBanner />
-      <div className="relative z-10 max-w-7xl mx-auto px-4 h-16 flex items-center gap-3">
+      <div className="relative z-[60] max-w-7xl mx-auto px-4 h-16 flex items-center gap-3">
         <Logo />
 
         <div className="hidden md:flex flex-1">
