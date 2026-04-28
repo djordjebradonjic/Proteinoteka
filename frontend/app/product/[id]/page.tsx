@@ -1,17 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
 import api from "@/lib/axios";
 import { Product } from "@/types/product";
 import Header from "@/components/Header";
 import Link from "next/link";
-import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer,
-} from "recharts";
 import { ShoppingCart, ArrowLeft, Package, Zap, Droplets, Flame, Store } from "lucide-react";
+import Image from "next/image";
 import { trackEvent } from "@/lib/trackEvent";
+
+const PriceHistoryChart = dynamic(() => import("@/components/PriceHistoryChart"), { ssr: false });
 
 const CATEGORY_LABELS: Record<string, string> = {
   whey_concentrate: "Whey Concentrate",
@@ -193,10 +193,14 @@ export default function ProductPage() {
           {/* Image */}
           <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-8 flex items-center justify-center h-64 sm:h-80 md:aspect-square md:h-auto shadow-sm">
             {product.imageUrl ? (
-              <img
+              <Image
                 src={product.imageUrl}
                 alt={product.name}
+                width={400}
+                height={400}
+                sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 624px"
                 className="max-h-full max-w-full object-contain hover:scale-105 transition-transform duration-300"
+                priority
               />
             ) : (
               <Package className="w-24 h-24 text-slate-200" />
@@ -402,27 +406,7 @@ export default function ProductPage() {
           <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm mb-6">
             <h2 className="text-base font-bold text-slate-900 mb-6">Istorija cene</h2>
             <div className="h-52">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="datum" axisLine={false} tickLine={false}
-                         tick={{ fill: "#94a3b8", fontSize: 11 }} dy={8} />
-                  <YAxis hide domain={["dataMin - 200", "dataMax + 200"]} />
-                  <Tooltip
-                    cursor={{ stroke: "#e2e8f0", strokeWidth: 2 }}
-                    content={({ active, payload }) =>
-                      active && payload?.length ? (
-                        <div className="bg-slate-900 text-white px-3 py-2 rounded-lg shadow-xl text-xs">
-                          <p className="font-bold mb-0.5">{payload[0].payload.datum}</p>
-                          <p className="text-[#FF9900]">{payload[0].value?.toLocaleString("sr-RS")} RSD</p>
-                        </div>
-                      ) : null
-                    }
-                  />
-                  <Line type="stepAfter" dataKey="cena" stroke="#FF9900" strokeWidth={3}
-                        dot={{ r: 0 }} activeDot={{ r: 5, fill: "#FF9900" }} />
-                </LineChart>
-              </ResponsiveContainer>
+              <PriceHistoryChart data={chartData} />
             </div>
           </div>
         )}
@@ -450,9 +434,9 @@ export default function ProductPage() {
                   className="shrink-0 w-44 bg-white rounded-xl border border-slate-200 p-3 hover:border-[#FF9900] hover:shadow-md transition-all duration-150"
                 >
                   {p.imageUrl && (
-                    <div className="aspect-square bg-slate-50 rounded-lg mb-2 overflow-hidden">
-                      <img src={p.imageUrl} alt={p.name}
-                           className="w-full h-full object-contain p-2" />
+                    <div className="aspect-square bg-slate-50 rounded-lg mb-2 overflow-hidden relative">
+                      <Image src={p.imageUrl} alt={p.name}
+                           fill sizes="176px" className="object-contain p-2" />
                     </div>
                   )}
                   <p className="text-xs font-semibold text-slate-800 leading-tight line-clamp-2 mb-1">

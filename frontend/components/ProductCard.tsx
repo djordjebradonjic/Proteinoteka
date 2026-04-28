@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Product } from "@/types/product";
+import Image from "next/image";
 import Link from "next/link";
 import { Heart } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -15,15 +17,18 @@ import { trackEvent } from "@/lib/trackEvent";
 
 interface ProductCardProps {
   product: Product;
+  priority?: boolean;
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, priority = false }: ProductCardProps) {
   const dispatch = useAppDispatch();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   const wishlistItems = useAppSelector(
     (state) => (state as any).wishlist.items,
   ) as any[];
-  const wished = wishlistItems.some((p: any) => p.id === product.id);
+  const wished = mounted && wishlistItems.some((p: any) => p.id === product.id);
 
   const compareIds = useAppSelector(
     (state) => (state as any).compare.ids,
@@ -73,12 +78,17 @@ export default function ProductCard({ product }: ProductCardProps) {
       {/* Slika */}
       <div className="relative flex items-center justify-center bg-[#F5F5F5] p-4 md:p-6 h-40 md:h-56">
         {product.imageUrl ? (
-          <img
-            src={product.imageUrl}
-            alt={product.name}
-            referrerPolicy="no-referrer-when-downgrade"
-            className="h-full w-full object-contain transition-transform duration-200 group-hover:scale-105"
-          />
+          <div className="relative w-full h-full">
+            <Image
+              src={product.imageUrl}
+              alt={product.name}
+              fill
+              sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 300px"
+              className="object-contain transition-transform duration-200 group-hover:scale-105"
+              priority={priority}
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
         ) : (
           <div className="w-full h-full bg-slate-100 rounded flex items-center justify-center text-slate-400 text-xs">
             Nema slike

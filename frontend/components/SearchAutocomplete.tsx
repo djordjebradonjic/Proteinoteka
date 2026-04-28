@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Search, X, TrendingUp } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { trackEvent } from "@/lib/trackEvent";
 
@@ -292,15 +293,14 @@ export default function SearchAutocomplete({
                 style={{ width: 48, height: 48 }}
               >
                 {product.imageUrl ? (
-                  <img
+                  <Image
                     src={product.imageUrl}
                     alt={product.name}
                     width={48}
                     height={48}
                     className="object-contain w-full h-full"
-                    loading="lazy"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = "none";
+                      (e.currentTarget as HTMLImageElement).style.display = "none";
                     }}
                   />
                 ) : (

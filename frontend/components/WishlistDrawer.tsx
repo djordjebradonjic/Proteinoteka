@@ -8,6 +8,7 @@ import {
 } from "@/store/wishlistSlice";
 import { addToCompare, removeFromCompare } from "@/store/compareSlice";
 import { X, Heart, ExternalLink, ShoppingCart, Trash2 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { trackEvent } from "@/lib/trackEvent";
@@ -150,11 +151,12 @@ export default function WishlistDrawer() {
                     {/* Slika */}
                     <div className="w-14 h-14 shrink-0 bg-slate-50 rounded-lg flex items-center justify-center overflow-hidden border border-slate-100">
                       {product.imageUrl ? (
-                        <img
+                        <Image
                           src={product.imageUrl}
                           alt={product.name}
+                          width={56}
+                          height={56}
                           className="w-full h-full object-contain"
-                          loading="lazy"
                         />
                       ) : (
                         <Heart className="w-5 h-5 text-slate-300" />

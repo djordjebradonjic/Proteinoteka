@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import dynamic from "next/dynamic";
 import api from "@/lib/axios";
 import { Product } from "@/types/product";
 import Header from "@/components/Header";
@@ -8,13 +9,14 @@ import ProductGrid from "@/components/ProductGrid";
 import SortSelect from "@/components/SortSelect";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import SidebarFilter from "./SIdeBarFilter";
-import CompareBar from "./CompareBar";
-import KontaktSekcija from "./KontaktFoma";
-import WishlistDrawer from "./WishlistDrawer";
 import HeroSection from "./HeroSection";
 import { X } from "lucide-react";
 import { getCategoryByValue } from "@/lib/categories";
-import ProteinCalculatorWizard from "@/components/ProteinCalculatorWizard";
+
+const CompareBar = dynamic(() => import("./CompareBar"), { ssr: false });
+const KontaktSekcija = dynamic(() => import("./KontaktFoma"), { ssr: false });
+const WishlistDrawer = dynamic(() => import("./WishlistDrawer"), { ssr: false });
+const ProteinCalculatorWizard = dynamic(() => import("@/components/ProteinCalculatorWizard"), { ssr: false });
 
 interface Props {
   initialProducts: Product[];

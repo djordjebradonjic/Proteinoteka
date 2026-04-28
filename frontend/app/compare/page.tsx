@@ -8,6 +8,7 @@ import { trackEvent } from "@/lib/trackEvent";
 import { useAppDispatch } from "@/store/hooks";
 import { clearCompare } from "@/store/compareSlice";
 import { ArrowLeft, Package, ShoppingCart, X } from "lucide-react";
+import Image from "next/image";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -366,8 +367,8 @@ function ComparePage() {
                     </button>
 
                     {p.imageUrl ? (
-                      <img src={p.imageUrl} alt={p.name}
-                        className="w-20 h-20 object-contain" />
+                      <Image src={p.imageUrl} alt={p.name}
+                        width={80} height={80} className="w-20 h-20 object-contain" />
                     ) : (
                       <div className="w-20 h-20 bg-slate-100 rounded flex items-center justify-center">
                         <Package className="w-8 h-8 text-slate-300" />

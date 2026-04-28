@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Product } from "@/types/product";
 import Header from "@/components/Header";
 import { SEOProductCard } from "./SEOProductCard";
@@ -47,11 +48,13 @@ function CompareShortcut({ products }: { products: Product[] }) {
           >
             {p.imageUrl ? (
               <div className="w-20 h-20 mb-2 flex items-center justify-center bg-white/10 rounded-lg p-1">
-                <img
+                <Image
                   src={p.imageUrl}
                   alt={p.name}
-                  referrerPolicy="no-referrer-when-downgrade"
+                  width={80}
+                  height={80}
                   className="w-full h-full object-contain"
+                  referrerPolicy="no-referrer-when-downgrade"
                 />
               </div>
             ) : (

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Product } from "@/types/product";
 
 function scoreColor(s: number) {
@@ -25,11 +26,12 @@ export function SEOProductCard({ product, rank }: { product: Product; rank: numb
       {/* Image */}
       {product.imageUrl && (
         <div className="shrink-0 w-14 h-14 bg-slate-50 rounded-lg overflow-hidden flex items-center justify-center border border-slate-100">
-          <img
+          <Image
             src={product.imageUrl}
             alt={product.name}
+            width={56}
+            height={56}
             className="w-full h-full object-contain p-1"
-            loading="lazy"
           />
         </div>
       )}
