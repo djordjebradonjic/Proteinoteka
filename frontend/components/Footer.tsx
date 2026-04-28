@@ -49,7 +49,6 @@ const STORES = [
 
 const NAV_LINKS = [
   { label: "Početna",              href: "/"              },
-  { label: "Blog",                 href: "/blog"          },
   { label: "Kontakt",              href: "/#kontakt"      },
   { label: "Najjeftiniji proteini",href: "/?sort=numericPrice,asc"    },
   { label: "Poređenje cena",       href: "/?sort=valueScore,desc"     },
