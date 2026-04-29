@@ -23,6 +23,7 @@ interface ProductCardProps {
 export default function ProductCard({ product, priority = false }: ProductCardProps) {
   const dispatch = useAppDispatch();
   const [mounted, setMounted] = useState(false);
+  const [imgError, setImgError] = useState(false);
   useEffect(() => { setMounted(true); }, []);
 
   const wishlistItems = useAppSelector(
@@ -77,7 +78,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
       />
       {/* Slika */}
       <div className="relative flex items-center justify-center bg-[#F5F5F5] p-4 md:p-6 h-40 md:h-56">
-        {product.imageUrl ? (
+        {product.imageUrl && !imgError ? (
           <div className="relative w-full h-full">
             <Image
               src={product.imageUrl}
@@ -87,6 +88,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
               className="object-contain transition-transform duration-200 group-hover:scale-105"
               priority={priority}
               referrerPolicy="no-referrer-when-downgrade"
+              onError={() => setImgError(true)}
             />
           </div>
         ) : (

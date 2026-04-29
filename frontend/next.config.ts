@@ -7,6 +7,19 @@ const nextConfig: NextConfig = {
   },
   images: {
     remotePatterns: [
+      { protocol: "https", hostname: "**.pansport.rs" },
+      { protocol: "https", hostname: "pansport.rs" },
+      { protocol: "https", hostname: "**.proteinisi.rs" },
+      { protocol: "https", hostname: "proteinisi.rs" },
+      { protocol: "https", hostname: "**.proteinbox.rs" },
+      { protocol: "https", hostname: "proteinbox.rs" },
+      { protocol: "https", hostname: "**.supplementshop.rs" },
+      { protocol: "https", hostname: "supplementshop.rs" },
+      { protocol: "https", hostname: "**.ogistra-nutrition-shop.com" },
+      { protocol: "https", hostname: "ogistra-nutrition-shop.com" },
+      { protocol: "https", hostname: "**.fitlab.rs" },
+      { protocol: "https", hostname: "fitlab.rs" },
+      // fallback for any other store added later
       { protocol: "https", hostname: "**" },
       { protocol: "http", hostname: "**" },
     ],

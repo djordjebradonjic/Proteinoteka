@@ -33,7 +33,7 @@ export default function ProductGrid({
     );
   }
 
-  if (products.length === 0) {
+  if (!products || products.length === 0) {
     return (
       <div className="text-center py-20 text-slate-400">
         <p className="text-lg">Nema rezultata za "{searchQuery}"</p>

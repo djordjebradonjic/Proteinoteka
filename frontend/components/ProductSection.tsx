@@ -129,9 +129,9 @@ export default function ProductSection({
       if (max) params.set("maxPrice", max);
 
       const res = await api.get(`/products?${params.toString()}`);
-      setProducts(res.data.content);
-      setTotalPages(res.data.page.totalPages);
-      setTotalItems(res.data.page.totalElements);
+      setProducts(res.data?.content ?? []);
+      setTotalPages(res.data?.page?.totalPages ?? 0);
+      setTotalItems(res.data?.page?.totalElements ?? 0);
     } catch (err) {
       console.error("Greška pri učitavanju:", err);
     } finally {
