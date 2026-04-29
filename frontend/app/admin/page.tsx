@@ -68,8 +68,11 @@ export default function AdminAnalyticsPage() {
     </main>
   );
 
-  const conversionRate = stats.totalViews > 0
-    ? ((stats.totalClickOuts / stats.totalViews) * 100).toFixed(1)
+  const rawConversion = stats.totalViews > 0
+    ? (stats.totalClickOuts / stats.totalViews) * 100
+    : null;
+  const conversionRate = rawConversion !== null
+    ? (rawConversion > 100 ? "—" : rawConversion.toFixed(1))
     : "—";
 
   const merged = mergeByDate(stats.viewsLast7Days, stats.compareLast7Days, stats.clicksLast7Days);
@@ -209,7 +212,7 @@ function FunnelView({ views, compares, clickouts }: {
           </div>
         </div>
       ))}
-      {views > 0 && (
+      {views > 0 && clickouts / views <= 1 && (
         <p className="text-xs text-slate-400 pt-2 border-t border-slate-100">
           Konverzija Kupi/Pregled:{" "}
           <span className="font-bold text-[#FF9900]">

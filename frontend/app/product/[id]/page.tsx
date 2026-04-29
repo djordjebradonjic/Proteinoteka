@@ -102,6 +102,7 @@ export default function ProductPage() {
     api.get(`/products/${id}`)
       .then((res) => {
         setProduct(res.data);
+        trackEvent({ eventType: "PRODUCT_VIEW", productId: Number(id), store: res.data.storeName });
         const src = res.data.proteinSource;
         if (src) {
           api.get(`/products?category=${src}&size=7`)
