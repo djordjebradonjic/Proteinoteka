@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
 import api from "@/lib/axios";
@@ -89,6 +89,9 @@ export default function ProductPage() {
   const [similar, setSimilar] = useState<Product[]>([]);
   const [storePrices, setStorePrices] = useState<StorePrice[]>([]);
   const [loading, setLoading] = useState(true);
+  const [descExpanded, setDescExpanded] = useState(false);
+  const [descOverflows, setDescOverflows] = useState(false);
+  const descRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!id || id === "undefined" || isNaN(Number(id))) {
@@ -118,6 +121,12 @@ export default function ProductPage() {
       .catch(() => setProduct(null))
       .finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    if (descRef.current) {
+      setDescOverflows(descRef.current.scrollHeight > descRef.current.clientHeight + 4);
+    }
+  }, [product?.description]);
 
   if (loading) return <Skeleton />;
 
@@ -415,10 +424,25 @@ export default function ProductPage() {
         {product.description && (
           <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm mb-6">
             <h2 className="text-base font-bold text-slate-900 mb-4">Opis proizvoda</h2>
-            <div
-              className="text-sm text-slate-600 leading-relaxed prose max-w-none"
-              dangerouslySetInnerHTML={{ __html: product.description }}
-            />
+            <div className="relative">
+              <div
+                ref={descRef}
+                className="text-sm text-slate-600 leading-relaxed prose max-w-none overflow-hidden transition-[max-height] duration-500 ease-in-out"
+                style={{ maxHeight: descExpanded ? descRef.current?.scrollHeight ?? 9999 : "9rem" }}
+                dangerouslySetInnerHTML={{ __html: product.description }}
+              />
+              {!descExpanded && descOverflows && (
+                <div className="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+              )}
+            </div>
+            {descOverflows && (
+              <button
+                onClick={() => setDescExpanded((v) => !v)}
+                className="mt-3 text-sm font-semibold text-[#FF9900] hover:text-[#e68a00] transition-colors flex items-center gap-1"
+              >
+                {descExpanded ? "Prikaži manje ↑" : "Prikaži više ↓"}
+              </button>
+            )}
           </div>
         )}
 
