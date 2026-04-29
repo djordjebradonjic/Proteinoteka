@@ -316,12 +316,16 @@ export default function SidebarFilter(props: SidebarFilterProps) {
       <div className="md:hidden w-full mb-2">
         <button
           onClick={() => setDrawerOpen(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-lg shadow-sm text-sm font-semibold text-[#1B2B4B] w-full justify-center"
+          className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-bold w-full justify-center shadow-md transition-all active:scale-[0.98] ${
+            props.activeCount > 0
+              ? "bg-[#FF9900] text-[#1B2B4B]"
+              : "bg-[#1B2B4B] text-white"
+          }`}
         >
-          <SlidersHorizontal className="w-4 h-4" />
+          <SlidersHorizontal className="w-4 h-4 shrink-0" />
           Filteri
           {props.activeCount > 0 && (
-            <span className="ml-1 bg-[#FF9900] text-[#1B2B4B] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+            <span className="ml-1 bg-[#1B2B4B] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
               {props.activeCount}
             </span>
           )}
