@@ -1,31 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export function middleware(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
+const COOKIE = "admin_session";
 
-  if (authHeader) {
-    const [scheme, encoded] = authHeader.split(" ");
-    if (scheme === "Basic" && encoded) {
-      const decoded = atob(encoded);
-      const colon = decoded.indexOf(":");
-      const username = decoded.slice(0, colon);
-      const password = decoded.slice(colon + 1);
+async function sessionToken(): Promise<string> {
+  const raw = `${process.env.ADMIN_USERNAME}:${process.env.ADMIN_PASSWORD}`;
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
 
-      if (
-        username === process.env.ADMIN_USERNAME &&
-        password === process.env.ADMIN_PASSWORD
-      ) {
-        return NextResponse.next();
-      }
-    }
+export async function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+
+  // Let the login page and its API through
+  if (pathname.startsWith("/admin/login") || pathname.startsWith("/api/admin/login")) {
+    return NextResponse.next();
   }
 
-  return new NextResponse("Unauthorized", {
-    status: 401,
-    headers: { "WWW-Authenticate": 'Basic realm="Proteinoteka Admin"' },
-  });
+  const cookie = req.cookies.get(COOKIE)?.value;
+  const expected = await sessionToken();
+
+  if (cookie === expected) return NextResponse.next();
+
+  const loginUrl = req.nextUrl.clone();
+  loginUrl.pathname = "/admin/login";
+  return NextResponse.redirect(loginUrl);
 }
 
 export const config = {
-  matcher: ["/admin", "/admin/:path*"],
+  matcher: ["/admin", "/admin/:path*", "/api/admin/login"],
 };
