@@ -106,7 +106,7 @@ export default function AdminAnalyticsPage() {
                     <div className="bg-slate-900 text-white px-3 py-2 rounded-lg shadow-xl text-xs space-y-1">
                       <p className="text-slate-400 mb-1">{payload[0].payload.date}</p>
                       {payload.map((p) => (
-                        <p key={p.dataKey} style={{ color: p.color }} className="font-bold">
+                        <p key={String(p.dataKey)} style={{ color: p.color }} className="font-bold">
                           {p.name}: {p.value}
                         </p>
                       ))}
