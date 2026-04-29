@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/admin")
@@ -84,5 +85,16 @@ public class ClickStatsController {
                 viewsLast7Days, topViewedProducts, totalViews,
                 compareLast7Days, totalCompares
         );
+    }
+
+    @DeleteMapping("/tracking")
+    public Map<String, String> clearTracking(
+            @RequestParam(defaultValue = "false") boolean keepClickOut) {
+        if (keepClickOut) {
+            trackingEventRepository.deleteAllExceptClickOut();
+            return Map.of("deleted", "all except CLICK_OUT");
+        }
+        trackingEventRepository.deleteAll();
+        return Map.of("deleted", "all");
     }
 }

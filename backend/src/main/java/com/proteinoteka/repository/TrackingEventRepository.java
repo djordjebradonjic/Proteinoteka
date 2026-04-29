@@ -34,4 +34,14 @@ public interface TrackingEventRepository extends JpaRepository<TrackingEvent, Lo
     @Query(value = "SELECT COUNT(*) FROM tracking_events WHERE event_type = :eventType",
            nativeQuery = true)
     long countByEventType(@Param("eventType") String eventType);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    @Query(value = "DELETE FROM tracking_events", nativeQuery = true)
+    void deleteAll();
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    @Query(value = "DELETE FROM tracking_events WHERE event_type != 'CLICK_OUT'", nativeQuery = true)
+    void deleteAllExceptClickOut();
 }

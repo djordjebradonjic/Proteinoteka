@@ -43,18 +43,34 @@ function mergeByDate(
     .map(([date, v]) => ({ date, ...v }));
 }
 
-export default function AdminAnalyticsPage() {
-  const [stats, setStats]   = useState<Stats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError]   = useState(false);
+type ClearMode = "all" | "keepClickOut";
 
-  useEffect(() => {
+export default function AdminAnalyticsPage() {
+  const [stats, setStats]       = useState<Stats | null>(null);
+  const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState(false);
+  const [confirm, setConfirm]   = useState<ClearMode | null>(null);
+  const [clearing, setClearing] = useState(false);
+
+  const fetchStats = () => {
+    setLoading(true);
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/clicks/stats`)
       .then((r) => { if (!r.ok) throw new Error(); return r.json(); })
       .then(setStats)
       .catch(() => setError(true))
       .finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { fetchStats(); }, []);
+
+  const clearTracking = async (mode: ClearMode) => {
+    setClearing(true);
+    const qs = mode === "keepClickOut" ? "?keepClickOut=true" : "";
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/tracking${qs}`, { method: "DELETE" });
+    setConfirm(null);
+    setClearing(false);
+    fetchStats();
+  };
 
   if (loading) return (
     <main className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -79,10 +95,55 @@ export default function AdminAnalyticsPage() {
 
   return (
     <main className="min-h-screen bg-slate-50 p-6 md:p-10">
+      {/* Confirmation modal */}
+      {confirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-xl p-6 w-full max-w-sm">
+            <h2 className="text-base font-black text-slate-900 mb-2">Potvrdi brisanje</h2>
+            <p className="text-sm text-slate-500 mb-6">
+              {confirm === "all"
+                ? "Biće obrisani SVI tracking podaci (PRODUCT_VIEW, COMPARE_CLICK i CLICK_OUT). Ova akcija je nepovratna."
+                : "Biće obrisani PRODUCT_VIEW i COMPARE_CLICK podaci. CLICK_OUT istorija se čuva."}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirm(null)}
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+              >
+                Otkaži
+              </button>
+              <button
+                onClick={() => clearTracking(confirm)}
+                disabled={clearing}
+                className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-sm font-bold transition-colors"
+              >
+                {clearing ? "Brišem..." : "Obriši"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-black text-[#1B2B4B]">Analytics</h1>
-        <p className="text-slate-400 text-sm mt-1">Praćenje klikova i konverzija</p>
+      <div className="flex items-start justify-between mb-8 gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-black text-[#1B2B4B]">Analytics</h1>
+          <p className="text-slate-400 text-sm mt-1">Praćenje klikova i konverzija</p>
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={() => setConfirm("keepClickOut")}
+            className="px-4 py-2 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold transition-colors"
+          >
+            Resetuj (zadrži Kupi)
+          </button>
+          <button
+            onClick={() => setConfirm("all")}
+            className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-colors"
+          >
+            Obriši sve podatke
+          </button>
+        </div>
       </div>
 
       {/* Summary cards */}
