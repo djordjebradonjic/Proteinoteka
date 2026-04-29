@@ -40,7 +40,8 @@ export const metadata: Metadata = {
   creator: "Proteinoteka",
   metadataBase: new URL("https://proteinoteka.rs"),
   alternates: {
-    canonical: "/",
+    canonical: "https://proteinoteka.rs",
+    languages: { "sr-RS": "https://proteinoteka.rs" },
   },
   openGraph: {
     type: "website",
@@ -97,6 +98,21 @@ export default function RootLayout({
           {children} <Footer />
         </Providers>
         <Analytics />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "Proteinoteka",
+              url: "https://proteinoteka.rs",
+              logo: "https://proteinoteka.rs/logo.png",
+              description: "Poređenje cena proteinskih suplemenata u Srbiji",
+              email: "kontakt@proteinoteka.rs",
+              areaServed: "RS",
+            }),
+          }}
+        />
         {/* lazyOnload: no <link rel="preload"> injected, fires after idle — keeps GA off the critical path */}
         <Script
           id="ga-init"

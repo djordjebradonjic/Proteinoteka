@@ -36,7 +36,8 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://proteinoteka.rs"),
 
   alternates: {
-    canonical: "/",
+    canonical: "https://proteinoteka.rs",
+    languages: { "sr-RS": "https://proteinoteka.rs" },
   },
 
   openGraph: {

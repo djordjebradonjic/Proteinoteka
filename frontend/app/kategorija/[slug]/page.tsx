@@ -52,7 +52,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: m.title,
     description: m.description,
-    alternates: { canonical: `/kategorija/${slug}` },
+    alternates: {
+      canonical: `https://proteinoteka.rs/kategorija/${slug}`,
+      languages: { "sr-RS": `https://proteinoteka.rs/kategorija/${slug}` },
+    },
     openGraph: {
       title: m.title,
       description: m.description,
@@ -80,6 +83,8 @@ async function getCategoryProducts(categoryValue: string) {
   }
 }
 
+const BASE_URL = "https://proteinoteka.rs";
+
 export default async function KategorijaPage({ params }: Props) {
   const { slug } = await params;
   const cat = getCategoryBySlug(slug);
@@ -87,13 +92,34 @@ export default async function KategorijaPage({ params }: Props) {
 
   const initialData = await getCategoryProducts(cat.value);
 
+  const m = META[cat.value];
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Početna", item: BASE_URL },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: m?.title.replace(" – Uporedi cene u Srbiji", "") ?? cat.label,
+        item: `${BASE_URL}/kategorija/${slug}`,
+      },
+    ],
+  };
+
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <HomeContent
-        initialProducts={initialData.content}
-        initialTotalPages={initialData.totalPages}
-        initialCategory={cat.value}
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
-    </Suspense>
+      <Suspense fallback={<div>Loading...</div>}>
+        <HomeContent
+          initialProducts={initialData.content}
+          initialTotalPages={initialData.totalPages}
+          initialCategory={cat.value}
+        />
+      </Suspense>
+    </>
   );
 }

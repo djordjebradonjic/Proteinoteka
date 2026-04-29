@@ -166,11 +166,26 @@ export interface SEOLandingPageProps {
   currentSlug: string;
 }
 
+const BASE_URL = "https://proteinoteka.rs";
+
 export function SEOLandingPage({
   h1, intro, quickAnswer, products, tableCaption, listHeading, currentSlug,
 }: SEOLandingPageProps) {
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Početna", item: BASE_URL },
+      { "@type": "ListItem", position: 2, name: h1, item: `${BASE_URL}/${currentSlug}` },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-slate-50">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <Header />
 
       {/* Hero */}
