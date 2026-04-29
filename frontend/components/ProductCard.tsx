@@ -91,6 +91,16 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
               onError={() => setImgError(true)}
             />
           </div>
+        ) : product.storeName?.toLowerCase().includes("pansport") ? (
+          <div className="relative w-full h-full">
+            <Image
+              src="/protein-gym.jpg"
+              alt={product.name}
+              fill
+              sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 300px"
+              className="object-contain transition-transform duration-200 group-hover:scale-105"
+            />
+          </div>
         ) : (
           <div className="w-full h-full bg-slate-100 rounded flex items-center justify-center text-slate-400 text-xs">
             Nema slike
