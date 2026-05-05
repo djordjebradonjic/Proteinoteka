@@ -81,10 +81,9 @@ function ScoreBar({ label, pct, score }: { label: string; pct: number; score: st
 
 const STRIP_MARKERS = /PODACI O NUTRITIVNOJ VREDNOSTI|PAKOVANJE:|UPOTREBA:/i;
 
-function stripRawDescription(html: string): string {
-  const text = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-  const cut = text.search(STRIP_MARKERS);
-  return cut > 0 ? text.slice(0, cut).trim() : text;
+function cutRawDescription(html: string): string {
+  const cut = html.search(STRIP_MARKERS);
+  return cut > 0 ? html.slice(0, cut) : html;
 }
 
 export default function ProductPage() {
@@ -455,20 +454,30 @@ export default function ProductPage() {
         {(product.aiDescription || product.description) && (
           <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm mb-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-3">Opis proizvoda</h2>
-            <div className="relative border-t border-gray-100 pt-6">
+            <div className="relative border-t border-gray-100 pt-5">
               <div
                 ref={descRef}
-                className="max-w-prose overflow-hidden transition-[max-height] duration-500 ease-in-out"
+                className="overflow-hidden transition-[max-height] duration-500 ease-in-out"
                 style={{ maxHeight: descExpanded ? descRef.current?.scrollHeight ?? 9999 : "9rem" }}
               >
                 {product.aiDescription ? (
-                  product.aiDescription.split("\n").filter(Boolean).map((para, i) => (
-                    <p key={i} className="text-base leading-relaxed text-gray-700 mb-3">{para}</p>
-                  ))
+                  <div className="max-w-prose">
+                    {product.aiDescription.split("\n").filter(Boolean).map((para, i) => (
+                      <p key={i} className="text-[15px] leading-[1.75] text-slate-700 mb-4 last:mb-0">{para}</p>
+                    ))}
+                  </div>
                 ) : (
-                  <p className="text-base leading-relaxed text-gray-700">
-                    {stripRawDescription(product.description!)}
-                  </p>
+                  <div
+                    className="max-w-prose text-[15px] leading-[1.75] text-slate-700
+                      [&_p]:mb-4 [&_p:last-child]:mb-0
+                      [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-4
+                      [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-4
+                      [&_li]:mb-1
+                      [&_strong]:font-semibold [&_strong]:text-slate-800
+                      [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-slate-800 [&_h2]:mt-5 [&_h2]:mb-2
+                      [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-slate-700 [&_h3]:mt-4 [&_h3]:mb-1"
+                    dangerouslySetInnerHTML={{ __html: cutRawDescription(product.description!) }}
+                  />
                 )}
               </div>
               {!descExpanded && descOverflows && (
