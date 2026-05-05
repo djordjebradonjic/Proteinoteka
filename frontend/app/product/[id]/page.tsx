@@ -79,6 +79,14 @@ function ScoreBar({ label, pct, score }: { label: string; pct: number; score: st
   );
 }
 
+const STRIP_MARKERS = /PODACI O NUTRITIVNOJ VREDNOSTI|PAKOVANJE:|UPOTREBA:/i;
+
+function stripRawDescription(html: string): string {
+  const text = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  const cut = text.search(STRIP_MARKERS);
+  return cut > 0 ? text.slice(0, cut).trim() : text;
+}
+
 export default function ProductPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -446,17 +454,21 @@ export default function ProductPage() {
         {/* ── Description ───────────────────────────────────────────── */}
         {(product.aiDescription || product.description) && (
           <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm mb-6">
-            <h2 className="text-base font-bold text-slate-900 mb-4">Opis proizvoda</h2>
-            <div className="relative">
+            <h2 className="text-lg font-semibold text-gray-900 mb-3">Opis proizvoda</h2>
+            <div className="relative border-t border-gray-100 pt-6">
               <div
                 ref={descRef}
-                className="text-sm text-slate-600 leading-relaxed prose max-w-none overflow-hidden transition-[max-height] duration-500 ease-in-out"
+                className="max-w-prose overflow-hidden transition-[max-height] duration-500 ease-in-out"
                 style={{ maxHeight: descExpanded ? descRef.current?.scrollHeight ?? 9999 : "9rem" }}
               >
                 {product.aiDescription ? (
-                  <p>{product.aiDescription}</p>
+                  product.aiDescription.split("\n").filter(Boolean).map((para, i) => (
+                    <p key={i} className="text-base leading-relaxed text-gray-700 mb-3">{para}</p>
+                  ))
                 ) : (
-                  <div dangerouslySetInnerHTML={{ __html: product.description! }} />
+                  <p className="text-base leading-relaxed text-gray-700">
+                    {stripRawDescription(product.description!)}
+                  </p>
                 )}
               </div>
               {!descExpanded && descOverflows && (
