@@ -76,4 +76,7 @@ public class Product {
     private List<PriceHistory> priceHistories = new ArrayList<>();
 
     private Double numericPrice= 0.0;
+
+    @Column(name = "ai_description", columnDefinition = "TEXT")
+    private String aiDescription;
 }

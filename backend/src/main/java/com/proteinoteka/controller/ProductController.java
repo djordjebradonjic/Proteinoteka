@@ -276,7 +276,8 @@ public class ProductController {
                 product.getSugarPer100g(),
                 product.getFatPer100g(),
                 product.getCaloriePer100g(),
-                product.getProteinSource()
+                product.getProteinSource(),
+                product.getAiDescription()
         );
     }
 }

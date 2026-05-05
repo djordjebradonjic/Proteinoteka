@@ -23,4 +23,5 @@ export interface Product {
   caloriePer100g: number | null;
   proteinSource: string | null;
   primaryWeightGrams: number | null;
+  aiDescription?: string;
 }

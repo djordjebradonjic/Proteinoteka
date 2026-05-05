@@ -127,7 +127,7 @@ export default function ProductPage() {
     if (descRef.current) {
       setDescOverflows(descRef.current.scrollHeight > descRef.current.clientHeight + 4);
     }
-  }, [product?.description]);
+  }, [product?.aiDescription, product?.description]);
 
   if (loading) return <Skeleton />;
 
@@ -421,8 +421,30 @@ export default function ProductPage() {
           </div>
         )}
 
+        {/* JSON-LD */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org/",
+              "@type": "Product",
+              "name": product.name,
+              "image": product.imageUrl,
+              "description": product.aiDescription || product.description || "",
+              "brand": { "@type": "Brand", "name": product.brand || "" },
+              "offers": {
+                "@type": "Offer",
+                "price": product.numericPrice,
+                "priceCurrency": "RSD",
+                "url": product.productUrl,
+                "availability": "https://schema.org/InStock",
+              },
+            }),
+          }}
+        />
+
         {/* ── Description ───────────────────────────────────────────── */}
-        {product.description && (
+        {(product.aiDescription || product.description) && (
           <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm mb-6">
             <h2 className="text-base font-bold text-slate-900 mb-4">Opis proizvoda</h2>
             <div className="relative">
@@ -430,8 +452,13 @@ export default function ProductPage() {
                 ref={descRef}
                 className="text-sm text-slate-600 leading-relaxed prose max-w-none overflow-hidden transition-[max-height] duration-500 ease-in-out"
                 style={{ maxHeight: descExpanded ? descRef.current?.scrollHeight ?? 9999 : "9rem" }}
-                dangerouslySetInnerHTML={{ __html: product.description }}
-              />
+              >
+                {product.aiDescription ? (
+                  <p>{product.aiDescription}</p>
+                ) : (
+                  <div dangerouslySetInnerHTML={{ __html: product.description! }} />
+                )}
+              </div>
               {!descExpanded && descOverflows && (
                 <div className="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-white to-transparent pointer-events-none" />
               )}

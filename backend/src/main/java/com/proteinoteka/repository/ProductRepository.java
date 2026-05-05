@@ -51,4 +51,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @Query("SELECT p FROM products p WHERE LOWER(TRIM(p.name)) = LOWER(TRIM(:name)) " +
            "AND (:brand IS NULL OR LOWER(TRIM(p.brand)) = LOWER(TRIM(:brand)))")
     List<Product> findSameProductAcrossStores(@Param("name") String name, @Param("brand") String brand);
+
+    @Query("SELECT p FROM products p WHERE p.aiDescription IS NULL")
+    List<Product> findByAiDescriptionIsNull();
 }
