@@ -55,11 +55,11 @@ const NAV_LINKS = [
 ];
 
 const SEO_GUIDES = [
-  { label: "Najbolji whey protein u Srbiji", href: "/najbolji-whey-protein-srbija" },
-  { label: "Najjeftiniji whey protein",      href: "/najjeftiniji-whey-protein"    },
-  { label: "Whey protein cena",              href: "/whey-protein-cena"            },
-  { label: "Whey izolat u Srbiji",           href: "/whey-isolate-srbija"          },
-  { label: "Protein za masu",                href: "/protein-za-masu"              },
+  { label: "Koliko proteina dnevno?",  href: "/vodici/koliko-proteina-dnevno"      },
+  { label: "Da li protein goji?",      href: "/vodici/da-li-protein-goji"          },
+  { label: "Kada piti protein?",       href: "/vodici/kada-piti-protein"           },
+  { label: "Isolate vs Concentrate",   href: "/vodici/whey-isolate-vs-concentrate" },
+  { label: "Najbolji whey protein",    href: "/najbolji-whey-protein-srbija"       },
 ];
 
 function ColHeading({ children }: { children: React.ReactNode }) {

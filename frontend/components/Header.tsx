@@ -111,11 +111,16 @@ function Logo() {
 }
 
 const GUIDES = [
-  { label: "Najbolji whey protein",   href: "/najbolji-whey-protein-srbija" },
-  { label: "Najjeftiniji whey",        href: "/najjeftiniji-whey-protein"    },
-  { label: "Whey protein cena",        href: "/whey-protein-cena"            },
-  { label: "Whey izolat Srbija",       href: "/whey-isolate-srbija"          },
-  { label: "Protein za masu",          href: "/protein-za-masu"              },
+  { label: "Koliko proteina dnevno?",   href: "/vodici/koliko-proteina-dnevno"      },
+  { label: "Isolate vs Concentrate",    href: "/vodici/whey-isolate-vs-concentrate" },
+  { label: "Da li protein goji?",       href: "/vodici/da-li-protein-goji"          },
+  { label: "Kada piti protein?",        href: "/vodici/kada-piti-protein"           },
+  { label: "Svi vodiči →",             href: "/vodici"                             },
+  { label: "Najbolji whey protein",     href: "/najbolji-whey-protein-srbija"       },
+  { label: "Najjeftiniji whey",         href: "/najjeftiniji-whey-protein"          },
+  { label: "Whey protein cena",         href: "/whey-protein-cena"                  },
+  { label: "Whey izolat Srbija",        href: "/whey-isolate-srbija"                },
+  { label: "Protein za masu",           href: "/protein-za-masu"                    },
 ];
 
 function GuidesDropdown({ mobile = false }: { mobile?: boolean }) {
@@ -141,7 +146,7 @@ function GuidesDropdown({ mobile = false }: { mobile?: boolean }) {
       </button>
       {open && (
         <div className={`absolute ${mobile ? "right-0" : "left-0"} top-full w-52 pt-2 z-50`}>
-          <div className="bg-white rounded-xl shadow-xl border border-slate-100 py-1">
+          <div className="bg-white rounded-xl shadow-xl border border-slate-100 py-1 max-h-[260px] overflow-y-auto">
             {GUIDES.map((g) => (
               <Link
                 key={g.href}
