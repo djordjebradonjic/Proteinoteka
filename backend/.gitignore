@@ -6,6 +6,7 @@ target/
 docker-compose.yml
 docker-compose*.yml
 railway_dump.sql
+src/main/resources/application-railway.yaml
 
 ### STS ###
 .apt_generated
