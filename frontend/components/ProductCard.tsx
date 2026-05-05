@@ -136,7 +136,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
         <button
           onClick={toggleWish}
           className="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-white shadow-sm hover:scale-110 transition-transform"
-          aria-label="Dodaj u wish listu"
+          aria-label={wished ? `Ukloni ${product.name} sa liste željenih` : `Dodaj ${product.name} na listu željenih`}
         >
           <Heart
             className="w-4 h-4 md:w-5 md:h-5"
