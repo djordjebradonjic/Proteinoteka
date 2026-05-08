@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
+import VodiciNav from "@/components/VodiciNav";
 
 export const metadata: Metadata = {
   title: "Koliko proteina dnevno treba uzimati? | Proteinoteka",
@@ -205,6 +206,7 @@ export default function Page() {
             </Link>
           </div>
 
+          <VodiciNav currentSlug="koliko-proteina-dnevno" />
         </main>
       </div>
     </>

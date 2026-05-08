@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
+import VodiciNav from "@/components/VodiciNav";
 
 export const metadata: Metadata = {
   title: "Da li protein goji? Šta kaže nauka o whey proteinu i gojenju | Proteinoteka",
@@ -196,6 +197,7 @@ export default function Page() {
             </Link>
           </div>
 
+          <VodiciNav currentSlug="da-li-protein-goji" />
         </main>
       </div>
     </>

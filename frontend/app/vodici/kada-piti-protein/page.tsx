@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
+import VodiciNav from "@/components/VodiciNav";
 
 export const metadata: Metadata = {
   title: "Kada piti protein — pre, posle treninga ili ujutru? | Proteinoteka",
@@ -211,6 +212,7 @@ export default function Page() {
             </Link>
           </div>
 
+          <VodiciNav currentSlug="kada-piti-protein" />
         </main>
       </div>
     </>

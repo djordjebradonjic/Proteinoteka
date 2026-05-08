@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
+import VodiciNav from "@/components/VodiciNav";
 
 export const metadata: Metadata = {
   title: "Whey Isolate vs Concentrate — koja je razlika i šta da odabereš? | Proteinoteka",
@@ -202,6 +203,7 @@ export default function Page() {
             </Link>
           </div>
 
+          <VodiciNav currentSlug="whey-isolate-vs-concentrate" />
         </main>
       </div>
     </>
