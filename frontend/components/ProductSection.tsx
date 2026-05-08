@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import api from "@/lib/axios";
 import { Product } from "@/types/product";
@@ -30,6 +30,7 @@ export default function ProductSection({
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const { replace } = useRouter();
+  const pendingGridScroll = useRef(false);
 
   const search = searchParams.get("query") || "";
   const selectedStores = parseList(searchParams.get("store"));
@@ -145,13 +146,26 @@ export default function ProductSection({
 
   useEffect(() => {
     if (loading) return;
+
+    // Page-change scroll: smoothly bring #product-grid into view after data loads
+    if (pendingGridScroll.current) {
+      pendingGridScroll.current = false;
+      requestAnimationFrame(() => {
+        const el = document.getElementById("product-grid");
+        if (!el) return;
+        const top = el.getBoundingClientRect().top + window.scrollY - 80;
+        window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+      });
+      return;
+    }
+
+    // Back-navigation: restore saved scroll position instantly
     const key = `scroll:${window.location.pathname}${window.location.search}`;
     const saved = sessionStorage.getItem(key);
     if (!saved) return;
     sessionStorage.removeItem(key);
-    const top = parseInt(saved, 10);
     requestAnimationFrame(() => {
-      window.scrollTo({ top, behavior: "instant" });
+      window.scrollTo({ top: parseInt(saved, 10), behavior: "instant" });
     });
   }, [loading]);
 
@@ -250,8 +264,8 @@ export default function ProductSection({
           currentPage={page}
           totalPages={totalPages}
           onPageChange={(newPage) => {
+            pendingGridScroll.current = true;
             updateFilters("page", newPage);
-            document.getElementById("product-grid")?.scrollIntoView({ behavior: "smooth", block: "start" });
           }}
         />
       </div>

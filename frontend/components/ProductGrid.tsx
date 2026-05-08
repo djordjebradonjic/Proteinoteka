@@ -18,22 +18,23 @@ export default function ProductGrid({
   totalPages,
   onPageChange,
 }: ProductGridProps) {
-  if (loading) {
+  // Initial empty load — show skeletons
+  if (loading && (!products || products.length === 0)) {
     return (
       <div className="flex flex-wrap gap-3 md:gap-4">
-        {[...Array(8)].map((_, i) => (
+        {[...Array(12)].map((_, i) => (
           <div
             key={i}
             className="w-[calc(50%-6px)] lg:w-[calc(33.333%-10px)] xl:w-[calc(25%-12px)]"
           >
-            <div className="h-56 md:h-72 bg-slate-200 animate-pulse rounded-lg" />
+            <div className="h-[340px] md:h-[380px] bg-slate-200 animate-pulse rounded-lg" />
           </div>
         ))}
       </div>
     );
   }
 
-  if (!products || products.length === 0) {
+  if (!loading && (!products || products.length === 0)) {
     return (
       <div className="text-center py-20 text-slate-400">
         <p className="text-lg">Nema rezultata za "{searchQuery}"</p>
@@ -44,7 +45,8 @@ export default function ProductGrid({
 
   return (
     <>
-      <div className="flex flex-wrap gap-3 md:gap-4">
+      {/* Dim existing products during page-change fetch — no height change, no jump */}
+      <div className={`flex flex-wrap gap-3 md:gap-4 transition-opacity duration-150 ${loading ? "opacity-40 pointer-events-none" : "opacity-100"}`}>
         {products.map((p, index) => (
           <div
             key={p.id}
