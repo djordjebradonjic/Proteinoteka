@@ -62,6 +62,22 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
 
   const productHref = product.id ? `/product/${product.id}` : "/";
 
+  const vs = product.valueScore;
+  const vsBg =
+    vs == null || vs <= 0 ? null
+    : vs >= 9.0 ? "#22c55e"
+    : vs >= 8.0 ? "#16a34a"
+    : vs >= 7.0 ? "#FF9900"
+    : vs >= 6.0 ? "#f97316"
+    : "#ef4444";
+  const vsLabel =
+    vs == null || vs <= 0 ? null
+    : vs >= 9.0 ? "Best in class"
+    : vs >= 8.0 ? "Odlična kupovina"
+    : vs >= 7.0 ? "Dobar izbor"
+    : vs >= 6.0 ? "Prosečno"
+    : "Ne preporučuje se";
+
   const saveScrollAndTrack = () => {
     sessionStorage.setItem(
       `scroll:${window.location.pathname}${window.location.search}`,
@@ -154,6 +170,22 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             color={wished ? "#FF6B00" : "#CBD5E1"}
           />
         </button>
+
+        {/* Value Score badge — bottom of image */}
+        {vsBg && vs != null && (
+          <div className="absolute bottom-2 inset-x-2 z-10 flex justify-center pointer-events-none">
+            <div
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white shadow-lg"
+              style={{ backgroundColor: vsBg }}
+            >
+              <span className="text-xs leading-none">⚡</span>
+              <span className="text-sm font-black tabular-nums leading-none">{vs.toFixed(1)}</span>
+              <span className="hidden sm:block text-[9px] font-semibold uppercase tracking-widest opacity-90 leading-none">
+                {vsLabel}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Sadržaj */}
