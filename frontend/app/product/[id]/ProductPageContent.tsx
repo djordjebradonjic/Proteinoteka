@@ -9,6 +9,7 @@ import Link from "next/link";
 import { ShoppingCart, ArrowLeft, Package, Zap, Droplets, Flame, Store } from "lucide-react";
 import Image from "next/image";
 import { trackEvent } from "@/lib/trackEvent";
+import PricePerGramBadge from "@/components/PricePerGramBadge";
 
 const PriceHistoryChart = dynamic(() => import("@/components/PriceHistoryChart"), { ssr: false });
 
@@ -206,15 +207,12 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
             <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
               <p className="text-xs uppercase tracking-wider text-slate-400 font-bold mb-1">Trenutna cena</p>
               <p className="text-4xl font-black text-slate-900 mb-1">{product.price}</p>
-              {product.primaryWeightGrams && product.proteinPer100g && (
-                <p className="text-xs text-slate-400">
-                  ≈{" "}
-                  <span className="font-semibold text-slate-600">
-                    {(product.numericPrice / ((product.proteinPer100g / 100) * product.primaryWeightGrams)).toFixed(0)} RSD
-                  </span>{" "}
-                  po gramu proteina
-                </p>
-              )}
+              <PricePerGramBadge
+                numericPrice={product.numericPrice}
+                proteinPer100g={product.proteinPer100g}
+                primaryWeightGrams={product.primaryWeightGrams}
+                size="md"
+              />
             </div>
 
             {score != null && (

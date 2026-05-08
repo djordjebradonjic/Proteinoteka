@@ -5,6 +5,7 @@ import { Product } from "@/types/product";
 import Image from "next/image";
 import Link from "next/link";
 import { PriceTrendIndicator } from "@/components/PriceTrendIndicator";
+import PricePerGramBadge from "@/components/PricePerGramBadge";
 import { Heart } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
@@ -212,17 +213,16 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           <PriceTrendIndicator currentPrice={product.numericPrice} previousPrice={product.previousPrice} />
         </p>
 
-        <div className="h-6">
-          {product.valueScore && (
-            <div className="inline-flex items-center gap-0.5 bg-[#FFF8EC] text-[#b36b00] text-[10px] md:text-xs font-semibold px-1.5 py-0.5 rounded w-fit border border-[#FFD980]">
-              ⚡ {product.valueScore} RSD/g
-            </div>
-          )}
+        <div className="mb-1">
+          <PricePerGramBadge
+            numericPrice={product.numericPrice}
+            proteinPer100g={product.proteinPer100g}
+            primaryWeightGrams={product.primaryWeightGrams}
+          />
         </div>
-
-        <div className="h-4 mb-1">
+        <div className="h-4">
           {product.proteinPer100g && (
-            <p className="text-[10px] md:text-xs text-[#4A5568]">
+            <p className="text-xs text-[#9CA3AF]">
               🥩 {product.proteinPer100g}g/100g
             </p>
           )}
