@@ -20,15 +20,19 @@ function CardRow({
 }) {
   if (!products.length) {
     return (
-      <div className="flex items-center justify-center py-12 text-slate-400">
-        <p className="text-sm">Trenutno nema proizvoda sa padom cene.</p>
+      <div className="flex items-center justify-center py-12">
+        <p className="text-sm text-slate-400">Trenutno nema proizvoda sa padom cene.</p>
       </div>
     );
   }
 
   return (
     <div
-      className="flex gap-3 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-4 md:gap-4 md:overflow-visible md:pb-0"
+      className="
+        flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden
+        md:grid md:grid-cols-3 md:gap-4 md:overflow-visible md:pb-0 md:snap-none
+        lg:grid-cols-5
+      "
       style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
     >
       {products.map((product) => {
@@ -40,7 +44,14 @@ function CardRow({
             : 0;
 
         return (
-          <div key={product.id} className="relative flex-shrink-0 w-[156px] md:w-auto">
+          <div
+            key={product.id}
+            className="
+              relative flex-shrink-0 snap-start
+              w-[220px] sm:w-[calc(50%-6px)]
+              md:w-auto md:flex-shrink
+            "
+          >
             {priceDrop > 0 && (
               <div className="absolute top-[7px] left-[7px] z-30 pointer-events-none">
                 <span className="flex items-center gap-0.5 bg-green-500 text-white text-[10px] font-black px-2 py-[3px] rounded-md shadow-md leading-none whitespace-nowrap">
@@ -48,7 +59,8 @@ function CardRow({
                 </span>
               </div>
             )}
-            <div className="h-full rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
+            {/* White card elevated against dark bg */}
+            <div className="h-full rounded-xl overflow-hidden ring-1 ring-white/[0.09] shadow-[0_4px_24px_rgba(0,0,0,0.35)] hover:shadow-[0_8px_36px_rgba(0,0,0,0.5)] hover:ring-white/20 transition-all duration-200">
               <ProductCard product={product} priority={false} />
             </div>
           </div>
@@ -69,7 +81,7 @@ export default function FeaturedSection({ topValueProducts, priceDropProducts }:
   ];
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 mb-10">
+    <section aria-label="Izdvojeno">
       <style>{`
         @keyframes ftab {
           from { opacity: 0; transform: translateY(6px); }
@@ -77,45 +89,58 @@ export default function FeaturedSection({ topValueProducts, priceDropProducts }:
         }
       `}</style>
 
-      <div className="bg-gradient-to-b from-slate-50 to-white rounded-2xl border border-slate-100 shadow-sm p-6 md:p-8">
+      {/* ── Dark body ──────────────────────────────────────────────────────── */}
+      <div style={{ backgroundColor: "#131921" }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-10 lg:pt-12 pb-8 sm:pb-10">
 
-        {/* Header */}
-        <div className="mb-5">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1A1A1A] leading-tight">
-            Izdvojeno
-          </h2>
-          <p className="text-sm text-slate-500 mt-1">
-            Najpametnije kupovine trenutno na tržištu
-          </p>
+          {/* Header */}
+          <div className="mb-5 sm:mb-6">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-white leading-tight">
+              Izdvojeno
+            </h2>
+            <p className="hidden sm:block text-sm text-slate-400 mt-1">
+              Najpametnije kupovine trenutno na tržištu
+            </p>
+          </div>
+
+          {/* Pill tabs — min-h-[44px] for touch targets */}
+          <div className="flex gap-2 mb-6 flex-wrap">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`min-h-[44px] px-4 sm:px-5 py-2 rounded-full text-sm font-semibold transition-all duration-150 ${
+                  activeTab === tab.id
+                    ? "bg-white text-[#131921] shadow-md"
+                    : "border border-white/20 text-slate-300 hover:border-white/40 hover:text-white"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Tab content — key triggers fade on switch */}
+          <div key={activeTab} style={{ animation: "ftab 0.18s ease-out" }}>
+            {activeTab === "value" ? (
+              <CardRow products={topValueProducts} />
+            ) : (
+              <CardRow products={priceDropProducts} showPriceDropBadge />
+            )}
+          </div>
+
         </div>
-
-        {/* Pill tabs */}
-        <div className="flex gap-2 mb-6 flex-wrap">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-150 ${
-                activeTab === tab.id
-                  ? "bg-[#1B2B4B] text-white shadow-sm"
-                  : "bg-white border border-slate-200 text-slate-600 hover:border-[#1B2B4B] hover:text-[#1B2B4B]"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Tab content — key re-mounts on switch, triggering the fade */}
-        <div key={activeTab} style={{ animation: "ftab 0.18s ease-out" }}>
-          {activeTab === "value" ? (
-            <CardRow products={topValueProducts} />
-          ) : (
-            <CardRow products={priceDropProducts} showPriceDropBadge />
-          )}
-        </div>
-
       </div>
+
+      {/* ── Gradient fade dark → white ──────────────────────────────────── */}
+      <div
+        aria-hidden="true"
+        className="h-12 sm:h-16"
+        style={{
+          background:
+            "linear-gradient(180deg, #131921 0%, rgba(19,25,33,0.45) 55%, #ffffff 100%)",
+        }}
+      />
     </section>
   );
 }
