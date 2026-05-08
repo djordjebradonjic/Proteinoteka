@@ -21,18 +21,14 @@ function CardRow({
   if (!products.length) {
     return (
       <div className="flex items-center justify-center py-12">
-        <p className="text-sm text-slate-400">Trenutno nema proizvoda sa padom cene.</p>
+        <p className="text-sm text-slate-500">Trenutno nema proizvoda sa padom cene.</p>
       </div>
     );
   }
 
   return (
     <div
-      className="
-        flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden
-        md:grid md:grid-cols-3 md:gap-4 md:overflow-visible md:pb-0 md:snap-none
-        lg:grid-cols-5
-      "
+      className="flex flex-nowrap gap-4 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden"
       style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
     >
       {products.map((product) => {
@@ -46,11 +42,7 @@ function CardRow({
         return (
           <div
             key={product.id}
-            className="
-              relative flex-shrink-0 snap-start
-              w-[220px] sm:w-[calc(50%-6px)]
-              md:w-auto md:flex-shrink
-            "
+            className="relative flex-shrink-0 w-[220px]"
           >
             {priceDrop > 0 && (
               <div className="absolute top-[7px] left-[7px] z-30 pointer-events-none">
@@ -59,8 +51,7 @@ function CardRow({
                 </span>
               </div>
             )}
-            {/* White card elevated against dark bg */}
-            <div className="h-full rounded-xl overflow-hidden ring-1 ring-white/[0.09] shadow-[0_4px_24px_rgba(0,0,0,0.35)] hover:shadow-[0_8px_36px_rgba(0,0,0,0.5)] hover:ring-white/20 transition-all duration-200">
+            <div className="h-full rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-200">
               <ProductCard product={product} priority={false} />
             </div>
           </div>
@@ -81,7 +72,14 @@ export default function FeaturedSection({ topValueProducts, priceDropProducts }:
   ];
 
   return (
-    <section aria-label="Izdvojeno">
+    <section
+      aria-label="Izdvojeno"
+      className="mb-6"
+      style={{
+        background: "linear-gradient(135deg, #fff7ed 0%, #f8fafc 100%)",
+        borderBottom: "1px solid #e2e8f0",
+      }}
+    >
       <style>{`
         @keyframes ftab {
           from { opacity: 0; transform: translateY(6px); }
@@ -89,58 +87,45 @@ export default function FeaturedSection({ topValueProducts, priceDropProducts }:
         }
       `}</style>
 
-      {/* ── Dark body ──────────────────────────────────────────────────────── */}
-      <div style={{ backgroundColor: "#131921" }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-10 lg:pt-12 pb-8 sm:pb-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
 
-          {/* Header */}
-          <div className="mb-5 sm:mb-6">
-            <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-white leading-tight">
-              Izdvojeno
-            </h2>
-            <p className="hidden sm:block text-sm text-slate-400 mt-1">
-              Najpametnije kupovine trenutno na tržištu
-            </p>
-          </div>
-
-          {/* Pill tabs — min-h-[44px] for touch targets */}
-          <div className="flex gap-2 mb-6 flex-wrap">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`min-h-[44px] px-4 sm:px-5 py-2 rounded-full text-sm font-semibold transition-all duration-150 ${
-                  activeTab === tab.id
-                    ? "bg-white text-[#131921] shadow-md"
-                    : "border border-white/20 text-slate-300 hover:border-white/40 hover:text-white"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Tab content — key triggers fade on switch */}
-          <div key={activeTab} style={{ animation: "ftab 0.18s ease-out" }}>
-            {activeTab === "value" ? (
-              <CardRow products={topValueProducts} />
-            ) : (
-              <CardRow products={priceDropProducts} showPriceDropBadge />
-            )}
-          </div>
-
+        {/* Header */}
+        <div className="mb-4 sm:mb-5">
+          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 leading-tight">
+            Izdvojeno
+          </h2>
+          <p className="text-sm text-slate-500 mt-0.5 hidden sm:block">
+            Najpametnije kupovine trenutno na tržištu
+          </p>
         </div>
-      </div>
 
-      {/* ── Gradient fade dark → white ──────────────────────────────────── */}
-      <div
-        aria-hidden="true"
-        className="h-12 sm:h-16"
-        style={{
-          background:
-            "linear-gradient(180deg, #131921 0%, rgba(19,25,33,0.45) 55%, #ffffff 100%)",
-        }}
-      />
+        {/* Pill tabs */}
+        <div className="flex gap-2 mb-5 flex-wrap">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`min-h-[44px] px-4 sm:px-5 py-2 rounded-full text-sm font-semibold transition-all duration-150 ${
+                activeTab === tab.id
+                  ? "bg-[#FF9900] text-[#131921] font-bold shadow-sm"
+                  : "bg-white border border-slate-200 text-slate-500 hover:border-[#FF9900] hover:text-[#FF9900]"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab content */}
+        <div key={activeTab} style={{ animation: "ftab 0.18s ease-out" }}>
+          {activeTab === "value" ? (
+            <CardRow products={topValueProducts} />
+          ) : (
+            <CardRow products={priceDropProducts} showPriceDropBadge />
+          )}
+        </div>
+
+      </div>
     </section>
   );
 }
