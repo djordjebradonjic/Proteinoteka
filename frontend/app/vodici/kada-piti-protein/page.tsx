@@ -189,7 +189,7 @@ export default function Page() {
               <Link href="/vodici/whey-isolate-vs-concentrate" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
                 Whey Isolate vs Concentrate
               </Link>
-              <Link href="/kategorija/casein" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
+              <Link href="/kategorija/casein?sort=valueScore,desc" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
                 Kazein proteini
               </Link>
               <Link href="/vodici/da-li-protein-goji" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
@@ -204,7 +204,7 @@ export default function Page() {
               Pronađi whey protein koji odgovara tvom rasporedu — uporedi cene svih brendova dostupnih u Srbiji.
             </p>
             <Link
-              href="/"
+              href="/?sort=valueScore,desc"
               className="inline-block px-6 py-3 bg-[#FF9900] hover:bg-[#e68a00] text-[#131921] font-bold rounded-xl text-sm transition-colors"
             >
               Uporedi whey proteine na Proteinoteka.rs

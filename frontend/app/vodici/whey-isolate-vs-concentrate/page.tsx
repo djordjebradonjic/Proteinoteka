@@ -174,10 +174,10 @@ export default function Page() {
           <section className="mb-10">
             <h2 className="text-xl font-bold text-slate-900 mb-4">Korisni linkovi</h2>
             <div className="flex flex-wrap gap-3">
-              <Link href="/kategorija/whey-isolate" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
+              <Link href="/kategorija/whey-isolate?sort=valueScore,desc" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
                 Svi Whey Isolate proteini
               </Link>
-              <Link href="/kategorija/whey-concentrate" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
+              <Link href="/kategorija/whey-concentrate?sort=valueScore,desc" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
                 Svi Whey Concentrate proteini
               </Link>
               <Link href="/vodici/koliko-proteina-dnevno" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
@@ -195,7 +195,7 @@ export default function Page() {
               Uporedi sve isolate i concentrate proteine dostupne u Srbiji — sortirane po ceni i gramu proteina.
             </p>
             <Link
-              href="/kategorija/whey-isolate"
+              href="/kategorija/whey-isolate?sort=valueScore,desc"
               className="inline-block px-6 py-3 bg-[#FF9900] hover:bg-[#e68a00] text-[#131921] font-bold rounded-xl text-sm transition-colors"
             >
               Pogledaj whey isolate proteine

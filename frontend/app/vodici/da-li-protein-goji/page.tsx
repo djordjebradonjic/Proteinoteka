@@ -177,7 +177,7 @@ export default function Page() {
               <Link href="/vodici/kada-piti-protein" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
                 Kada piti protein?
               </Link>
-              <Link href="/kategorija/whey-concentrate" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
+              <Link href="/kategorija/whey-concentrate?sort=valueScore,desc" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
                 Whey proteini za mrsavljenje
               </Link>
             </div>
@@ -189,7 +189,7 @@ export default function Page() {
               Ako tražiš protein koji nudi najviše proteina po gramu i kaloriji, Proteinoteka.rs poredi sve dostupne opcije na srpskom tržištu.
             </p>
             <Link
-              href="/"
+              href="/?sort=valueScore,desc"
               className="inline-block px-6 py-3 bg-[#FF9900] hover:bg-[#e68a00] text-[#131921] font-bold rounded-xl text-sm transition-colors"
             >
               Pronađi protein sa najboljim odnosom proteina i kalorija

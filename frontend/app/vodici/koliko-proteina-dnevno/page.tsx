@@ -177,10 +177,10 @@ export default function Page() {
           <section className="mb-10">
             <h2 className="text-xl font-bold text-slate-900 mb-4">Korisni linkovi</h2>
             <div className="flex flex-wrap gap-3">
-              <Link href="/kategorija/whey-concentrate" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
+              <Link href="/kategorija/whey-concentrate?sort=valueScore,desc" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
                 Whey Concentrate proteini
               </Link>
-              <Link href="/kategorija/whey-isolate" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
+              <Link href="/kategorija/whey-isolate?sort=valueScore,desc" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
                 Whey Isolate proteini
               </Link>
               <Link href="/vodici/kada-piti-protein" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
@@ -198,7 +198,7 @@ export default function Page() {
               Znaš koliko proteina treba — sad pronađi koji whey protein nudi najviše proteina za tvoj novac.
             </p>
             <Link
-              href="/"
+              href="/?sort=valueScore,desc"
               className="inline-block px-6 py-3 bg-[#FF9900] hover:bg-[#e68a00] text-[#131921] font-bold rounded-xl text-sm transition-colors"
             >
               Uporedi cene proteina na Proteinoteka.rs
