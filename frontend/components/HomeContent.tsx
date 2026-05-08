@@ -8,7 +8,7 @@ import HeroSection from "@/components/HeroSection";
 import SortSelect from "@/components/SortSelect";
 import ProductGrid from "@/components/ProductGrid";
 import ProductSection from "@/components/ProductSection";
-import ProductCarousel from "@/components/ProductCarousel";
+import FeaturedSection from "@/components/FeaturedSection";
 
 const CompareBar = dynamic(() => import("./CompareBar"), { ssr: false });
 const KontaktSekcija = dynamic(() => import("./KontaktFoma"));
@@ -64,34 +64,17 @@ export default function HomeContent({
   topValueProducts = [],
   priceDropProducts = [],
 }: Props) {
-  const showCarousels = !initialCategory && (topValueProducts.length > 0 || priceDropProducts.length > 0);
-
   return (
     <main className="min-h-screen bg-white">
       <Header />
       {!initialCategory && <HeroSection />}
 
-      {/* Carousels — homepage only, above the main grid */}
-      {showCarousels && (
-        <>
-          {topValueProducts.length > 0 && (
-            <ProductCarousel
-              products={topValueProducts}
-              title="Najisplativije trenutno"
-              subtitle="Najbolji odnos cene i proteina"
-              accentColor="#FF9900"
-            />
-          )}
-          {priceDropProducts.length > 0 && (
-            <ProductCarousel
-              products={priceDropProducts}
-              title="Cena pala 🔥"
-              subtitle="Proizvodi sa sniženom cenom u poslednjih 7 dana"
-              accentColor="#22c55e"
-              showPriceDropBadge
-            />
-          )}
-        </>
+      {/* Featured tabbed section — homepage only, above the main grid */}
+      {!initialCategory && (
+        <FeaturedSection
+          topValueProducts={topValueProducts}
+          priceDropProducts={priceDropProducts}
+        />
       )}
 
       {/* ProductSection owns all useSearchParams logic.
