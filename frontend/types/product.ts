@@ -24,4 +24,5 @@ export interface Product {
   proteinSource: string | null;
   primaryWeightGrams: number | null;
   aiDescription?: string;
+  previousPrice?: number | null;
 }

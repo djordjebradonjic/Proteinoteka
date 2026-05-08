@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Product } from "@/types/product";
 import Image from "next/image";
 import Link from "next/link";
+import { PriceTrendIndicator } from "@/components/PriceTrendIndicator";
 import { Heart } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
@@ -203,11 +204,12 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           {product.name}
         </h3>
 
-        <p className="text-sm md:text-base font-semibold text-[#1A1A1A] h-6 flex items-center">
+        <p className="text-sm md:text-base font-semibold text-[#1A1A1A] h-6 flex items-center gap-1">
           {product.price.toLocaleString()}
-          <span className="text-[10px] font-medium text-[#8A8A9A] ml-1">
+          <span className="text-[10px] font-medium text-[#8A8A9A]">
             RSD
           </span>
+          <PriceTrendIndicator currentPrice={product.numericPrice} previousPrice={product.previousPrice} />
         </p>
 
         <div className="h-6">

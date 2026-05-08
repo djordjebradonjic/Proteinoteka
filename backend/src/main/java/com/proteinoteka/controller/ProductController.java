@@ -7,7 +7,9 @@ import com.proteinoteka.dto.ProductDTO;
 import com.proteinoteka.dto.StorePriceDTO;
 import com.proteinoteka.model.AffiliateLink;
 import com.proteinoteka.model.ClickEvent;
+import com.proteinoteka.model.PriceHistory;
 import com.proteinoteka.model.Product;
+import com.proteinoteka.util.PriceParser;
 import com.proteinoteka.repository.AffiliateLinkRepository;
 import com.proteinoteka.repository.ClickEventRepository;
 import com.proteinoteka.repository.ProductRepository;
@@ -38,6 +40,7 @@ public class ProductController {
     private final ProductRepository productRepository;
     private final ClickEventRepository clickEventRepository;
     private final AffiliateLinkRepository affiliateLinkRepository;
+    private final PriceParser priceParser;
 
     @GetMapping
     public Page<ProductDTO> getProducts(
@@ -254,6 +257,11 @@ public class ProductController {
     }
 
     private ProductDTO convertToDTO(Product product) {
+        Double prevPrice = product.getPriceHistories().stream()
+                .max(Comparator.comparing(PriceHistory::getTimestamp))
+                .map(h -> priceParser.parse(h.getPrice()))
+                .orElse(null);
+
         return new ProductDTO(
                 product.getId(),
                 product.getName(),
@@ -277,7 +285,8 @@ public class ProductController {
                 product.getFatPer100g(),
                 product.getCaloriePer100g(),
                 product.getProteinSource(),
-                product.getAiDescription()
+                product.getAiDescription(),
+                prevPrice
         );
     }
 }

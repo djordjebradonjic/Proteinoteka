@@ -21,6 +21,7 @@ public record ProductDTO(Long id,
                          Double fatPer100g,
                          Double caloriePer100g,
                          String proteinSource,
-                         String aiDescription)
+                         String aiDescription,
+                         Double previousPrice)
     {
 }
