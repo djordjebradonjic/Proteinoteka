@@ -60,6 +60,8 @@ const SEO_GUIDES = [
   { label: "Kada piti protein?",       href: "/vodici/kada-piti-protein"           },
   { label: "Isolate vs Concentrate",   href: "/vodici/whey-isolate-vs-concentrate" },
   { label: "Najbolji whey protein",    href: "/najbolji-whey-protein-srbija"       },
+  { label: "Whey do 3000 dinara",      href: "/whey-protein-do-3000-dinara"        },
+  { label: "Whey do 5000 dinara",      href: "/whey-protein-do-5000-dinara"        },
 ];
 
 function ColHeading({ children }: { children: React.ReactNode }) {

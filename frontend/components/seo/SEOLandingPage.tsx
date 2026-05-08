@@ -14,11 +14,13 @@ function scoreColor(s: number) {
 }
 
 const SEO_PAGES = [
-  { slug: "najbolji-whey-protein-srbija", label: "🥇 Najbolji Whey" },
-  { slug: "najjeftiniji-whey-protein",    label: "💰 Najjeftiniji Whey" },
-  { slug: "whey-protein-cena",            label: "📊 Whey Protein Cena" },
-  { slug: "whey-isolate-srbija",          label: "✨ Whey Izolat" },
-  { slug: "protein-za-masu",              label: "💪 Protein za Masu" },
+  { slug: "najbolji-whey-protein-srbija",   label: "🥇 Najbolji Whey"        },
+  { slug: "najjeftiniji-whey-protein",      label: "💰 Najjeftiniji Whey"     },
+  { slug: "whey-protein-cena",              label: "📊 Whey Protein Cena"     },
+  { slug: "whey-isolate-srbija",            label: "✨ Whey Izolat"           },
+  { slug: "protein-za-masu",               label: "💪 Protein za Masu"       },
+  { slug: "whey-protein-do-3000-dinara",   label: "🏷️ Whey do 3000 RSD"     },
+  { slug: "whey-protein-do-5000-dinara",   label: "🏷️ Whey do 5000 RSD"     },
 ] as const;
 
 // ── Sub-components (inlined, no extra files) ──────────────────────────────────
@@ -135,7 +137,64 @@ function ProductTable({ products, caption }: { products: Product[]; caption: str
   );
 }
 
-function CrossLinks({ currentSlug }: { currentSlug: string }) {
+function DecisionSummary({ products }: { products: Product[] }) {
+  if (products.length === 0) return null;
+
+  const bestValue = [...products].sort((a, b) => (b.valueScore ?? 0) - (a.valueScore ?? 0))[0];
+  const cheapest  = [...products].sort((a, b) => (a.numericPrice ?? 0) - (b.numericPrice ?? 0))[0];
+  const withRatio = products
+    .filter(p => p.proteinPer100g && p.primaryWeightGrams && p.numericPrice)
+    .map(p => ({ ...p, ratio: ((p.proteinPer100g! / 100) * p.primaryWeightGrams!) / p.numericPrice! }));
+  const bestRatio = withRatio.length > 0 ? [...withRatio].sort((a, b) => b.ratio - a.ratio)[0] : null;
+
+  const cards: { icon: string; label: string; product: Product | null; extra?: string }[] = [
+    { icon: "⭐", label: "Najbolji value score", product: bestValue,    extra: bestValue?.valueScore != null ? `Score: ${bestValue.valueScore.toFixed(1)}/10` : undefined },
+    { icon: "💰", label: "Najjeftiniji",         product: cheapest,     extra: undefined },
+    { icon: "⚡", label: "Najviše proteina/RSD", product: bestRatio ?? null, extra: bestRatio?.proteinPer100g != null ? `${bestRatio.proteinPer100g}g/100g` : undefined },
+  ];
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      {cards.map(({ icon, label, product, extra }) =>
+        product ? (
+          <Link
+            key={label}
+            href={`/product/${product.id}`}
+            className="bg-white border border-slate-200 rounded-xl p-4 hover:border-[#FF9900] hover:shadow-md transition-all duration-150 flex flex-col"
+          >
+            <div className="text-xl mb-1">{icon}</div>
+            <div className="text-[10px] font-bold uppercase text-slate-400 tracking-wide mb-1">{label}</div>
+            <div className="font-bold text-sm text-slate-900 line-clamp-2 leading-snug flex-1">{product.name}</div>
+            <div className="mt-2 flex items-center justify-between flex-wrap gap-1">
+              <span className="text-base font-black text-[#FF9900]">{product.price}</span>
+              {extra && <span className="text-[10px] text-slate-400">{extra}</span>}
+            </div>
+          </Link>
+        ) : null,
+      )}
+    </div>
+  );
+}
+
+export interface PageFAQ { q: string; a: string; }
+
+function FAQSection({ faqs }: { faqs: PageFAQ[] }) {
+  return (
+    <section>
+      <h2 className="text-xl font-extrabold text-slate-900 mb-4">Česta pitanja</h2>
+      <div className="space-y-3">
+        {faqs.map((faq, i) => (
+          <div key={i} className="bg-white border border-slate-200 rounded-xl p-5">
+            <h3 className="font-bold text-slate-900 text-sm mb-2">{faq.q}</h3>
+            <p className="text-sm text-slate-600 leading-relaxed">{faq.a}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function CrossLinks({ currentSlug, extraLinks }: { currentSlug: string; extraLinks?: { href: string; label: string }[] }) {
   return (
     <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
       <h3 className="text-sm font-bold text-slate-700 mb-3">Istraži i ostale vodiče:</h3>
@@ -147,6 +206,15 @@ function CrossLinks({ currentSlug }: { currentSlug: string }) {
             className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-all"
           >
             {page.label}
+          </Link>
+        ))}
+        {extraLinks?.map(link => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-all"
+          >
+            {link.label}
           </Link>
         ))}
       </div>
@@ -164,12 +232,16 @@ export interface SEOLandingPageProps {
   tableCaption: string;
   listHeading: string;
   currentSlug: string;
+  faqs?: PageFAQ[];
+  extraLinks?: { href: string; label: string }[];
+  disclaimer?: string;
 }
 
 const BASE_URL = "https://proteinoteka.rs";
 
 export function SEOLandingPage({
   h1, intro, quickAnswer, products, tableCaption, listHeading, currentSlug,
+  faqs, extraLinks, disclaimer,
 }: SEOLandingPageProps) {
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
@@ -180,12 +252,28 @@ export function SEOLandingPage({
     ],
   };
 
+  const faqJsonLd = faqs ? {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map(faq => ({
+      "@type": "Question",
+      name: faq.q,
+      acceptedAnswer: { "@type": "Answer", text: faq.a },
+    })),
+  } : null;
+
   return (
     <div className="min-h-screen bg-slate-50">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      )}
       <Header />
 
       {/* Hero */}
@@ -205,6 +293,9 @@ export function SEOLandingPage({
 
         {/* Quick Answer */}
         {quickAnswer && <QuickAnswer text={quickAnswer} />}
+
+        {/* Decision summary — shown on extended pages (price-range, etc.) */}
+        {faqs && products.length > 0 && <DecisionSummary products={products} />}
 
         {/* Product list */}
         {products.length > 0 && (
@@ -226,8 +317,16 @@ export function SEOLandingPage({
           <ProductTable products={products.slice(0, 15)} caption={tableCaption} />
         )}
 
+        {/* FAQ — extended pages only */}
+        {faqs && <FAQSection faqs={faqs} />}
+
+        {/* Disclaimer — extended pages only */}
+        {disclaimer && (
+          <p className="text-xs text-slate-400 text-center leading-relaxed">{disclaimer}</p>
+        )}
+
         {/* Cross links */}
-        <CrossLinks currentSlug={currentSlug} />
+        <CrossLinks currentSlug={currentSlug} extraLinks={extraLinks} />
 
         {/* Bottom CTA */}
         <div className="bg-white rounded-xl border border-slate-200 p-6 text-center shadow-sm">

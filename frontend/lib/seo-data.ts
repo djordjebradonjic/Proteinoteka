@@ -22,6 +22,27 @@ export async function fetchTopProducts(params: {
   }
 }
 
+export async function fetchPriceRangeProducts(params: {
+  maxPrice: number;
+  limit?: number;
+}): Promise<Product[]> {
+  if (!API) return [];
+  try {
+    const url = new URL(`${API}/api/v1/products`);
+    url.searchParams.set("maxPrice", String(params.maxPrice));
+    url.searchParams.set("size", String(params.limit ?? 40));
+    url.searchParams.set("sort", "valueScore,desc");
+    url.searchParams.set("page", "0");
+
+    const res = await fetch(url.toString(), { next: { revalidate: 300 } });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.content ?? [];
+  } catch {
+    return [];
+  }
+}
+
 export async function fetchStoreProducts(params: {
   storeName: string;
   limit?: number;
