@@ -549,12 +549,24 @@ function WizardContent({ onClose }: { onClose: () => void }) {
 
 export default function ProteinCalculatorWizard() {
   const [open, setOpen] = useState(false);
+  const [footerVisible, setFooterVisible] = useState(false);
 
   useEffect(() => {
     if (open) document.body.style.overflow = "hidden";
     else document.body.style.overflow = "";
     return () => { document.body.style.overflow = ""; };
   }, [open]);
+
+  useEffect(() => {
+    const footer = document.getElementById("site-footer");
+    if (!footer) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setFooterVisible(entry.isIntersecting),
+      { threshold: 0 },
+    );
+    observer.observe(footer);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <>
@@ -576,7 +588,7 @@ export default function ProteinCalculatorWizard() {
       {/* Floating button */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 left-5 z-40 flex items-center gap-2 px-4 py-3 bg-[#1B2B4B] text-white text-sm font-bold rounded-2xl shadow-lg hover:bg-[#243860] hover:shadow-xl transition-all duration-200 cursor-pointer"
+        className={`fixed bottom-6 left-5 z-40 flex items-center gap-2 px-4 py-3 bg-[#1B2B4B] text-white text-sm font-bold rounded-2xl shadow-lg hover:bg-[#243860] hover:shadow-xl transition-all duration-200 cursor-pointer ${footerVisible ? "opacity-0 pointer-events-none" : "opacity-100"}`}
         aria-label="Otvori protein kalkulator"
       >
         <Calculator className="w-4 h-4 text-[#FF9900]" />

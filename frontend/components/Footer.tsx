@@ -89,7 +89,7 @@ function FooterLink({ href, children }: { href: string; children: React.ReactNod
 
 export default function Footer() {
   return (
-    <footer style={{ backgroundColor: "#131921" }} className="text-white mt-auto">
+    <footer id="site-footer" style={{ backgroundColor: "#131921" }} className="text-white mt-auto">
       <div className="max-w-7xl mx-auto px-4 pt-14 pb-6">
 
         {/* ── Four-column grid ────────────────────────────────────────── */}
