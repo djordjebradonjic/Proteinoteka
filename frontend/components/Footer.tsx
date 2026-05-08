@@ -38,13 +38,13 @@ const CATEGORIES = [
   { label: "Blend",            slug: "blend"            },
 ];
 
-const STORES = [
-  "Ogistrashop",
-  "Supplementshop",
-  "Pansport",
-  "FitLab",
-  "Proteinbox",
-  "Proteini.si",
+const STORE_PAGES = [
+  { label: "Ogistrashop",    href: "/ogistrashop-proteini"    },
+  { label: "Supplementshop", href: "/supplementshop-proteini" },
+  { label: "Pansport",       href: "/pansport-proteini"       },
+  { label: "FitLab",         href: "/fitlab-proteini"         },
+  { label: "Proteinbox",     href: "/proteinbox-proteini"     },
+  { label: "Proteini.si",    href: "/proteini-si-srbija"      },
 ];
 
 const NAV_LINKS = [
@@ -119,19 +119,13 @@ export default function Footer() {
               ))}
             </div>
 
-            {/* Store names */}
+            {/* Store pages */}
             <ColHeading>Prodavnice</ColHeading>
-            <div className="flex flex-wrap gap-x-3 gap-y-1.5">
-              {STORES.map((s) => (
-                <Link key={s} href={`/?store=${encodeURIComponent(s)}`}
-                      className="text-xs transition-colors duration-150"
-                      style={{ color: "rgba(255,255,255,0.40)" }}
-                      onMouseEnter={(e) => ((e.target as HTMLElement).style.color = "#FF9900")}
-                      onMouseLeave={(e) => ((e.target as HTMLElement).style.color = "rgba(255,255,255,0.40)")}>
-                  {s}
-                </Link>
+            <ul className="flex flex-col gap-2.5">
+              {STORE_PAGES.map((s) => (
+                <FooterLink key={s.href} href={s.href}>{s.label}</FooterLink>
               ))}
-            </div>
+            </ul>
           </div>
 
           {/* Col 2 — Kategorije */}

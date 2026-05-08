@@ -21,3 +21,24 @@ export async function fetchTopProducts(params: {
     return [];
   }
 }
+
+export async function fetchStoreProducts(params: {
+  storeName: string;
+  limit?: number;
+}): Promise<Product[]> {
+  if (!API) return [];
+  try {
+    const url = new URL(`${API}/api/v1/products`);
+    url.searchParams.set("storeName", params.storeName);
+    url.searchParams.set("size", String(params.limit ?? 30));
+    url.searchParams.set("sort", "id,desc");
+    url.searchParams.set("page", "0");
+
+    const res = await fetch(url.toString(), { next: { revalidate: 300 } });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.content ?? [];
+  } catch {
+    return [];
+  }
+}
