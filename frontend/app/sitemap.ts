@@ -1,7 +1,7 @@
 import { MetadataRoute } from "next";
 import { CATEGORIES } from "@/lib/categories";
 
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 const BASE = "https://proteinoteka.rs";
 

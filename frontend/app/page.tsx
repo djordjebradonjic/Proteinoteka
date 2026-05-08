@@ -5,7 +5,7 @@ import { Suspense } from "react";
 // useSearchParams() now lives only inside ProductSection (wrapped in its own Suspense)
 // and inside mini SearchSync/CategorySync components (each in their own Suspense).
 // The outer page and HomeContent are free of useSearchParams → static generation works.
-export const revalidate = 60;
+export const revalidate = 21600;
 
 
 export const metadata: Metadata = {

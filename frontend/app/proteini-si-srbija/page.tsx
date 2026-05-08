@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { fetchStoreProducts } from "@/lib/seo-data";
 import { SEOStorePage } from "@/components/seo/SEOStorePage";
 
-export const revalidate = 300;
+export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: "Proteini.si — dostava u Srbiju i cene | Proteinoteka",

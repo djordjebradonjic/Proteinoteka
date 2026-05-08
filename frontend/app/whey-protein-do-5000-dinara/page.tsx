@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { fetchPriceRangeProducts } from "@/lib/seo-data";
 import { SEOLandingPage } from "@/components/seo/SEOLandingPage";
 
-export const revalidate = 300;
+export const revalidate = 43200;
 
 export const metadata: Metadata = {
   title: "Whey protein do 5000 dinara — uporedi cene | Proteinoteka",

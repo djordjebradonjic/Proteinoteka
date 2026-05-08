@@ -4,6 +4,8 @@ import { Metadata } from "next";
 import HomeContent from "@/components/HomeContent";
 import { CATEGORIES, getCategoryBySlug } from "@/lib/categories";
 
+export const revalidate = 86400;
+
 type Props = { params: Promise<{ slug: string }> };
 
 export function generateStaticParams() {
@@ -71,7 +73,7 @@ async function getCategoryProducts(categoryValue: string) {
   try {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/api/v1/products?page=0&size=12&sort=id,desc&category=${categoryValue}`,
-      { next: { revalidate: 3600 } },
+      { next: { revalidate: 86400 } },
     );
     const data = await res.json();
     return {

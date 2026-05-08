@@ -1,5 +1,7 @@
 import { Metadata } from "next";
 
+export const revalidate = 86400;
+
 interface Props {
   params: Promise<{ id: string }>;
 }
@@ -27,7 +29,7 @@ const BASE_URL = "https://proteinoteka.rs";
 async function fetchProduct(id: string) {
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/api/v1/products/${id}`,
-    { next: { revalidate: 3600 } }
+    { next: { revalidate: 86400 } }
   );
   if (!res.ok) throw new Error();
   return res.json();
