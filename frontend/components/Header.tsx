@@ -111,16 +111,17 @@ function Logo() {
 }
 
 const GUIDES = [
-  { label: "Koliko proteina dnevno?",   href: "/vodici/koliko-proteina-dnevno"      },
-  { label: "Isolate vs Concentrate",    href: "/vodici/whey-isolate-vs-concentrate" },
-  { label: "Da li protein goji?",       href: "/vodici/da-li-protein-goji"          },
-  { label: "Kada piti protein?",        href: "/vodici/kada-piti-protein"           },
-  { label: "Svi vodiči →",             href: "/vodici"                             },
-  { label: "Najbolji whey protein",     href: "/najbolji-whey-protein-srbija"       },
-  { label: "Najjeftiniji whey",         href: "/najjeftiniji-whey-protein"          },
-  { label: "Whey protein cena",         href: "/whey-protein-cena"                  },
-  { label: "Whey izolat Srbija",        href: "/whey-isolate-srbija"                },
-  { label: "Protein za masu",           href: "/protein-za-masu"                    },
+  { label: "Koliko proteina dnevno?",    href: "/vodici/koliko-proteina-dnevno"      },
+  { label: "Isolate vs Concentrate",     href: "/vodici/whey-isolate-vs-concentrate" },
+  { label: "Da li protein goji?",        href: "/vodici/da-li-protein-goji"          },
+  { label: "Kada piti protein?",         href: "/vodici/kada-piti-protein"           },
+  { label: "Kako računamo Value Score",  href: "/kako-racunamo-value-score"          },
+  { label: "O Proteinoteci",             href: "/o-nama"                             },
+  { label: "Najbolji whey protein",      href: "/najbolji-whey-protein-srbija"       },
+  { label: "Najjeftiniji whey",          href: "/najjeftiniji-whey-protein"          },
+  { label: "Whey protein cena",          href: "/whey-protein-cena"                  },
+  { label: "Whey izolat Srbija",         href: "/whey-isolate-srbija"                },
+  { label: "Protein za masu",            href: "/protein-za-masu"                    },
 ];
 
 function GuidesDropdown({ mobile = false }: { mobile?: boolean }) {
@@ -145,18 +146,32 @@ function GuidesDropdown({ mobile = false }: { mobile?: boolean }) {
         Vodiči <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-150 ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div className={`absolute ${mobile ? "right-0" : "left-0"} top-full w-52 pt-2 z-50`}>
-          <div className="bg-white rounded-xl shadow-xl border border-slate-100 py-1 max-h-[260px] overflow-y-auto">
-            {GUIDES.map((g) => (
+        <div className={`absolute ${mobile ? "right-0" : "left-0"} top-full w-56 pt-2 z-50`}>
+          <div className="bg-white rounded-xl shadow-xl border border-slate-100 flex flex-col max-h-[320px]">
+            {/* Scrollable guide links */}
+            <div className="overflow-y-auto flex-1 py-1">
+              {GUIDES.map((g) => (
+                <Link
+                  key={g.href}
+                  href={g.href}
+                  onClick={() => setOpen(false)}
+                  className="block px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-[#FF9900] transition-colors"
+                >
+                  {g.label}
+                </Link>
+              ))}
+            </div>
+            {/* Fixed bottom — always visible */}
+            <div className="border-t border-slate-100 p-2 shrink-0">
               <Link
-                key={g.href}
-                href={g.href}
+                href="/vodici"
                 onClick={() => setOpen(false)}
-                className="block px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-[#FF9900] transition-colors"
+                className="flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-bold text-[#FF9900] hover:bg-[#FFF8EC] rounded-lg transition-colors"
               >
-                {g.label}
+                Svi vodiči
+                <span aria-hidden="true">→</span>
               </Link>
-            ))}
+            </div>
           </div>
         </div>
       )}

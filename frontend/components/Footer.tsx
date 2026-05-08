@@ -49,6 +49,7 @@ const STORE_PAGES = [
 
 const NAV_LINKS = [
   { label: "Početna",              href: "/"              },
+  { label: "O nama",               href: "/o-nama"        },
   { label: "Kontakt",              href: "/#kontakt"      },
   { label: "Najjeftiniji proteini",href: "/?sort=numericPrice,asc"    },
   { label: "Poređenje cena",       href: "/?sort=valueScore,desc"     },
@@ -68,7 +69,7 @@ const SEO_GUIDES = [
 function ColHeading({ children }: { children: React.ReactNode }) {
   return (
     <h4 className="text-[11px] font-bold uppercase tracking-widest mb-4"
-        style={{ color: "rgba(255,255,255,0.35)" }}>
+        style={{ color: "rgba(255,153,0,0.75)" }}>
       {children}
     </h4>
   );
@@ -96,30 +97,33 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 pt-14 pb-6">
 
         {/* ── Four-column grid ────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 pb-10 border-b"
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-10 pb-10 border-b"
              style={{ borderColor: "rgba(255,255,255,0.08)" }}>
 
-          {/* Col 1 — O nama */}
+          {/* Col 1 — O nama + Prodavnice */}
           <div>
-            <Logo />
-            <p className="text-sm leading-relaxed mb-5"
-               style={{ color: "rgba(255,255,255,0.50)" }}>
-              Platforma za poređenje cena proteinskih suplemenata u Srbiji.
-            </p>
+            {/* Logo + tagline — hidden on mobile to save space */}
+            <div className="hidden sm:block">
+              <Logo />
+              <p className="text-sm leading-relaxed mb-5"
+                 style={{ color: "rgba(255,255,255,0.50)" }}>
+                Platforma za poređenje cena proteinskih suplemenata u Srbiji.
+              </p>
 
-            {/* Trust badges */}
-            <div className="flex flex-wrap gap-2 mb-5">
-              {["6+ prodavnica", "250+ proizvoda", "Auto ažurirano"].map((t) => (
-                <span key={t}
-                      className="text-[11px] font-semibold px-2.5 py-1 rounded-full"
-                      style={{
-                        background: "rgba(255,153,0,0.12)",
-                        border: "1px solid rgba(255,153,0,0.25)",
-                        color: "#FF9900",
-                      }}>
-                  {t}
-                </span>
-              ))}
+              {/* Trust badges */}
+              <div className="flex flex-wrap gap-2 mb-5">
+                {["6+ prodavnica", "250+ proizvoda", "Auto ažurirano"].map((t) => (
+                  <span key={t}
+                        className="text-[11px] font-semibold px-2.5 py-1 rounded-full"
+                        style={{
+                          background: "rgba(255,153,0,0.12)",
+                          border: "1px solid rgba(255,153,0,0.25)",
+                          color: "#FF9900",
+                        }}>
+                    {t}
+                  </span>
+                ))}
+              </div>
             </div>
 
             {/* Store pages */}
@@ -175,7 +179,7 @@ export default function Footer() {
                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
               <p className="text-[11px] leading-relaxed"
                  style={{ color: "rgba(255,255,255,0.35)" }}>
-                <span className="font-semibold" style={{ color: "rgba(255,153,0,0.8)" }}>Napomena:</span>{" "}
+                <span className="font-black text-[12px] tracking-wide" style={{ color: "#FF9900" }}>Napomena:</span>{" "}
                 Proteinoteka nije prodavnica. Cene su informativnog karaktera i mogu se razlikovati od aktuelnih cena kod prodavca.
               </p>
             </div>
