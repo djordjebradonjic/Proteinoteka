@@ -1,6 +1,7 @@
 import HomeContent from "@/components/HomeContent";
 import { Metadata } from "next";
 import { Suspense } from "react";
+import { fetchTopProducts } from "@/lib/seo-data";
 
 // useSearchParams() now lives only inside ProductSection (wrapped in its own Suspense)
 // and inside mini SearchSync/CategorySync components (each in their own Suspense).
@@ -100,14 +101,41 @@ async function getInitialProducts() {
   }
 }
 
+const BASE_URL = "https://proteinoteka.rs";
+
 export default async function Home() {
-  const initialData = await getInitialProducts();
+  const [initialData, topProducts] = await Promise.all([
+    getInitialProducts(),
+    fetchTopProducts({ sortBy: "valueScore", limit: 10 }),
+  ]);
+
+  const top10 = topProducts.slice(0, 10);
+  const itemListJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Najbolji whey proteini u Srbiji",
+    description: "Top 10 protein suplemenata po vrednosti na srpskom tržištu",
+    numberOfItems: top10.length,
+    itemListElement: top10.map((p, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: p.name,
+      url: `${BASE_URL}/product/${p.id}`,
+    })),
+  };
+
   return (
-    <Suspense fallback={<div className="min-h-screen" />}>
-      <HomeContent
-        initialProducts={initialData.content}
-        initialTotalPages={initialData.totalPages}
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
       />
-    </Suspense>
+      <Suspense fallback={<div className="min-h-screen" />}>
+        <HomeContent
+          initialProducts={initialData.content}
+          initialTotalPages={initialData.totalPages}
+        />
+      </Suspense>
+    </>
   );
 }
