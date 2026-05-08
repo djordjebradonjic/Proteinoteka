@@ -62,6 +62,15 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
 
   const productHref = product.id ? `/product/${product.id}` : "/";
 
+  const saveScrollAndTrack = () => {
+    sessionStorage.setItem(
+      `scroll:${window.location.pathname}${window.location.search}`,
+      String(window.scrollY),
+    );
+    if (product.id && typeof product.id === "number")
+      trackEvent({ eventType: "PRODUCT_VIEW", productId: product.id, store: product.storeName });
+  };
+
   return (
     <div
       className={`group relative flex flex-col overflow-hidden transition-all duration-200 h-full rounded-lg cursor-pointer ${
@@ -74,7 +83,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
         href={productHref}
         className="absolute inset-0 z-0"
         aria-label={product.name}
-        onClick={() => { if (product.id && typeof product.id === "number") trackEvent({ eventType: "PRODUCT_VIEW", productId: product.id, store: product.storeName }); }}
+        onClick={saveScrollAndTrack}
       />
       {/* Slika */}
       <div className="relative flex items-center justify-center bg-[#F5F5F5] p-4 md:p-6 h-40 md:h-56">
@@ -190,7 +199,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
       <div className="relative z-10 flex flex-col gap-1.5 mt-auto px-2 pb-2 pt-3">
         <Link
           href={productHref}
-          onClick={() => { if (product.id && typeof product.id === "number") trackEvent({ eventType: "PRODUCT_VIEW", productId: product.id, store: product.storeName }); }}
+          onClick={saveScrollAndTrack}
           className="w-full bg-[#1B2B4B] text-white font-bold text-xs md:text-sm py-2.5 md:py-3 text-center hover:bg-[#243860] transition-colors uppercase tracking-wide rounded-md"
         >
           Detalji

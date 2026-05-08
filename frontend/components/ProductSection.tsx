@@ -143,6 +143,18 @@ export default function ProductSection({
     fetchProducts();
   }, [fetchProducts]);
 
+  useEffect(() => {
+    if (loading) return;
+    const key = `scroll:${window.location.pathname}${window.location.search}`;
+    const saved = sessionStorage.getItem(key);
+    if (!saved) return;
+    sessionStorage.removeItem(key);
+    const top = parseInt(saved, 10);
+    requestAnimationFrame(() => {
+      window.scrollTo({ top, behavior: "instant" });
+    });
+  }, [loading]);
+
   const handleReset = () => replace(pathname, { scroll: false });
 
   const activeCount =
