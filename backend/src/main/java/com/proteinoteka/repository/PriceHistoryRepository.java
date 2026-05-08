@@ -1,10 +1,18 @@
 package com.proteinoteka.repository;
 
 import com.proteinoteka.model.PriceHistory;
+import com.proteinoteka.model.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-@Repository
-public interface PriceHistoryRepository extends JpaRepository<PriceHistory,Long> {
+import java.time.LocalDateTime;
+import java.util.List;
 
+@Repository
+public interface PriceHistoryRepository extends JpaRepository<PriceHistory, Long> {
+
+    @Query("SELECT DISTINCT h.product FROM PriceHistory h WHERE h.timestamp >= :since")
+    List<Product> findProductsWithHistorySince(@Param("since") LocalDateTime since);
 }

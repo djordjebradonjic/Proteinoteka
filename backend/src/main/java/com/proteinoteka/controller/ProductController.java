@@ -12,6 +12,7 @@ import com.proteinoteka.model.Product;
 import com.proteinoteka.util.PriceParser;
 import com.proteinoteka.repository.AffiliateLinkRepository;
 import com.proteinoteka.repository.ClickEventRepository;
+import com.proteinoteka.repository.PriceHistoryRepository;
 import com.proteinoteka.repository.ProductRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -24,6 +25,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -38,6 +40,7 @@ import java.util.Optional;
 public class ProductController {
 
     private final ProductRepository productRepository;
+    private final PriceHistoryRepository priceHistoryRepository;
     private final ClickEventRepository clickEventRepository;
     private final AffiliateLinkRepository affiliateLinkRepository;
     private final PriceParser priceParser;
@@ -188,6 +191,43 @@ public class ProductController {
         return productRepository.findAll(spec, PageRequest.of(0, safeLimit, sort))
                 .stream()
                 .map(this::convertToDTO)
+                .toList();
+    }
+
+    @GetMapping("/top-value")
+    public List<ProductDTO> getTopValueProducts(
+            @RequestParam(defaultValue = "5") int limit) {
+
+        int safeLimit = Math.min(limit, 20);
+
+        Specification<Product> spec = (root, query, cb) -> cb.and(
+                cb.isNotNull(root.get("valueScore")),
+                cb.greaterThan(root.get("numericPrice"), 0.0)
+        );
+
+        return productRepository.findAll(spec, PageRequest.of(0, safeLimit, Sort.by("valueScore").descending()))
+                .stream()
+                .map(this::convertToDTO)
+                .toList();
+    }
+
+    @GetMapping("/price-drops")
+    public List<ProductDTO> getPriceDrops(
+            @RequestParam(defaultValue = "7") int days,
+            @RequestParam(defaultValue = "5") int limit) {
+
+        int safeLimit = Math.min(limit, 20);
+        LocalDateTime since = LocalDateTime.now().minusDays(Math.min(days, 30));
+
+        return priceHistoryRepository.findProductsWithHistorySince(since).stream()
+                .filter(p -> p.getNumericPrice() != null && p.getNumericPrice() > 0)
+                .map(this::convertToDTO)
+                .filter(dto -> dto.previousPrice() != null
+                        && dto.numericPrice() != null
+                        && dto.previousPrice() > dto.numericPrice())
+                .sorted(Comparator.comparingDouble(
+                        (ProductDTO dto) -> dto.previousPrice() - dto.numericPrice()).reversed())
+                .limit(safeLimit)
                 .toList();
     }
 

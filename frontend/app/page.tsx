@@ -1,7 +1,7 @@
 import HomeContent from "@/components/HomeContent";
 import { Metadata } from "next";
 import { Suspense } from "react";
-import { fetchTopProducts } from "@/lib/seo-data";
+import { fetchTopProducts, fetchTopValueProducts, fetchPriceDropProducts } from "@/lib/seo-data";
 
 // useSearchParams() now lives only inside ProductSection (wrapped in its own Suspense)
 // and inside mini SearchSync/CategorySync components (each in their own Suspense).
@@ -104,9 +104,11 @@ async function getInitialProducts() {
 const BASE_URL = "https://proteinoteka.rs";
 
 export default async function Home() {
-  const [initialData, topProducts] = await Promise.all([
+  const [initialData, topProducts, topValueProducts, priceDropProducts] = await Promise.all([
     getInitialProducts(),
     fetchTopProducts({ sortBy: "valueScore", limit: 10 }),
+    fetchTopValueProducts(5),
+    fetchPriceDropProducts(7, 5),
   ]);
 
   const top10 = topProducts.slice(0, 10);
@@ -134,6 +136,8 @@ export default async function Home() {
         <HomeContent
           initialProducts={initialData.content}
           initialTotalPages={initialData.totalPages}
+          topValueProducts={topValueProducts}
+          priceDropProducts={priceDropProducts}
         />
       </Suspense>
     </>

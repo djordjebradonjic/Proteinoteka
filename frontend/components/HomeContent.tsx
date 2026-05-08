@@ -8,6 +8,7 @@ import HeroSection from "@/components/HeroSection";
 import SortSelect from "@/components/SortSelect";
 import ProductGrid from "@/components/ProductGrid";
 import ProductSection from "@/components/ProductSection";
+import ProductCarousel from "@/components/ProductCarousel";
 
 const CompareBar = dynamic(() => import("./CompareBar"), { ssr: false });
 const KontaktSekcija = dynamic(() => import("./KontaktFoma"));
@@ -18,6 +19,8 @@ interface Props {
   initialProducts: Product[];
   initialTotalPages: number;
   initialCategory?: string;
+  topValueProducts?: Product[];
+  priceDropProducts?: Product[];
 }
 
 // Fallback shown while ProductSection hydrates.
@@ -58,11 +61,37 @@ export default function HomeContent({
   initialProducts,
   initialTotalPages,
   initialCategory = "",
+  topValueProducts = [],
+  priceDropProducts = [],
 }: Props) {
+  const showCarousels = !initialCategory && (topValueProducts.length > 0 || priceDropProducts.length > 0);
+
   return (
     <main className="min-h-screen bg-white">
       <Header />
       {!initialCategory && <HeroSection />}
+
+      {/* Carousels — homepage only, above the main grid */}
+      {showCarousels && (
+        <div className="max-w-7xl mx-auto px-4 pt-6 pb-2 space-y-5">
+          {topValueProducts.length > 0 && (
+            <ProductCarousel
+              products={topValueProducts}
+              title="Najisplativije trenutno"
+              subtitle="Najbolji odnos cene i proteina"
+            />
+          )}
+          {priceDropProducts.length > 0 && (
+            <ProductCarousel
+              products={priceDropProducts}
+              title="Cena pala 🔥"
+              subtitle="Proizvodi sa sniženom cenom u poslednjih 7 dana"
+              showPriceDropBadge
+            />
+          )}
+          <div className="border-t border-slate-100 pt-1" />
+        </div>
+      )}
 
       {/* ProductSection owns all useSearchParams logic.
           The fallback renders identical markup to ProductSection's default state
