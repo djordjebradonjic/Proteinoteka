@@ -98,7 +98,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
     >
       <Link
         href={productHref}
-        className="absolute inset-0 z-0"
+        className="absolute inset-0 z-[1]"
         aria-label={product.name}
         onClick={saveScrollAndTrack}
       />
