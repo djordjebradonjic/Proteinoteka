@@ -40,3 +40,6 @@ playwright:
 anthropic:
   api:
     key: ${ANTHROPIC_API_KEY}
+
+admin:
+  token: ${ADMIN_TOKEN:}

@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -56,6 +57,7 @@ public class Product {
     @ElementCollection
     @CollectionTable(name = "product_package_weights", joinColumns = @JoinColumn(name = "product_id"))
     @Column(name = "package_weight")
+    @BatchSize(size = 50)
     private List<String> package_weight = new ArrayList<>();
 
     @Column(name = "primary_weight_grams")
@@ -64,6 +66,7 @@ public class Product {
     @ElementCollection
     @CollectionTable(name = "product_flavours", joinColumns = @JoinColumn(name = "product_id"))
     @Column(name = "flavour")
+    @BatchSize(size = 50)
     private List<String> flavours = new ArrayList<>();
 
     @ManyToOne
@@ -73,6 +76,7 @@ public class Product {
     private LocalDateTime lastUpdated = LocalDateTime.now();
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 50)
     private List<PriceHistory> priceHistories = new ArrayList<>();
 
     private Double numericPrice= 0.0;

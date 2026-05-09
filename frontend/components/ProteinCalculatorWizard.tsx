@@ -181,13 +181,43 @@ function MacroCard({ icon, label, value, unit, color }: {
 // ─── Wizard Content ───────────────────────────────────────────────────────────
 
 function WizardContent({ onClose }: { onClose: () => void }) {
-  const [step, setStep]       = useState(1);
-  const [animKey, setAnimKey] = useState(0);
-  const [data, setData]       = useState<WizardData>(INITIAL);
-  const [loading, setLoading] = useState(false);
-  const [result, setResult]   = useState<MacroResult | null>(null);
+  const [step, setStep]         = useState(1);
+  const [animKey, setAnimKey]   = useState(0);
+  const [data, setData]         = useState<WizardData>(INITIAL);
+  const [loading, setLoading]   = useState(false);
+  const [result, setResult]     = useState<MacroResult | null>(null);
+  const [email, setEmail]       = useState("");
+  const [emailSent, setEmailSent]   = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
 
   const API = process.env.NEXT_PUBLIC_API_URL ?? "";
+
+  const sendEmail = async () => {
+    if (!result || !email) return;
+    setEmailLoading(true);
+    try {
+      await fetch("/api/wizard/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          name: data.name || undefined,
+          goal: data.goal || undefined,
+          protein: result.protein,
+          calories: result.calories,
+          carbs: result.carbs,
+          fat: result.fat,
+          meals: result.meals,
+          proteinPerMeal: result.proteinPerMeal,
+        }),
+      });
+      setEmailSent(true);
+    } catch {
+      // silently ignore
+    } finally {
+      setEmailLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetch(`${API}/api/track`, {
@@ -309,6 +339,36 @@ function WizardContent({ onClose }: { onClose: () => void }) {
             {data.goal && <p className="text-xs text-slate-600">{tips[data.goal]}</p>}
             <p className="text-xs text-slate-600">💧 Pij 35–40ml vode po kg telesne mase dnevno.</p>
             <p className="text-xs text-slate-600">😴 San 7–9h direktno utiče na oporavak i telesnu kompoziciju.</p>
+          </div>
+
+          {/* Email capture */}
+          <div className="bg-[#131921] rounded-xl p-4">
+            <p className="text-[10px] font-bold text-[#FF9900] uppercase tracking-widest mb-1">Sačuvaj plan</p>
+            {emailSent ? (
+              <p className="text-sm text-white font-semibold flex items-center gap-2">
+                <Check className="w-4 h-4 text-green-400 shrink-0" /> Plan poslat na tvoj email!
+              </p>
+            ) : (
+              <>
+                <p className="text-xs text-slate-400 mb-3">Pošalji plan sebi na email da ga imaš uvek pri ruci.</p>
+                <div className="flex gap-2">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder="tvoj@email.com"
+                    className="flex-1 min-w-0 px-3 py-2.5 rounded-lg text-sm bg-white/10 text-white placeholder:text-slate-500 border border-white/10 outline-none focus:border-[#FF9900] transition-colors"
+                  />
+                  <button
+                    onClick={sendEmail}
+                    disabled={emailLoading || !email}
+                    className="shrink-0 px-3 py-2.5 bg-[#FF9900] text-[#131921] text-xs font-extrabold rounded-lg hover:bg-[#e68a00] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {emailLoading ? "..." : "Pošalji"}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
 

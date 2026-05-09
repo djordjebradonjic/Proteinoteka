@@ -55,11 +55,48 @@ export default async function ProductPage({
       : Promise.resolve([]),
   ]);
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    ...(product.imageUrl && { image: product.imageUrl }),
+    ...(product.aiDescription || product.description
+      ? { description: (product.aiDescription || product.description)?.slice(0, 500) }
+      : {}),
+    ...(product.brand && { brand: { "@type": "Brand", name: product.brand } }),
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "RSD",
+      price: product.numericPrice ?? undefined,
+      availability: "https://schema.org/InStock",
+      url: `https://proteinoteka.rs/product/${product.id}`,
+      seller: {
+        "@type": "Organization",
+        name: product.storeName,
+      },
+    },
+    ...(product.valueScore != null && {
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: product.valueScore.toFixed(1),
+        bestRating: "10",
+        worstRating: "1",
+        reviewCount: "1",
+      },
+    }),
+  };
+
   return (
-    <ProductPageContent
-      product={product}
-      similar={similar}
-      storePrices={storePrices}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <ProductPageContent
+        product={product}
+        similar={similar}
+        storePrices={storePrices}
+      />
+    </>
   );
 }

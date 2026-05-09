@@ -307,8 +307,8 @@ export default function SidebarFilter(props: SidebarFilterProps) {
 
   return (
     <>
-      {/* Desktop sidebar — top-[108px] clears the header (64px nav + 36px BetaBanner) with a small gap */}
-      <aside className="hidden md:block w-64 shrink-0 self-start sticky top-[108px]">
+      {/* Desktop sidebar — top-[72px] clears the 64px sticky header with a small gap */}
+      <aside className="hidden md:block w-64 shrink-0 self-start sticky top-[72px]">
         <FilterContent {...props} />
       </aside>
 

@@ -7,7 +7,7 @@ import { Heart, ChevronDown } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { toggleWishlist } from "@/store/wishlistSlice";
 import SearchAutocomplete from "@/components/SearchAutocomplete";
-import BetaBanner from "@/components/BetaBanner";
+
 
 // Reads the ?query param and syncs it into Header's local state.
 // Lives inside a mini <Suspense> so it never causes SSR bailout of the outer page.
@@ -229,7 +229,6 @@ export default function Header() {
       <Suspense fallback={null}>
         <SearchSync onValue={setLocalSearch} />
       </Suspense>
-      <BetaBanner />
       <div className="relative z-[60] max-w-7xl mx-auto px-4 h-16 flex items-center gap-3">
         <Logo />
 
