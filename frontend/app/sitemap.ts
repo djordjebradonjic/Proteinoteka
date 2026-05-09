@@ -17,6 +17,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/kontakt`,        changeFrequency: "monthly" as const, priority: 0.3, lastModified: now },
     { url: `${BASE}/kako-racunamo-value-score`, changeFrequency: "monthly" as const, priority: 0.6, lastModified: now },
     { url: `${BASE}/o-nama`,                    changeFrequency: "monthly" as const, priority: 0.5, lastModified: now },
+    // Guides
+    { url: `${BASE}/vodici`,                              changeFrequency: "monthly" as const, priority: 0.7, lastModified: now },
+    { url: `${BASE}/vodici/koliko-proteina-dnevno`,       changeFrequency: "monthly" as const, priority: 0.7, lastModified: now },
+    { url: `${BASE}/vodici/kada-piti-protein`,            changeFrequency: "monthly" as const, priority: 0.7, lastModified: now },
+    { url: `${BASE}/vodici/whey-isolate-vs-concentrate`,  changeFrequency: "monthly" as const, priority: 0.7, lastModified: now },
+    { url: `${BASE}/vodici/da-li-protein-goji`,           changeFrequency: "monthly" as const, priority: 0.7, lastModified: now },
     // SEO landing pages
     { url: `${BASE}/najbolji-whey-protein-srbija`, changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/najjeftiniji-whey-protein`,    changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },

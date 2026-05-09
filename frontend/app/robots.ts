@@ -5,14 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: [
-        '/api/',
-        '/admin/',
-        '/private/',
-        '/checkout/',
-        '/cart/',
-        '/account/',
-      ],
+      disallow: ['/api/', '/admin/'],
     },
     sitemap: 'https://proteinoteka.rs/sitemap.xml',
   };
