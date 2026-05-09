@@ -25,7 +25,8 @@ export default function SortSelect({ value, onSortChange }: SortSelectProps) {
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="id,desc">Najnovije dodato</SelectItem>
-          <SelectItem value="valueScore,desc">⚡ Isplativost</SelectItem>
+          <SelectItem value="valueScore,desc">🏆 Najbolja vrednost</SelectItem>
+          <SelectItem value="proteinPerRsd,desc">⚡ Najviše proteina za novac</SelectItem>
           <SelectItem value="numericPrice,asc">Cena: Niža ka višoj</SelectItem>
           <SelectItem value="numericPrice,desc">Cena: Viša ka nižoj</SelectItem>
           <SelectItem value="name,asc">Naziv: A-Z</SelectItem>

@@ -68,16 +68,16 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
   const vsBg =
     vs == null || vs <= 0 ? null
     : vs >= 9.0 ? "#22c55e"
-    : vs >= 8.0 ? "#16a34a"
-    : vs >= 7.0 ? "#FF9900"
-    : vs >= 6.0 ? "#f97316"
+    : vs >= 7.0 ? "#16a34a"
+    : vs >= 5.5 ? "#FF9900"
+    : vs >= 4.0 ? "#f97316"
     : "#ef4444";
   const vsLabel =
     vs == null || vs <= 0 ? null
     : vs >= 9.0 ? "Best in class"
-    : vs >= 8.0 ? "Odlična kupovina"
-    : vs >= 7.0 ? "Dobar izbor"
-    : vs >= 6.0 ? "Prosečno"
+    : vs >= 7.0 ? "Odlična kupovina"
+    : vs >= 5.5 ? "Dobar izbor"
+    : vs >= 4.0 ? "Prosečno"
     : "Ne preporučuje se";
 
   const saveScrollAndTrack = () => {
