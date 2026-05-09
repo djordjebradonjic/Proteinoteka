@@ -144,6 +144,14 @@ export default function ProductSection({
     fetchProducts();
   }, [fetchProducts]);
 
+  // Disable the browser's native scroll restoration so F5 no longer jumps
+  // to where the user was. Our sessionStorage system handles back-navigation.
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.history.scrollRestoration = "manual";
+    }
+  }, []);
+
   useEffect(() => {
     if (loading) return;
 
