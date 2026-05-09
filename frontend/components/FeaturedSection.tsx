@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { Product } from "@/types/product";
-import ProductCard from "@/components/ProductCard";
+import FeaturedValueCard from "@/components/FeaturedValueCard";
+import FeaturedPriceDropCard from "@/components/FeaturedPriceDropCard";
 
 interface Props {
   topValueProducts: Product[];
@@ -11,52 +12,13 @@ interface Props {
 
 type Tab = "value" | "drops";
 
-function CardRow({
-  products,
-  showPriceDropBadge = false,
-}: {
-  products: Product[];
-  showPriceDropBadge?: boolean;
-}) {
-  if (!products.length) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-sm text-slate-500">Trenutno nema proizvoda sa padom cene.</p>
-      </div>
-    );
-  }
-
+function ScrollRow({ children }: { children: React.ReactNode }) {
   return (
     <div
       className="flex flex-nowrap gap-4 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden"
       style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
     >
-      {products.map((product) => {
-        const priceDrop =
-          showPriceDropBadge &&
-          product.previousPrice != null &&
-          product.numericPrice != null
-            ? product.previousPrice - product.numericPrice
-            : 0;
-
-        return (
-          <div
-            key={product.id}
-            className="relative flex-shrink-0 w-[220px]"
-          >
-            {priceDrop > 0 && (
-              <div className="absolute top-[7px] left-[7px] z-30 pointer-events-none">
-                <span className="flex items-center gap-0.5 bg-green-500 text-white text-[10px] font-black px-2 py-[3px] rounded-md shadow-md leading-none whitespace-nowrap">
-                  ▼ {Math.round(priceDrop).toLocaleString()} RSD
-                </span>
-              </div>
-            )}
-            <div className="h-full rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-200">
-              <ProductCard product={product} priority={false} />
-            </div>
-          </div>
-        );
-      })}
+      {children}
     </div>
   );
 }
@@ -119,9 +81,25 @@ export default function FeaturedSection({ topValueProducts, priceDropProducts }:
         {/* Tab content */}
         <div key={activeTab} style={{ animation: "ftab 0.18s ease-out" }}>
           {activeTab === "value" ? (
-            <CardRow products={topValueProducts} />
+            topValueProducts.length ? (
+              <ScrollRow>
+                {topValueProducts.map((p) => (
+                  <FeaturedValueCard key={p.id} product={p} />
+                ))}
+              </ScrollRow>
+            ) : (
+              <p className="text-sm text-slate-500 py-8 text-center">Nema podataka.</p>
+            )
           ) : (
-            <CardRow products={priceDropProducts} showPriceDropBadge />
+            priceDropProducts.length ? (
+              <ScrollRow>
+                {priceDropProducts.map((p) => (
+                  <FeaturedPriceDropCard key={p.id} product={p} />
+                ))}
+              </ScrollRow>
+            ) : (
+              <p className="text-sm text-slate-500 py-8 text-center">Trenutno nema proizvoda sa padom cene.</p>
+            )
           )}
         </div>
 
