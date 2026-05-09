@@ -18,6 +18,6 @@ public interface PriceHistoryRepository extends JpaRepository<PriceHistory, Long
 
     // Products with 2+ price_history entries (price changed at least once),
     // regardless of when — used by the price-drops endpoint.
-    @Query("SELECT p FROM Product p WHERE SIZE(p.priceHistories) >= 2")
+    @Query("SELECT p FROM products p WHERE SIZE(p.priceHistories) >= 2")
     List<Product> findProductsWithMultiplePriceEntries();
 }
