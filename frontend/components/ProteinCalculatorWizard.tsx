@@ -186,17 +186,25 @@ function WizardContent({ onClose }: { onClose: () => void }) {
   const [data, setData]         = useState<WizardData>(INITIAL);
   const [loading, setLoading]   = useState(false);
   const [result, setResult]     = useState<MacroResult | null>(null);
-  const [email, setEmail]       = useState("");
+  const [email, setEmail]           = useState("");
   const [emailSent, setEmailSent]   = useState(false);
   const [emailLoading, setEmailLoading] = useState(false);
+  const [emailError, setEmailError] = useState("");
 
   const API = process.env.NEXT_PUBLIC_API_URL ?? "";
 
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
   const sendEmail = async () => {
-    if (!result || !email) return;
+    if (!result) return;
+    if (!EMAIL_RE.test(email)) {
+      setEmailError("Unesi ispravan email.");
+      return;
+    }
+    setEmailError("");
     setEmailLoading(true);
     try {
-      await fetch("/api/wizard/subscribe", {
+      const res = await fetch("/api/wizard/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -211,9 +219,13 @@ function WizardContent({ onClose }: { onClose: () => void }) {
           proteinPerMeal: result.proteinPerMeal,
         }),
       });
-      setEmailSent(true);
+      if (res.ok) {
+        setEmailSent(true);
+      } else {
+        setEmailError("Greška — pokušaj ponovo.");
+      }
     } catch {
-      // silently ignore
+      setEmailError("Nema konekcije — pokušaj ponovo.");
     } finally {
       setEmailLoading(false);
     }
@@ -318,12 +330,13 @@ function WizardContent({ onClose }: { onClose: () => void }) {
           </p>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 py-5 space-y-3 bg-slate-50">
+        {/* Scrollable macro results */}
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 bg-slate-50">
           <div className="grid grid-cols-2 gap-3">
-            <MacroCard icon="🥩" label="Protein"  value={result.protein}  unit="g"    color="#FF9900" />
-            <MacroCard icon="🌾" label="Ugljeni h." value={result.carbs}  unit="g"    color="#3B82F6" />
-            <MacroCard icon="🫒" label="Masti"     value={result.fat}     unit="g"    color="#22C55E" />
-            <MacroCard icon="🔥" label="Kalorije"  value={result.calories} unit="kcal" color="#EF4444" />
+            <MacroCard icon="🥩" label="Protein"    value={result.protein}   unit="g"    color="#FF9900" />
+            <MacroCard icon="🌾" label="Ugljeni h." value={result.carbs}     unit="g"    color="#3B82F6" />
+            <MacroCard icon="🫒" label="Masti"      value={result.fat}       unit="g"    color="#22C55E" />
+            <MacroCard icon="🔥" label="Kalorije"   value={result.calories}  unit="kcal" color="#EF4444" />
           </div>
 
           <div className="bg-[#FFF8EC] border border-[#FFD980] rounded-xl p-4">
@@ -340,52 +353,66 @@ function WizardContent({ onClose }: { onClose: () => void }) {
             <p className="text-xs text-slate-600">💧 Pij 35–40ml vode po kg telesne mase dnevno.</p>
             <p className="text-xs text-slate-600">😴 San 7–9h direktno utiče na oporavak i telesnu kompoziciju.</p>
           </div>
+        </div>
 
+        {/* Fixed footer — always visible on every screen size */}
+        <div className="shrink-0 border-t border-slate-100 bg-white rounded-b-2xl">
           {/* Email capture */}
-          <div className="bg-[#131921] rounded-xl p-4">
-            <p className="text-[10px] font-bold text-[#FF9900] uppercase tracking-widest mb-1">Sačuvaj plan</p>
+          <div className="px-5 pt-4 pb-3">
             {emailSent ? (
-              <p className="text-sm text-white font-semibold flex items-center gap-2">
-                <Check className="w-4 h-4 text-green-400 shrink-0" /> Plan poslat na tvoj email!
-              </p>
+              <div className="flex items-center gap-2.5 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+                <Check className="w-4 h-4 text-green-600 shrink-0" />
+                <p className="text-sm font-semibold text-green-800">Plan poslat! Proveri inbox.</p>
+              </div>
             ) : (
-              <>
-                <p className="text-xs text-slate-400 mb-3">Pošalji plan sebi na email da ga imaš uvek pri ruci.</p>
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                  Sačuvaj plan na email
+                </p>
                 <div className="flex gap-2">
                   <input
                     type="email"
                     value={email}
-                    onChange={e => setEmail(e.target.value)}
+                    onChange={e => { setEmail(e.target.value); if (emailError) setEmailError(""); }}
+                    onKeyDown={e => e.key === "Enter" && sendEmail()}
                     placeholder="tvoj@email.com"
-                    className="flex-1 min-w-0 px-3 py-2.5 rounded-lg text-sm bg-white/10 text-white placeholder:text-slate-500 border border-white/10 outline-none focus:border-[#FF9900] transition-colors"
+                    className={`flex-1 min-w-0 px-3 py-2.5 rounded-xl text-sm border-2 outline-none transition-colors bg-white text-slate-800 placeholder:text-slate-400 ${
+                      emailError ? "border-red-400 focus:border-red-500" : "border-slate-200 focus:border-[#FF9900]"
+                    }`}
                   />
                   <button
                     onClick={sendEmail}
-                    disabled={emailLoading || !email}
-                    className="shrink-0 px-3 py-2.5 bg-[#FF9900] text-[#131921] text-xs font-extrabold rounded-lg hover:bg-[#e68a00] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    disabled={emailLoading}
+                    className="shrink-0 px-4 py-2.5 bg-[#1B2B4B] text-white text-xs font-extrabold rounded-xl hover:bg-[#243860] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
                   >
-                    {emailLoading ? "..." : "Pošalji"}
+                    {emailLoading
+                      ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      : "Pošalji"}
                   </button>
                 </div>
-              </>
+                {emailError && (
+                  <p className="text-xs text-red-500 mt-1.5 font-medium">{emailError}</p>
+                )}
+              </div>
             )}
           </div>
-        </div>
 
-        <div className="shrink-0 px-5 py-4 border-t border-slate-100 bg-white rounded-b-2xl">
-          <Link
-            href={getCTAUrl(data)}
-            onClick={onClose}
-            className="block w-full text-center bg-[#FF9900] text-[#131921] font-extrabold text-sm py-3.5 rounded-xl hover:bg-[#e68a00] transition-colors shadow-md"
-          >
-            Pogledaj proteine za tvoj cilj →
-          </Link>
-          <button
-            onClick={onClose}
-            className="block w-full text-center text-xs text-slate-400 hover:text-slate-600 mt-3 transition-colors py-1"
-          >
-            Zatvori
-          </button>
+          {/* CTA */}
+          <div className="px-5 pb-4 flex flex-col gap-2">
+            <Link
+              href={getCTAUrl(data)}
+              onClick={onClose}
+              className="block w-full text-center bg-[#FF9900] text-[#131921] font-extrabold text-sm py-3.5 rounded-xl hover:bg-[#e68a00] transition-colors shadow-md"
+            >
+              Pogledaj proteine za tvoj cilj →
+            </Link>
+            <button
+              onClick={onClose}
+              className="w-full text-center text-xs text-slate-400 hover:text-slate-600 transition-colors py-1"
+            >
+              Zatvori
+            </button>
+          </div>
         </div>
       </div>
     );
