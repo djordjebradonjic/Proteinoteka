@@ -213,20 +213,22 @@ public class ProductController {
 
     @GetMapping("/price-drops")
     public List<ProductDTO> getPriceDrops(
-            @RequestParam(defaultValue = "7") int days,
             @RequestParam(defaultValue = "5") int limit) {
 
         int safeLimit = Math.min(limit, 20);
-        LocalDateTime since = LocalDateTime.now().minusDays(Math.min(days, 30));
 
-        return priceHistoryRepository.findProductsWithHistorySince(since).stream()
+        // Find all products that have ever changed price (2+ history entries).
+        // convertToDTO already sets previousPrice = most-recent history entry
+        // (the old price saved right before the current price was applied).
+        // If previousPrice > numericPrice the price dropped — no time window needed.
+        return priceHistoryRepository.findProductsWithMultiplePriceEntries().stream()
                 .filter(p -> p.getNumericPrice() != null && p.getNumericPrice() > 0)
                 .map(this::convertToDTO)
                 .filter(dto -> dto.previousPrice() != null
                         && dto.numericPrice() != null
                         && dto.previousPrice() > dto.numericPrice())
                 .sorted(Comparator.comparingDouble(
-                        (ProductDTO dto) -> dto.previousPrice() - dto.numericPrice()).reversed())
+                        (ProductDTO dto) -> (dto.previousPrice() - dto.numericPrice()) / dto.previousPrice()).reversed())
                 .limit(safeLimit)
                 .toList();
     }

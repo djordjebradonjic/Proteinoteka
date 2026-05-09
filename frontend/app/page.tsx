@@ -108,7 +108,7 @@ export default async function Home() {
     getInitialProducts(),
     fetchTopProducts({ sortBy: "valueScore", limit: 10 }),
     fetchTopValueProducts(8),
-    fetchPriceDropProducts(7, 8),
+    fetchPriceDropProducts(8),
   ]);
 
   const top10 = topProducts.slice(0, 10);

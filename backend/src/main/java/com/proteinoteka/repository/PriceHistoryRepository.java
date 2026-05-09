@@ -15,4 +15,9 @@ public interface PriceHistoryRepository extends JpaRepository<PriceHistory, Long
 
     @Query("SELECT DISTINCT h.product FROM PriceHistory h WHERE h.timestamp >= :since")
     List<Product> findProductsWithHistorySince(@Param("since") LocalDateTime since);
+
+    // Products with 2+ price_history entries (price changed at least once),
+    // regardless of when — used by the price-drops endpoint.
+    @Query("SELECT p FROM Product p WHERE SIZE(p.priceHistories) >= 2")
+    List<Product> findProductsWithMultiplePriceEntries();
 }

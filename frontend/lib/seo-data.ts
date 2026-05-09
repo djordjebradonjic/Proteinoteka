@@ -56,11 +56,10 @@ export async function fetchTopValueProducts(limit = 5): Promise<Product[]> {
   }
 }
 
-export async function fetchPriceDropProducts(days = 7, limit = 5): Promise<Product[]> {
+export async function fetchPriceDropProducts(limit = 8): Promise<Product[]> {
   if (!API) return [];
   try {
     const url = new URL(`${API}/api/v1/products/price-drops`);
-    url.searchParams.set("days", String(days));
     url.searchParams.set("limit", String(limit));
     const res = await fetch(url.toString(), { next: { revalidate: 21600 } });
     if (!res.ok) return [];
