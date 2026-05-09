@@ -10,6 +10,7 @@ import { ShoppingCart, ArrowLeft, Package, Zap, Droplets, Flame, Store } from "l
 import Image from "next/image";
 import { trackEvent } from "@/lib/trackEvent";
 import PricePerGramBadge from "@/components/PricePerGramBadge";
+import { productUrl } from "@/lib/productUrl";
 
 const PriceHistoryChart = dynamic(() => import("@/components/PriceHistoryChart"), { ssr: false });
 
@@ -391,7 +392,7 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
               {similar.map((p) => (
                 <Link
                   key={p.id}
-                  href={`/product/${p.id}`}
+                  href={productUrl(p)}
                   className="shrink-0 w-44 bg-white rounded-xl border border-slate-200 p-3 hover:border-[#FF9900] hover:shadow-md transition-all duration-150"
                 >
                   {p.imageUrl && (

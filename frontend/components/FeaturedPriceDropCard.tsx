@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Package } from "lucide-react";
 import { Product } from "@/types/product";
+import { productUrl } from "@/lib/productUrl";
 
 interface Props { product: Product }
 
@@ -18,7 +19,7 @@ export default function FeaturedPriceDropCard({ product }: Props) {
   const savings  = hasDrop ? Math.round(prev! - curr) : 0;
 
   const buyUrl    = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/products/${product.id}/buy`;
-  const detailUrl = `/product/${product.id}`;
+  const detailUrl = productUrl(product);
 
   return (
     <div className="flex-shrink-0 w-56 bg-white rounded-2xl border border-slate-100 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 flex flex-col overflow-hidden">

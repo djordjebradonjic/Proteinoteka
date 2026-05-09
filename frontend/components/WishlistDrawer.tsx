@@ -10,6 +10,7 @@ import { addToCompare, removeFromCompare } from "@/store/compareSlice";
 import { X, Heart, ExternalLink, ShoppingCart, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { productUrl } from "@/lib/productUrl";
 import { useEffect, useState } from "react";
 import { trackEvent } from "@/lib/trackEvent";
 
@@ -212,7 +213,7 @@ export default function WishlistDrawer() {
                     {/* Akcije */}
                     <div className="flex flex-col items-center gap-1.5 shrink-0">
                       <Link
-                        href={product.id ? `/product/${product.id}` : "/"}
+                        href={product.id ? productUrl(product) : "/"}
                         onClick={() => dispatch(closeWishlist())}
                         className="p-1.5 rounded-lg bg-[#131921] hover:bg-[#243860] text-white transition-colors"
                         aria-label="Pogledaj detalje"

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Product } from "@/types/product";
+import { productUrl } from "@/lib/productUrl";
 import Header from "@/components/Header";
 import { SEOProductCard } from "./SEOProductCard";
 
@@ -45,7 +46,7 @@ function CompareShortcut({ products }: { products: Product[] }) {
         {top3.map((p, i) => (
           <Link
             key={p.id}
-            href={`/product/${p.id}`}
+            href={productUrl(p)}
             className="bg-white/10 hover:bg-white/20 rounded-lg p-4 text-center transition-colors flex flex-col items-center"
           >
             {p.imageUrl ? (
@@ -122,7 +123,7 @@ function ProductTable({ products, caption }: { products: Product[]; caption: str
                 </td>
                 <td className="py-3 pr-5 text-right">
                   <Link
-                    href={`/product/${p.id}`}
+                    href={productUrl(p)}
                     className="text-xs font-bold text-[#FF9900] hover:underline whitespace-nowrap"
                   >
                     Pogledaj →
@@ -159,7 +160,7 @@ function DecisionSummary({ products }: { products: Product[] }) {
         product ? (
           <Link
             key={label}
-            href={`/product/${product.id}`}
+            href={productUrl(product)}
             className="bg-white border border-slate-200 rounded-xl p-4 hover:border-[#FF9900] hover:shadow-md transition-all duration-150 flex flex-col"
           >
             <div className="text-xl mb-1">{icon}</div>

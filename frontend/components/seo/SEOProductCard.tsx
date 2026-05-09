@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Product } from "@/types/product";
+import { productUrl } from "@/lib/productUrl";
 
 function scoreColor(s: number) {
   if (s >= 8.5) return "#22c55e";
@@ -39,7 +40,7 @@ export function SEOProductCard({ product, rank }: { product: Product; rank: numb
       {/* Info */}
       <div className="flex-1 min-w-0">
         <Link
-          href={`/product/${product.id}`}
+          href={productUrl(product)}
           className="font-semibold text-slate-900 text-sm hover:text-[#FF9900] line-clamp-2 leading-snug"
         >
           {product.name}
@@ -74,7 +75,7 @@ export function SEOProductCard({ product, rank }: { product: Product; rank: numb
       {/* CTA */}
       <div className="shrink-0 flex flex-col justify-center">
         <Link
-          href={`/product/${product.id}`}
+          href={productUrl(product)}
           className="px-3 py-2 rounded-lg bg-[#131921] hover:bg-[#243860] text-white text-xs font-bold whitespace-nowrap transition-colors"
         >
           Pogledaj →

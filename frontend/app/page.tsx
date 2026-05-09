@@ -2,6 +2,7 @@ import HomeContent from "@/components/HomeContent";
 import { Metadata } from "next";
 import { Suspense } from "react";
 import { fetchTopProducts, fetchTopValueProducts, fetchPriceDropProducts } from "@/lib/seo-data";
+import { productUrl } from "@/lib/productUrl";
 
 // useSearchParams() now lives only inside ProductSection (wrapped in its own Suspense)
 // and inside mini SearchSync/CategorySync components (each in their own Suspense).
@@ -122,7 +123,7 @@ export default async function Home() {
       "@type": "ListItem",
       position: i + 1,
       name: p.name,
-      url: `${BASE_URL}/product/${p.id}`,
+      url: `${BASE_URL}${productUrl(p)}`,
     })),
   };
 

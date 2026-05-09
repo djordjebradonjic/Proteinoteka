@@ -16,6 +16,7 @@ import {
 } from "@/store/wishlistSlice";
 import { addToCompare, removeFromCompare } from "@/store/compareSlice";
 import { trackEvent } from "@/lib/trackEvent";
+import { productUrl } from "@/lib/productUrl";
 
 interface ProductCardProps {
   product: Product;
@@ -62,7 +63,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
     }
   };
 
-  const productHref = product.id ? `/product/${product.id}` : "/";
+  const productHref = product.id ? productUrl(product) : "/";
 
   const vs = product.valueScore;
   const vsBg =

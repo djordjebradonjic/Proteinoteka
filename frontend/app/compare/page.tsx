@@ -8,6 +8,7 @@ import { trackEvent } from "@/lib/trackEvent";
 import { useAppDispatch } from "@/store/hooks";
 import { clearCompare } from "@/store/compareSlice";
 import { ArrowLeft, Package, ShoppingCart, X } from "lucide-react";
+import { productUrl } from "@/lib/productUrl";
 import Image from "next/image";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -403,7 +404,7 @@ function ComparePage() {
                       Kupi u {p.storeName}
                     </a>
                     <Link
-                      href={`/product/${p.id}`}
+                      href={productUrl(p)}
                       className="text-center py-2 rounded-lg text-xs font-semibold text-slate-600 border border-slate-200 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors"
                     >
                       Pogledaj detalje

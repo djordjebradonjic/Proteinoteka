@@ -5,6 +5,7 @@ import { Search, X, TrendingUp } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { trackEvent } from "@/lib/trackEvent";
+import { productUrl } from "@/lib/productUrl";
 
 interface ProductSuggestion {
   id: number;
@@ -15,6 +16,7 @@ interface ProductSuggestion {
   brand: string;
   valueScore?: number;
   storeName: string;
+  proteinSource?: string | null;
 }
 
 function debounce<T extends (...args: any[]) => void>(fn: T, delay: number): T {
@@ -262,7 +264,7 @@ export default function SearchAutocomplete({
           {results.filter((p) => p.id != null).map((product, idx) => (
             <Link
               key={product.id}
-              href={`/product/${product.id}`}
+              href={productUrl(product)}
               onClick={() => {
                 setQuery(product.name);
                 onChange(product.name);
