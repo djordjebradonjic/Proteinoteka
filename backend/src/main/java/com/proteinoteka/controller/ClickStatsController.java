@@ -97,4 +97,10 @@ public class ClickStatsController {
         trackingEventRepository.deleteAll();
         return Map.of("deleted", "all");
     }
+
+    @DeleteMapping("/clicks")
+    public Map<String, String> clearClickEvents() {
+        clickEventRepository.deleteAll();
+        return Map.of("deleted", "click_events");
+    }
 }

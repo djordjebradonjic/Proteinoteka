@@ -43,7 +43,7 @@ function mergeByDate(
     .map(([date, v]) => ({ date, ...v }));
 }
 
-type ClearMode = "all" | "keepClickOut";
+type ClearMode = "all" | "keepClickOut" | "clicks";
 
 export default function AdminAnalyticsPage() {
   const [stats, setStats]       = useState<Stats | null>(null);
@@ -65,8 +65,12 @@ export default function AdminAnalyticsPage() {
 
   const clearTracking = async (mode: ClearMode) => {
     setClearing(true);
-    const qs = mode === "keepClickOut" ? "?keepClickOut=true" : "";
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/tracking${qs}`, { method: "DELETE" });
+    if (mode === "clicks") {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/clicks`, { method: "DELETE" });
+    } else {
+      const qs = mode === "keepClickOut" ? "?keepClickOut=true" : "";
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/tracking${qs}`, { method: "DELETE" });
+    }
     setConfirm(null);
     setClearing(false);
     fetchStats();
@@ -103,7 +107,9 @@ export default function AdminAnalyticsPage() {
             <p className="text-sm text-slate-500 mb-6">
               {confirm === "all"
                 ? "Biće obrisani SVI tracking podaci (PRODUCT_VIEW, COMPARE_CLICK i CLICK_OUT). Ova akcija je nepovratna."
-                : "Biće obrisani PRODUCT_VIEW i COMPARE_CLICK podaci. CLICK_OUT istorija se čuva."}
+                : confirm === "clicks"
+                  ? "Biće obrisani svi Kupi klikovi (click_events). Ova akcija je nepovratna."
+                  : "Biće obrisani PRODUCT_VIEW i COMPARE_CLICK podaci. CLICK_OUT istorija se čuva."}
             </p>
             <div className="flex gap-3">
               <button
@@ -131,6 +137,12 @@ export default function AdminAnalyticsPage() {
           <p className="text-slate-400 text-sm mt-1">Praćenje klikova i konverzija</p>
         </div>
         <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={() => setConfirm("clicks")}
+            className="px-4 py-2 rounded-xl border border-orange-200 text-orange-600 hover:bg-orange-50 text-xs font-semibold transition-colors"
+          >
+            Resetuj Kupi klikove
+          </button>
           <button
             onClick={() => setConfirm("keepClickOut")}
             className="px-4 py-2 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold transition-colors"

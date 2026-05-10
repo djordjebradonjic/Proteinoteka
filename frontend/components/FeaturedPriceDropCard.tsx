@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Package } from "lucide-react";
 import { Product } from "@/types/product";
 import { productUrl } from "@/lib/productUrl";
+import { trackEvent } from "@/lib/trackEvent";
 
 interface Props { product: Product }
 
@@ -83,8 +84,13 @@ export default function FeaturedPriceDropCard({ product }: Props) {
         )}
 
         {/* CTA */}
-        <a href={buyUrl} target="_blank" rel="noopener noreferrer"
-          className="block w-full text-center bg-red-600 hover:bg-red-700 text-white text-sm font-bold py-2.5 rounded-xl transition-colors mt-1">
+        <a
+          href={buyUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => trackEvent({ eventType: "CLICK_OUT", productId: product.id, store: product.storeName })}
+          className="block w-full text-center bg-red-600 hover:bg-red-700 text-white text-sm font-bold py-2.5 rounded-xl transition-colors mt-1"
+        >
           Kupi po novoj ceni
         </a>
       </div>
