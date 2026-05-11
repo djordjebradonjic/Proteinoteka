@@ -21,11 +21,11 @@ public class MetricsCollectorService {
     private final AlertJobRepository alertJobRepo;
     private final AlertUnsubscribeRepository unsubRepo;
 
-    @Value("${analytics.conversion-rate:#{null}}")
-    private Double externalConversionRate;
+    @Value("${analytics.conversion-rate:}")
+    private String conversionRateRaw;
 
-    @Value("${analytics.avg-time-to-create-ms:#{null}}")
-    private Double externalAvgTimeToCreateMs;
+    @Value("${analytics.avg-time-to-create-ms:}")
+    private String avgTimeRaw;
 
     public AlertMetrics collect() {
         long totalAlerts  = wishlistRepo.countTotal();
@@ -52,8 +52,14 @@ public class MetricsCollectorService {
                 totalAlerts, uniqueEmails, withTarget, avgPerUser, repeatUsers,
                 pending, sent, failed, opened, clicked, totalUnsubs,
                 openRate, clickRate, failureRate, unsubRate, repeatUserRate,
-                externalConversionRate,
-                externalAvgTimeToCreateMs
+                parseDouble(conversionRateRaw),
+                parseDouble(avgTimeRaw)
         );
+    }
+
+    private static Double parseDouble(String s) {
+        if (s == null || s.isBlank()) return null;
+        try { return Double.parseDouble(s.trim()); }
+        catch (NumberFormatException e) { return null; }
     }
 }
