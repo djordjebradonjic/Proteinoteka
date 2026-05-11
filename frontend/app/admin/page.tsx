@@ -11,18 +11,22 @@ interface ProductClick { productId: number; productName: string; count: number; 
 interface DayClick     { date: string; count: number; }
 
 interface Stats {
-  // CLICK_OUT
   clicksPerStore:    StoreClick[];
   topProducts:       ProductClick[];
   clicksLast7Days:   DayClick[];
   totalClickOuts:    number;
-  // PRODUCT_VIEW
   viewsLast7Days:    DayClick[];
   topViewedProducts: ProductClick[];
   totalViews:        number;
-  // COMPARE_CLICK
   compareLast7Days:  DayClick[];
   totalCompares:     number;
+}
+
+interface RecentSubscriber { email: string; name: string | null; goal: string | null; createdAt: string; }
+interface CalcStats {
+  total:  number;
+  byGoal: Record<string, number>;
+  recent: RecentSubscriber[];
 }
 
 function mergeByDate(
@@ -46,17 +50,23 @@ function mergeByDate(
 type ClearMode = "all" | "keepClickOut" | "clicks";
 
 export default function AdminAnalyticsPage() {
-  const [stats, setStats]       = useState<Stats | null>(null);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState(false);
-  const [confirm, setConfirm]   = useState<ClearMode | null>(null);
-  const [clearing, setClearing] = useState(false);
+  const [stats, setStats]           = useState<Stats | null>(null);
+  const [calcStats, setCalcStats]   = useState<CalcStats | null>(null);
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState(false);
+  const [confirm, setConfirm]       = useState<ClearMode | null>(null);
+  const [clearing, setClearing]     = useState(false);
 
   const fetchStats = () => {
     setLoading(true);
-    fetch("/api/admin/stats")
-      .then((r) => { if (!r.ok) throw new Error(); return r.json(); })
-      .then(setStats)
+    Promise.all([
+      fetch("/api/admin/stats").then(r => { if (!r.ok) throw new Error(); return r.json(); }),
+      fetch("/api/admin/calculator-stats").then(r => r.ok ? r.json() : null).catch(() => null),
+    ])
+      .then(([analyticsData, calcData]) => {
+        setStats(analyticsData);
+        setCalcStats(calcData);
+      })
       .catch(() => setError(true))
       .finally(() => setLoading(false));
   };
@@ -249,6 +259,9 @@ export default function AdminAnalyticsPage() {
           />
         </Section>
       </div>
+
+      {/* Calculator subscribers */}
+      {calcStats && <CalculatorSection stats={calcStats} />}
     </main>
   );
 }
@@ -327,6 +340,98 @@ function ProductTable({ rows, badgeColor }: {
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+const GOAL_META: Record<string, { label: string; color: string }> = {
+  mass:     { label: "Masa",       color: "#3b82f6" },
+  muscle:   { label: "Mišići",     color: "#FF9900" },
+  maintain: { label: "Održavanje", color: "#22c55e" },
+  fat_loss: { label: "Mršavljenje",color: "#ef4444" },
+};
+
+function CalculatorSection({ stats }: { stats: CalcStats }) {
+  const goalData = Object.entries(stats.byGoal).map(([goal, count]) => ({
+    name: GOAL_META[goal]?.label ?? goal,
+    count,
+    color: GOAL_META[goal]?.color ?? "#94a3b8",
+  }));
+
+  return (
+    <div className="mt-6">
+      <Section title="Protein kalkulator — Subscribers">
+        <div className="grid md:grid-cols-3 gap-6">
+
+          {/* Total + goal breakdown */}
+          <div className="space-y-4">
+            <div>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Ukupno subscribera</p>
+              <p className="text-4xl font-black text-[#1B2B4B]">{stats.total.toLocaleString()}</p>
+            </div>
+            <div className="space-y-2">
+              {goalData.map(({ name, count, color }) => {
+                const pct = stats.total > 0 ? Math.round((count / stats.total) * 100) : 0;
+                return (
+                  <div key={name}>
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="font-semibold text-slate-600">{name}</span>
+                      <span className="font-black" style={{ color }}>{count} <span className="text-slate-400 font-normal">({pct}%)</span></span>
+                    </div>
+                    <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full transition-all duration-500"
+                        style={{ width: `${pct}%`, backgroundColor: color }} />
+                    </div>
+                  </div>
+                );
+              })}
+              {goalData.length === 0 && <p className="text-xs text-slate-400">Nema podataka po cilju.</p>}
+            </div>
+          </div>
+
+          {/* Recent subscribers table */}
+          <div className="md:col-span-2 overflow-x-auto">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Poslednjih 10</p>
+            {stats.recent.length === 0 ? (
+              <p className="text-sm text-slate-400">Nema subscribera još.</p>
+            ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-100">
+                    <th className="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest pb-2 pr-4">Email</th>
+                    <th className="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest pb-2 pr-4">Ime</th>
+                    <th className="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest pb-2 pr-4">Cilj</th>
+                    <th className="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest pb-2">Datum</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.recent.map((s, i) => {
+                    const meta = s.goal ? GOAL_META[s.goal] : null;
+                    const date = new Date(s.createdAt).toLocaleDateString("sr-Latn", {
+                      day: "2-digit", month: "2-digit", year: "numeric",
+                    });
+                    return (
+                      <tr key={i} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
+                        <td className="py-2.5 pr-4 text-slate-700 font-medium text-xs truncate max-w-[160px]">{s.email}</td>
+                        <td className="py-2.5 pr-4 text-slate-500 text-xs">{s.name ?? "—"}</td>
+                        <td className="py-2.5 pr-4">
+                          {meta ? (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                              style={{ color: meta.color, background: `${meta.color}18` }}>
+                              {meta.label}
+                            </span>
+                          ) : <span className="text-xs text-slate-400">{s.goal ?? "—"}</span>}
+                        </td>
+                        <td className="py-2.5 text-xs text-slate-400">{date}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      </Section>
     </div>
   );
 }

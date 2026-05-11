@@ -40,6 +40,13 @@ export async function POST(req: NextRequest) {
   const greeting = name ? `Zdravo ${name},` : "Zdravo,";
   const goalLabel = goal ? GOAL_LABEL[goal] ?? goal : null;
 
+  // Save to DB — fire and forget, don't block email send
+  fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/calculator/subscribe`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, name, goal, protein, calories, carbs, fat }),
+  }).catch(err => console.error("[wizard] Failed to save subscriber:", err));
+
   try {
     await resend.emails.send({
       from: "plan@proteinoteka.rs",
