@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 import { NextRequest, NextResponse } from "next/server";
 
+const resend = new Resend(process.env.RESEND_API_KEY);
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const GOAL_LABEL: Record<string, string> = {
@@ -11,8 +12,6 @@ const GOAL_LABEL: Record<string, string> = {
 };
 
 export async function POST(req: NextRequest) {
-  const resend = new Resend(process.env.RESEND_API_KEY);
-
   let body: {
     email: string;
     name?: string;

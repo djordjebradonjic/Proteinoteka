@@ -1,8 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo, memo } from "react";
 import Link from "next/link";
+import { useAppSelector } from "@/store/hooks";
 import { X, ChevronRight, ChevronLeft, Loader2, Check, Calculator, Mail } from "lucide-react";
+
+const API = process.env.NEXT_PUBLIC_API_URL ?? "";
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -83,7 +87,7 @@ function getCTAUrl(d: WizardData): string {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function OptionCard({ selected, onClick, emoji, title, desc }: {
+const OptionCard = memo(function OptionCard({ selected, onClick, emoji, title, desc }: {
   selected: boolean; onClick: () => void; emoji: string; title: string; desc?: string;
 }) {
   return (
@@ -110,9 +114,9 @@ function OptionCard({ selected, onClick, emoji, title, desc }: {
       </div>
     </button>
   );
-}
+});
 
-function MultiCard({ selected, onClick, emoji, title, disabled }: {
+const MultiCard = memo(function MultiCard({ selected, onClick, emoji, title, disabled }: {
   selected: boolean; onClick: () => void; emoji: string; title: string; disabled?: boolean;
 }) {
   return (
@@ -132,9 +136,9 @@ function MultiCard({ selected, onClick, emoji, title, disabled }: {
       <p className={`text-xs font-semibold leading-tight ${selected ? "text-[#b36b00]" : "text-slate-700"}`}>{title}</p>
     </button>
   );
-}
+});
 
-function NumInput({ label, value, onChange, min, max, unit }: {
+const NumInput = memo(function NumInput({ label, value, onChange, min, max, unit }: {
   label: string; value: string; onChange: (v: string) => void;
   min?: number; max?: number; unit: string;
 }) {
@@ -148,7 +152,7 @@ function NumInput({ label, value, onChange, min, max, unit }: {
           onChange={e => onChange(e.target.value)}
           min={min}
           max={max}
-          className="flex-1 px-3 py-3 text-sm font-bold text-slate-800 bg-white outline-none w-0"
+          className="flex-1 px-3 py-3 text-[16px] font-bold text-slate-800 bg-white outline-none w-0"
           placeholder="—"
         />
         <span className="px-2.5 flex items-center bg-slate-50 text-[10px] font-semibold text-slate-400 border-l border-slate-200 shrink-0">
@@ -157,7 +161,7 @@ function NumInput({ label, value, onChange, min, max, unit }: {
       </div>
     </div>
   );
-}
+});
 
 // ─── Macro Card ───────────────────────────────────────────────────────────────
 
@@ -192,10 +196,7 @@ function WizardContent({ onClose }: { onClose: () => void }) {
   const [emailLoading, setEmailLoading] = useState(false);
   const [emailError, setEmailError] = useState("");
 
-  const API = process.env.NEXT_PUBLIC_API_URL ?? "";
-  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-  const sendEmail = async () => {
+  const sendEmail = useCallback(async () => {
     if (!result) return;
     if (!EMAIL_RE.test(email)) { setEmailError("Unesi ispravan email."); return; }
     setEmailError("");
@@ -218,7 +219,7 @@ function WizardContent({ onClose }: { onClose: () => void }) {
     } finally {
       setEmailLoading(false);
     }
-  };
+  }, [result, email, data.name, data.goal]);
 
   useEffect(() => {
     fetch(`${API}/api/track`, {
@@ -227,18 +228,41 @@ function WizardContent({ onClose }: { onClose: () => void }) {
       body: JSON.stringify({ eventType: "CALCULATOR_START" }),
       keepalive: true,
     }).catch(() => {});
-  }, [API]);
+  }, []);
 
-  const goStep = (n: number) => { setAnimKey(k => k + 1); setStep(n); };
+  // Stable field setters — prevent memo'd sub-components from re-rendering on unrelated state changes
+  const setName         = useCallback((v: string) => setData(d => ({ ...d, name: v })), []);
+  const setGenderMale   = useCallback(() => setData(d => ({ ...d, gender: "male" })), []);
+  const setGenderFemale = useCallback(() => setData(d => ({ ...d, gender: "female" })), []);
+  const setAge          = useCallback((v: string) => setData(d => ({ ...d, age: v })), []);
+  const setHeight       = useCallback((v: string) => setData(d => ({ ...d, height: v })), []);
+  const setWeight       = useCallback((v: string) => setData(d => ({ ...d, weight: v })), []);
+  const setGoal         = useCallback((v: Goal) => setData(d => ({ ...d, goal: v })), []);
+  const setActivity     = useCallback((v: Activity) => setData(d => ({ ...d, activity: v })), []);
+  const setTrainingFreq = useCallback((v: TrainingFreq) => setData(d => ({ ...d, trainingFreq: v })), []);
+  const setDiet         = useCallback((v: Diet) => setData(d => ({ ...d, diet: v })), []);
+  const toggleTrainingType = useCallback((v: string) => setData(d => {
+    const maxed = d.trainingTypes.length >= 3;
+    return {
+      ...d,
+      trainingTypes: d.trainingTypes.includes(v)
+        ? d.trainingTypes.filter(x => x !== v)
+        : maxed ? d.trainingTypes : [...d.trainingTypes, v],
+    };
+  }), []);
+  const toggleBenefit = useCallback((v: string) => setData(d => {
+    const maxed = d.benefits.length >= 2;
+    return {
+      ...d,
+      benefits: d.benefits.includes(v)
+        ? d.benefits.filter(x => x !== v)
+        : maxed ? d.benefits : [...d.benefits, v],
+    };
+  }), []);
+
+  const goStep = useCallback((n: number) => { setAnimKey(k => k + 1); setStep(n); }, []);
 
   const next = () => {
-    fetch(`${API}/api/track`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ eventType: "STEP_COMPLETE", step }),
-      keepalive: true,
-    }).catch(() => {});
-
     if (step === TOTAL_STEPS) {
       setLoading(true);
       setTimeout(() => {
@@ -252,10 +276,16 @@ function WizardContent({ onClose }: { onClose: () => void }) {
           body: JSON.stringify({ eventType: "CALCULATOR_FINISH" }),
           keepalive: true,
         }).catch(() => {});
-      }, 1600);
+      }, 500);
     } else {
       // Skip step 5 (training types) when user selected "no training"
       goStep(step === 4 && data.trainingFreq === "none" ? 6 : step + 1);
+      fetch(`${API}/api/track`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventType: "STEP_COMPLETE", step }),
+        keepalive: true,
+      }).catch(() => {});
     }
   };
 
@@ -264,7 +294,7 @@ function WizardContent({ onClose }: { onClose: () => void }) {
     goStep(step === 6 && data.trainingFreq === "none" ? 4 : step - 1);
   };
 
-  const canNext = (): boolean => {
+  const canNext = useMemo((): boolean => {
     if (step === 1) return !!data.gender && +data.age > 0 && +data.height > 0 && +data.weight > 0;
     if (step === 2) return !!data.goal;
     if (step === 3) return !!data.activity;
@@ -273,7 +303,148 @@ function WizardContent({ onClose }: { onClose: () => void }) {
     if (step === 6) return data.benefits.length > 0;
     if (step === 7) return !!data.diet;
     return false;
-  };
+  }, [step, data.gender, data.age, data.height, data.weight, data.goal, data.activity, data.trainingFreq, data.trainingTypes.length, data.benefits.length, data.diet]);
+
+  const stepTitles = [
+    "", "Osnovne informacije", "Koji je tvoj cilj?",
+    "Nivo aktivnosti", "Koliko često treniraš?",
+    "Vrsta treninga", "Šta ti je prioritet?", "Tip ishrane",
+  ];
+
+  const stepContent = useMemo(() => {
+    switch (step) {
+      case 1:
+        return (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-widest">Ime (opciono)</label>
+              <input
+                type="text"
+                value={data.name}
+                onChange={e => setName(e.target.value)}
+                placeholder="Npr. Marko"
+                className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 text-[16px] text-slate-800 outline-none focus:border-[#FF9900] transition-colors bg-white"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-widest">Pol</label>
+              <div className="grid grid-cols-2 gap-3">
+                <OptionCard selected={data.gender === "male"}   onClick={setGenderMale}   emoji="♂️" title="Muško" />
+                <OptionCard selected={data.gender === "female"} onClick={setGenderFemale} emoji="♀️" title="Žensko" />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <NumInput label="Godine" value={data.age}    onChange={setAge}    min={15}  max={80}  unit="god" />
+              <NumInput label="Visina" value={data.height} onChange={setHeight} min={140} max={220} unit="cm" />
+              <NumInput label="Težina" value={data.weight} onChange={setWeight} min={40}  max={200} unit="kg" />
+            </div>
+          </div>
+        );
+
+      case 2:
+        return (
+          <div className="space-y-2.5">
+            {([
+              ["mass",     "⬆️",  "Dobijanje mase",                     "Kalorijsko ubrzanje i suvišak"],
+              ["muscle",   "💪",  "Izgradnja mišića",                   "Rekomp i snaga uz kontrolu"],
+              ["maintain", "⚖️",  "Održavanje težine",                  "Stabilnost i forma"],
+              ["fat_loss", "🔥",  "Gubitak masti uz očuvanje mišića",   "Deficit uz visok protein"],
+            ] as const).map(([v, e, t, d]) => (
+              <OptionCard key={v} selected={data.goal === v} onClick={() => setGoal(v)} emoji={e} title={t} desc={d} />
+            ))}
+          </div>
+        );
+
+      case 3:
+        return (
+          <div className="space-y-2.5">
+            {([
+              ["sedentary", "🪑", "Sedentarno",        "Kancelarijski posao, minimalno kretanje"],
+              ["light",     "🚶", "Laka aktivnost",    "Šetnje, stajanje, povremene aktivnosti"],
+              ["moderate",  "🏃", "Umerena aktivnost", "Sport 3–4x nedeljno, aktivan životni stil"],
+              ["high",      "🏋️", "Visoka aktivnost",  "Intenzivan trening 5+ puta, fizički posao"],
+            ] as const).map(([v, e, t, d]) => (
+              <OptionCard key={v} selected={data.activity === v} onClick={() => setActivity(v)} emoji={e} title={t} desc={d} />
+            ))}
+          </div>
+        );
+
+      case 4:
+        return (
+          <div className="space-y-2.5">
+            {([
+              ["none", "😴", "Bez treninga",      "Trenutno ne treniram"],
+              ["1-2",  "🌱", "1–2x nedeljno",     "Rekreativno"],
+              ["3-4",  "🔥", "3–4x nedeljno",     "Redovni trening"],
+              ["5+",   "⚡", "5+ puta nedeljno",  "Ozbiljan atletičar"],
+            ] as const).map(([v, e, t, d]) => (
+              <OptionCard key={v} selected={data.trainingFreq === v} onClick={() => setTrainingFreq(v)} emoji={e} title={t} desc={d} />
+            ))}
+          </div>
+        );
+
+      case 5: {
+        const opts = [
+          ["weights", "🏋️", "Teretana (tegovi)"],
+          ["cardio",  "🏃", "Kardio"],
+          ["hiit",    "⚡", "HIIT / funkcionalni"],
+          ["sports",  "⚽", "Sportovi"],
+          ["yoga",    "🧘", "Yoga / pilates"],
+          ["other",   "🤸", "Ostalo"],
+        ] as const;
+        const maxed = data.trainingTypes.length >= 3;
+        return (
+          <>
+            <p className="text-xs text-slate-400 mb-3">Odaberi do 3 vrste treninga</p>
+            <div className="grid grid-cols-2 gap-2.5">
+              {opts.map(([v, e, t]) => (
+                <MultiCard key={v} selected={data.trainingTypes.includes(v)} onClick={() => toggleTrainingType(v)} emoji={e} title={t} disabled={maxed} />
+              ))}
+            </div>
+          </>
+        );
+      }
+
+      case 6: {
+        const opts = [
+          ["recovery",  "🔄", "Oporavak"],
+          ["energy",    "⚡", "Više energije"],
+          ["strength",  "💪", "Snaga"],
+          ["endurance", "🏅", "Izdržljivost"],
+          ["satiety",   "🥗", "Sitost tokom dana"],
+        ] as const;
+        const maxed = data.benefits.length >= 2;
+        return (
+          <>
+            <p className="text-xs text-slate-400 mb-3">Odaberi do 2 benefita</p>
+            <div className="grid grid-cols-2 gap-2.5">
+              {opts.map(([v, e, t]) => (
+                <MultiCard key={v} selected={data.benefits.includes(v)} onClick={() => toggleBenefit(v)} emoji={e} title={t} disabled={maxed} />
+              ))}
+            </div>
+          </>
+        );
+      }
+
+      case 7:
+        return (
+          <div className="space-y-2.5">
+            {([
+              ["omnivore",    "🍖", "Sve jedem",      "Bez ograničenja"],
+              ["vegetarian",  "🥚", "Vegetarijanac",  "Bez mesa, ali jedem jaja i mlečne"],
+              ["vegan",       "🌱", "Vegan",          "Isključivo biljni protein"],
+              ["flexitarian", "🥗", "Flexitarian",    "Pretežno biljno, povremeno meso"],
+            ] as const).map(([v, e, t, d]) => (
+              <OptionCard key={v} selected={data.diet === v} onClick={() => setDiet(v)} emoji={e} title={t} desc={d} />
+            ))}
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, data.name, data.gender, data.age, data.height, data.weight, data.goal, data.activity, data.trainingFreq, data.trainingTypes, data.benefits, data.diet]);
 
   // ── Loading ──────────────────────────────────────────────────────────────────
   if (loading) {
@@ -411,7 +582,7 @@ function WizardContent({ onClose }: { onClose: () => void }) {
                     onChange={e => { setEmail(e.target.value); if (emailError) setEmailError(""); }}
                     onKeyDown={e => e.key === "Enter" && sendEmail()}
                     placeholder="tvoj@email.com"
-                    className={`flex-1 min-w-0 px-3.5 py-2.5 rounded-xl text-sm border-2 outline-none bg-white text-slate-800 placeholder:text-slate-400 transition-colors ${
+                    className={`flex-1 min-w-0 px-3.5 py-2.5 rounded-xl text-[16px] border-2 outline-none bg-white text-slate-800 placeholder:text-slate-400 transition-colors ${
                       emailError ? "border-red-400 focus:border-red-500" : "border-slate-200 focus:border-[#FF9900]"
                     }`}
                   />
@@ -450,159 +621,6 @@ function WizardContent({ onClose }: { onClose: () => void }) {
       </div>
     );
   }
-
-  // ── Steps ────────────────────────────────────────────────────────────────────
-  const stepTitles = [
-    "", "Osnovne informacije", "Koji je tvoj cilj?",
-    "Nivo aktivnosti", "Koliko često treniraš?",
-    "Vrsta treninga", "Šta ti je prioritet?", "Tip ishrane",
-  ];
-
-  const renderStep = () => {
-    switch (step) {
-      case 1:
-        return (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-widest">Ime (opciono)</label>
-              <input
-                type="text"
-                value={data.name}
-                onChange={e => setData(d => ({ ...d, name: e.target.value }))}
-                placeholder="Npr. Marko"
-                className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 outline-none focus:border-[#FF9900] transition-colors bg-white"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-widest">Pol</label>
-              <div className="grid grid-cols-2 gap-3">
-                <OptionCard selected={data.gender === "male"}   onClick={() => setData(d => ({ ...d, gender: "male"   }))} emoji="♂️" title="Muško" />
-                <OptionCard selected={data.gender === "female"} onClick={() => setData(d => ({ ...d, gender: "female" }))} emoji="♀️" title="Žensko" />
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              <NumInput label="Godine"  value={data.age}    onChange={v => setData(d => ({ ...d, age: v }))}    min={15} max={80}  unit="god" />
-              <NumInput label="Visina"  value={data.height} onChange={v => setData(d => ({ ...d, height: v }))} min={140} max={220} unit="cm" />
-              <NumInput label="Težina"  value={data.weight} onChange={v => setData(d => ({ ...d, weight: v }))} min={40} max={200}  unit="kg" />
-            </div>
-          </div>
-        );
-
-      case 2:
-        return (
-          <div className="space-y-2.5">
-            {([
-              ["mass",     "⬆️",  "Dobijanje mase",                     "Kalorijsko ubrzanje i suvišak"],
-              ["muscle",   "💪",  "Izgradnja mišića",                   "Rekomp i snaga uz kontrolu"],
-              ["maintain", "⚖️",  "Održavanje težine",                  "Stabilnost i forma"],
-              ["fat_loss", "🔥",  "Gubitak masti uz očuvanje mišića",   "Deficit uz visok protein"],
-            ] as const).map(([v, e, t, d]) => (
-              <OptionCard key={v} selected={data.goal === v} onClick={() => setData(s => ({ ...s, goal: v }))} emoji={e} title={t} desc={d} />
-            ))}
-          </div>
-        );
-
-      case 3:
-        return (
-          <div className="space-y-2.5">
-            {([
-              ["sedentary", "🪑", "Sedentarno",        "Kancelarijski posao, minimalno kretanje"],
-              ["light",     "🚶", "Laka aktivnost",    "Šetnje, stajanje, povremene aktivnosti"],
-              ["moderate",  "🏃", "Umerena aktivnost", "Sport 3–4x nedeljno, aktivan životni stil"],
-              ["high",      "🏋️", "Visoka aktivnost",  "Intenzivan trening 5+ puta, fizički posao"],
-            ] as const).map(([v, e, t, d]) => (
-              <OptionCard key={v} selected={data.activity === v} onClick={() => setData(s => ({ ...s, activity: v }))} emoji={e} title={t} desc={d} />
-            ))}
-          </div>
-        );
-
-      case 4:
-        return (
-          <div className="space-y-2.5">
-            {([
-              ["none", "😴", "Bez treninga",      "Trenutno ne treniram"],
-              ["1-2",  "🌱", "1–2x nedeljno",     "Rekreativno"],
-              ["3-4",  "🔥", "3–4x nedeljno",     "Redovni trening"],
-              ["5+",   "⚡", "5+ puta nedeljno",  "Ozbiljan atletičar"],
-            ] as const).map(([v, e, t, d]) => (
-              <OptionCard key={v} selected={data.trainingFreq === v} onClick={() => setData(s => ({ ...s, trainingFreq: v }))} emoji={e} title={t} desc={d} />
-            ))}
-          </div>
-        );
-
-      case 5: {
-        const opts = [
-          ["weights", "🏋️", "Teretana (tegovi)"],
-          ["cardio",  "🏃", "Kardio"],
-          ["hiit",    "⚡", "HIIT / funkcionalni"],
-          ["sports",  "⚽", "Sportovi"],
-          ["yoga",    "🧘", "Yoga / pilates"],
-          ["other",   "🤸", "Ostalo"],
-        ] as const;
-        const maxed = data.trainingTypes.length >= 3;
-        const toggle = (v: string) => setData(d => ({
-          ...d,
-          trainingTypes: d.trainingTypes.includes(v)
-            ? d.trainingTypes.filter(x => x !== v)
-            : maxed ? d.trainingTypes : [...d.trainingTypes, v],
-        }));
-        return (
-          <>
-            <p className="text-xs text-slate-400 mb-3">Odaberi do 3 vrste treninga</p>
-            <div className="grid grid-cols-2 gap-2.5">
-              {opts.map(([v, e, t]) => (
-                <MultiCard key={v} selected={data.trainingTypes.includes(v)} onClick={() => toggle(v)} emoji={e} title={t} disabled={maxed} />
-              ))}
-            </div>
-          </>
-        );
-      }
-
-      case 6: {
-        const opts = [
-          ["recovery",  "🔄", "Oporavak"],
-          ["energy",    "⚡", "Više energije"],
-          ["strength",  "💪", "Snaga"],
-          ["endurance", "🏅", "Izdržljivost"],
-          ["satiety",   "🥗", "Sitost tokom dana"],
-        ] as const;
-        const maxed = data.benefits.length >= 2;
-        const toggle = (v: string) => setData(d => ({
-          ...d,
-          benefits: d.benefits.includes(v)
-            ? d.benefits.filter(x => x !== v)
-            : maxed ? d.benefits : [...d.benefits, v],
-        }));
-        return (
-          <>
-            <p className="text-xs text-slate-400 mb-3">Odaberi do 2 benefita</p>
-            <div className="grid grid-cols-2 gap-2.5">
-              {opts.map(([v, e, t]) => (
-                <MultiCard key={v} selected={data.benefits.includes(v)} onClick={() => toggle(v)} emoji={e} title={t} disabled={maxed} />
-              ))}
-            </div>
-          </>
-        );
-      }
-
-      case 7:
-        return (
-          <div className="space-y-2.5">
-            {([
-              ["omnivore",    "🍖", "Sve jedem",      "Bez ograničenja"],
-              ["vegetarian",  "🥚", "Vegetarijanac",  "Bez mesa, ali jedem jaja i mlečne"],
-              ["vegan",       "🌱", "Vegan",          "Isključivo biljni protein"],
-              ["flexitarian", "🥗", "Flexitarian",    "Pretežno biljno, povremeno meso"],
-            ] as const).map(([v, e, t, d]) => (
-              <OptionCard key={v} selected={data.diet === v} onClick={() => setData(s => ({ ...s, diet: v }))} emoji={e} title={t} desc={d} />
-            ))}
-          </div>
-        );
-
-      default:
-        return null;
-    }
-  };
 
   const skipTraining   = data.trainingFreq === "none";
   const displayTotal   = skipTraining ? TOTAL_STEPS - 1 : TOTAL_STEPS;
@@ -643,7 +661,7 @@ function WizardContent({ onClose }: { onClose: () => void }) {
         className="flex-1 min-h-0 overflow-y-auto px-5 py-4"
         style={{ animation: "wzFadeIn 0.22s ease-out" }}
       >
-        {renderStep()}
+        {stepContent}
       </div>
 
       {/* Navigation */}
@@ -659,7 +677,7 @@ function WizardContent({ onClose }: { onClose: () => void }) {
         )}
         <button
           onClick={next}
-          disabled={!canNext()}
+          disabled={!canNext}
           className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#FF9900] text-[#131921] text-sm font-extrabold hover:bg-[#e68a00] transition-colors disabled:opacity-35 disabled:cursor-not-allowed shadow-sm"
         >
           {step === TOTAL_STEPS ? "Izračunaj →" : <>Dalje <ChevronRight className="w-4 h-4" /></>}
@@ -674,6 +692,7 @@ function WizardContent({ onClose }: { onClose: () => void }) {
 export default function ProteinCalculatorWizard() {
   const [open, setOpen] = useState(false);
   const [footerVisible, setFooterVisible] = useState(false);
+  const compareCount = (useAppSelector((state: any) => state.compare?.ids?.length) as number) || 0;
 
   useEffect(() => {
     if (open) document.body.style.overflow = "hidden";
@@ -712,9 +731,14 @@ export default function ProteinCalculatorWizard() {
       {/* Floating button */}
       <button
         onClick={() => setOpen(true)}
-        className={`fixed bottom-6 left-5 z-40 flex items-center gap-2 px-4 py-3 bg-[#1B2B4B] text-white text-sm font-bold rounded-2xl shadow-lg hover:bg-[#243860] hover:shadow-xl transition-all duration-200 cursor-pointer ${
+        className={`fixed left-5 z-40 flex items-center gap-2 px-4 py-3 bg-[#1B2B4B] text-white text-sm font-bold rounded-2xl shadow-lg hover:bg-[#243860] hover:shadow-xl transition-all duration-200 cursor-pointer ${
           footerVisible ? "opacity-0 pointer-events-none" : "opacity-100"
         }`}
+        style={{
+          bottom: compareCount > 0
+            ? "calc(3.5rem + env(safe-area-inset-bottom, 0px))"
+            : "calc(1.5rem + env(safe-area-inset-bottom, 0px))",
+        }}
         aria-label="Otvori protein kalkulator"
       >
         <Calculator className="w-4 h-4 text-[#FF9900]" />
@@ -731,7 +755,7 @@ export default function ProteinCalculatorWizard() {
           {/* Mobile: bottom sheet */}
           <div
             className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl flex flex-col sm:hidden overflow-hidden"
-            style={{ maxHeight: "92dvh", animation: "wzSlideUp 0.3s ease-out" }}
+            style={{ maxHeight: "92dvh", paddingBottom: "env(safe-area-inset-bottom, 0px)", animation: "wzSlideUp 0.3s ease-out" }}
           >
             <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mt-3 mb-1 shrink-0" />
             <WizardContent onClose={() => setOpen(false)} />

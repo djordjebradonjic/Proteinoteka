@@ -45,6 +45,9 @@ public class ProductController {
     private final ClickEventRepository clickEventRepository;
     private final AffiliateLinkRepository affiliateLinkRepository;
 
+    private static final java.util.Set<String> NULLABLE_SORT_COLS =
+            java.util.Set.of("valueScore", "proteinPerRsd");
+
     @Cacheable("products")
     @GetMapping
     public Page<ProductDTO> getProducts(
@@ -59,7 +62,16 @@ public class ProductController {
 
         Specification<Product> spec = buildSpec(name, storeName, brand, flavour, category, minPrice, maxPrice);
 
-        return productRepository.findAll(spec, pageable).map(this::convertToDTO);
+        Sort fixedSort = Sort.by(
+                pageable.getSort().stream()
+                        .map(order -> NULLABLE_SORT_COLS.contains(order.getProperty())
+                                ? new Sort.Order(order.getDirection(), order.getProperty(), Sort.NullHandling.NULLS_LAST)
+                                : order)
+                        .toList()
+        );
+        Pageable fixedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), fixedSort);
+
+        return productRepository.findAll(spec, fixedPageable).map(this::convertToDTO);
     }
 
     private Specification<Product> buildSpec(String name, String storeName, String brand,
