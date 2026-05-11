@@ -558,20 +558,20 @@ public class ScraperService {
     private double extractPackageGrams(Product p) {
         if (p.getPackage_weight() == null || p.getPackage_weight().isEmpty()) return 0;
 
-        String weight = p.getPackage_weight().get(0)
-                .toLowerCase()
-                .replaceAll("\\s+", "");
-
-        try {
-            if (weight.contains("kg")) {
-                return Double.parseDouble(weight.replace("kg", "").replace(",", ".")) * 1000;
-            } else if (weight.contains("g")) {
-                return Double.parseDouble(weight.replace("g", "").replace(",", "."));
-            }
-        } catch (Exception e) {
-            log.warn("Cannot parse package weight: '{}'", weight);
+        for (String raw : p.getPackage_weight()) {
+            String weight = raw.toLowerCase().replaceAll("\\s+", "");
+            try {
+                if (weight.contains("kg")) {
+                    double val = Double.parseDouble(weight.replace("kg", "").replace(",", ".")) * 1000;
+                    if (val > 0) return val;
+                } else if (weight.contains("g")) {
+                    double val = Double.parseDouble(weight.replace("g", "").replace(",", "."));
+                    if (val > 0) return val;
+                }
+            } catch (Exception ignored) {}
         }
 
+        log.warn("Cannot parse any package weight from: '{}'", p.getPackage_weight());
         return 0;
     }
 }
