@@ -385,6 +385,7 @@ public class ScraperService {
                 PriceHistory history = new PriceHistory();
                 history.setProduct(existing);
                 history.setPrice(oldPrice);
+                history.setNumericPrice(priceParser.parse(oldPrice));
                 history.setTimestamp(LocalDateTime.now());
                 priceHistoryRepository.save(history);
             }

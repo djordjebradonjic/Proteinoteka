@@ -9,7 +9,6 @@ import com.proteinoteka.model.AffiliateLink;
 import com.proteinoteka.model.ClickEvent;
 import com.proteinoteka.model.PriceHistory;
 import com.proteinoteka.model.Product;
-import com.proteinoteka.util.PriceParser;
 import com.proteinoteka.repository.AffiliateLinkRepository;
 import com.proteinoteka.repository.ClickEventRepository;
 import com.proteinoteka.repository.PriceHistoryRepository;
@@ -45,7 +44,6 @@ public class ProductController {
     private final PriceHistoryRepository priceHistoryRepository;
     private final ClickEventRepository clickEventRepository;
     private final AffiliateLinkRepository affiliateLinkRepository;
-    private final PriceParser priceParser;
 
     @Cacheable("products")
     @GetMapping
@@ -296,7 +294,7 @@ public class ProductController {
     private ProductDTO convertToDTO(Product product) {
         Double prevPrice = product.getPriceHistories().stream()
                 .max(Comparator.comparing(PriceHistory::getTimestamp))
-                .map(h -> priceParser.parse(h.getPrice()))
+                .map(PriceHistory::getNumericPrice)
                 .orElse(null);
 
         return new ProductDTO(
@@ -310,7 +308,7 @@ public class ProductController {
                 product.getPackage_weight(),
                 product.getFlavours(),
                 product.getPriceHistories().stream()
-                        .map(h -> new PriceHistoryDTO(h.getPrice(), h.getTimestamp()))
+                        .map(h -> new PriceHistoryDTO(h.getPrice(), h.getNumericPrice(), h.getTimestamp()))
                         .sorted(Comparator.comparing(PriceHistoryDTO::timestamp).reversed())
                         .toList(),
                 product.getDescription(),

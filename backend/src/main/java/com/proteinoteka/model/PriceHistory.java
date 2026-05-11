@@ -18,6 +18,10 @@ public class PriceHistory {
     private Long id;
 
     private String price;
+
+    @Column(name = "numeric_price")
+    private Double numericPrice;
+
     private LocalDateTime timestamp= LocalDateTime.now();
 
     @ManyToOne
