@@ -18,8 +18,13 @@ import org.springframework.cache.CacheManager;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
@@ -165,6 +170,32 @@ public class AdminController {
                 ),
                 "insights", insights
         ));
+    }
+
+    @GetMapping("/alert-subscribers")
+    public ResponseEntity<List<Map<String, Object>>> recentAlertSubscribers(
+            @RequestParam(defaultValue = "30") int limit) {
+        var items = wishlistItemRepository.findAll(
+                PageRequest.of(0, Math.min(limit, 200), Sort.by("addedAt").descending())
+        );
+
+        Set<Long> productIds = items.getContent().stream()
+                .map(w -> w.getProductId())
+                .collect(Collectors.toSet());
+        Map<Long, String> productNames = productRepository.findAllById(productIds).stream()
+                .collect(Collectors.toMap(Product::getId, Product::getName, (a, b) -> a));
+
+        List<Map<String, Object>> result = items.getContent().stream().map(w -> {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("email", w.getEmail());
+            m.put("productId", w.getProductId());
+            m.put("productName", productNames.getOrDefault(w.getProductId(), "#" + w.getProductId()));
+            m.put("targetPrice", w.getTargetPrice());
+            m.put("addedAt", w.getAddedAt());
+            return m;
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping("/recalculate-scores")

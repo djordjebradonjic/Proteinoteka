@@ -29,6 +29,16 @@ interface CalcStats {
   recent: RecentSubscriber[];
 }
 
+interface AlertMetrics {
+  subscribers: { totalAlerts: number; uniqueEmails: number; withTargetPrice: number; avgAlertsPerUser: number; repeatUsers: number; };
+  jobs:        { pending: number; sent: number; failed: number; failureRate: number; };
+  email:       { sent: number; opened: number; clicked: number; openRate: number; clickRate: number; clickToOpenRate: number; };
+  unsubscribes:{ total: number; last30Days: number; unsubscribeRate: number; };
+  insights:    string[];
+}
+
+interface AlertSubscriber { email: string; productId: number; productName: string; targetPrice: number | null; addedAt: string; }
+
 function mergeByDate(
   views: DayClick[],
   compares: DayClick[],
@@ -50,22 +60,28 @@ function mergeByDate(
 type ClearMode = "all" | "keepClickOut" | "clicks";
 
 export default function AdminAnalyticsPage() {
-  const [stats, setStats]           = useState<Stats | null>(null);
-  const [calcStats, setCalcStats]   = useState<CalcStats | null>(null);
-  const [loading, setLoading]       = useState(true);
-  const [error, setError]           = useState(false);
-  const [confirm, setConfirm]       = useState<ClearMode | null>(null);
-  const [clearing, setClearing]     = useState(false);
+  const [stats, setStats]                     = useState<Stats | null>(null);
+  const [calcStats, setCalcStats]             = useState<CalcStats | null>(null);
+  const [alertMetrics, setAlertMetrics]       = useState<AlertMetrics | null>(null);
+  const [alertSubscribers, setAlertSubscribers] = useState<AlertSubscriber[]>([]);
+  const [loading, setLoading]                 = useState(true);
+  const [error, setError]                     = useState(false);
+  const [confirm, setConfirm]                 = useState<ClearMode | null>(null);
+  const [clearing, setClearing]               = useState(false);
 
   const fetchStats = () => {
     setLoading(true);
     Promise.all([
       fetch("/api/admin/stats").then(r => { if (!r.ok) throw new Error(); return r.json(); }),
       fetch("/api/admin/calculator-stats").then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch("/api/admin/alert-metrics").then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch("/api/admin/alert-subscribers").then(r => r.ok ? r.json() : null).catch(() => null),
     ])
-      .then(([analyticsData, calcData]) => {
+      .then(([analyticsData, calcData, alertData, subscribersData]) => {
         setStats(analyticsData);
         setCalcStats(calcData);
+        setAlertMetrics(alertData);
+        setAlertSubscribers(Array.isArray(subscribersData) ? subscribersData : []);
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false));
@@ -262,6 +278,9 @@ export default function AdminAnalyticsPage() {
 
       {/* Calculator subscribers */}
       {calcStats && <CalculatorSection stats={calcStats} />}
+
+      {/* Price alert subscribers */}
+      {alertMetrics && <AlertSection metrics={alertMetrics} subscribers={alertSubscribers} />}
     </main>
   );
 }
@@ -432,6 +451,139 @@ function CalculatorSection({ stats }: { stats: CalcStats }) {
           </div>
         </div>
       </Section>
+    </div>
+  );
+}
+
+function AlertSection({ metrics, subscribers }: { metrics: AlertMetrics; subscribers: AlertSubscriber[] }) {
+  const { subscribers: s, jobs, email, unsubscribes, insights } = metrics;
+
+  const fmt = (n: number) => (n * 100).toFixed(1) + "%";
+
+  return (
+    <div className="mt-6">
+      <Section title="Price Alerts — Subscribers">
+
+        {/* Summary row */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+          <MiniCard label="Ukupno alerta"     value={s.totalAlerts}     color="#FF9900" />
+          <MiniCard label="Jedinstvenih email" value={s.uniqueEmails}    color="#3b82f6" />
+          <MiniCard label="Sa ciljnom cenom"  value={s.withTargetPrice} color="#8b5cf6" />
+          <MiniCard label="Avg po useru"      value={s.avgAlertsPerUser.toFixed(1)} color="#22c55e" />
+        </div>
+
+        {/* Jobs + email stats */}
+        <div className="grid md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Email jobs</p>
+            <div className="space-y-2">
+              {[
+                { label: "Pending",  value: jobs.pending,  color: "#FF9900" },
+                { label: "Poslato",  value: jobs.sent,     color: "#22c55e" },
+                { label: "Failed",   value: jobs.failed,   color: "#ef4444" },
+              ].map(({ label, value, color }) => (
+                <div key={label} className="flex items-center justify-between text-sm">
+                  <span className="text-slate-600">{label}</span>
+                  <span className="font-bold" style={{ color }}>{value}</span>
+                </div>
+              ))}
+              {jobs.sent > 0 && (
+                <div className="flex items-center justify-between text-sm border-t border-slate-100 pt-2">
+                  <span className="text-slate-500">Failure rate</span>
+                  <span className="font-semibold text-slate-700">{fmt(jobs.failureRate)}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {jobs.sent > 0 && (
+            <div>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Email engagement</p>
+              <div className="space-y-2">
+                {[
+                  { label: "Open rate",         value: fmt(email.openRate) },
+                  { label: "Click rate",         value: fmt(email.clickRate) },
+                  { label: "Click-to-open rate", value: fmt(email.clickToOpenRate) },
+                ].map(({ label, value }) => (
+                  <div key={label} className="flex items-center justify-between text-sm">
+                    <span className="text-slate-600">{label}</span>
+                    <span className="font-bold text-[#FF9900]">{value}</span>
+                  </div>
+                ))}
+                <div className="flex items-center justify-between text-sm border-t border-slate-100 pt-2">
+                  <span className="text-slate-500">Unsubscribes (30d)</span>
+                  <span className="font-semibold text-slate-700">{unsubscribes.last30Days}</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Insights */}
+        {insights.length > 0 && (
+          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+            <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-2">Insights</p>
+            <ul className="space-y-1">
+              {insights.map((ins, i) => (
+                <li key={i} className="text-xs text-amber-800 font-medium">· {ins}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Recent subscribers table */}
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
+          Poslednjih {subscribers.length} subscribera
+        </p>
+        {subscribers.length === 0 ? (
+          <p className="text-sm text-slate-400">Nema subscribera još.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-100">
+                  <th className="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest pb-2 pr-4">Email</th>
+                  <th className="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest pb-2 pr-4">Proizvod</th>
+                  <th className="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest pb-2 pr-4">Ciljana cena</th>
+                  <th className="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest pb-2">Datum</th>
+                </tr>
+              </thead>
+              <tbody>
+                {subscribers.map((sub, i) => {
+                  const date = new Date(sub.addedAt).toLocaleDateString("sr-Latn", {
+                    day: "2-digit", month: "2-digit", year: "numeric",
+                  });
+                  return (
+                    <tr key={i} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
+                      <td className="py-2.5 pr-4 text-slate-700 font-medium text-xs truncate max-w-[160px]">{sub.email}</td>
+                      <td className="py-2.5 pr-4 text-slate-500 text-xs truncate max-w-[200px]">{sub.productName}</td>
+                      <td className="py-2.5 pr-4 text-xs">
+                        {sub.targetPrice != null ? (
+                          <span className="font-bold text-[#FF9900]">
+                            {new Intl.NumberFormat("sr-RS").format(Math.round(sub.targetPrice))} RSD
+                          </span>
+                        ) : (
+                          <span className="text-slate-400">Bilo koji pad</span>
+                        )}
+                      </td>
+                      <td className="py-2.5 text-xs text-slate-400">{date}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Section>
+    </div>
+  );
+}
+
+function MiniCard({ label, value, color }: { label: string; value: number | string; color: string }) {
+  return (
+    <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">{label}</p>
+      <p className="text-2xl font-black" style={{ color }}>{value}</p>
     </div>
   );
 }

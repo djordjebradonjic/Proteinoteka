@@ -556,6 +556,7 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
         {similar.length > 0 && (
           <div className="mb-6">
             <h2 className="text-base font-bold text-slate-900 mb-4">Slični proizvodi</h2>
+            <div className="relative">
             <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
               {similar.map((p) => (
                 <Link
@@ -573,6 +574,8 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
                   {p.storeName && <p className="text-[10px] text-slate-400 mt-0.5">{p.storeName}</p>}
                 </Link>
               ))}
+            </div>
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-slate-50 to-transparent" />
             </div>
           </div>
         )}
