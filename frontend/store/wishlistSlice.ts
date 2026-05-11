@@ -63,6 +63,14 @@ const wishlistSlice = createSlice({
       state.count = 0;
       saveToStorage([]);
     },
+    hydrateWishlist: (state, action: PayloadAction<Product[]>) => {
+      const existingIds = new Set(state.items.map((p) => p.id));
+      const newItems = action.payload.filter((p) => !existingIds.has(p.id));
+      if (newItems.length === 0) return;
+      state.items.push(...newItems);
+      state.count = state.items.length;
+      saveToStorage(state.items as Product[]);
+    },
     openWishlist: (state) => { state.isOpen = true; },
     closeWishlist: (state) => { state.isOpen = false; },
     toggleWishlist: (state) => { state.isOpen = !state.isOpen; },
@@ -74,7 +82,7 @@ const wishlistSlice = createSlice({
 });
 
 export const {
-  addToWishlist, removeFromWishlist, clearWishlist,
+  addToWishlist, removeFromWishlist, clearWishlist, hydrateWishlist,
   openWishlist, closeWishlist, toggleWishlist,
   increment, decrement, setCount,
 } = wishlistSlice.actions;
