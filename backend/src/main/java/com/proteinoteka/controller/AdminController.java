@@ -2,6 +2,7 @@ package com.proteinoteka.controller;
 
 import com.proteinoteka.model.Product;
 import com.proteinoteka.model.ScrapeLog;
+import com.proteinoteka.repository.BrandReputationRepository;
 import com.proteinoteka.repository.ProductRepository;
 import com.proteinoteka.scheduler.ScrapingSchedulerService;
 import com.proteinoteka.service.ScraperService;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -23,6 +25,7 @@ public class AdminController {
     private final List<StoreScraper> scrapers;
     private final ProductRepository productRepository;
     private final ScrapingSchedulerService schedulerService;
+    private final BrandReputationRepository brandReputationRepository;
 
 
     // All scrape endpoints run in a background thread and return 202 immediately.
@@ -114,16 +117,27 @@ public class AdminController {
 
     @PostMapping("/recalculate-scores")
     public ResponseEntity<String> recalculateScores() {
+        Map<String, Double> brandScores = brandReputationRepository.findAll().stream()
+                .collect(Collectors.toMap(
+                        b -> b.getBrandName().toLowerCase().trim(),
+                        com.proteinoteka.model.BrandReputation::getScore,
+                        (a, b) -> a
+                ));
+
         List<Product> all = productRepository.findAll();
         int updated = 0;
         for (Product p : all) {
-            Double newScore = scraperService.calculateValueScore(p.getNumericPrice(), p);
+            double brandScore = p.getBrand() != null
+                    ? brandScores.getOrDefault(p.getBrand().toLowerCase().trim(), 4.5)
+                    : 4.5;
+            Double newScore = scraperService.calculateValueScore(p.getNumericPrice(), p, brandScore);
             if (newScore != null) {
                 p.setValueScore(newScore);
-                productRepository.save(p);
                 updated++;
             }
+            p.setProteinPerRsd(scraperService.computeProteinPerRsd(p.getNumericPrice(), p));
         }
+        productRepository.saveAll(all);
         return ResponseEntity.ok("Updated " + updated + " products");
     }
 }

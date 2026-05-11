@@ -15,16 +15,17 @@ import com.proteinoteka.repository.ClickEventRepository;
 import com.proteinoteka.repository.PriceHistoryRepository;
 import com.proteinoteka.repository.ProductRepository;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
@@ -56,26 +57,7 @@ public class ProductController {
             @RequestParam(required = false) Double maxPrice,
             Pageable pageable) {
 
-        boolean sortByValueScore = pageable.getSort().stream()
-                .anyMatch(o -> o.getProperty().equals("valueScore"));
-        boolean sortByProteinPerRsd = pageable.getSort().stream()
-                .anyMatch(o -> o.getProperty().equals("proteinPerRsd"));
-
         Specification<Product> spec = buildSpec(name, storeName, brand, flavour, category, minPrice, maxPrice);
-
-        if (sortByValueScore || sortByProteinPerRsd) {
-            List<ProductDTO> all = productRepository.findAll(spec, Sort.by("id").descending())
-                    .stream()
-                    .map(this::convertToDTO)
-                    .sorted(sortByProteinPerRsd
-                            ? Comparator.comparingDouble(ProductController::proteinPerRsd).reversed()
-                            : Comparator.comparingDouble((ProductDTO p) -> p.valueScore() != null ? p.valueScore() : -1.0).reversed())
-                    .toList();
-            int start = (int) pageable.getOffset();
-            int end = Math.min(start + pageable.getPageSize(), all.size());
-            List<ProductDTO> page = start >= all.size() ? List.of() : all.subList(start, end);
-            return new PageImpl<>(page, pageable, all.size());
-        }
 
         return productRepository.findAll(spec, pageable).map(this::convertToDTO);
     }
@@ -99,12 +81,6 @@ public class ProductController {
         if (maxPrice != null)
             spec = spec.and(ProductSpecifications.priceLessThan(maxPrice));
         return spec;
-    }
-
-    private static double proteinPerRsd(ProductDTO p) {
-        if (p.proteinPer100g() == null || p.primaryWeightGrams() == null
-                || p.numericPrice() == null || p.numericPrice() <= 0) return -1.0;
-        return (p.proteinPer100g() / 100.0 * p.primaryWeightGrams()) / p.numericPrice();
     }
 
     @GetMapping("/search")

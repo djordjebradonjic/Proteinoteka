@@ -81,6 +81,9 @@ public class Product {
 
     private Double numericPrice= 0.0;
 
+    @Column(name = "protein_per_rsd")
+    private Double proteinPerRsd;
+
     @Column(name = "ai_description", columnDefinition = "TEXT")
     private String aiDescription;
 }

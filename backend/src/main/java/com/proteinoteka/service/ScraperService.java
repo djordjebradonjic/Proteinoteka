@@ -426,6 +426,7 @@ public class ScraperService {
             if (existing.getProteinSource() == null && scraped.getProteinSource() != null)
                 existing.setProteinSource(scraped.getProteinSource());
 
+            existing.setProteinPerRsd(computeProteinPerRsd(numericPrice, existing));
             productRepository.save(existing);
             return true;
 
@@ -434,6 +435,7 @@ public class ScraperService {
             scraped.setNumericPrice(numericPrice);
             scraped.setValueScore(valueScore);
             if (weightGrams > 0) scraped.setPrimaryWeightGrams(weightGrams);
+            scraped.setProteinPerRsd(computeProteinPerRsd(numericPrice, scraped));
             productRepository.save(scraped);
             log.info("[{}] New product saved: '{}'", store.getName(), scraped.getName());
             return true;
@@ -443,6 +445,17 @@ public class ScraperService {
     // -------------------- Score calculation --------------------
 
     public Double calculateValueScore(Double numericPrice, Product p) {
+        double brandScore = 4.5;
+        if (p.getBrand() != null && !p.getBrand().isBlank()) {
+            brandScore = brandReputationRepository
+                    .findByBrandNameIgnoreCase(p.getBrand())
+                    .map(BrandReputation::getScore)
+                    .orElse(4.5);
+        }
+        return calculateValueScore(numericPrice, p, brandScore);
+    }
+
+    public Double calculateValueScore(Double numericPrice, Product p, double brandScore) {
         if (numericPrice == null || numericPrice <= 0) return null;
         if (p.getProteinPer100g() == null) return null;
         double packageGrams = extractPackageGrams(p);
@@ -495,15 +508,6 @@ public class ScraperService {
         }
         ingredients = Math.max(0, ingredients);
 
-        // 5. BRAND REPUTATION (0-10) - weight 0.10
-        double brandScore = 4.5;
-        if (p.getBrand() != null && !p.getBrand().isBlank()) {
-            brandScore = brandReputationRepository
-                    .findByBrandNameIgnoreCase(p.getBrand())
-                    .map(BrandReputation::getScore)
-                    .orElse(4.5);
-        }
-
         // Penal: skupo + nepoznat brend
         if (brandScore < 6.0 && ratio > 1.2) {
             valueMoney *= 0.85;
@@ -528,6 +532,13 @@ public class ScraperService {
         total *= confidencePenalty;
 
         return Math.round(total * 10.0) / 10.0;
+    }
+
+    public Double computeProteinPerRsd(Double numericPrice, Product p) {
+        if (numericPrice == null || numericPrice <= 0) return null;
+        if (p.getProteinPer100g() == null || p.getPrimaryWeightGrams() == null
+                || p.getPrimaryWeightGrams() <= 0) return null;
+        return (p.getProteinPer100g() / 100.0 * p.getPrimaryWeightGrams()) / numericPrice;
     }
 
     private double getCategoryBenchmark(String proteinSource) {
