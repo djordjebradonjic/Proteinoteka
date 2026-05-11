@@ -3,7 +3,6 @@ import Image from "next/image";
 import { Package } from "lucide-react";
 import { Product } from "@/types/product";
 import { productUrl } from "@/lib/productUrl";
-import { trackEvent } from "@/lib/trackEvent";
 
 interface Props { product: Product }
 
@@ -22,7 +21,6 @@ export default function FeaturedValueCard({ product }: Props) {
       ? product.numericPrice / ((product.proteinPer100g / 100) * product.primaryWeightGrams)
       : null;
 
-  const buyUrl    = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/products/${product.id}/buy`;
   const detailUrl = productUrl(product);
 
   return (
@@ -75,15 +73,12 @@ export default function FeaturedValueCard({ product }: Props) {
         </div>
 
         {/* CTA */}
-        <a
-          href={buyUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() => trackEvent({ eventType: "CLICK_OUT", productId: product.id, store: product.storeName })}
+        <Link
+          href={detailUrl}
           className="block w-full text-center bg-[#1B2B4B] hover:bg-[#243860] text-white text-sm font-bold py-2.5 rounded-xl transition-colors mt-1"
         >
-          Kupi
-        </a>
+          Detalji →
+        </Link>
       </div>
     </div>
   );
