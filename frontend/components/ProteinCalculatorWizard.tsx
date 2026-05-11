@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { X, ChevronRight, ChevronLeft, Loader2, Check, Calculator } from "lucide-react";
+import { X, ChevronRight, ChevronLeft, Loader2, Check, Calculator, Mail } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -159,20 +159,21 @@ function NumInput({ label, value, onChange, min, max, unit }: {
   );
 }
 
-// ─── Macro Card (result) ──────────────────────────────────────────────────────
+// ─── Macro Card ───────────────────────────────────────────────────────────────
 
-function MacroCard({ icon, label, value, unit, color }: {
-  icon: string; label: string; value: number; unit: string; color: string;
+function MacroCard({ emoji, label, value, unit, color, bg, border }: {
+  emoji: string; label: string; value: number; unit: string;
+  color: string; bg: string; border: string;
 }) {
   return (
-    <div className="bg-white rounded-xl border border-slate-100 p-4 shadow-sm">
+    <div className={`rounded-2xl border p-4 ${bg} ${border}`}>
       <div className="flex items-center gap-1.5 mb-2">
-        <span className="text-base">{icon}</span>
-        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{label}</span>
+        <span className="text-base leading-none">{emoji}</span>
+        <span className="text-[9px] font-black uppercase tracking-widest" style={{ color }}>{label}</span>
       </div>
-      <p className="text-2xl font-extrabold" style={{ color }}>
+      <p className="text-[1.6rem] font-black leading-none" style={{ color }}>
         {value.toLocaleString()}
-        <span className="text-xs font-medium text-slate-400 ml-1">{unit}</span>
+        <span className="text-[11px] font-semibold opacity-60 ml-1">{unit}</span>
       </p>
     </div>
   );
@@ -181,26 +182,22 @@ function MacroCard({ icon, label, value, unit, color }: {
 // ─── Wizard Content ───────────────────────────────────────────────────────────
 
 function WizardContent({ onClose }: { onClose: () => void }) {
-  const [step, setStep]         = useState(1);
-  const [animKey, setAnimKey]   = useState(0);
-  const [data, setData]         = useState<WizardData>(INITIAL);
-  const [loading, setLoading]   = useState(false);
-  const [result, setResult]     = useState<MacroResult | null>(null);
+  const [step, setStep]             = useState(1);
+  const [animKey, setAnimKey]       = useState(0);
+  const [data, setData]             = useState<WizardData>(INITIAL);
+  const [loading, setLoading]       = useState(false);
+  const [result, setResult]         = useState<MacroResult | null>(null);
   const [email, setEmail]           = useState("");
   const [emailSent, setEmailSent]   = useState(false);
   const [emailLoading, setEmailLoading] = useState(false);
   const [emailError, setEmailError] = useState("");
 
   const API = process.env.NEXT_PUBLIC_API_URL ?? "";
-
   const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const sendEmail = async () => {
     if (!result) return;
-    if (!EMAIL_RE.test(email)) {
-      setEmailError("Unesi ispravan email.");
-      return;
-    }
+    if (!EMAIL_RE.test(email)) { setEmailError("Unesi ispravan email."); return; }
     setEmailError("");
     setEmailLoading(true);
     try {
@@ -208,22 +205,14 @@ function WizardContent({ onClose }: { onClose: () => void }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email,
-          name: data.name || undefined,
-          goal: data.goal || undefined,
-          protein: result.protein,
-          calories: result.calories,
-          carbs: result.carbs,
-          fat: result.fat,
-          meals: result.meals,
-          proteinPerMeal: result.proteinPerMeal,
+          email, name: data.name || undefined, goal: data.goal || undefined,
+          protein: result.protein, calories: result.calories,
+          carbs: result.carbs, fat: result.fat,
+          meals: result.meals, proteinPerMeal: result.proteinPerMeal,
         }),
       });
-      if (res.ok) {
-        setEmailSent(true);
-      } else {
-        setEmailError("Greška — pokušaj ponovo.");
-      }
+      if (res.ok) setEmailSent(true);
+      else setEmailError("Greška — pokušaj ponovo.");
     } catch {
       setEmailError("Nema konekcije — pokušaj ponovo.");
     } finally {
@@ -240,10 +229,7 @@ function WizardContent({ onClose }: { onClose: () => void }) {
     }).catch(() => {});
   }, [API]);
 
-  const goStep = (n: number) => {
-    setAnimKey(k => k + 1);
-    setStep(n);
-  };
+  const goStep = (n: number) => { setAnimKey(k => k + 1); setStep(n); };
 
   const next = () => {
     fetch(`${API}/api/track`, {
@@ -285,10 +271,10 @@ function WizardContent({ onClose }: { onClose: () => void }) {
     return false;
   };
 
-  // ── Loading ─────────────────────────────────────────────────────────────────
+  // ── Loading ──────────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-full gap-4 py-20">
+      <div className="flex flex-col items-center justify-center flex-1 min-h-0 gap-4 py-16">
         <div className="w-16 h-16 rounded-full bg-[#FFF8EC] flex items-center justify-center">
           <Loader2 className="w-8 h-8 text-[#FF9900] animate-spin" />
         </div>
@@ -296,9 +282,9 @@ function WizardContent({ onClose }: { onClose: () => void }) {
           <p className="text-base font-extrabold text-slate-800">Računamo tvoj plan...</p>
           <p className="text-sm text-slate-400 mt-1">Analiziramo unete podatke</p>
         </div>
-        <div className="flex gap-1.5 mt-2">
+        <div className="flex gap-1.5 mt-1">
           {[0, 1, 2].map(i => (
-            <span key={i} className="w-2 h-2 rounded-full bg-[#FF9900] opacity-50 animate-bounce"
+            <span key={i} className="w-2 h-2 rounded-full bg-[#FF9900] opacity-60 animate-bounce"
               style={{ animationDelay: `${i * 0.15}s` }} />
           ))}
         </div>
@@ -306,69 +292,114 @@ function WizardContent({ onClose }: { onClose: () => void }) {
     );
   }
 
-  // ── Result ──────────────────────────────────────────────────────────────────
+  // ── Result ───────────────────────────────────────────────────────────────────
   if (step === 8 && result) {
     const goalLabel: Record<string, string> = {
       mass: "dobijanje mase", muscle: "izgradnju mišića",
       maintain: "održavanje", fat_loss: "gubitak masti",
     };
     const tips: Record<string, string> = {
-      mass:     "📈 Kalorijski suficit mora biti umeran — 300–400 kcal iznad održavanja.",
-      muscle:   "💪 Protein posle treninga (30–60 min) maksimizuje sintezu mišića.",
-      maintain: "⚖️ Prati napredak nedeljno i prilagodi kalorije po potrebi.",
-      fat_loss: "⚡ Visok unos proteina tokom deficita čuva mišićnu masu.",
+      mass:     "Kalorijski suficit 300–400 kcal iznad održavanja daje optimalan rast.",
+      muscle:   "Protein posle treninga (30–60 min) maksimizuje sintezu mišića.",
+      maintain: "Prati napredak nedeljno i prilagodi kalorije po potrebi.",
+      fat_loss: "Visok unos proteina tokom deficita čuva mišićnu masu.",
     };
+
     return (
-      <div className="flex flex-col h-full" key={animKey} style={{ animation: "wzFadeIn 0.3s ease-out" }}>
-        <div className="bg-[#131921] text-white px-6 py-5 shrink-0 rounded-t-2xl">
-          <span className="text-[10px] font-bold text-[#FF9900] uppercase tracking-widest">Tvoj plan</span>
-          <h2 className="text-xl font-extrabold mt-0.5">
-            {data.name ? `${data.name}, evo tvog plana` : "Evo tvog plana"}
-          </h2>
-          <p className="text-slate-400 text-sm mt-1">
-            Optimizovano za {goalLabel[data.goal] ?? "tvoj cilj"}
-          </p>
+      <div className="flex flex-col flex-1 min-h-0" key={animKey} style={{ animation: "wzFadeIn 0.3s ease-out" }}>
+
+        {/* Header */}
+        <div className="shrink-0 bg-[#0f172a] px-6 py-5 flex items-start justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-black text-[#FF9900] uppercase tracking-[0.15em] mb-0.5">
+              Tvoj plan
+            </p>
+            <h2 className="text-lg font-black text-white leading-tight">
+              {data.name ? `${data.name}, evo tvog plana` : "Evo tvog plana"}
+            </h2>
+            <p className="text-slate-400 text-xs mt-1">
+              Optimizovano za {goalLabel[data.goal] ?? "tvoj cilj"}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors mt-0.5"
+            aria-label="Zatvori"
+          >
+            <X className="w-4 h-4 text-white" />
+          </button>
         </div>
 
-        {/* Scrollable macro results */}
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 bg-slate-50">
-          <div className="grid grid-cols-2 gap-3">
-            <MacroCard icon="🥩" label="Protein"    value={result.protein}   unit="g"    color="#FF9900" />
-            <MacroCard icon="🌾" label="Ugljeni h." value={result.carbs}     unit="g"    color="#3B82F6" />
-            <MacroCard icon="🫒" label="Masti"      value={result.fat}       unit="g"    color="#22C55E" />
-            <MacroCard icon="🔥" label="Kalorije"   value={result.calories}  unit="kcal" color="#EF4444" />
+        {/* Scrollable results */}
+        <div className="flex-1 min-h-0 overflow-y-auto bg-[#f8fafc] px-5 py-4 space-y-3">
+          {/* Macro grid */}
+          <div className="grid grid-cols-2 gap-2.5">
+            <MacroCard emoji="🥩" label="Protein"    value={result.protein}  unit="g"    color="#b45309" bg="bg-amber-50"  border="border-amber-200" />
+            <MacroCard emoji="🌾" label="Ugljeni h." value={result.carbs}    unit="g"    color="#1d4ed8" bg="bg-blue-50"   border="border-blue-200"  />
+            <MacroCard emoji="🫒" label="Masti"      value={result.fat}      unit="g"    color="#15803d" bg="bg-green-50"  border="border-green-200" />
+            <MacroCard emoji="🔥" label="Kalorije"   value={result.calories} unit="kcal" color="#b91c1c" bg="bg-red-50"    border="border-red-200"   />
           </div>
 
-          <div className="bg-[#FFF8EC] border border-[#FFD980] rounded-xl p-4">
-            <p className="text-[10px] font-bold text-[#b36b00] uppercase tracking-widest mb-1">Po obroku</p>
-            <p className="text-sm text-slate-700">
-              Rasporedi unos u <strong>{result.meals} obroka</strong> — ciljaj{" "}
-              <strong className="text-[#FF9900]">{result.proteinPerMeal}g proteina</strong> po obroku.
+          {/* Per meal */}
+          <div className="bg-gradient-to-r from-amber-500 to-orange-400 rounded-2xl p-4 text-white">
+            <p className="text-[9px] font-black uppercase tracking-[0.15em] opacity-80 mb-1">Po obroku</p>
+            <p className="text-sm font-semibold leading-snug">
+              Rasporedi u{" "}
+              <span className="font-black">{result.meals} obroka</span>
+              {" "}— ciljaj{" "}
+              <span className="font-black">{result.proteinPerMeal}g proteina</span>{" "}
+              po obroku
             </p>
           </div>
 
-          <div className="bg-white rounded-xl border border-slate-100 p-4 shadow-sm space-y-2">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Saveti</p>
-            {data.goal && <p className="text-xs text-slate-600">{tips[data.goal]}</p>}
-            <p className="text-xs text-slate-600">💧 Pij 35–40ml vode po kg telesne mase dnevno.</p>
-            <p className="text-xs text-slate-600">😴 San 7–9h direktno utiče na oporavak i telesnu kompoziciju.</p>
+          {/* Tips */}
+          <div className="bg-white rounded-2xl border border-slate-100 p-4 space-y-2.5">
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.15em]">Saveti</p>
+            {data.goal && (
+              <div className="flex gap-2.5">
+                <span className="text-base shrink-0 mt-0.5">
+                  {data.goal === "mass" ? "📈" : data.goal === "muscle" ? "💪" : data.goal === "fat_loss" ? "⚡" : "⚖️"}
+                </span>
+                <p className="text-xs text-slate-600 leading-relaxed">{tips[data.goal]}</p>
+              </div>
+            )}
+            <div className="flex gap-2.5">
+              <span className="text-base shrink-0 mt-0.5">💧</span>
+              <p className="text-xs text-slate-600 leading-relaxed">Pij 35–40ml vode po kg telesne mase dnevno.</p>
+            </div>
+            <div className="flex gap-2.5">
+              <span className="text-base shrink-0 mt-0.5">😴</span>
+              <p className="text-xs text-slate-600 leading-relaxed">San 7–9h direktno utiče na oporavak i telesnu kompoziciju.</p>
+            </div>
           </div>
         </div>
 
-        {/* Fixed footer — always visible on every screen size */}
-        <div className="shrink-0 border-t border-slate-100 bg-white rounded-b-2xl">
+        {/* ── Email + CTA footer — always visible ── */}
+        <div className="shrink-0 bg-white border-t border-slate-100">
+
           {/* Email capture */}
           <div className="px-5 pt-4 pb-3">
             {emailSent ? (
-              <div className="flex items-center gap-2.5 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
-                <Check className="w-4 h-4 text-green-600 shrink-0" />
-                <p className="text-sm font-semibold text-green-800">Plan poslat! Proveri inbox.</p>
+              <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-3">
+                <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                  <Check className="w-4 h-4 text-emerald-600" strokeWidth={2.5} />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-emerald-800">Plan poslat!</p>
+                  <p className="text-xs text-emerald-600">Proveri inbox.</p>
+                </div>
               </div>
             ) : (
-              <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
-                  Sačuvaj plan na email
-                </p>
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                <div className="flex items-center gap-2.5 mb-3">
+                  <div className="w-8 h-8 rounded-xl bg-[#FFF8EC] border border-amber-200 flex items-center justify-center shrink-0">
+                    <Mail className="w-4 h-4 text-amber-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-black text-slate-800">Sačuvaj plan na email</p>
+                    <p className="text-[11px] text-slate-400">Vrati se kad god trebaš</p>
+                  </div>
+                </div>
                 <div className="flex gap-2">
                   <input
                     type="email"
@@ -376,22 +407,20 @@ function WizardContent({ onClose }: { onClose: () => void }) {
                     onChange={e => { setEmail(e.target.value); if (emailError) setEmailError(""); }}
                     onKeyDown={e => e.key === "Enter" && sendEmail()}
                     placeholder="tvoj@email.com"
-                    className={`flex-1 min-w-0 px-3 py-2.5 rounded-xl text-sm border-2 outline-none transition-colors bg-white text-slate-800 placeholder:text-slate-400 ${
+                    className={`flex-1 min-w-0 px-3.5 py-2.5 rounded-xl text-sm border-2 outline-none bg-white text-slate-800 placeholder:text-slate-400 transition-colors ${
                       emailError ? "border-red-400 focus:border-red-500" : "border-slate-200 focus:border-[#FF9900]"
                     }`}
                   />
                   <button
                     onClick={sendEmail}
                     disabled={emailLoading}
-                    className="shrink-0 px-4 py-2.5 bg-[#1B2B4B] text-white text-xs font-extrabold rounded-xl hover:bg-[#243860] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
+                    className="shrink-0 px-4 py-2.5 bg-[#1B2B4B] hover:bg-[#243860] disabled:opacity-50 text-white text-xs font-black rounded-xl transition-colors flex items-center gap-1.5"
                   >
-                    {emailLoading
-                      ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      : "Pošalji"}
+                    {emailLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Pošalji"}
                   </button>
                 </div>
                 {emailError && (
-                  <p className="text-xs text-red-500 mt-1.5 font-medium">{emailError}</p>
+                  <p className="text-xs text-red-500 mt-2 font-medium">{emailError}</p>
                 )}
               </div>
             )}
@@ -402,7 +431,7 @@ function WizardContent({ onClose }: { onClose: () => void }) {
             <Link
               href={getCTAUrl(data)}
               onClick={onClose}
-              className="block w-full text-center bg-[#FF9900] text-[#131921] font-extrabold text-sm py-3.5 rounded-xl hover:bg-[#e68a00] transition-colors shadow-md"
+              className="block w-full text-center bg-[#FF9900] hover:bg-[#e68a00] text-[#131921] font-black text-sm py-3.5 rounded-xl transition-colors shadow-sm shadow-amber-200"
             >
               Pogledaj proteine za tvoj cilj →
             </Link>
@@ -556,10 +585,10 @@ function WizardContent({ onClose }: { onClose: () => void }) {
         return (
           <div className="space-y-2.5">
             {([
-              ["omnivore",     "🍖", "Sve jedem",       "Bez ograničenja"],
-              ["vegetarian",   "🥚", "Vegetarijanac",   "Bez mesa, ali jedem jaja i mlečne"],
-              ["vegan",        "🌱", "Vegan",           "Isključivo biljni protein"],
-              ["flexitarian",  "🥗", "Flexitarian",     "Pretežno biljno, povremeno meso"],
+              ["omnivore",    "🍖", "Sve jedem",      "Bez ograničenja"],
+              ["vegetarian",  "🥚", "Vegetarijanac",  "Bez mesa, ali jedem jaja i mlečne"],
+              ["vegan",       "🌱", "Vegan",          "Isključivo biljni protein"],
+              ["flexitarian", "🥗", "Flexitarian",    "Pretežno biljno, povremeno meso"],
             ] as const).map(([v, e, t, d]) => (
               <OptionCard key={v} selected={data.diet === v} onClick={() => setData(s => ({ ...s, diet: v }))} emoji={e} title={t} desc={d} />
             ))}
@@ -572,11 +601,11 @@ function WizardContent({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col flex-1 min-h-0">
       {/* Modal header */}
       <div className="shrink-0 flex items-center justify-between px-5 pt-5 pb-4 border-b border-slate-100">
         <div>
-          <p className="text-[10px] font-bold text-[#FF9900] uppercase tracking-widest mb-0.5">
+          <p className="text-[10px] font-black text-[#FF9900] uppercase tracking-[0.15em] mb-0.5">
             Korak {step} od {TOTAL_STEPS}
           </p>
           <h3 className="text-base font-extrabold text-slate-800">{stepTitles[step]}</h3>
@@ -603,7 +632,7 @@ function WizardContent({ onClose }: { onClose: () => void }) {
       {/* Step content */}
       <div
         key={animKey}
-        className="flex-1 overflow-y-auto px-5 py-4"
+        className="flex-1 min-h-0 overflow-y-auto px-5 py-4"
         style={{ animation: "wzFadeIn 0.22s ease-out" }}
       >
         {renderStep()}
@@ -675,7 +704,9 @@ export default function ProteinCalculatorWizard() {
       {/* Floating button */}
       <button
         onClick={() => setOpen(true)}
-        className={`fixed bottom-6 left-5 z-40 flex items-center gap-2 px-4 py-3 bg-[#1B2B4B] text-white text-sm font-bold rounded-2xl shadow-lg hover:bg-[#243860] hover:shadow-xl transition-all duration-200 cursor-pointer ${footerVisible ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+        className={`fixed bottom-6 left-5 z-40 flex items-center gap-2 px-4 py-3 bg-[#1B2B4B] text-white text-sm font-bold rounded-2xl shadow-lg hover:bg-[#243860] hover:shadow-xl transition-all duration-200 cursor-pointer ${
+          footerVisible ? "opacity-0 pointer-events-none" : "opacity-100"
+        }`}
         aria-label="Otvori protein kalkulator"
       >
         <Calculator className="w-4 h-4 text-[#FF9900]" />
@@ -691,8 +722,8 @@ export default function ProteinCalculatorWizard() {
         >
           {/* Mobile: bottom sheet */}
           <div
-            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[92dvh] flex flex-col sm:hidden overflow-hidden"
-            style={{ animation: "wzSlideUp 0.3s ease-out" }}
+            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl flex flex-col sm:hidden overflow-hidden"
+            style={{ maxHeight: "92dvh", animation: "wzSlideUp 0.3s ease-out" }}
           >
             <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mt-3 mb-1 shrink-0" />
             <WizardContent onClose={() => setOpen(false)} />
@@ -700,8 +731,8 @@ export default function ProteinCalculatorWizard() {
 
           {/* Desktop: centered modal */}
           <div
-            className="hidden sm:flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-2xl max-h-[88vh] flex-col overflow-hidden shadow-2xl"
-            style={{ animation: "wzScaleIn 0.25s ease-out" }}
+            className="hidden sm:flex flex-col absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden"
+            style={{ maxHeight: "88vh", animation: "wzScaleIn 0.25s ease-out" }}
           >
             <WizardContent onClose={() => setOpen(false)} />
           </div>
