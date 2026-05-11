@@ -8,6 +8,7 @@ import com.proteinoteka.scheduler.ScrapingSchedulerService;
 import com.proteinoteka.service.ScraperService;
 import com.proteinoteka.service.StoreScraper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.CacheManager;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,6 +27,7 @@ public class AdminController {
     private final ProductRepository productRepository;
     private final ScrapingSchedulerService schedulerService;
     private final BrandReputationRepository brandReputationRepository;
+    private final CacheManager cacheManager;
 
 
     // All scrape endpoints run in a background thread and return 202 immediately.
@@ -138,6 +140,10 @@ public class AdminController {
             p.setProteinPerRsd(scraperService.computeProteinPerRsd(p.getNumericPrice(), p));
         }
         productRepository.saveAll(all);
+        List.of("products", "products-meta", "products-search").forEach(name -> {
+            var cache = cacheManager.getCache(name);
+            if (cache != null) cache.clear();
+        });
         return ResponseEntity.ok("Updated " + updated + " products");
     }
 }

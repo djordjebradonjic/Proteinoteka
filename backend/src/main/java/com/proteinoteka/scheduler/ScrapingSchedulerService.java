@@ -8,6 +8,7 @@ import com.proteinoteka.service.StoreScraper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.CacheManager;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 
@@ -49,6 +50,7 @@ public class ScrapingSchedulerService {
     private final List<StoreScraper> scrapers;
     private final ScrapeLogRepository scrapeLogRepository;
     private final TaskScheduler taskScheduler;
+    private final CacheManager cacheManager;
 
     @Value("${scraping.schedule.enabled:true}")
     private boolean schedulingEnabled;
@@ -160,6 +162,10 @@ public class ScrapingSchedulerService {
             log.info("[Scheduler] Finished scrape: {} — {} products ({})",
                     scraper.getStoreName(), products.size(), entry.getStatus());
 
+            if (entry.getStatus() == ScrapeStatus.SUCCESS) {
+                evictProductCaches();
+            }
+
         } catch (Exception e) {
             entry.setStatus(ScrapeStatus.FAILED);
             entry.setErrorMessage(e.getMessage() != null
@@ -172,6 +178,14 @@ public class ScrapingSchedulerService {
         }
 
         return entry;
+    }
+
+    private void evictProductCaches() {
+        java.util.List.of("products", "products-meta", "products-search").forEach(name -> {
+            var cache = cacheManager.getCache(name);
+            if (cache != null) cache.clear();
+        });
+        log.info("[Cache] Product caches evicted after scrape");
     }
 
     private StoreScraper findScraper(String name) {

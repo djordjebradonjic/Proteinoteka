@@ -24,6 +24,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -46,6 +47,7 @@ public class ProductController {
     private final AffiliateLinkRepository affiliateLinkRepository;
     private final PriceParser priceParser;
 
+    @Cacheable("products")
     @GetMapping
     public Page<ProductDTO> getProducts(
             @RequestParam(required = false) String name,
@@ -83,6 +85,7 @@ public class ProductController {
         return spec;
     }
 
+    @Cacheable("products-search")
     @GetMapping("/search")
     public List<ProductDTO> searchAutocomplete(
             @RequestParam String query,
@@ -155,6 +158,7 @@ public class ProductController {
         return request.getRemoteAddr();
     }
 
+    @Cacheable("products")
     @GetMapping("/top")
     public List<ProductDTO> getTopProducts(
             @RequestParam(required = false) String category,
@@ -181,6 +185,7 @@ public class ProductController {
                 .toList();
     }
 
+    @Cacheable("products")
     @GetMapping("/top-value")
     public List<ProductDTO> getTopValueProducts(
             @RequestParam(defaultValue = "5") int limit) {
@@ -198,6 +203,7 @@ public class ProductController {
                 .toList();
     }
 
+    @Cacheable("products")
     @GetMapping("/price-drops")
     public List<ProductDTO> getPriceDrops(
             @RequestParam(defaultValue = "5") int limit) {
@@ -243,11 +249,13 @@ public class ProductController {
         return productRepository.findAllIds();
     }
 
+    @Cacheable("products-meta")
     @GetMapping("/brands")
     List<String> getAllBrands() {
         return productRepository.findAllUniqueBrands();
     }
 
+    @Cacheable("products-meta")
     @GetMapping("/flavours")
     List<String> getAllFlavours() {
         return productRepository.findAllUniqueFlavours();
