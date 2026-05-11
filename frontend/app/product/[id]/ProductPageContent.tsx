@@ -8,7 +8,7 @@ import Header from "@/components/Header";
 import Link from "next/link";
 import { ShoppingCart, ArrowLeft, Package, Zap, Droplets, Flame, Store } from "lucide-react";
 import Image from "next/image";
-import { trackEvent } from "@/lib/trackEvent";
+import { analytics } from "@/lib/analytics";
 import PricePerGramBadge from "@/components/PricePerGramBadge";
 import { productUrl } from "@/lib/productUrl";
 
@@ -102,8 +102,8 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
   const descRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    trackEvent({ eventType: "PRODUCT_VIEW", productId: product.id, store: product.storeName });
-  }, [product.id, product.storeName]);
+    analytics.viewItemDetails(product.id, product.name, product.storeName ?? "");
+  }, [product.id, product.name, product.storeName]);
 
   useEffect(() => {
     if (descRef.current) {
@@ -236,7 +236,7 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
               href={buyUrl}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => trackEvent({ eventType: "CLICK_OUT", productId: product.id, store: product.storeName })}
+              onClick={() => analytics.clickBuyDetails(product.id, product.name, product.storeName ?? "")}
               className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl font-bold text-base text-[#131921] transition-all duration-150 active:scale-[0.98] shadow-lg"
               style={{ background: "linear-gradient(135deg, #FF9900, #e68a00)", boxShadow: "0 4px 24px rgba(255,153,0,0.35)" }}
             >
@@ -279,7 +279,7 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
                         href={`${process.env.NEXT_PUBLIC_API_URL}/api/v1/products/${sp.id}/buy`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        onClick={() => trackEvent({ eventType: "CLICK_OUT", productId: sp.id, store: sp.storeName })}
+                        onClick={() => analytics.clickBuyDetails(sp.id, product.name, sp.storeName)}
                         className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all ${isCheapest ? "bg-green-600 hover:bg-green-700 text-white" : "bg-slate-900 hover:bg-[#243860] text-white"}`}
                       >
                         <ShoppingCart className="w-3.5 h-3.5" /> Kupi

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Product } from "@/types/product";
 import Image from "next/image";
 import Link from "next/link";
@@ -15,7 +15,7 @@ import {
   closeWishlist,
 } from "@/store/wishlistSlice";
 import { addToCompare, removeFromCompare } from "@/store/compareSlice";
-import { trackEvent } from "@/lib/trackEvent";
+import { analytics } from "@/lib/analytics";
 import { productUrl } from "@/lib/productUrl";
 
 interface ProductCardProps {
@@ -27,7 +27,27 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
   const dispatch = useAppDispatch();
   const [mounted, setMounted] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => { setMounted(true); }, []);
+
+  // Fire view_item_card once per product per session when card enters viewport.
+  // IntersectionObserver fires outside React render — no risk of spurious events.
+  useEffect(() => {
+    if (!product.id || !cardRef.current) return;
+    const el = cardRef.current;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          analytics.viewItemCard(product.id, product.name, product.storeName ?? "");
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.5 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [product.id, product.name, product.storeName]);
 
   const wishlistItems = useAppSelector(
     (state) => (state as any).wishlist.items,
@@ -59,7 +79,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
       dispatch(removeFromCompare(product.id));
     } else if (compareCount < 4 && product.id && typeof product.id === "number") {
       dispatch(addToCompare({ id: product.id, name: product.name }));
-      trackEvent({ eventType: "COMPARE_CLICK", productId: product.id, store: product.storeName });
+      analytics.compareClick(product.id, product.name, product.storeName ?? "");
     }
   };
 
@@ -90,6 +110,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
 
   return (
     <div
+      ref={cardRef}
       className={`group relative flex flex-col overflow-hidden transition-all duration-200 h-full rounded-lg cursor-pointer ${
         isComparing
           ? "bg-[#FFF3DC] shadow-[0_0_0_3px_rgba(255,180,0,0.4),0_4px_16px_rgba(255,153,0,0.2)] scale-[1.02]"

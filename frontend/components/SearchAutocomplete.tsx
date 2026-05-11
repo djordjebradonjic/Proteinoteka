@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { Search, X, TrendingUp } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { trackEvent } from "@/lib/trackEvent";
+import { analytics } from "@/lib/analytics";
 import { productUrl } from "@/lib/productUrl";
 
 interface ProductSuggestion {
@@ -162,7 +162,7 @@ export default function SearchAutocomplete({
       setQuery(p.name);
       onChange(p.name);
       setOpen(false);
-      trackEvent({ eventType: "SEARCH", query: p.name });
+      analytics.search(p.name);
     } else if (e.key === "Escape") {
       setOpen(false);
       setActiveIndex(-1);
@@ -212,7 +212,7 @@ export default function SearchAutocomplete({
         )}
         <button
           type="button"
-          onClick={() => { if (query.trim().length >= 2) trackEvent({ eventType: "SEARCH", query: query.trim() }); }}
+          onClick={() => { if (query.trim().length >= 2) analytics.search(query.trim()); }}
           className="px-4 bg-[#FF9900] hover:bg-[#e68a00] transition-colors flex items-center justify-center"
           aria-label="Pretraži"
         >
@@ -269,7 +269,7 @@ export default function SearchAutocomplete({
                 setQuery(product.name);
                 onChange(product.name);
                 setOpen(false);
-                if (product.id) trackEvent({ eventType: "SEARCH", query: product.name, productId: product.id, store: product.storeName });
+                if (product.id) analytics.search(product.name, product.id, product.storeName);
               }}
               className="flex items-center gap-3 px-3 transition-colors"
               style={{
