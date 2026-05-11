@@ -254,11 +254,15 @@ function WizardContent({ onClose }: { onClose: () => void }) {
         }).catch(() => {});
       }, 1600);
     } else {
-      goStep(step + 1);
+      // Skip step 5 (training types) when user selected "no training"
+      goStep(step === 4 && data.trainingFreq === "none" ? 6 : step + 1);
     }
   };
 
-  const back = () => { if (step > 1 && step < 8) goStep(step - 1); };
+  const back = () => {
+    if (step <= 1 || step >= 8) return;
+    goStep(step === 6 && data.trainingFreq === "none" ? 4 : step - 1);
+  };
 
   const canNext = (): boolean => {
     if (step === 1) return !!data.gender && +data.age > 0 && +data.height > 0 && +data.weight > 0;
@@ -600,13 +604,17 @@ function WizardContent({ onClose }: { onClose: () => void }) {
     }
   };
 
+  const skipTraining   = data.trainingFreq === "none";
+  const displayTotal   = skipTraining ? TOTAL_STEPS - 1 : TOTAL_STEPS;
+  const displayStep    = skipTraining && step >= 6 ? step - 1 : step;
+
   return (
     <div className="flex flex-col flex-1 min-h-0">
       {/* Modal header */}
       <div className="shrink-0 flex items-center justify-between px-5 pt-5 pb-4 border-b border-slate-100">
         <div>
           <p className="text-[10px] font-black text-[#FF9900] uppercase tracking-[0.15em] mb-0.5">
-            Korak {step} od {TOTAL_STEPS}
+            Korak {displayStep} od {displayTotal}
           </p>
           <h3 className="text-base font-extrabold text-slate-800">{stepTitles[step]}</h3>
         </div>
@@ -624,7 +632,7 @@ function WizardContent({ onClose }: { onClose: () => void }) {
         <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
           <div
             className="h-full bg-[#FF9900] rounded-full transition-all duration-500 ease-out"
-            style={{ width: `${(step / TOTAL_STEPS) * 100}%` }}
+            style={{ width: `${(displayStep / displayTotal) * 100}%` }}
           />
         </div>
       </div>
