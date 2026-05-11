@@ -221,9 +221,8 @@ export function SEOStorePage({
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Početna",    item: BASE_URL },
-      { "@type": "ListItem", position: 2, name: "Prodavnice"                 },
-      { "@type": "ListItem", position: 3, name: storeName,   item: `${BASE_URL}/${currentSlug}` },
+      { "@type": "ListItem", position: 1, name: "Početna",  item: BASE_URL },
+      { "@type": "ListItem", position: 2, name: storeName,  item: `${BASE_URL}/${currentSlug}` },
     ],
   };
 
