@@ -10,7 +10,7 @@ import {
 import { addToCompare, removeFromCompare } from "@/store/compareSlice";
 import {
   X, Heart, ExternalLink, ShoppingCart, Trash2,
-  Cloud, CloudOff, CheckCircle2, Loader2,
+  Cloud, CloudOff, CheckCircle2, Loader2, Bell, BellOff,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -25,6 +25,13 @@ import {
   pushWishlistToBackend,
   fetchProductById,
 } from "@/lib/wishlistSync";
+import {
+  loadAlerts,
+  deleteAlert,
+  AlertsMap,
+  getAlert,
+} from "@/lib/alerts";
+import PriceAlertModal from "@/components/PriceAlertModal";
 
 function ValueBadge({ score }: { score: number }) {
   const color =
@@ -65,6 +72,11 @@ export default function WishlistDrawer() {
   const [isSaving, setIsSaving]       = useState(false);
   const [saveError, setSaveError]     = useState("");
   const [justSaved, setJustSaved]     = useState(false);
+  const [alerts, setAlerts]           = useState<AlertsMap>({});
+  const [alertModalProduct, setAlertModalProduct] = useState<any | null>(null);
+  const [removingAlertId, setRemovingAlertId]     = useState<number | null>(null);
+
+  const refreshAlerts = () => setAlerts(loadAlerts());
 
   // Auto-push to backend whenever items change (if email is saved)
   const syncEmailRef = useRef(syncEmail);
@@ -81,6 +93,7 @@ export default function WishlistDrawer() {
   // On mount: check cookie → restore from backend
   useEffect(() => {
     setMounted(true);
+    setAlerts(loadAlerts());
     const email = getWishlistEmail();
     if (!email) return;
     setSyncEmail(email);
@@ -241,6 +254,59 @@ export default function WishlistDrawer() {
                         </span>
                         {isComparing ? "U poređenju" : isDisabled ? "Maksimum 4" : "Uporedi"}
                       </button>
+
+                      {/* Alert status row */}
+                      {(() => {
+                        const alert = alerts[String(product.id)];
+                        const hasEmailSet = !!syncEmail;
+                        if (alert !== undefined) {
+                          return (
+                            <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
+                              <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-600">
+                                <Bell className="w-3 h-3" fill="#16a34a" />
+                                {alert.targetPrice
+                                  ? `Ispod ${new Intl.NumberFormat("sr-RS").format(Math.round(alert.targetPrice))} RSD`
+                                  : "Alert aktivan"}
+                              </span>
+                              <button
+                                onClick={() => { analytics.alertCtaClicked(product.id, product.name, "wishlist"); setAlertModalProduct(product); }}
+                                className="text-[10px] text-slate-400 hover:text-[#FF9900] transition-colors underline"
+                              >
+                                Izmeni
+                              </button>
+                              <button
+                                disabled={removingAlertId === product.id}
+                                onClick={async () => {
+                                  if (!syncEmail) return;
+                                  setRemovingAlertId(product.id);
+                                  try {
+                                    await deleteAlert(syncEmail, product.id);
+                                    analytics.alertDeleted(product.id);
+                                    refreshAlerts();
+                                  } finally {
+                                    setRemovingAlertId(null);
+                                  }
+                                }}
+                                className="text-[10px] text-slate-400 hover:text-red-500 transition-colors disabled:opacity-50"
+                              >
+                                {removingAlertId === product.id ? "..." : "Ukloni"}
+                              </button>
+                            </div>
+                          );
+                        }
+                        if (hasEmailSet) {
+                          return (
+                            <button
+                              onClick={() => { analytics.alertCtaClicked(product.id, product.name, "wishlist"); setAlertModalProduct(product); }}
+                              className="mt-1.5 flex items-center gap-1 text-[10px] font-medium text-slate-400 hover:text-[#FF9900] transition-colors"
+                            >
+                              <Bell className="w-3 h-3" />
+                              Aktiviraj alert
+                            </button>
+                          );
+                        }
+                        return null;
+                      })()}
                     </div>
 
                     <div className="flex flex-col items-center gap-1.5 shrink-0">
@@ -380,6 +446,16 @@ export default function WishlistDrawer() {
           </div>
         )}
       </div>
+      {alertModalProduct && (
+        <PriceAlertModal
+          product={alertModalProduct}
+          initialAlert={getAlert(alertModalProduct.id)}
+          onClose={(changed) => {
+            setAlertModalProduct(null);
+            if (changed) refreshAlerts();
+          }}
+        />
+      )}
     </>
   );
 }

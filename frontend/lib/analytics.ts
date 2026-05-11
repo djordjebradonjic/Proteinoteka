@@ -16,7 +16,13 @@ export type AnalyticsEventName =
   | "click_buy_details"
   | "outbound_click"
   | "compare_click"
-  | "search";
+  | "search"
+  | "alert_cta_clicked"
+  | "alert_modal_opened"
+  | "alert_created"
+  | "alert_updated"
+  | "alert_deleted"
+  | "alert_failed";
 
 interface EventParams {
   product_id: number;
@@ -183,5 +189,51 @@ export const analytics = {
     _ga4("compare_click", p);
     _internal("COMPARE_CLICK", productId, store);
     _log("compare_click", p);
+  },
+
+  alertCtaClicked(productId: number, productName: string, location: "card" | "product_page" | "wishlist"): void {
+    const key = `alert_cta:${productId}:${location}`;
+    if (_isDuplicateClick(key)) return;
+    const p: EventParams = { product_id: productId, product_name: productName, store: location };
+    _ga4("alert_cta_clicked", p);
+    _log("alert_cta_clicked", { ...p, location });
+  },
+
+  alertModalOpened(productId: number, productName: string): void {
+    const p: EventParams = { product_id: productId, product_name: productName, store: "" };
+    _ga4("alert_modal_opened", p);
+    _log("alert_modal_opened", p);
+  },
+
+  alertCreated(productId: number, productName: string, hasTargetPrice: boolean, timeToCreateMs?: number): void {
+    const key = `alert_created:${productId}`;
+    if (_isDuplicateClick(key)) return;
+    const p: EventParams = {
+      product_id: productId,
+      product_name: productName,
+      store: "",
+      has_target_price: hasTargetPrice ? 1 : 0,
+      ...(timeToCreateMs !== undefined && { time_to_create_ms: Math.round(timeToCreateMs) }),
+    };
+    _ga4("alert_created", p);
+    _log("alert_created", p);
+  },
+
+  alertUpdated(productId: number): void {
+    const p: EventParams = { product_id: productId, product_name: "", store: "" };
+    _ga4("alert_updated", p);
+    _log("alert_updated", p);
+  },
+
+  alertDeleted(productId: number): void {
+    const p: EventParams = { product_id: productId, product_name: "", store: "" };
+    _ga4("alert_deleted", p);
+    _log("alert_deleted", p);
+  },
+
+  alertFailed(productId: number, productName: string, reason: string): void {
+    const p: EventParams = { product_id: productId, product_name: productName, store: reason };
+    _ga4("alert_failed", p);
+    _log("alert_failed", { ...p, reason });
   },
 };

@@ -43,3 +43,18 @@ anthropic:
 
 admin:
   token: ${ADMIN_TOKEN:}
+
+resend:
+  api-key: ${RESEND_API_KEY:}
+  from: "Proteinoteka <alerts@proteinoteka.rs>"
+
+app:
+  frontend-url: ${FRONTEND_BASE_URL:https://proteinoteka.rs}
+  api-url: ${API_BASE_URL:http://localhost:8080}
+
+# Optional: override with values from GA4 export (frontend-only events)
+# Set these after reviewing GA4 → Explore → Funnel reports
+# Example: analytics.conversion-rate=0.38
+analytics:
+  conversion-rate:
+  avg-time-to-create-ms:

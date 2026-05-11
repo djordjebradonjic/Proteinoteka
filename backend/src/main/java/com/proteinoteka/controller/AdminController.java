@@ -1,9 +1,15 @@
 package com.proteinoteka.controller;
 
+import com.proteinoteka.analytics.DecisionRulesEngine;
+import com.proteinoteka.analytics.MetricsCollectorService;
+import com.proteinoteka.model.AlertStatus;
 import com.proteinoteka.model.Product;
 import com.proteinoteka.model.ScrapeLog;
+import com.proteinoteka.repository.AlertJobRepository;
+import com.proteinoteka.repository.AlertUnsubscribeRepository;
 import com.proteinoteka.repository.BrandReputationRepository;
 import com.proteinoteka.repository.ProductRepository;
+import com.proteinoteka.repository.WishlistItemRepository;
 import com.proteinoteka.scheduler.ScrapingSchedulerService;
 import com.proteinoteka.service.ScraperService;
 import com.proteinoteka.service.StoreScraper;
@@ -28,6 +34,11 @@ public class AdminController {
     private final ScrapingSchedulerService schedulerService;
     private final BrandReputationRepository brandReputationRepository;
     private final CacheManager cacheManager;
+    private final AlertJobRepository alertJobRepository;
+    private final WishlistItemRepository wishlistItemRepository;
+    private final AlertUnsubscribeRepository alertUnsubscribeRepository;
+    private final MetricsCollectorService metricsCollector;
+    private final DecisionRulesEngine rulesEngine;
 
 
     // All scrape endpoints run in a background thread and return 202 immediately.
@@ -114,6 +125,45 @@ public class AdminController {
         return ResponseEntity.ok(Map.of(
                 "cycleDay", schedulerService.currentCycleDay(),
                 "stores",   schedulerService.getStatus()
+        ));
+    }
+
+    @GetMapping("/alert-metrics")
+    public ResponseEntity<Map<String, Object>> alertMetrics() {
+        var m        = metricsCollector.collect();
+        var insights = rulesEngine.evaluate(m);
+
+        long unsub30d = alertUnsubscribeRepository.countLast30Days();
+        double ctoRate = m.jobsOpened() > 0 ? (double) m.jobsClicked() / m.jobsOpened() : 0;
+
+        return ResponseEntity.ok(Map.of(
+                "subscribers", Map.of(
+                        "totalAlerts",      m.totalAlerts(),
+                        "uniqueEmails",     m.uniqueEmails(),
+                        "withTargetPrice",  m.withTargetPrice(),
+                        "avgAlertsPerUser", Math.round(m.avgAlertsPerUser() * 100.0) / 100.0,
+                        "repeatUsers",      m.repeatUsers()
+                ),
+                "jobs", Map.of(
+                        "pending",     m.jobsPending(),
+                        "sent",        m.jobsSent(),
+                        "failed",      m.jobsFailed(),
+                        "failureRate", Math.round(m.failureRate() * 10000.0) / 10000.0
+                ),
+                "email", Map.of(
+                        "sent",            m.jobsSent(),
+                        "opened",          m.jobsOpened(),
+                        "clicked",         m.jobsClicked(),
+                        "openRate",        Math.round(m.openRate()   * 10000.0) / 10000.0,
+                        "clickRate",       Math.round(m.clickRate()  * 10000.0) / 10000.0,
+                        "clickToOpenRate", Math.round(ctoRate         * 10000.0) / 10000.0
+                ),
+                "unsubscribes", Map.of(
+                        "total",           m.totalUnsubscribes(),
+                        "last30Days",      unsub30d,
+                        "unsubscribeRate", Math.round(m.unsubscribeRate() * 10000.0) / 10000.0
+                ),
+                "insights", insights
         ));
     }
 

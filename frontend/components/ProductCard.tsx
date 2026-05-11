@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { PriceTrendIndicator } from "@/components/PriceTrendIndicator";
 import PricePerGramBadge from "@/components/PricePerGramBadge";
-import { Heart } from "lucide-react";
+import { Bell, Heart } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   addToWishlist,
@@ -17,6 +17,8 @@ import {
 import { addToCompare, removeFromCompare } from "@/store/compareSlice";
 import { analytics } from "@/lib/analytics";
 import { productUrl } from "@/lib/productUrl";
+import { hasAlert, loadAlerts } from "@/lib/alerts";
+import PriceAlertModal from "@/components/PriceAlertModal";
 
 interface ProductCardProps {
   product: Product;
@@ -27,9 +29,14 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
   const dispatch = useAppDispatch();
   const [mounted, setMounted] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [alertActive, setAlertActive] = useState(false);
+  const [alertModalOpen, setAlertModalOpen] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+    setAlertActive(hasAlert(product.id));
+  }, [product.id]);
 
   // Fire view_item_card once per product per session when card enters viewport.
   // IntersectionObserver fires outside React render — no risk of spurious events.
@@ -250,15 +257,45 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
       </div>
 
       {/* Dugme */}
-      <div className="relative z-10 flex flex-col gap-1.5 mt-auto px-2 pb-2 pt-3">
+      <div className="relative z-10 flex gap-1.5 mt-auto px-2 pb-2 pt-3">
         <Link
           href={productHref}
           onClick={saveScroll}
-          className="w-full bg-[#1B2B4B] text-white font-bold text-xs md:text-sm py-2.5 md:py-3 text-center hover:bg-[#243860] transition-colors uppercase tracking-wide rounded-md"
+          className="flex-1 bg-[#1B2B4B] text-white font-bold text-xs md:text-sm py-2.5 md:py-3 text-center hover:bg-[#243860] transition-colors uppercase tracking-wide rounded-md"
         >
           Detalji
         </Link>
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            analytics.alertCtaClicked(product.id, product.name, "card");
+            setAlertModalOpen(true);
+          }}
+          title={alertActive ? "Izmeni price alert" : "Prati cenu"}
+          className={`w-10 flex items-center justify-center rounded-md border-2 transition-colors ${
+            mounted && alertActive
+              ? "border-[#FF9900] text-[#FF9900] bg-[#FFF8EC]"
+              : "border-slate-200 text-slate-400 hover:border-[#FF9900] hover:text-[#FF9900] hover:bg-[#FFF8EC]"
+          }`}
+        >
+          <Bell
+            className="w-4 h-4"
+            fill={mounted && alertActive ? "#FF9900" : "none"}
+            strokeWidth={mounted && alertActive ? 0 : 1.8}
+          />
+        </button>
       </div>
+
+      {alertModalOpen && (
+        <PriceAlertModal
+          product={product}
+          initialAlert={mounted ? loadAlerts()[String(product.id)] : undefined}
+          onClose={(changed) => {
+            setAlertModalOpen(false);
+            if (changed) setAlertActive(hasAlert(product.id));
+          }}
+        />
+      )}
     </div>
   );
 }

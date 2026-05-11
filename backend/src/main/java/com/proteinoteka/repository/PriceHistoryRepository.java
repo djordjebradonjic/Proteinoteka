@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PriceHistoryRepository extends JpaRepository<PriceHistory, Long> {
@@ -16,8 +17,19 @@ public interface PriceHistoryRepository extends JpaRepository<PriceHistory, Long
     @Query("SELECT DISTINCT h.product FROM PriceHistory h WHERE h.timestamp >= :since")
     List<Product> findProductsWithHistorySince(@Param("since") LocalDateTime since);
 
-    // Products with 2+ price_history entries (price changed at least once),
-    // regardless of when — used by the price-drops endpoint.
     @Query("SELECT p FROM products p WHERE SIZE(p.priceHistories) >= 2")
     List<Product> findProductsWithMultiplePriceEntries();
+
+    // Returns the lowest recorded price in the last 30 days for a given product.
+    // Used to show the "lowest price in 30 days" badge in alert emails.
+    @Query("""
+            SELECT MIN(h.numericPrice) FROM PriceHistory h
+            WHERE h.product.id = :productId
+              AND h.timestamp >= :since
+              AND h.numericPrice IS NOT NULL
+            """)
+    Optional<Double> findMinPriceInLast30Days(
+            @Param("productId") Long productId,
+            @Param("since") LocalDateTime since
+    );
 }

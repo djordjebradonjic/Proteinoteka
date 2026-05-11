@@ -2,6 +2,7 @@ package com.proteinoteka.service;
 
 import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.WaitUntilState;
+import com.proteinoteka.event.PriceDropEvent;
 import com.proteinoteka.model.BrandReputation;
 import com.proteinoteka.model.PriceHistory;
 import com.proteinoteka.model.Product;
@@ -19,6 +20,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -43,6 +45,7 @@ public class ScraperService {
     private final BrandReputationRepository brandReputationRepository;
     private final BrandNormalizerService brandNormalizer;
     private final ScrapeLogRepository scrapeLogRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Autowired
     private NutritionParserService nutritionParser;
@@ -378,6 +381,9 @@ public class ScraperService {
         if (existingOpt.isPresent()) {
             Product existing = existingOpt.get();
 
+            // Capture old numeric price before overwriting — used for drop detection below
+            Double oldNumericPrice = existing.getNumericPrice();
+
             String oldPrice = existing.getPrice();
             if (oldPrice != null && !oldPrice.equals(scraped.getPrice())) {
                 log.info("[{}] Price change for '{}': {} -> {}",
@@ -429,6 +435,9 @@ public class ScraperService {
 
             existing.setProteinPerRsd(computeProteinPerRsd(numericPrice, existing));
             productRepository.save(existing);
+
+            publishPriceDropEventIfSignificant(existing, oldNumericPrice, numericPrice);
+
             return true;
 
         } else {
@@ -573,5 +582,39 @@ public class ScraperService {
 
         log.warn("Cannot parse any package weight from: '{}'", p.getPackage_weight());
         return 0;
+    }
+
+    // ── Price drop detection ──────────────────────────────────────────────────────
+
+    private static final double ALERT_MIN_PCT_DROP = 5.0;
+    private static final double ALERT_MIN_RSD_DROP = 300.0;
+
+    /**
+     * Publishes a PriceDropEvent when the price drop is significant enough to warrant alerts.
+     * Thresholds: ≥5% OR ≥300 RSD absolute drop.
+     *
+     * The event fires AFTER_COMMIT (via @TransactionalEventListener in the listener),
+     * so listeners always see the already-persisted new price.
+     */
+    private void publishPriceDropEventIfSignificant(Product product, Double oldPrice, Double newPrice) {
+        if (oldPrice == null || newPrice == null || newPrice >= oldPrice) return;
+
+        double pctDrop = (oldPrice - newPrice) / oldPrice * 100.0;
+        double absDrop = oldPrice - newPrice;
+
+        if (pctDrop < ALERT_MIN_PCT_DROP && absDrop < ALERT_MIN_RSD_DROP) return;
+
+        log.info("[PriceDrop] Significant drop for '{}' (id={}): {} -> {} RSD ({}%)",
+                product.getName(), product.getId(),
+                Math.round(oldPrice), Math.round(newPrice), String.format("%.1f", pctDrop));
+
+        eventPublisher.publishEvent(new PriceDropEvent(
+                product.getId(),
+                product.getName(),
+                product.getImageUrl(),
+                oldPrice,
+                newPrice,
+                pctDrop
+        ));
     }
 }

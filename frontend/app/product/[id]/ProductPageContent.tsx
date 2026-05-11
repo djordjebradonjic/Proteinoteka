@@ -6,13 +6,178 @@ import { useRouter } from "next/navigation";
 import { Product } from "@/types/product";
 import Header from "@/components/Header";
 import Link from "next/link";
-import { ShoppingCart, ArrowLeft, Package, Zap, Droplets, Flame, Store } from "lucide-react";
+import { ShoppingCart, ArrowLeft, Package, Zap, Droplets, Flame, Store, Bell, BellOff } from "lucide-react";
 import Image from "next/image";
 import { analytics } from "@/lib/analytics";
 import PricePerGramBadge from "@/components/PricePerGramBadge";
 import { productUrl } from "@/lib/productUrl";
+import { getAlert, hasAlert, loadAlerts, deleteAlert, AlertEntry } from "@/lib/alerts";
+import { getWishlistEmail } from "@/lib/wishlistSync";
+import PriceAlertModal from "@/components/PriceAlertModal";
 
 const PriceHistoryChart = dynamic(() => import("@/components/PriceHistoryChart"), { ssr: false });
+
+// ── Price insight computation ─────────────────────────────────────────────────
+
+type PriceInsight =
+  | { type: "low" }
+  | { type: "drop"; pct: number }
+  | { type: "none" };
+
+function computePriceInsight(product: Product): PriceInsight {
+  const history = product.priceHistory;
+  if (!history || history.length < 2 || !product.numericPrice) return { type: "none" };
+
+  const parseP = (raw: string) =>
+    parseFloat(String(raw).replace(/[^0-9.,]/g, "").replace(",", "."));
+
+  const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  const last30 = history
+    .filter((h) => new Date(h.timestamp).getTime() >= thirtyDaysAgo)
+    .map((h) => parseP(h.price))
+    .filter((p) => p > 0);
+
+  if (last30.length > 0 && product.numericPrice <= Math.min(...last30)) {
+    return { type: "low" };
+  }
+
+  const sorted = [...history].sort(
+    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+  );
+  const oldest = sorted[0];
+  if (oldest) {
+    const oldPrice = parseP(oldest.price);
+    if (oldPrice > 0 && product.numericPrice < oldPrice) {
+      const pct = Math.round(((oldPrice - product.numericPrice) / oldPrice) * 100);
+      if (pct >= 3) return { type: "drop", pct };
+    }
+  }
+
+  return { type: "none" };
+}
+
+// ── Price alert section ───────────────────────────────────────────────────────
+
+function PriceAlertSection({ product }: { product: Product }) {
+  const insight = computePriceInsight(product);
+  const [mounted, setMounted] = useState(false);
+  const [alertActive, setAlertActive] = useState(false);
+  const [alertData, setAlertData] = useState<AlertEntry | undefined>(undefined);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [removing, setRemoving] = useState(false);
+  const [removeError, setRemoveError] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const a = getAlert(product.id);
+    setAlertActive(a !== undefined);
+    setAlertData(a);
+  }, [product.id]);
+
+  const refresh = () => {
+    const a = getAlert(product.id);
+    setAlertActive(a !== undefined);
+    setAlertData(a);
+  };
+
+  const handleRemove = async () => {
+    const email = getWishlistEmail();
+    if (!email) return;
+    setRemoving(true);
+    setRemoveError(false);
+    try {
+      await deleteAlert(email, product.id);
+      refresh();
+    } catch {
+      setRemoveError(true);
+    } finally {
+      setRemoving(false);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm mb-6 overflow-hidden">
+      {/* Price insight banner */}
+      {insight.type !== "none" && (
+        <div className={`px-5 py-3 text-sm font-semibold flex items-center gap-2 ${
+          insight.type === "low"
+            ? "bg-amber-50 text-amber-700 border-b border-amber-100"
+            : "bg-emerald-50 text-emerald-700 border-b border-emerald-100"
+        }`}>
+          {insight.type === "low" ? (
+            <><span>🔥</span> Najniža cena u poslednjih 30 dana</>
+          ) : (
+            <><span>📉</span> Cena je pala {insight.pct}% u poslednjih 30 dana</>
+          )}
+        </div>
+      )}
+
+      <div className="px-5 py-4">
+        {mounted && alertActive ? (
+          /* Alert is active */
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Bell className="w-4 h-4 text-emerald-600" fill="#16a34a" />
+                <span className="text-sm font-bold text-emerald-700">Price alert aktivan</span>
+              </div>
+              <p className="text-xs text-slate-500">
+                {alertData?.targetPrice
+                  ? `Dobićeš email kada cena padne ispod ${new Intl.NumberFormat("sr-RS").format(Math.round(alertData.targetPrice))} RSD`
+                  : "Dobićeš email kada cena značajno padne"}
+              </p>
+              {removeError && (
+                <p className="text-xs text-red-500 mt-1">Greška. Pokušaj ponovo.</p>
+              )}
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              <button
+                onClick={() => { analytics.alertCtaClicked(product.id, product.name, "product_page"); setModalOpen(true); }}
+                className="text-xs font-semibold text-[#FF9900] hover:text-[#e68a00] transition-colors"
+              >
+                Izmeni
+              </button>
+              <button
+                onClick={handleRemove}
+                disabled={removing}
+                className="flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-red-500 transition-colors disabled:opacity-50"
+              >
+                <BellOff className="w-3.5 h-3.5" />
+                {removing ? "..." : "Ukloni"}
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* Alert not active */
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <p className="text-sm font-semibold text-slate-800 mb-0.5">Prati promenu cene</p>
+              <p className="text-xs text-slate-500">Email kada cena značajno padne. Bez registracije.</p>
+            </div>
+            <button
+              onClick={() => {
+                analytics.alertCtaClicked(product.id, product.name, "product_page");
+                setModalOpen(true);
+              }}
+              className="shrink-0 flex items-center gap-2 px-4 py-2.5 bg-[#1B2B4B] text-white font-bold text-sm rounded-xl hover:bg-[#243860] transition-colors"
+            >
+              <Bell className="w-4 h-4" />
+              Aktiviraj alert
+            </button>
+          </div>
+        )}
+      </div>
+
+      {modalOpen && (
+        <PriceAlertModal
+          product={product}
+          initialAlert={mounted ? alertData : undefined}
+          onClose={(changed) => { setModalOpen(false); if (changed) refresh(); }}
+        />
+      )}
+    </div>
+  );
+}
 
 const CATEGORY_LABELS: Record<string, string> = {
   whey_concentrate: "Whey Concentrate",
@@ -245,6 +410,9 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
             </a>
           </div>
         </div>
+
+        {/* ── Price alert ───────────────────────────────────────────── */}
+        <PriceAlertSection product={product} />
 
         {/* ── Cross-store prices ────────────────────────────────────── */}
         {storePrices.length > 1 && (() => {
