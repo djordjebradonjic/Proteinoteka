@@ -54,7 +54,7 @@ export default function AdminAnalyticsPage() {
 
   const fetchStats = () => {
     setLoading(true);
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/clicks/stats`)
+    fetch("/api/admin/stats")
       .then((r) => { if (!r.ok) throw new Error(); return r.json(); })
       .then(setStats)
       .catch(() => setError(true))
@@ -66,10 +66,10 @@ export default function AdminAnalyticsPage() {
   const clearTracking = async (mode: ClearMode) => {
     setClearing(true);
     if (mode === "clicks") {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/clicks`, { method: "DELETE" });
+      await fetch("/api/admin/clicks", { method: "DELETE" });
     } else {
       const qs = mode === "keepClickOut" ? "?keepClickOut=true" : "";
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/tracking${qs}`, { method: "DELETE" });
+      await fetch(`/api/admin/tracking${qs}`, { method: "DELETE" });
     }
     setConfirm(null);
     setClearing(false);

@@ -26,7 +26,7 @@ public class AdminTokenFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
 
-        if (path.startsWith("/api/admin/")) {
+        if (path.startsWith("/api/admin/") || path.startsWith("/api/v1/admin/")) {
             if (!adminToken.isBlank()) {
                 String header = request.getHeader("X-Admin-Token");
                 if (!adminToken.equals(header)) {
