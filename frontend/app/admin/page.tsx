@@ -29,12 +29,19 @@ interface CalcStats {
   recent: RecentSubscriber[];
 }
 
+interface DecisionRule {
+  flag:     string;
+  severity: "WARNING" | "SUCCESS" | "INFO";
+  message:  string;
+  action:   string;
+}
+
 interface AlertMetrics {
   subscribers: { totalAlerts: number; uniqueEmails: number; withTargetPrice: number; avgAlertsPerUser: number; repeatUsers: number; };
   jobs:        { pending: number; sent: number; failed: number; failureRate: number; };
   email:       { sent: number; opened: number; clicked: number; openRate: number; clickRate: number; clickToOpenRate: number; };
   unsubscribes:{ total: number; last30Days: number; unsubscribeRate: number; };
-  insights:    string[];
+  insights:    DecisionRule[];
 }
 
 interface AlertSubscriber { email: string; productId: number; productName: string; targetPrice: number | null; addedAt: string; }
@@ -523,9 +530,20 @@ function AlertSection({ metrics, subscribers }: { metrics: AlertMetrics; subscri
         {insights.length > 0 && (
           <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
             <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-2">Insights</p>
-            <ul className="space-y-1">
+            <ul className="space-y-3">
               {insights.map((ins, i) => (
-                <li key={i} className="text-xs text-amber-800 font-medium">· {ins}</li>
+                <li key={i} className="text-xs text-amber-800">
+                  <span className={`inline-block font-black mr-1 ${
+                    ins.severity === "WARNING" ? "text-red-600" :
+                    ins.severity === "SUCCESS" ? "text-green-600" : "text-amber-700"
+                  }`}>
+                    {ins.severity === "WARNING" ? "⚠" : ins.severity === "SUCCESS" ? "✓" : "·"}
+                  </span>
+                  <span className="font-semibold">{ins.message}</span>
+                  {ins.action && (
+                    <span className="block ml-4 text-amber-700 font-normal mt-0.5">{ins.action}</span>
+                  )}
+                </li>
               ))}
             </ul>
           </div>
