@@ -47,7 +47,7 @@ public class ClickStatsController {
                         ((Number) row[1]).longValue()))
                 .toList();
 
-        long totalClickOuts = clicksPerStore.stream().mapToLong(ClickStatsDTO.StoreClickDTO::count).sum();
+        long totalClickOuts = clickEventRepository.count();
 
         // ── PRODUCT_VIEW ─────────────────────────────────────────────────
         List<ClickStatsDTO.DayClickDTO> viewsLast7Days = trackingEventRepository
