@@ -2,3 +2,5 @@ node_modules/
 package-lock.json
 package.json
 src/main/resources/application-railway.yaml
+railway_dump.sql
+*.sql.dump

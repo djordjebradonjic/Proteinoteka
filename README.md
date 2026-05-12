@@ -173,8 +173,8 @@ Create `backend/src/main/resources/application-local.yml` or export environment 
 
 ```env
 DATABASE_URL=jdbc:postgresql://localhost:5432/proteinoteka
-DATABASE_USERNAME=proteinoteka_2026
-DATABASE_PASSWORD=proteinoteka_19032026
+DATABASE_USERNAME=your_db_username
+DATABASE_PASSWORD=your_db_password
 ANTHROPIC_API_KEY=your_key_here
 ADMIN_TOKEN=your_admin_token
 ```
