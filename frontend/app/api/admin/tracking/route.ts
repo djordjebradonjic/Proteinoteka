@@ -7,9 +7,13 @@ export async function DELETE(req: NextRequest) {
   }
   const qs = req.nextUrl.searchParams.toString();
   const url = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/tracking${qs ? `?${qs}` : ""}`;
-  const res = await fetch(url, {
-    method: "DELETE",
-    headers: { "X-Admin-Token": process.env.ADMIN_TOKEN ?? "" },
-  });
-  return new NextResponse(null, { status: res.status });
+  try {
+    const res = await fetch(url, {
+      method: "DELETE",
+      headers: { "X-Admin-Token": process.env.ADMIN_TOKEN ?? "" },
+    });
+    return new NextResponse(null, { status: res.status });
+  } catch {
+    return NextResponse.json({ error: "Backend unavailable" }, { status: 503 });
+  }
 }

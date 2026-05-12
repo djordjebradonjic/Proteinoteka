@@ -8,18 +8,20 @@ async function sessionToken(): Promise<string> {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Let the login page and its API through
   if (pathname.startsWith("/admin/login") || pathname.startsWith("/api/admin/login")) {
     return NextResponse.next();
   }
 
-  const cookie = req.cookies.get(COOKIE)?.value;
-  const expected = await sessionToken();
-
-  if (cookie === expected) return NextResponse.next();
+  try {
+    const cookie = req.cookies.get(COOKIE)?.value;
+    const expected = await sessionToken();
+    if (cookie === expected) return NextResponse.next();
+  } catch {
+    // fall through to redirect
+  }
 
   const loginUrl = req.nextUrl.clone();
   loginUrl.pathname = "/admin/login";
