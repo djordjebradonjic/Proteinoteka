@@ -40,6 +40,24 @@ export default async function Page() {
       listHeading="Top proteini po value score"
       tableCaption="Whey proteini u Srbiji — rang lista po value score"
       currentSlug="najbolji-whey-protein-srbija"
+      faqs={[
+        {
+          q: "Šta tačno znači 'najbolji' whey protein?",
+          a: "Zavisi od toga šta tražiš. Ako je cilj najveća vrednost za novac — gleda se koliko grama proteina dobijaš po dinaru, uz nutritivni profil (šećeri, masti, čistoća). Ako je cilj cena — biraš najjeftiniji u kilogramima. Na Proteinoteci rangiramo po value score koji kombinuje oba faktora, plus reputaciju brenda i tip proteina.",
+        },
+        {
+          q: "Šta je Value Score i kako se računa?",
+          a: "Value Score je ocena od 0 do 10 koju računamo za svaki protein. Uzima u obzir cenu po gramu proteina u poređenju sa prosekom kategorije (40% težine), čistoću proteina na 100g (20%), tip i svarljivost proteina (15%), sastojke poput šećera i aditiva (15%) i reputaciju brenda (10%). Ako nedostaje neki podatak, score se umanjuje.",
+        },
+        {
+          q: "Da li skuplji protein automatski znači bolji?",
+          a: "Ne. Cena je samo jedan od faktora. Mnogi skupi proteini imaju visok marketing budget, a ne nužno bolji sastav. Gledaj sadržaj proteina na 100g, šećere, masti i cenu po gramu proteina — to su brojevi koji ne lažu. Na Proteinoteci možeš sortirati po tim parametrima odvojeno.",
+        },
+        {
+          q: "Koliko često se ažurira rang lista?",
+          a: "Scraperи prolaze kroz sve prodavnice jednom nedeljno (ponedeljkom u 3 ujutro). Ako se cena promeni, value score se automatski preračunava. To znači da rang lista odražava stvarno stanje tržišta, ne zastarele podatke.",
+        },
+      ]}
     />
   );
 }

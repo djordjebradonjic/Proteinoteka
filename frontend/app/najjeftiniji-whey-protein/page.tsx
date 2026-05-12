@@ -45,6 +45,24 @@ export default async function Page() {
       listHeading="Whey proteini sortirani od najjeftinije cene"
       tableCaption="Najjeftiniji whey proteini u Srbiji — aktuelne cene"
       currentSlug="najjeftiniji-whey-protein"
+      faqs={[
+        {
+          q: "Koliko otprilike košta whey protein u Srbiji?",
+          a: "Cene jako variraju u zavisnosti od tipa i pakovanja. Whey koncentrat u pakovanju od 1 kg može se naći od oko 2.500 do 5.000 dinara. Izolat je skuplje — tipično 4.000–8.000 dinara za kilogram. Realniji pokazatelj od ukupne cene je cena po gramu proteina, koju možeš videti na svakom proizvodu na Proteinoteci.",
+        },
+        {
+          q: "Da li su jeftini proteini lošijeg kvaliteta?",
+          a: "Ne mora biti. Jeftiniji proteini su obično whey koncentrati sa 70–80% proteina na 100g, što je sasvim dovoljno za većinu korisnika. Ono na šta treba obratiti pažnju su sadržaj šećera, lista sastojaka i veličina pakovanja. Na ovoj listi svaki protein ima prikazane nutritivne vrednosti — ne moraš da veruješ na reč.",
+        },
+        {
+          q: "Koji tip whey proteina je najjeftiniji?",
+          a: "Whey koncentrat je konzistentno najjeftiniji tip. Sadrži 70–80% proteina i nešto više masti i laktoze od izolata, ali za fazu mase ili rekreativnu upotrebu to nije nedostatak. Hidrolizat i izolat su skuplji jer zahtevaju dodatnu obradu.",
+        },
+        {
+          q: "Da li je bitno koji brend kupujem ili samo cena i proteini?",
+          a: "Brend nije presudan, ali nije ni nevažan. Poznati brendovi imaju konzistentniji kvalitet i bolju kontrolu proizvodnje. Na Proteinoteci računamo reputaciju brenda kao jedan od faktora value score-a, ali ga ne tretiramo kao dominantan — 70% ocene dolazi od cene, proteina i nutritivnog profila.",
+        },
+      ]}
     />
   );
 }

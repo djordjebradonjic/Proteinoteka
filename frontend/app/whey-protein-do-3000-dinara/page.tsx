@@ -53,6 +53,10 @@ export default async function Page() {
           q: "Kako da izaberem protein po budžetu?",
           a: "Odredi maksimalnu cenu koju si spreman da platiš, pa sortiraj po value score. Proveri sadržaj proteina na 100g (ciljaj 70%+ za koncentrat), veličinu pakovanja i prodavnicu. Na Proteinoteci možeš filtrirati po ceni direktno na glavnoj stranici i porediti sve opcije jedne pored druge.",
         },
+        {
+          q: "Koji tip whey proteina je najisplativiji do 3000 dinara?",
+          a: "U ovom cenovnom rangu dominira whey koncentrat — izolati su retko dostupni ispod 3000 dinara za kilogram. Koncentrat sa 70–80% proteina na 100g je sasvim dovoljan za rekreativce i one u fazi mase. Pazi na veličinu pakovanja: manji paketi mogu izgledati jeftino, ali cena po gramu proteina je često viša nego kod većih.",
+        },
       ]}
       extraLinks={[
         { href: "/kategorija/whey-concentrate", label: "🥛 Whey Concentrate" },

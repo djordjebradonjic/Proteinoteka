@@ -44,6 +44,24 @@ export default async function Page() {
       listHeading="Whey izolati dostupni u Srbiji — rang lista"
       tableCaption="Whey izolat proteini u Srbiji — cene i value score"
       currentSlug="whey-isolate-srbija"
+      faqs={[
+        {
+          q: "Koja je razlika između whey izolata i koncentrata?",
+          a: "Koncentrat sadrži 70–80% proteina na 100g, uz nešto masti i laktoze. Izolat prolazi kroz dodatnu filtraciju i tipično ima 85–93% proteina, manje masti i drastično manje laktoze. Razlika u praksi: izolat je čistiji obrok, ali košta više. Za rekreativce koji nemaju problema sa laktозom, koncentrat je sasvim dovoljan.",
+        },
+        {
+          q: "Ko treba da koristi whey izolat?",
+          a: "Izolat ima smisla za osobe sa intolerancijom na laktozu, one u fazi definicije koji paze na svaki gram masti i ugljenih hidrata, i sportiste koji uzimaju veće količine proteina i žele čistiji unos. Ako si rekreativac u fazi mase, koncentrat ti daje istu količinu proteina za manji novac.",
+        },
+        {
+          q: "Da li je whey izolat zaista bez laktoze?",
+          a: "Nije nužno potpuno bez laktoze, ali sadrži je znatno manje od koncentrata — obično ispod 1g na serviranju. Većina osoba sa umerenom intolerancijom na laktozu podnosi izolat bez problema. Ako imaš ozbiljnu intoleranciju, proveri deklaraciju konkretnog proizvoda.",
+        },
+        {
+          q: "Da li se isplati platiti više za izolat?",
+          a: "Zavisi od tvojih ciljeva i budžeta. Ako nemaš problema sa laktозом i treniraš rekreativno, koncentrat je finansijski isplativiji. Ako si u deficitu kalorija, imaš intoleranciju na laktozu ili uziman protein više puta dnevno — izolat je opravdan izbor. Na Proteinoteci možeš porediti value score obe kategorije i doneti odluku na osnovu brojeva.",
+        },
+      ]}
     />
   );
 }

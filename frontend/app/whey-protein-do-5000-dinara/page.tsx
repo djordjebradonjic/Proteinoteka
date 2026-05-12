@@ -53,6 +53,10 @@ export default async function Page() {
           q: "Kako da izaberem protein po budžetu?",
           a: "Odredi maksimalnu cenu i filtriraj na Proteinoteci — sortiranje po value score odmah ti pokazuje šta nudi najveću vrednost. Ako imaš intoleranciju na laktozu ili si u fazi definicije, traži izolate; za fazu mase ili rekreativnu upotrebu, koncentrat je obično isplativiji. Uvek proveri aktuelnu cenu direktno na sajtu prodavnice pre kupovine.",
         },
+        {
+          q: "Da li se isplati uzimati whey izolat do 5000 dinara?",
+          a: "Do 5000 dinara možeš naći solidne izolate, posebno u pakovanjima od 1 kg manjih brendova. Izolat ima smisla ako imaš intoleranciju na laktozu, ako si u fazi definicije, ili ako uzimas protein 2–3 puta dnevno i čistoća unosa ti je važna. Ako si rekreativac bez tih uslova, koncentrat u istom budžetu daje veće pakovanje za isti novac.",
+        },
       ]}
       extraLinks={[
         { href: "/kategorija/whey-concentrate", label: "🥛 Whey Concentrate" },

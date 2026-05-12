@@ -57,6 +57,24 @@ export default async function Page() {
       listHeading="Preporučeni proteini za masu — rang lista"
       tableCaption="Proteini za masu — cene i nutritivne vrednosti"
       currentSlug="protein-za-masu"
+      faqs={[
+        {
+          q: "Koliko proteina dnevno treba za dobijanje mišićne mase?",
+          a: "Standardna preporuka je 1,6–2,2 g proteina po kilogramu telesne mase dnevno. Za osobu od 80 kg to znači 128–176 g proteina dnevno. Whey protein suplement ti pomaže da dostigneš tu količinu kada ne možeš dovoljno uneti hranом — nije zamena za obroke, nego dopuna.",
+        },
+        {
+          q: "Da li je dovoljan samo whey protein ili treba i gainer?",
+          a: "Whey protein je dovoljan ako unosiš dovoljno kalorija iz hrane. Gainer (mass gainer) dodaje ugljene hidrate i kalorije uz proteine — korisno je ako ti je teško da jedete dovoljno. Ako ti nije problem unos kalorija, obični whey uz normalne obroke daje isti efekat uz manji trošak.",
+        },
+        {
+          q: "Kada je najbolje vreme da se uzme whey protein?",
+          a: "Najvažnije je ukupna dnevna količina proteina, ne tačno vreme. Međutim, whey posle treninga ubrzava oporavak mišića zahvaljujući brzoj apsorpciji. Jutarnji unos proteina also ima smisla ako preskačeš doručak bogat proteinima. Ne postoji magično vreme — bitno je dostići dnevni cilj.",
+        },
+        {
+          q: "Koji proteinski prah je bolji za masu — concentrate ili blend?",
+          a: "Oba su efikasna. Whey koncentrat je najisplativiji — solidan sadržaj proteina, dobre kalorije, pristupačna cena. Blend (mešavina koncentrata, izolata i kazeina) daje sporije otpuštanje proteina tokom vremena, što može biti korisno kao zamena za obrok ili pre sna. Za većinu korisnika u fazi mase, obični koncentrat radi posao.",
+        },
+      ]}
     />
   );
 }
