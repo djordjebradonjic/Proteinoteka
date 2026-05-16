@@ -100,39 +100,38 @@ export default function ProductSection({
     api.get("/products/flavours").then((res) => setFlavours(res.data)).catch(() => {});
   }, []);
 
-  // Single effect owns the fetch. Cleanup cancels stale requests so a fast
-  // filter/sort change never lets an old response overwrite the latest one.
+  // Read all URL params synchronously at effect-scheduling time so the async
+  // run() closure never sees stale values from a previous render.
   useEffect(() => {
+    const page     = searchParams.get("page")     || "0";
+    const sort     = searchParams.get("sort")     || "id,desc";
+    const name     = searchParams.get("query")    || "";
+    const store    = searchParams.get("store")    || "";
+    const brand    = searchParams.get("brand")    || "";
+    const flavour  = searchParams.get("flavour")  || "";
+    const min      = searchParams.get("minPrice") || "";
+    const max      = searchParams.get("maxPrice") || "";
+    const urlCatList = parseList(searchParams.get("category"));
+    const allCats  = initialCategory && !urlCatList.includes(initialCategory)
+      ? [...urlCatList, initialCategory]
+      : urlCatList;
+
     let cancelled = false;
 
     const run = async () => {
       setLoading(true);
       try {
         const params = new URLSearchParams();
-        params.set("page", searchParams.get("page") || "0");
+        params.set("page", page);
         params.set("size", "12");
-        params.set("sort", searchParams.get("sort") || "id,desc");
-
-        const name = searchParams.get("query");
-        const store = searchParams.get("store");
-        const brand = searchParams.get("brand");
-        const flavour = searchParams.get("flavour");
-        const min = searchParams.get("minPrice");
-        const max = searchParams.get("maxPrice");
-
-        const urlCatList = parseList(searchParams.get("category"));
-        const allCats =
-          initialCategory && !urlCatList.includes(initialCategory)
-            ? [...urlCatList, initialCategory]
-            : urlCatList;
-
-        if (name) params.set("name", name);
-        if (store) params.set("storeName", store);
-        if (brand) params.set("brand", brand);
-        if (flavour) params.set("flavour", flavour);
-        if (allCats.length) params.set("category", allCats.join(","));
-        if (min) params.set("minPrice", min);
-        if (max) params.set("maxPrice", max);
+        params.set("sort", sort);
+        if (name)           params.set("name",      name);
+        if (store)          params.set("storeName",  store);
+        if (brand)          params.set("brand",      brand);
+        if (flavour)        params.set("flavour",    flavour);
+        if (allCats.length) params.set("category",   allCats.join(","));
+        if (min)            params.set("minPrice",   min);
+        if (max)            params.set("maxPrice",   max);
 
         const res = await api.get(`/products?${params.toString()}`);
         if (cancelled) return;
@@ -142,7 +141,6 @@ export default function ProductSection({
       } catch (err) {
         if (cancelled) return;
         console.error("Greška pri učitavanju:", err);
-        // On fetch failure keep SSR products so the user never sees an empty state.
         setProducts(p => p.length === 0 ? initialProducts : p);
         setTotalPages(t => t === 0 ? initialTotalPages : t);
       } finally {
@@ -152,7 +150,7 @@ export default function ProductSection({
 
     run();
     return () => { cancelled = true; };
-  }, [searchParams, initialCategory]);
+  }, [searchParams, initialCategory, initialProducts, initialTotalPages]);
 
   // Disable the browser's native scroll restoration so F5 no longer jumps
   // to where the user was. Our sessionStorage system handles back-navigation.
