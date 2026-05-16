@@ -34,7 +34,7 @@ public class ProductSpecifications {
             Predicate[] predicates = Arrays.stream(brands.split(","))
                     .map(String::trim)
                     .filter(s -> !s.isEmpty())
-                    .map(s -> cb.equal(root.get("brand"), s))
+                    .map(s -> cb.equal(cb.lower(root.get("brand")), s.toLowerCase()))
                     .toArray(Predicate[]::new);
             return predicates.length == 1 ? predicates[0] : cb.or(predicates);
         };

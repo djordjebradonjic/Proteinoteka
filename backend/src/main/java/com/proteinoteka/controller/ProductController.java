@@ -259,13 +259,13 @@ public class ProductController {
         return productRepository.findAllIds();
     }
 
-    @Cacheable("products-meta")
+    @Cacheable(value = "products-meta", key = "'brands'")
     @GetMapping("/brands")
     List<String> getAllBrands() {
         return productRepository.findAllUniqueBrands();
     }
 
-    @Cacheable("products-meta")
+    @Cacheable(value = "products-meta", key = "'flavours'")
     @GetMapping("/flavours")
     List<String> getAllFlavours() {
         return productRepository.findAllUniqueFlavours();
