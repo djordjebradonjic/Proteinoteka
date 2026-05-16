@@ -58,12 +58,8 @@ export default function ProductSection({
     !!searchParams.get("page") ||
     sort !== "id,desc";
 
-  const [products, setProducts] = useState<Product[]>(
-    hasUrlFilters ? [] : initialProducts,
-  );
-  const [totalPages, setTotalPages] = useState(
-    hasUrlFilters ? 0 : initialTotalPages,
-  );
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [totalPages, setTotalPages] = useState(initialTotalPages);
   const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(hasUrlFilters);
   const [brands, setBrands] = useState<string[]>([]);
@@ -135,6 +131,8 @@ export default function ProductSection({
       setTotalItems(res.data?.page?.totalElements ?? 0);
     } catch (err) {
       console.error("Greška pri učitavanju:", err);
+      // On error keep whatever products are already displayed (initialProducts on first load),
+      // so the user never sees "Nema rezultata" due to a transient network/backend failure.
     } finally {
       setLoading(false);
     }
