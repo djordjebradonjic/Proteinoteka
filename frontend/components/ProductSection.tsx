@@ -55,7 +55,7 @@ export default function ProductSection({
     urlCategories.length > 0 ||
     !!minPrice ||
     !!maxPrice ||
-    !!searchParams.get("page") ||
+    Number(searchParams.get("page") || "0") > 0 ||
     sort !== "id,desc";
 
   const [products, setProducts] = useState<Product[]>(initialProducts);
@@ -96,51 +96,57 @@ export default function ProductSection({
     api.get("/products/flavours").then((res) => setFlavours(res.data)).catch(() => {});
   }, []);
 
-  const fetchProducts = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      params.set("page", searchParams.get("page") || "0");
-      params.set("size", "12");
-      params.set("sort", searchParams.get("sort") || "id,desc");
-
-      const name = searchParams.get("query");
-      const store = searchParams.get("store");
-      const brand = searchParams.get("brand");
-      const flavour = searchParams.get("flavour");
-      const min = searchParams.get("minPrice");
-      const max = searchParams.get("maxPrice");
-
-      const urlCatList = parseList(searchParams.get("category"));
-      const allCats =
-        initialCategory && !urlCatList.includes(initialCategory)
-          ? [...urlCatList, initialCategory]
-          : urlCatList;
-
-      if (name) params.set("name", name);
-      if (store) params.set("storeName", store);
-      if (brand) params.set("brand", brand);
-      if (flavour) params.set("flavour", flavour);
-      if (allCats.length) params.set("category", allCats.join(","));
-      if (min) params.set("minPrice", min);
-      if (max) params.set("maxPrice", max);
-
-      const res = await api.get(`/products?${params.toString()}`);
-      setProducts(res.data?.content ?? []);
-      setTotalPages(res.data?.page?.totalPages ?? 0);
-      setTotalItems(res.data?.page?.totalElements ?? 0);
-    } catch (err) {
-      console.error("Greška pri učitavanju:", err);
-      // On error keep whatever products are already displayed (initialProducts on first load),
-      // so the user never sees "Nema rezultata" due to a transient network/backend failure.
-    } finally {
-      setLoading(false);
-    }
-  }, [searchParams, initialCategory]);
-
+  // Single effect owns the fetch. Cleanup cancels stale requests so a fast
+  // filter/sort change never lets an old response overwrite the latest one.
   useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
+    let cancelled = false;
+
+    const run = async () => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams();
+        params.set("page", searchParams.get("page") || "0");
+        params.set("size", "12");
+        params.set("sort", searchParams.get("sort") || "id,desc");
+
+        const name = searchParams.get("query");
+        const store = searchParams.get("store");
+        const brand = searchParams.get("brand");
+        const flavour = searchParams.get("flavour");
+        const min = searchParams.get("minPrice");
+        const max = searchParams.get("maxPrice");
+
+        const urlCatList = parseList(searchParams.get("category"));
+        const allCats =
+          initialCategory && !urlCatList.includes(initialCategory)
+            ? [...urlCatList, initialCategory]
+            : urlCatList;
+
+        if (name) params.set("name", name);
+        if (store) params.set("storeName", store);
+        if (brand) params.set("brand", brand);
+        if (flavour) params.set("flavour", flavour);
+        if (allCats.length) params.set("category", allCats.join(","));
+        if (min) params.set("minPrice", min);
+        if (max) params.set("maxPrice", max);
+
+        const res = await api.get(`/products?${params.toString()}`);
+        if (cancelled) return;
+        setProducts(res.data?.content ?? []);
+        setTotalPages(res.data?.page?.totalPages ?? 0);
+        setTotalItems(res.data?.page?.totalElements ?? 0);
+      } catch (err) {
+        if (cancelled) return;
+        console.error("Greška pri učitavanju:", err);
+        // Keep existing products on error — never flash "Nema rezultata" for a network blip.
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    run();
+    return () => { cancelled = true; };
+  }, [searchParams, initialCategory]);
 
   // Disable the browser's native scroll restoration so F5 no longer jumps
   // to where the user was. Our sessionStorage system handles back-navigation.

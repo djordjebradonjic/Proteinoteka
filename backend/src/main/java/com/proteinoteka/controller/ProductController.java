@@ -48,7 +48,6 @@ public class ProductController {
     private static final java.util.Set<String> NULLABLE_SORT_COLS =
             java.util.Set.of("valueScore", "proteinPerRsd");
 
-    @Cacheable("products")
     @GetMapping
     public Page<ProductDTO> getProducts(
             @RequestParam(required = false) String name,
