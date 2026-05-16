@@ -25,7 +25,7 @@ export default function ProductGrid({
         {[...Array(12)].map((_, i) => (
           <div
             key={i}
-            className="w-[calc(50%-6px)] lg:w-[calc(33.333%-10px)] xl:w-[calc(25%-12px)]"
+            className="w-[calc(50%-6px)] md:w-[calc(50%-8px)] lg:w-[calc(33.333%-11px)] xl:w-[calc(25%-12px)]"
           >
             <div className="h-[340px] md:h-[380px] bg-slate-200 animate-pulse rounded-lg" />
           </div>
@@ -50,7 +50,7 @@ export default function ProductGrid({
         {products.map((p, index) => (
           <div
             key={p.id}
-            className="w-[calc(50%-6px)] lg:w-[calc(33.333%-10px)] xl:w-[calc(25%-12px)]"
+            className="w-[calc(50%-6px)] md:w-[calc(50%-8px)] lg:w-[calc(33.333%-11px)] xl:w-[calc(25%-12px)]"
           >
             <ProductCard product={p} priority={index < 4} />
           </div>

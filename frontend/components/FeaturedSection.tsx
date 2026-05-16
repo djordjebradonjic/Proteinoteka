@@ -36,7 +36,7 @@ export default function FeaturedSection({ topValueProducts, priceDropProducts }:
   return (
     <section
       aria-label="Izdvojeno"
-      className="mb-6"
+      className="mb-6 overflow-x-hidden"
       style={{
         background: "linear-gradient(135deg, #fff7ed 0%, #f8fafc 100%)",
         borderBottom: "1px solid #e2e8f0",
