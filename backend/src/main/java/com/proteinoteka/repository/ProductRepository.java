@@ -31,7 +31,18 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @Query("SELECT p.id FROM products p ORDER BY p.id ASC")
     List<Long> findAllIds();
 
-    @Query("SELECT DISTINCT p.brand from products p WHERE p.brand IS NOT NULL ORDER BY p.brand ASC")
+    @Query(value = """
+            SELECT DISTINCT brand FROM products
+            WHERE brand IS NOT NULL
+              AND brand NOT LIKE '%RSD%'
+              AND brand NOT LIKE '%Kategorij%'
+              AND brand NOT LIKE '%Dodaj%'
+              AND brand NOT LIKE '%stanju%'
+              AND brand NOT LIKE '%korpu%'
+              AND brand NOT LIKE '%kom.%'
+              AND LENGTH(brand) <= 60
+            ORDER BY brand ASC
+            """, nativeQuery = true)
     List<String> findAllUniqueBrands();
 
     @Query(value = "SELECT DISTINCT flavour FROM product_flavours WHERE flavour IS NOT NULL ORDER BY flavour ASC", nativeQuery = true)

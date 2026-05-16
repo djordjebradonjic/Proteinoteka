@@ -275,7 +275,7 @@ function FilterContent({
       />
       <FilterGroup
         label="Brend"
-        options={brands.slice(0, 20)}
+        options={brands}
         selected={selectedBrand}
         onChange={onBrandChange}
       />
