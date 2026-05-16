@@ -40,7 +40,7 @@ function ProductFallback({
       {/* Sidebar placeholder — same width as real SidebarFilter */}
       <div className="hidden md:block w-64 shrink-0 self-start sticky top-24" />
 
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 w-full">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 gap-2">
           <SortSelect value="id,desc" onSortChange={() => {}} />
         </div>

@@ -24,7 +24,7 @@ export default function FeaturedValueCard({ product }: Props) {
   const detailUrl = productUrl(product);
 
   return (
-    <div className="flex-shrink-0 w-56 bg-white rounded-2xl border border-slate-100 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 flex flex-col overflow-hidden">
+    <div className="flex-shrink-0 w-[calc(50%-8px)] sm:w-56 bg-white rounded-2xl border border-slate-100 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 flex flex-col overflow-hidden">
 
       {/* Image */}
       <Link href={detailUrl} className="block">

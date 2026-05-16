@@ -224,7 +224,7 @@ export default function ProductSection({
         activeCount={activeCount}
       />
 
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 w-full">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 gap-2">
           <SortSelect value={sort} onSortChange={(val) => updateFilters("sort", val)} />
           {!loading && totalItems > 0 && (
