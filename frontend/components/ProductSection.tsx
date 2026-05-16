@@ -58,8 +58,12 @@ export default function ProductSection({
     Number(searchParams.get("page") || "0") > 0 ||
     sort !== "id,desc";
 
-  const [products, setProducts] = useState<Product[]>(initialProducts);
-  const [totalPages, setTotalPages] = useState(initialTotalPages);
+  const [products, setProducts] = useState<Product[]>(
+    hasUrlFilters ? [] : initialProducts,
+  );
+  const [totalPages, setTotalPages] = useState(
+    hasUrlFilters ? 0 : initialTotalPages,
+  );
   const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(hasUrlFilters);
   const [brands, setBrands] = useState<string[]>([]);
@@ -138,7 +142,9 @@ export default function ProductSection({
       } catch (err) {
         if (cancelled) return;
         console.error("Greška pri učitavanju:", err);
-        // Keep existing products on error — never flash "Nema rezultata" for a network blip.
+        // On fetch failure keep SSR products so the user never sees an empty state.
+        setProducts(p => p.length === 0 ? initialProducts : p);
+        setTotalPages(t => t === 0 ? initialTotalPages : t);
       } finally {
         if (!cancelled) setLoading(false);
       }
