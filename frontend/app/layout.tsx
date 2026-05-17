@@ -40,10 +40,8 @@ export const metadata: Metadata = {
   authors: [{ name: "Proteinoteka", url: "https://proteinoteka.rs" }],
   creator: "Proteinoteka",
   metadataBase: new URL("https://proteinoteka.rs"),
-  alternates: {
-    canonical: "https://proteinoteka.rs",
-    languages: { "sr-RS": "https://proteinoteka.rs" },
-  },
+  // No global canonical here — each page sets its own via alternates.canonical
+  // so inner pages never inherit the root URL as their canonical.
   openGraph: {
     type: "website",
     locale: "sr_RS",
