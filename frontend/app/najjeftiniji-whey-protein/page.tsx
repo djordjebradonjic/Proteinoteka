@@ -5,7 +5,7 @@ import { SEOLandingPage } from "@/components/seo/SEOLandingPage";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "Najjeftiniji Whey Protein u Srbiji | Proteinoteka",
+  title: { absolute: "Najjeftiniji Whey Protein u Srbiji 2026 | Proteinoteka" },
   description:
     "Pronađi najjeftiniji whey protein u Srbiji. Aktuelne cene iz svih prodavnica — Pansport, Proteini.si, Proteinbox i ostalih — sortiranih od najniže cene.",
   alternates: { canonical: "https://proteinoteka.rs/najjeftiniji-whey-protein" },
@@ -16,6 +16,10 @@ export const metadata: Metadata = {
     siteName: "Proteinoteka",
     locale: "sr_RS",
     type: "website",
+  },
+  twitter: {
+    title: "Najjeftiniji Whey Protein u Srbiji 2026 | Proteinoteka",
+    description: "Uporedi cene whey proteina iz svih srpskih prodavnica. Sortirano od najjeftinije cene.",
   },
 };
 

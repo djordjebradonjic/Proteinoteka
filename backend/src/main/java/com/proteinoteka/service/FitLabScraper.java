@@ -3,6 +3,7 @@ package com.proteinoteka.service;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.WaitUntilState;
 import com.proteinoteka.model.Product;
+import com.proteinoteka.util.ProductNameCleaner;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -90,10 +91,11 @@ public class FitLabScraper implements StoreScraper {
 
             Element h2 = el.selectFirst("h2");
             if (h2 != null) {
-                p.setName(h2.text().trim());
+                p.setName(ProductNameCleaner.clean(h2.text().trim()));
             } else {
                 String ariaLabel = titleLink.attr("aria-label");
-                p.setName(!ariaLabel.isBlank() ? ariaLabel.trim() : titleLink.text().trim());
+                String rawName = !ariaLabel.isBlank() ? ariaLabel.trim() : titleLink.text().trim();
+                p.setName(ProductNameCleaner.clean(rawName));
             }
 
             String url = titleLink.attr("href");
