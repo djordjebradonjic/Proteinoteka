@@ -49,30 +49,36 @@ async function fetchStorePrices(name: string, brand: string | null): Promise<Sto
 
 // ── Metadata ───────────────────────────────────────────────────────────────────
 
+const SUFFIX = " – Cena u Srbiji | Proteinoteka"; // 31 chars
+// Truncate product name at a word boundary so the full title stays under this limit.
+// Raise this value if you find important product names getting cut.
+const MAX_TITLE_CHARS = 65;
+
+function buildProductTitle(name: string): string {
+  const full = name + SUFFIX;
+  if (full.length <= MAX_TITLE_CHARS) return full;
+  // Trim name to fit, cutting at the last space before the limit
+  const maxName = MAX_TITLE_CHARS - SUFFIX.length;
+  const trimmed = name.slice(0, maxName).replace(/\s+\S*$/, "");
+  return trimmed + SUFFIX;
+}
+
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
   const id = extractProductId(slug);
-  if (!id) return { title: "Proizvod | Proteinoteka" };
+  if (!id) return { title: { absolute: "Proizvod | Proteinoteka" } };
 
   const product = await fetchProduct(id);
-  if (!product) return { title: "Proizvod | Proteinoteka" };
+  if (!product) return { title: { absolute: "Proizvod | Proteinoteka" } };
 
-  const canonical  = `${BASE_URL}${productUrl(product)}`;
-  const title      = `${product.name} — ${product.price} RSD | Proteinoteka`;
-  const catLabel   = product.proteinSource ? PRODUCT_CATEGORY_LABELS[product.proteinSource] : null;
-  const description = [
-    product.brand ? `${product.name} (${product.brand})` : product.name,
-    catLabel,
-    `${product.price} RSD u ${product.storeName}.`,
-    "Uporedi cene u svim prodavnicama, proveri istoriju cena i Value Score na Proteinoteka.",
-  ]
-    .filter(Boolean)
-    .join(" ");
+  const canonical   = `${BASE_URL}${productUrl(product)}`;
+  const title       = buildProductTitle(product.name);
+  const description = `${product.name} — uporedi cene u srpskim prodavnicama. Trenutna najniža cena i dostupnost na jednom mestu.`;
 
   return {
-    title,
+    title:       { absolute: title },
     description,
-    alternates: { canonical },
+    alternates:  { canonical },
     openGraph: {
       title,
       description,
@@ -83,6 +89,10 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
         : [],
       locale: "sr_RS",
       type: "website",
+    },
+    twitter: {
+      title,
+      description,
     },
   };
 }
