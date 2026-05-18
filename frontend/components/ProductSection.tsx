@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import api from "@/lib/axios";
 import { Product } from "@/types/product";
 import SidebarFilter from "./SIdeBarFilter";
@@ -22,11 +21,24 @@ function parseList(raw: string | null): string[] {
   return (raw || "").split(",").filter(Boolean);
 }
 
-// Always reads the live URL — avoids stale useSearchParams() values on first
-// render after a hard refresh (Next.js router context isn't ready yet).
 function getLiveParams() {
   if (typeof window === "undefined") return new URLSearchParams();
   return new URLSearchParams(window.location.search);
+}
+
+function hasAnyUrlFilter(live: URLSearchParams): boolean {
+  const sort = live.get("sort");
+  return !!(
+    live.get("query") ||
+    live.get("store") ||
+    live.get("brand") ||
+    live.get("flavour") ||
+    live.get("minPrice") ||
+    live.get("maxPrice") ||
+    (live.get("page") && live.get("page") !== "0") ||
+    live.get("category") ||
+    (sort && sort !== "id,desc")
+  );
 }
 
 export default function ProductSection({
@@ -34,51 +46,45 @@ export default function ProductSection({
   initialTotalPages,
   initialCategory = "",
 }: Props) {
-  // useSearchParams() is used ONLY as a change-trigger so React knows when to
-  // re-run the fetch effect. Actual param values come from getLiveParams().
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
-  const { replace } = useRouter();
   const pendingGridScroll = useRef(false);
+  // tick drives all re-fetches — incremented on every URL update
+  const [tick, setTick] = useState(0);
 
-  // Derive display state from the hook (may lag one render on hard refresh —
-  // that is fine; the user sees the correct selected state after the first repaint).
-  const sp = searchParams;
-  const search          = sp.get("query")    || "";
-  const selectedStores  = parseList(sp.get("store"));
-  const selectedBrands  = parseList(sp.get("brand"));
-  const selectedFlavours= parseList(sp.get("flavour"));
-  const urlCategories   = parseList(sp.get("category"));
-  const minPrice        = sp.get("minPrice") || "";
-  const maxPrice        = sp.get("maxPrice") || "";
-  const page            = Number(sp.get("page")) || 0;
-  const sort            = sp.get("sort") || "id,desc";
+  // Read display state directly from live URL on every render.
+  // getLiveParams() returns empty on SSR → defaults, which matches initialProducts.
+  // After hydration, tick changes keep this in sync.
+  const lp               = getLiveParams();
+  const search           = lp.get("query")    || "";
+  const selectedStores   = parseList(lp.get("store"));
+  const selectedBrands   = parseList(lp.get("brand"));
+  const selectedFlavours = parseList(lp.get("flavour"));
+  const urlCategories    = parseList(lp.get("category"));
+  const minPrice         = lp.get("minPrice") || "";
+  const maxPrice         = lp.get("maxPrice") || "";
+  const page             = Number(lp.get("page")) || 0;
+  const sort             = lp.get("sort") || "id,desc";
 
   const selectedCategories =
     initialCategory && !urlCategories.includes(initialCategory)
       ? [initialCategory, ...urlCategories]
       : urlCategories;
 
-  const hasUrlFilters =
-    !!search ||
-    selectedStores.length > 0 ||
-    selectedBrands.length > 0 ||
-    selectedFlavours.length > 0 ||
-    urlCategories.length > 0 ||
-    !!minPrice ||
-    !!maxPrice ||
-    Number(sp.get("page") || "0") > 0 ||
-    sort !== "id,desc";
-
-  const [products, setProducts]   = useState<Product[]>(hasUrlFilters ? [] : initialProducts);
-  const [totalPages, setTotalPages] = useState(hasUrlFilters ? 0 : initialTotalPages);
+  const [products, setProducts]     = useState<Product[]>(initialProducts);
+  const [totalPages, setTotalPages] = useState(initialTotalPages);
   const [totalItems, setTotalItems] = useState(0);
-  const [loading, setLoading]     = useState(hasUrlFilters);
-  const [brands, setBrands]       = useState<string[]>([]);
-  const [flavours, setFlavours]   = useState<string[]>([]);
+  const [loading, setLoading]       = useState(false);
+  const [brands, setBrands]         = useState<string[]>([]);
+  const [flavours, setFlavours]     = useState<string[]>([]);
 
-  // Use window.location.search (always live) so adding a filter never drops
-  // params that searchParams hasn't seen yet due to hydration lag.
+  // Update URL without triggering Next.js navigation — no reload, no scroll-to-top.
+  const updateUrl = useCallback((url: string) => {
+    window.history.replaceState(null, "", url);
+    setTick((t) => t + 1);
+  }, []);
+
+  const getPathname = () =>
+    typeof window !== "undefined" ? window.location.pathname : "/";
+
   const toggleFilter = useCallback(
     (name: string, value: string) => {
       const params = new URLSearchParams(getLiveParams().toString());
@@ -89,9 +95,9 @@ export default function ProductSection({
       if (next.length === 0) params.delete(name);
       else params.set(name, next.join(","));
       params.delete("page");
-      replace(`${pathname}?${params.toString()}`, { scroll: false });
+      updateUrl(`${getPathname()}?${params.toString()}`);
     },
-    [pathname, replace],
+    [updateUrl],
   );
 
   const updateFilters = useCallback(
@@ -100,32 +106,44 @@ export default function ProductSection({
       if (value !== "" && value !== "Sve") params.set(name, value.toString());
       else params.delete(name);
       if (name !== "page") params.delete("page");
-      replace(`${pathname}?${params.toString()}`, { scroll: false });
+      updateUrl(`${getPathname()}?${params.toString()}`);
     },
-    [pathname, replace],
+    [updateUrl],
   );
+
+  // Re-fetch on browser back/forward AND on URL changes from other components
+  // (HeroSection category pills, Header search — they dispatch "app:urlchange")
+  useEffect(() => {
+    const onUrlChange = () => setTick((t) => t + 1);
+    window.addEventListener("popstate",       onUrlChange);
+    window.addEventListener("app:urlchange",  onUrlChange);
+    return () => {
+      window.removeEventListener("popstate",      onUrlChange);
+      window.removeEventListener("app:urlchange", onUrlChange);
+    };
+  }, []);
 
   useEffect(() => {
     api.get("/products/brands").then((res) => setBrands(res.data)).catch(() => {});
     api.get("/products/flavours").then((res) => setFlavours(res.data)).catch(() => {});
   }, []);
 
-  // Fetch always reads from window.location.search so it gets the real URL
-  // even when useSearchParams() hasn't updated yet (first render after refresh).
-  // searchParams is kept as the dependency trigger so React re-runs this effect
-  // whenever the URL changes.
   useEffect(() => {
     const live    = getLiveParams();
-    const pageVal = live.get("page")     || "0";
-    const sortVal = live.get("sort")     || "id,desc";
-    const nameVal = live.get("query")    || "";
-    const storeVal= live.get("store")    || "";
-    const brandVal= live.get("brand")    || "";
-    const flavVal = live.get("flavour")  || "";
-    const minVal  = live.get("minPrice") || "";
-    const maxVal  = live.get("maxPrice") || "";
-    const catList = parseList(live.get("category"));
-    const allCats = initialCategory && !catList.includes(initialCategory)
+
+    // On initial mount with no URL params, skip fetch — SSR data is already correct.
+    if (tick === 0 && !hasAnyUrlFilter(live) && !initialCategory) return;
+
+    const pageVal  = live.get("page")     || "0";
+    const sortVal  = live.get("sort")     || "id,desc";
+    const nameVal  = live.get("query")    || "";
+    const storeVal = live.get("store")    || "";
+    const brandVal = live.get("brand")    || "";
+    const flavVal  = live.get("flavour")  || "";
+    const minVal   = live.get("minPrice") || "";
+    const maxVal   = live.get("maxPrice") || "";
+    const catList  = parseList(live.get("category"));
+    const allCats  = initialCategory && !catList.includes(initialCategory)
       ? [...catList, initialCategory]
       : catList;
 
@@ -135,9 +153,9 @@ export default function ProductSection({
       setLoading(true);
       try {
         const params = new URLSearchParams();
-        params.set("page",  pageVal);
-        params.set("size",  "12");
-        params.set("sort",  sortVal);
+        params.set("page", pageVal);
+        params.set("size", "12");
+        params.set("sort", sortVal);
         if (nameVal)        params.set("name",      nameVal);
         if (storeVal)       params.set("storeName",  storeVal);
         if (brandVal)       params.set("brand",      brandVal);
@@ -154,8 +172,8 @@ export default function ProductSection({
       } catch (err) {
         if (cancelled) return;
         console.error("Greška pri učitavanju:", err);
-        setProducts(p => p.length === 0 ? initialProducts : p);
-        setTotalPages(t => t === 0 ? initialTotalPages : t);
+        setProducts((p) => (p.length === 0 ? initialProducts : p));
+        setTotalPages((t) => (t === 0 ? initialTotalPages : t));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -164,7 +182,7 @@ export default function ProductSection({
     run();
     return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams, initialCategory]);
+  }, [tick, initialCategory]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -195,7 +213,7 @@ export default function ProductSection({
     });
   }, [loading]);
 
-  const handleReset = () => replace(pathname, { scroll: false });
+  const handleReset = () => updateUrl(getPathname());
 
   const activeCount =
     selectedStores.length +
@@ -208,13 +226,13 @@ export default function ProductSection({
   const hasActiveFilters = activeCount > 0 || !!search;
 
   const chips: Chip[] = [
-    search    ? { key: "query",    label: `"${search}"`,          onRemove: () => updateFilters("query",    "") } : null,
-    ...selectedStores.map( s => ({ key: `store-${s}`,   label: s,              onRemove: () => toggleFilter("store",   s) })),
-    ...selectedBrands.map( b => ({ key: `brand-${b}`,   label: b,              onRemove: () => toggleFilter("brand",   b) })),
+    search    ? { key: "query",    label: `"${search}"`,         onRemove: () => updateFilters("query",    "") } : null,
+    ...selectedStores.map( s => ({ key: `store-${s}`,    label: s,             onRemove: () => toggleFilter("store",   s) })),
+    ...selectedBrands.map( b => ({ key: `brand-${b}`,    label: b,             onRemove: () => toggleFilter("brand",   b) })),
     ...selectedFlavours.map(f => ({ key: `flavour-${f}`, label: `Ukus: ${f}`,  onRemove: () => toggleFilter("flavour", f) })),
-    ...urlCategories.map(  c => ({ key: `cat-${c}`,     label: getCategoryByValue(c)?.label ?? c, onRemove: () => toggleFilter("category", c) })),
-    minPrice  ? { key: "minPrice", label: `od ${minPrice} RSD`,  onRemove: () => updateFilters("minPrice", "") } : null,
-    maxPrice  ? { key: "maxPrice", label: `do ${maxPrice} RSD`,  onRemove: () => updateFilters("maxPrice", "") } : null,
+    ...urlCategories.map(  c => ({ key: `cat-${c}`,      label: getCategoryByValue(c)?.label ?? c, onRemove: () => toggleFilter("category", c) })),
+    minPrice  ? { key: "minPrice", label: `od ${minPrice} RSD`, onRemove: () => updateFilters("minPrice", "") } : null,
+    maxPrice  ? { key: "maxPrice", label: `do ${maxPrice} RSD`, onRemove: () => updateFilters("maxPrice", "") } : null,
   ].filter(Boolean) as Chip[];
 
   return (

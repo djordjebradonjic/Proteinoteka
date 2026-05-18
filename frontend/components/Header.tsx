@@ -1,24 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useState, useEffect, useRef, useCallback } from "react";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
 import { Heart, ChevronDown } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { toggleWishlist } from "@/store/wishlistSlice";
 import SearchAutocomplete from "@/components/SearchAutocomplete";
-
-
-// Reads the ?query param and syncs it into Header's local state.
-// Lives inside a mini <Suspense> so it never causes SSR bailout of the outer page.
-function SearchSync({ onValue }: { onValue: (v: string) => void }) {
-  const params = useSearchParams();
-  const stable = useCallback(onValue, []); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    stable(params.get("query") ?? "");
-  }, [params, stable]);
-  return null;
-}
+import { navigateTo } from "@/lib/navigation";
 
 function Logo() {
   return (
@@ -199,8 +187,6 @@ function NavLink({
 
 export default function Header() {
   const dispatch = useAppDispatch();
-  const router = useRouter();
-  const pathname = usePathname();
   const wishlistCount = useAppSelector(
     (state) => (state as any).wishlist.count,
   ) as number;
@@ -208,6 +194,21 @@ export default function Header() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
+
+  // Sync search input from URL on mount and on any URL change
+  useEffect(() => {
+    const sync = () => {
+      const q = new URLSearchParams(window.location.search).get("query") ?? "";
+      setLocalSearch(q);
+    };
+    sync();
+    window.addEventListener("app:urlchange", sync);
+    window.addEventListener("popstate",      sync);
+    return () => {
+      window.removeEventListener("app:urlchange", sync);
+      window.removeEventListener("popstate",      sync);
+    };
+  }, []);
 
   const displayCount = mounted ? wishlistCount : 0;
   const displayFill = mounted && wishlistCount > 0 ? "#FF9900" : "none";
@@ -217,7 +218,7 @@ export default function Header() {
     const params = new URLSearchParams(window.location.search);
     if (v) params.set("query", v); else params.delete("query");
     params.delete("page");
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    navigateTo(`${window.location.pathname}?${params.toString()}`);
   };
 
   return (
@@ -225,10 +226,6 @@ export default function Header() {
       className="sticky top-0 z-50 shadow-lg"
       style={{ backgroundColor: "#131921" }}
     >
-      {/* SearchSync lives in its own Suspense so the full Header is SSR'd without bailout */}
-      <Suspense fallback={null}>
-        <SearchSync onValue={setLocalSearch} />
-      </Suspense>
       <div className="relative z-[60] max-w-7xl mx-auto px-4 h-16 flex items-center gap-3">
         <Logo />
 

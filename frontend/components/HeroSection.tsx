@@ -1,25 +1,11 @@
 "use client";
 
-import { Suspense, useEffect, useState, useCallback } from "react";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { Store, Package, TrendingDown, ArrowDown, GitCompare } from "lucide-react";
 import { CATEGORIES } from "@/lib/categories";
-
-// Reads ?category param and syncs into HeroSection's local state.
-// Inside its own <Suspense> so the outer HeroSection is always SSR'd.
-function CategorySync({ onCategories }: { onCategories: (cats: string[]) => void }) {
-  const params = useSearchParams();
-  const stable = useCallback(onCategories, []); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    const cats = (params.get("category") ?? "").split(",").filter(Boolean);
-    stable(cats);
-  }, [params, stable]);
-  return null;
-}
+import { navigateTo } from "@/lib/navigation";
 
 interface HeroProps {
-  // Props are optional — HeroSection is now self-contained and reads URL internally.
-  // Category pages that don't render HeroSection at all don't need to pass these.
   selectedCategories?: string[];
   onCategoryToggle?: (val: string) => void;
 }
@@ -56,9 +42,14 @@ function scrollToGrid() {
   document.getElementById("product-grid")?.scrollIntoView({ behavior: "smooth" });
 }
 
+function readUrlCategories(): string[] {
+  if (typeof window === "undefined") return [];
+  return (new URLSearchParams(window.location.search).get("category") ?? "")
+    .split(",")
+    .filter(Boolean);
+}
+
 export default function HeroSection({ selectedCategories: propCategories, onCategoryToggle }: HeroProps) {
-  const router = useRouter();
-  const pathname = usePathname();
   const [visible, setVisible] = useState(false);
   const [urlCategories, setUrlCategories] = useState<string[]>([]);
 
@@ -70,11 +61,22 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
     return () => clearTimeout(t);
   }, []);
 
+  // Sync categories from URL on mount and whenever any component updates the URL
+  useEffect(() => {
+    const sync = () => setUrlCategories(readUrlCategories());
+    sync(); // read on mount
+    window.addEventListener("app:urlchange", sync);
+    window.addEventListener("popstate",      sync);
+    return () => {
+      window.removeEventListener("app:urlchange", sync);
+      window.removeEventListener("popstate",      sync);
+    };
+  }, []);
+
   const handleCategoryClick = (value: string) => {
     if (onCategoryToggle) {
       onCategoryToggle(value);
     } else {
-      // Self-contained URL navigation
       const params = new URLSearchParams(window.location.search);
       const current = (params.get("category") ?? "").split(",").filter(Boolean);
       const next = current.includes(value)
@@ -83,7 +85,7 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
       if (next.length === 0) params.delete("category");
       else params.set("category", next.join(","));
       params.delete("page");
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      navigateTo(`${window.location.pathname}?${params.toString()}`);
     }
     scrollToGrid();
   };
@@ -94,12 +96,6 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
       aria-label="Hero sekcija"
       style={{ background: "#131921" }}
     >
-      {/* CategorySync keeps category pills reactive to URL without causing SSR bailout */}
-      {!propCategories && (
-        <Suspense fallback={null}>
-          <CategorySync onCategories={setUrlCategories} />
-        </Suspense>
-      )}
       <style>{`
         @keyframes heroFloat {
           0%   { transform: translateY(0px)   scale(1);    opacity: 0.2;  }
