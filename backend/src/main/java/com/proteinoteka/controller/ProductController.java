@@ -61,16 +61,16 @@ public class ProductController {
 
         Specification<Product> spec = buildSpec(name, storeName, brand, flavour, category, minPrice, maxPrice);
 
-        Sort fixedSort = Sort.by(
-                pageable.getSort().stream()
-                        .map(order -> NULLABLE_SORT_COLS.contains(order.getProperty())
-                                ? new Sort.Order(order.getDirection(), order.getProperty(), Sort.NullHandling.NULLS_LAST)
-                                : order)
-                        .toList()
-        );
-        Pageable fixedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), fixedSort);
+        // JPA Criteria API doesn't support NULLS LAST — exclude nulls via spec instead.
+        // Products with no valueScore/proteinPerRsd are irrelevant when sorting by those fields.
+        for (Sort.Order order : pageable.getSort()) {
+            if (NULLABLE_SORT_COLS.contains(order.getProperty())) {
+                final String prop = order.getProperty();
+                spec = spec.and((root, q, cb) -> cb.isNotNull(root.get(prop)));
+            }
+        }
 
-        return productRepository.findAll(spec, fixedPageable).map(this::convertToDTO);
+        return productRepository.findAll(spec, pageable).map(this::convertToDTO);
     }
 
     private Specification<Product> buildSpec(String name, String storeName, String brand,
