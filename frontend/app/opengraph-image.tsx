@@ -106,10 +106,11 @@ export default async function Image() {
             lineHeight: 1,
             marginBottom: "18px",
             display: "flex",
+            alignItems: "baseline",
           }}
         >
-          <span style={{ color: "#ffffff" }}>PROTEIN</span>
-          <span style={{ color: "#FF9900" }}>OTEKA</span>
+          <span style={{ color: "#ffffff", display: "flex" }}>PROTEIN</span>
+          <span style={{ color: "#FF9900", display: "flex", marginLeft: "-6px" }}>OTEKA</span>
         </div>
 
         {/* Orange accent bar */}
