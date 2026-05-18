@@ -7,6 +7,7 @@ import { Product } from "@/types/product";
 import Header from "@/components/Header";
 import Link from "next/link";
 import { ShoppingCart, ArrowLeft, Package, Zap, Droplets, Flame, Store, Bell, BellOff } from "lucide-react";
+import ScrollableRow from "@/components/ScrollableRow";
 import Image from "next/image";
 import { analytics } from "@/lib/analytics";
 import PricePerGramBadge from "@/components/PricePerGramBadge";
@@ -379,6 +380,9 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
                 primaryWeightGrams={product.primaryWeightGrams}
                 size="md"
               />
+              <p className="text-[11px] text-slate-400 mt-2 leading-snug">
+                Cene se ažuriraju nedeljno. Finalna cena na sajtu prodavca može se razlikovati.
+              </p>
             </div>
 
             {score != null && (
@@ -556,8 +560,7 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
         {similar.length > 0 && (
           <div className="mb-6">
             <h2 className="text-base font-bold text-slate-900 mb-4">Slični proizvodi</h2>
-            <div className="relative">
-            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
+            <ScrollableRow fadeFrom="from-slate-50" gap="gap-3">
               {similar.map((p) => (
                 <Link
                   key={p.id}
@@ -574,9 +577,7 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
                   {p.storeName && <p className="text-[10px] text-slate-400 mt-0.5">{p.storeName}</p>}
                 </Link>
               ))}
-            </div>
-            <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-slate-50 to-transparent" />
-            </div>
+            </ScrollableRow>
           </div>
         )}
 

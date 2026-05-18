@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Product } from "@/types/product";
 import FeaturedValueCard from "@/components/FeaturedValueCard";
 import FeaturedPriceDropCard from "@/components/FeaturedPriceDropCard";
+import ScrollableRow from "@/components/ScrollableRow";
 
 interface Props {
   topValueProducts: Product[];
@@ -11,17 +12,6 @@ interface Props {
 }
 
 type Tab = "value" | "drops";
-
-function ScrollRow({ children }: { children: React.ReactNode }) {
-  return (
-    <div
-      className="flex flex-nowrap gap-4 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden"
-      style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
-    >
-      {children}
-    </div>
-  );
-}
 
 export default function FeaturedSection({ topValueProducts, priceDropProducts }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("value");
@@ -82,21 +72,21 @@ export default function FeaturedSection({ topValueProducts, priceDropProducts }:
         <div key={activeTab} style={{ animation: "ftab 0.18s ease-out" }}>
           {activeTab === "value" ? (
             topValueProducts.length ? (
-              <ScrollRow>
+              <ScrollableRow fadeFrom="from-[#fff7ed]">
                 {topValueProducts.map((p) => (
                   <FeaturedValueCard key={p.id} product={p} />
                 ))}
-              </ScrollRow>
+              </ScrollableRow>
             ) : (
               <p className="text-sm text-slate-500 py-8 text-center">Nema podataka.</p>
             )
           ) : (
             priceDropProducts.length ? (
-              <ScrollRow>
+              <ScrollableRow fadeFrom="from-[#f8fafc]">
                 {priceDropProducts.map((p) => (
                   <FeaturedPriceDropCard key={p.id} product={p} />
                 ))}
-              </ScrollRow>
+              </ScrollableRow>
             ) : (
               <p className="text-sm text-slate-500 py-8 text-center">Trenutno nema proizvoda sa padom cene.</p>
             )
