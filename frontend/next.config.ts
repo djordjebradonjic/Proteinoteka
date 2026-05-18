@@ -2,19 +2,6 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  async redirects() {
-    return [
-      // www → non-www permanent redirect (301).
-      // Belt-and-suspenders alongside the middleware so the redirect fires
-      // even if middleware is bypassed by a direct Node.js connection.
-      {
-        source: "/:path*",
-        has: [{ type: "host", value: "www.proteinoteka.rs" }],
-        destination: "https://proteinoteka.rs/:path*",
-        permanent: true,
-      },
-    ];
-  },
   experimental: {
     scrollRestoration: true,
   },
