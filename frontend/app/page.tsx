@@ -50,14 +50,6 @@ export const metadata: Metadata = {
     title: "Proteinoteka – Da li je tvoj protein vredan novca?",
     description:
       "Poredimo cene whey proteina, izolata i kreatina iz svih srpskih prodavnica. Videćeš tačno koliko platiš po gramu proteina i gde je najisplativija kupovina.",
-    images: [
-      {
-        url: "/opengraph-image.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Proteinoteka – Poređenje cena proteina u Srbiji",
-      },
-    ],
   },
 
   twitter: {
@@ -65,7 +57,6 @@ export const metadata: Metadata = {
     title: "Proteinoteka – Najisplativiji protein u Srbiji",
     description:
       "Poredimo cene proteina iz svih prodavnica i računamo RSD/g proteina. Znaćeš uvek gde je najpametnije kupiti.",
-    images: ["/opengraph-image.jpg"],
   },
 
   robots: {
