@@ -1,11 +1,16 @@
 import { ImageResponse } from "next/og";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 
 export const alt = "Proteinoteka — Uporedi cene proteina u Srbiji";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-export default function Image() {
+export default async function Image() {
   const stores = ["Pansport", "Proteini.si", "FitLab", "ProteinBox", "Ogistrasport"];
+
+  const logoData = await readFile(join(process.cwd(), "public/logo.png"));
+  const logoSrc = `data:image/png;base64,${logoData.toString("base64")}`;
 
   return new ImageResponse(
     (
@@ -60,22 +65,37 @@ export default function Image() {
           }}
         />
 
-        {/* Badge */}
+        {/* Logo + badge row */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            background: "rgba(255,153,0,0.12)",
-            border: "1px solid rgba(255,153,0,0.28)",
-            borderRadius: "100px",
-            padding: "9px 22px",
-            width: "fit-content",
+            gap: "16px",
             marginBottom: "44px",
           }}
         >
-          <span style={{ color: "#FF9900", fontSize: "18px", fontWeight: "600" }}>
-            proteinoteka.rs
-          </span>
+          {/* Logo */}
+          <img
+            src={logoSrc}
+            alt="Proteinoteka logo"
+            style={{ width: "52px", height: "52px", objectFit: "contain", borderRadius: "10px" }}
+          />
+
+          {/* Domain badge */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              background: "rgba(255,153,0,0.12)",
+              border: "1px solid rgba(255,153,0,0.28)",
+              borderRadius: "100px",
+              padding: "9px 22px",
+            }}
+          >
+            <span style={{ color: "#FF9900", fontSize: "18px", fontWeight: "600" }}>
+              proteinoteka.rs
+            </span>
+          </div>
         </div>
 
         {/* Main title */}
@@ -83,13 +103,13 @@ export default function Image() {
           style={{
             fontSize: "88px",
             fontWeight: "900",
-            color: "#ffffff",
             lineHeight: 1,
             marginBottom: "18px",
             display: "flex",
           }}
         >
-          Proteinoteka
+          <span style={{ color: "#ffffff" }}>PROTEIN</span>
+          <span style={{ color: "#FF9900" }}>OTEKA</span>
         </div>
 
         {/* Orange accent bar */}
