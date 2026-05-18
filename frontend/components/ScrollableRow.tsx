@@ -58,13 +58,13 @@ export default function ScrollableRow({
     <div className="relative">
       {/* Left fade + arrow */}
       <div
-        className={`absolute left-0 top-0 bottom-2 w-16 bg-gradient-to-r ${fadeFrom} to-transparent pointer-events-none z-10 transition-opacity duration-200 ${canLeft ? "opacity-100" : "opacity-0"}`}
+        className={`absolute left-0 top-0 bottom-2 w-14 bg-gradient-to-r ${fadeFrom} to-transparent pointer-events-none z-10 transition-opacity duration-200 ${canLeft ? "opacity-100" : "opacity-0"}`}
       />
       <button
         onClick={() => scroll("left")}
-        className={`hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-20
-          w-9 h-9 rounded-full items-center justify-center
-          bg-white border border-slate-200 shadow-md
+        className={`flex absolute left-2 top-1/2 -translate-y-1/2 z-20
+          w-8 h-8 sm:w-9 sm:h-9 rounded-full items-center justify-center
+          bg-white/95 border border-slate-200 shadow-md
           text-slate-500 hover:text-[#FF9900] hover:border-[#FF9900] hover:shadow-lg
           transition-all duration-200
           ${canLeft ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
@@ -75,13 +75,13 @@ export default function ScrollableRow({
 
       {/* Right fade + arrow */}
       <div
-        className={`absolute right-0 top-0 bottom-2 w-16 bg-gradient-to-l ${fadeFrom} to-transparent pointer-events-none z-10 transition-opacity duration-200 ${canRight ? "opacity-100" : "opacity-0"}`}
+        className={`absolute right-0 top-0 bottom-2 w-14 bg-gradient-to-l ${fadeFrom} to-transparent pointer-events-none z-10 transition-opacity duration-200 ${canRight ? "opacity-100" : "opacity-0"}`}
       />
       <button
         onClick={() => scroll("right")}
-        className={`hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-20
-          w-9 h-9 rounded-full items-center justify-center
-          bg-white border border-slate-200 shadow-md
+        className={`flex absolute right-2 top-1/2 -translate-y-1/2 z-20
+          w-8 h-8 sm:w-9 sm:h-9 rounded-full items-center justify-center
+          bg-white/95 border border-slate-200 shadow-md
           text-slate-500 hover:text-[#FF9900] hover:border-[#FF9900] hover:shadow-lg
           transition-all duration-200
           ${canRight ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
