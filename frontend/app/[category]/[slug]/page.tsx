@@ -84,13 +84,11 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       description,
       url: canonical,
       siteName: "Proteinoteka",
-      images: product.imageUrl
-        ? [{ url: product.imageUrl, width: 800, height: 800, alt: product.name }]
-        : [],
       locale: "sr_RS",
       type: "website",
     },
     twitter: {
+      card: "summary_large_image",
       title,
       description,
     },

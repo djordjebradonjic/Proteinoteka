@@ -50,20 +50,11 @@ export const metadata: Metadata = {
     title: "Gde je najjeftiniji protein u Srbiji? | Proteinoteka",
     description:
       "Uštedi na suplementaciji. Uporedi cene svih brendova i saznaj koji whey protein nudi najviše za tvoj novac.",
-    images: [
-      {
-        url: "/opengraph-image.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Proteinoteka grafika sa uporednim cenama suplemenata",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Najbolje cene proteina u Srbiji | Proteinoteka",
     description: "Prestani da preplaćuješ suplemente. Uporedi cene odmah.",
-    images: ["/opengraph-image.jpg"],
   },
   robots: {
     index: true,

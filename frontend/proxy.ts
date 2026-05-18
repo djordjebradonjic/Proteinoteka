@@ -11,6 +11,22 @@ async function sessionToken(): Promise<string> {
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // www → non-www redirect (runs on all routes via catch-all matcher)
+  const host =
+    req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? "";
+  if (host.startsWith("www.")) {
+    const url = req.nextUrl.clone();
+    url.host = host.slice(4);
+    url.protocol = "https:";
+    url.port = "";
+    return NextResponse.redirect(url, { status: 301 });
+  }
+
+  // Admin auth guard — only for /admin and /api/admin routes
+  if (!pathname.startsWith("/admin") && !pathname.startsWith("/api/admin")) {
+    return NextResponse.next();
+  }
+
   if (pathname.startsWith("/admin/login") || pathname.startsWith("/api/admin/login")) {
     return NextResponse.next();
   }
@@ -29,5 +45,8 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin", "/admin/:path*", "/api/admin/login"],
+  matcher: [
+    // Run on every request except Next.js internals and static assets
+    "/((?!_next/static|_next/image|favicon\\.ico|robots\\.txt|sitemap\\.xml).*)",
+  ],
 };
