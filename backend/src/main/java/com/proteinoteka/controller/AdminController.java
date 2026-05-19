@@ -11,6 +11,8 @@ import com.proteinoteka.repository.BrandReputationRepository;
 import com.proteinoteka.repository.ProductRepository;
 import com.proteinoteka.repository.WishlistItemRepository;
 import com.proteinoteka.scheduler.ScrapingSchedulerService;
+import com.proteinoteka.dto.NutritionDataDTO;
+import com.proteinoteka.service.AiNutritionService;
 import com.proteinoteka.service.ScraperService;
 import com.proteinoteka.service.StoreScraper;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +46,7 @@ public class AdminController {
     private final AlertUnsubscribeRepository alertUnsubscribeRepository;
     private final MetricsCollectorService metricsCollector;
     private final DecisionRulesEngine rulesEngine;
+    private final AiNutritionService aiNutritionService;
 
 
     // All scrape endpoints run in a background thread and return 202 immediately.
@@ -226,5 +229,67 @@ public class AdminController {
             if (cache != null) cache.clear();
         });
         return ResponseEntity.ok("Updated " + updated + " products");
+    }
+
+    @PostMapping("/enrich-nutrition")
+    public ResponseEntity<String> enrichNutrition() {
+        List<Product> candidates = productRepository.findAll().stream()
+                .filter(p -> (p.getSugarPer100g() == null || p.getFatPer100g() == null)
+                        && p.getDescription() != null && !p.getDescription().isBlank())
+                .toList();
+
+        runAsync("enrich-nutrition", () -> {
+            int updated = 0;
+            for (Product p : candidates) {
+                try {
+                    NutritionDataDTO ai = aiNutritionService.extractNutritionData(
+                            p.getName(), p.getDescription(), p.getPackage_weight());
+                    if (ai == null) continue;
+
+                    boolean changed = false;
+                    if (p.getSugarPer100g() == null && ai.getSugarPer100g() != null) {
+                        p.setSugarPer100g(ai.getSugarPer100g());
+                        changed = true;
+                    }
+                    if (p.getFatPer100g() == null && ai.getFatPer100g() != null) {
+                        p.setFatPer100g(ai.getFatPer100g());
+                        changed = true;
+                    }
+                    if (p.getCaloriePer100g() == null && ai.getCaloriePer100g() != null) {
+                        p.setCaloriePer100g(ai.getCaloriePer100g());
+                        changed = true;
+                    }
+                    if (changed) {
+                        productRepository.save(p);
+                        updated++;
+                    }
+                } catch (Exception e) {
+                    // continue with next product
+                }
+            }
+
+            Map<String, Double> brandScores = brandReputationRepository.findAll().stream()
+                    .collect(Collectors.toMap(
+                            b -> b.getBrandName().toLowerCase().trim(),
+                            com.proteinoteka.model.BrandReputation::getScore,
+                            (a, b) -> a));
+            List<Product> all = productRepository.findAll();
+            for (Product p : all) {
+                double brandScore = p.getBrand() != null
+                        ? brandScores.getOrDefault(p.getBrand().toLowerCase().trim(), 4.5) : 4.5;
+                Double newScore = scraperService.calculateValueScore(p.getNumericPrice(), p, brandScore);
+                if (newScore != null) p.setValueScore(newScore);
+                p.setProteinPerRsd(scraperService.computeProteinPerRsd(p.getNumericPrice(), p));
+            }
+            productRepository.saveAll(all);
+
+            List.of("products", "products-meta", "products-search").forEach(name -> {
+                var cache = cacheManager.getCache(name);
+                if (cache != null) cache.clear();
+            });
+        });
+
+        return ResponseEntity.accepted().body(
+                "Nutrition enrichment started for " + candidates.size() + " products");
     }
 }
