@@ -7,9 +7,10 @@ import { productUrl } from "@/lib/productUrl";
 interface Props { product: Product }
 
 function vsConfig(vs: number) {
-  if (vs > 7) return { bg: "bg-green-50", border: "border-green-100", text: "text-green-600", dot: "🟢", label: "Odlična vrednost" };
-  if (vs >= 4) return { bg: "bg-amber-50",  border: "border-amber-100",  text: "text-amber-600",  dot: "🟡", label: "Prosečna vrednost" };
-  return          { bg: "bg-red-50",    border: "border-red-100",    text: "text-red-600",    dot: "🔴", label: "Slaba vrednost" };
+  if (vs >= 8.0) return { bg: "bg-green-50", border: "border-green-200", text: "text-green-700", dot: "🏆", label: "Izuzetna vrednost" };
+  if (vs >= 6.5) return { bg: "bg-emerald-50", border: "border-emerald-100", text: "text-emerald-600", dot: "✅", label: "Dobra vrednost" };
+  if (vs >= 5.0) return { bg: "bg-amber-50",  border: "border-amber-100",  text: "text-amber-600",  dot: "➡️", label: "Prosečna vrednost" };
+  return          { bg: "bg-red-50",    border: "border-red-100",    text: "text-red-600",    dot: "⚠️", label: "Slaba vrednost" };
 }
 
 export default function FeaturedValueCard({ product }: Props) {
@@ -61,6 +62,11 @@ export default function FeaturedValueCard({ product }: Props) {
             <span className={`inline-flex items-center gap-1 mt-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full ${cfg.bg} ${cfg.text} border ${cfg.border}`}>
               {cfg.dot} {cfg.label}
             </span>
+            {product.percentileRank != null && product.percentileRank >= 10 && (
+              <p className={`mt-1 text-[9px] ${cfg.text} opacity-70`}>
+                Bolje od {product.percentileRank}% proteina
+              </p>
+            )}
           </div>
         )}
 

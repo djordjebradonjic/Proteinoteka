@@ -4,9 +4,9 @@ import { Product } from "@/types/product";
 import { productUrl } from "@/lib/productUrl";
 
 function scoreColor(s: number) {
-  if (s >= 8.5) return "#22c55e";
-  if (s >= 7)   return "#84cc16";
-  if (s >= 5.5) return "#FF9900";
+  if (s >= 8.0) return "#16a34a";
+  if (s >= 6.5) return "#22c55e";
+  if (s >= 5.0) return "#FF9900";
   return "#ef4444";
 }
 

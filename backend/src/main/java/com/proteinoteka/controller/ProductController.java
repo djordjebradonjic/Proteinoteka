@@ -332,7 +332,8 @@ public class ProductController {
                 product.getCaloriePer100g(),
                 product.getProteinSource(),
                 product.getAiDescription(),
-                prevPrice
+                prevPrice,
+                product.getPercentileRank()
         );
     }
 }

@@ -223,6 +223,16 @@ public class AdminController {
             }
             p.setProteinPerRsd(scraperService.computeProteinPerRsd(p.getNumericPrice(), p));
         }
+        // Compute percentile ranks based on value score
+        List<Product> withScore = all.stream()
+                .filter(p -> p.getValueScore() != null)
+                .sorted(java.util.Comparator.comparingDouble(Product::getValueScore))
+                .toList();
+        for (int i = 0; i < withScore.size(); i++) {
+            int pct = (int) Math.round((double) i / withScore.size() * 100);
+            withScore.get(i).setPercentileRank(pct);
+        }
+
         productRepository.saveAll(all);
         List.of("products", "products-meta", "products-search").forEach(name -> {
             var cache = cacheManager.getCache(name);

@@ -92,21 +92,24 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
 
   const productHref = product.id ? productUrl(product) : "/";
 
-  const vs = product.valueScore;
+  const vs  = product.valueScore;
+  const pct = product.percentileRank;
   const vsBg =
     vs == null || vs <= 0 ? null
-    : vs >= 9.0 ? "#22c55e"
-    : vs >= 7.0 ? "#16a34a"
-    : vs >= 5.5 ? "#FF9900"
-    : vs >= 4.0 ? "#f97316"
+    : vs >= 8.0 ? "#16a34a"
+    : vs >= 6.5 ? "#22c55e"
+    : vs >= 5.0 ? "#FF9900"
     : "#ef4444";
   const vsLabel =
     vs == null || vs <= 0 ? null
-    : vs >= 9.0 ? "Best in class"
-    : vs >= 7.0 ? "Odlična kupovina"
-    : vs >= 5.5 ? "Dobar izbor"
-    : vs >= 4.0 ? "Prosečno"
-    : "Ne preporučuje se";
+    : vs >= 8.0 ? "Izuzetna vrednost"
+    : vs >= 6.5 ? "Dobra vrednost"
+    : vs >= 5.0 ? "Prosečna vrednost"
+    : "Slaba vrednost";
+  const vsPercentile =
+    pct != null && pct >= 10
+      ? `Bolje od ${pct}% proteina`
+      : null;
 
   const saveScroll = () => {
     sessionStorage.setItem(
@@ -202,7 +205,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
 
         {/* Value Score badge — bottom of image */}
         {vsBg && vs != null && (
-          <div className="absolute bottom-2 inset-x-2 z-10 flex justify-center pointer-events-none">
+          <div className="absolute bottom-2 inset-x-2 z-10 flex flex-col items-center gap-1 pointer-events-none">
             <div
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white shadow-lg"
               style={{ backgroundColor: vsBg }}
@@ -213,6 +216,11 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
                 {vsLabel}
               </span>
             </div>
+            {vsPercentile && (
+              <span className="text-[9px] font-semibold text-white bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-full leading-none">
+                {vsPercentile}
+              </span>
+            )}
           </div>
         )}
       </div>

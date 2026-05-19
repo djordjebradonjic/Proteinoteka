@@ -199,18 +199,17 @@ const CATEGORY_SLUGS: Record<string, string> = {
 };
 
 function scoreColor(score: number) {
-  if (score >= 8.5) return "#22c55e";
-  if (score >= 7)   return "#84cc16";
-  if (score >= 5.5) return "#FF9900";
+  if (score >= 8.0) return "#16a34a";
+  if (score >= 6.5) return "#22c55e";
+  if (score >= 5.0) return "#FF9900";
   return "#ef4444";
 }
 
 function scoreLabel(score: number) {
-  if (score >= 9)   return "Izvanredan";
-  if (score >= 8)   return "Odličan";
-  if (score >= 7)   return "Dobar";
-  if (score >= 5.5) return "Prosečan";
-  return "Slab";
+  if (score >= 8.0) return "Izuzetna vrednost";
+  if (score >= 6.5) return "Dobra vrednost";
+  if (score >= 5.0) return "Prosečna vrednost";
+  return "Slaba vrednost";
 }
 
 function NutritionRow({ label, value, unit, icon }: {
@@ -396,7 +395,10 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
                 <div>
                   <p className="text-xs uppercase tracking-wider text-slate-400 font-bold">Value Score</p>
                   <p className="text-base font-bold" style={{ color }}>{scoreLabel(score)}</p>
-                  <p className="text-xs text-slate-400">na skali 1–10</p>
+                  {product.percentileRank != null && product.percentileRank >= 10
+                    ? <p className="text-xs text-slate-400">Bolje od {product.percentileRank}% proteina</p>
+                    : <p className="text-xs text-slate-400">na skali 1–10</p>
+                  }
                 </div>
               </div>
             )}

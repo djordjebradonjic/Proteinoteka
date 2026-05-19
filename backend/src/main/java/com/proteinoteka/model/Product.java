@@ -84,6 +84,9 @@ public class Product {
     @Column(name = "protein_per_rsd")
     private Double proteinPerRsd;
 
+    @Column(name = "percentile_rank")
+    private Integer percentileRank;
+
     @Column(name = "ai_description", columnDefinition = "TEXT")
     private String aiDescription;
 }

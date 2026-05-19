@@ -25,4 +25,5 @@ export interface Product {
   primaryWeightGrams: number | null;
   aiDescription?: string;
   previousPrice?: number | null;
+  percentileRank?: number | null;
 }
