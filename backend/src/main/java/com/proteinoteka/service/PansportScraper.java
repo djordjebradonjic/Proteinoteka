@@ -260,7 +260,7 @@ public class PansportScraper implements StoreScraper {
                     // Protein
                     if ((label.contains("proteini") || label.contains("belančevine"))
                             && !label.contains("koncentrat") && !label.contains("izvor")) {
-                        if (value <= 100) p.setProteinPer100g(value);
+                        if (value > 0 && value <= 95) p.setProteinPer100g(value);
                     }
                     // Fat
                     else if (label.contains("masti") || label.contains("ukupne masti")

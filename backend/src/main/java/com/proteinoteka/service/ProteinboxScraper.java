@@ -252,7 +252,7 @@ public class ProteinboxScraper implements StoreScraper {
                 // Protein
                 if ((label.equals("proteini") || label.contains("belančevine"))
                         && !label.contains("koncentrat")) {
-                    if (value <= 100) p.setProteinPer100g(value);
+                    if (value > 0 && value <= 95) p.setProteinPer100g(value);
                 }
                 // Fat — samo "Masti", ne "zasićene"
                 else if (label.equals("masti") || label.equals("fat")) {
@@ -329,7 +329,7 @@ public class ProteinboxScraper implements StoreScraper {
 
                 if ((label.contains("proteini") || label.contains("belančevine"))
                         && !label.contains("koncentrat")) {
-                    if (per100g <= 100) p.setProteinPer100g(per100g);
+                    if (per100g > 0 && per100g <= 95) p.setProteinPer100g(per100g);
                 } else if (label.contains("masti") || label.contains("ukupne masti")) {
                     if (per100g <= 100) p.setFatPer100g(per100g);
                 } else if (label.contains("šećeri") || label.contains("seceri")) {

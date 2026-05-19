@@ -47,7 +47,8 @@ public class BaseScraperEnricher {
                 return;
             }
 
-            if (p.getProteinPer100g() == null && data.getProteinPer100g() != null)
+            if (p.getProteinPer100g() == null && data.getProteinPer100g() != null
+                    && data.getProteinPer100g() <= 95)
                 p.setProteinPer100g(data.getProteinPer100g());
 
             if (p.getSugarPer100g() == null && data.getSugarPer100g() != null)

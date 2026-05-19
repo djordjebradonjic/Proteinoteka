@@ -262,7 +262,7 @@ public class SupplementShopScraper implements StoreScraper {
                     if ((label.equals("proteini") || label.contains("belančevine"))
                             && !label.contains("koncentrat") && !label.contains("preparat")
                             && !label.contains("izvor")) {
-                        if (value <= 100) p.setProteinPer100g(value);
+                        if (value > 0 && value <= 95) p.setProteinPer100g(value);
                     }
                     // Fat — samo "Masti", ne zasićene
                     else if ((label.equals("masti") || label.equals("fat"))

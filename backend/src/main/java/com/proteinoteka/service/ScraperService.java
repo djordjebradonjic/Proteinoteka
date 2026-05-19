@@ -419,7 +419,7 @@ public class ScraperService {
                 existing.setPrimaryWeightGrams(weightGrams);
 
             // GROUP 3 — ažuriraj samo ako je null u bazi
-            if (scraped.getProteinPer100g() != null) {
+            if (scraped.getProteinPer100g() != null && scraped.getProteinPer100g() <= 95) {
                 if (existing.getProteinPer100g() == null || existing.getProteinPer100g() < 15) {
                     existing.setProteinPer100g(scraped.getProteinPer100g());
                 }

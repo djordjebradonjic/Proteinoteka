@@ -277,7 +277,7 @@ public class OgistraScraper implements StoreScraper {
             // Protein
             if ((label.contains("proteini") || label.contains("belančevine") || label.equals("protein"))
                     && !label.contains("koncentrat") && !label.contains("izvor") && !label.contains("preparat")) {
-                if (rounded > 0 && rounded <= 100) p.setProteinPer100g(rounded);
+                if (rounded > 0 && rounded <= 95) p.setProteinPer100g(rounded);
             }
             // Fat
             else if (label.contains("masti") || label.contains("ukupne masti") || label.equals("fat")) {
@@ -335,7 +335,7 @@ public class OgistraScraper implements StoreScraper {
             // Protein
             if ((label.contains("proteini") || label.contains("belančevine"))
                     && !label.contains("koncentrat") && !label.contains("izvor")) {
-                if (value <= 100) p.setProteinPer100g(value);
+                if (value > 0 && value <= 95) p.setProteinPer100g(value);
             }
             // Fat
             else if (label.contains("masti") || label.contains("ukupne masti") || label.equals("fat")) {

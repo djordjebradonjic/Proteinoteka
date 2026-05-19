@@ -316,7 +316,7 @@ public class FitLabScraper implements StoreScraper {
 
                     // Protein
                     if (label.equals("proteini") || label.equals("protein")) {
-                        if (value <= 100) p.setProteinPer100g(value);
+                        if (value > 0 && value <= 95) p.setProteinPer100g(value);
                     }
                     // Fat — "masti" but not "zasićene masti"
                     else if ((label.equals("masti") || label.equals("fat"))

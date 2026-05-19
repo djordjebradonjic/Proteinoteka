@@ -24,7 +24,7 @@ public class NutritionParserService {
         Matcher m0 = p0.matcher(text);
         if (m0.find()) {
             double val = parseDouble(m0.group(1));
-            if (val > 0 && val <= 100) {
+            if (val > 0 && val <= 95) {
                 log.info("Extracted protein per 100g (explicit notation): {}g/100g", val);
                 return val;
             }
@@ -40,7 +40,7 @@ public class NutritionParserService {
             double proteinPerServing = parseDouble(m05.group(2));
             if (servingSize > 0 && proteinPerServing > 0) {
                 double per100g = (proteinPerServing / servingSize) * 100.0;
-                if (per100g > 0 && per100g <= 100) {
+                if (per100g > 0 && per100g <= 95) {
                     return Math.round(per100g * 10) / 10.0;
                 }
             }
@@ -58,7 +58,7 @@ public class NutritionParserService {
             double second = parseDouble(m1.group(2));
             // Na 100g uvek veći broj
             double per100g = Math.max(first, second);
-            if (per100g > 0 && per100g <= 100) {
+            if (per100g > 0 && per100g <= 95) {
                 log.info("Extracted protein: {}g/100g", per100g);
                 return per100g;
             }
@@ -72,7 +72,7 @@ public class NutritionParserService {
         Matcher m2 = p2.matcher(text);
         if (m2.find()) {
             double val = parseDouble(m2.group(1));
-            if (val > 0 && val <= 100) {
+            if (val > 0 && val <= 95) {
                 log.info("Extracted protein from text: {}g", val);
                 return val;
             }
@@ -86,7 +86,7 @@ public class NutritionParserService {
         Matcher m3 = p3.matcher(text);
         if (m3.find()) {
             double val = parseDouble(m3.group(1));
-            if (val > 0 && val <= 100) {
+            if (val > 0 && val <= 95) {
                 log.info("Extracted protein from percentage: {}%", val);
                 return val;
             }
