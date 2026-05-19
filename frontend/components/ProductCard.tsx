@@ -203,11 +203,11 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           />
         </button>
 
-        {/* Value Score badge — bottom of image, full width */}
+        {/* Value Score badge — wide pill */}
         {vsBg && vs != null && (
-          <div className="absolute bottom-0 inset-x-0 z-10 pointer-events-none">
+          <div className="absolute bottom-2 inset-x-2 z-10 pointer-events-none">
             <div
-              className="flex items-center justify-between px-3 py-2 text-white"
+              className="w-full flex items-center justify-between px-3 py-1.5 rounded-full text-white shadow-lg"
               style={{ backgroundColor: vsBg }}
             >
               <div className="flex items-center gap-1.5">
