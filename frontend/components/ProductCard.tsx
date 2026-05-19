@@ -242,13 +242,20 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           {product.name}
         </h3>
 
-        <p className="text-sm md:text-base font-semibold text-[#1A1A1A] h-6 flex items-center gap-1">
-          {product.price.toLocaleString()}
-          <span className="text-[10px] font-medium text-[#8A8A9A]">
-            RSD
-          </span>
-          <PriceTrendIndicator currentPrice={product.numericPrice} previousPrice={product.previousPrice} />
-        </p>
+        <div className="flex flex-col gap-0.5 min-h-[2.5rem] justify-center">
+          {product.previousPrice != null &&
+           product.previousPrice > 0 &&
+           product.numericPrice < product.previousPrice && (
+            <span className="text-[10px] text-[#9CA3AF] line-through leading-none">
+              {product.previousPrice.toLocaleString()} RSD
+            </span>
+          )}
+          <p className="text-sm md:text-base font-semibold text-[#1A1A1A] flex items-center gap-1.5 leading-none">
+            {product.price.toLocaleString()}
+            <span className="text-[10px] font-medium text-[#8A8A9A]">RSD</span>
+            <PriceTrendIndicator currentPrice={product.numericPrice} previousPrice={product.previousPrice} />
+          </p>
+        </div>
 
         <div className="mb-1">
           <PricePerGramBadge

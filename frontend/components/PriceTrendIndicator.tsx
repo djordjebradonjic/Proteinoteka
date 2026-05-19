@@ -4,16 +4,22 @@ interface Props {
 }
 
 export function PriceTrendIndicator({ currentPrice, previousPrice }: Props) {
-  if (previousPrice == null || currentPrice === previousPrice) return null;
+  if (previousPrice == null || previousPrice <= 0 || currentPrice === previousPrice) return null;
 
   const dropped = currentPrice < previousPrice;
+  const pct = Math.round(Math.abs((currentPrice - previousPrice) / previousPrice) * 100);
+  if (pct < 1) return null;
+
   return (
     <span
-      className={`text-[11px] font-black leading-none ${dropped ? "text-green-500" : "text-red-500"}`}
-      title={dropped ? "Cena je pala" : "Cena je porasla"}
-      aria-label={dropped ? "Cena je pala" : "Cena je porasla"}
+      className={`inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
+        dropped
+          ? "bg-green-100 text-green-700"
+          : "bg-red-100 text-red-600"
+      }`}
+      title={dropped ? `Cena pala za ${pct}%` : `Cena porasla za ${pct}%`}
     >
-      {dropped ? "▼" : "▲"}
+      {dropped ? "▼" : "▲"} {pct}%
     </span>
   );
 }
