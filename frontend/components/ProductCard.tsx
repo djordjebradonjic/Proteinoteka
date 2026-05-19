@@ -243,7 +243,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
         <div className="flex flex-col gap-0.5 min-h-[2.5rem] justify-center">
           {product.previousPrice != null &&
            product.previousPrice > 0 &&
-           product.numericPrice < product.previousPrice && (
+           product.previousPrice !== product.numericPrice && (
             <span className="text-[10px] text-[#9CA3AF] line-through leading-none">
               {product.previousPrice.toLocaleString()} RSD
             </span>

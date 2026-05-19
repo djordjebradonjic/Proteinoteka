@@ -11,6 +11,7 @@ import ScrollableRow from "@/components/ScrollableRow";
 import Image from "next/image";
 import { analytics } from "@/lib/analytics";
 import PricePerGramBadge from "@/components/PricePerGramBadge";
+import { PriceTrendIndicator } from "@/components/PriceTrendIndicator";
 import { productUrl } from "@/lib/productUrl";
 import { getAlert, hasAlert, loadAlerts, deleteAlert, AlertEntry } from "@/lib/alerts";
 import { getWishlistEmail } from "@/lib/wishlistSync";
@@ -372,7 +373,20 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
 
             <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
               <p className="text-xs uppercase tracking-wider text-slate-400 font-bold mb-1">Trenutna cena</p>
-              <p className="text-4xl font-black text-slate-900 mb-1">{product.price}</p>
+              {product.previousPrice != null &&
+               product.previousPrice > 0 &&
+               product.previousPrice !== product.numericPrice && (
+                <p className="text-sm text-[#9CA3AF] line-through leading-none mb-1">
+                  {product.previousPrice.toLocaleString()} RSD
+                </p>
+              )}
+              <div className="flex items-center flex-wrap gap-2 mb-2">
+                <p className="text-3xl sm:text-4xl font-black text-slate-900 leading-none">{product.price}</p>
+                <PriceTrendIndicator
+                  currentPrice={product.numericPrice}
+                  previousPrice={product.previousPrice}
+                />
+              </div>
               <PricePerGramBadge
                 numericPrice={product.numericPrice}
                 proteinPer100g={product.proteinPer100g}

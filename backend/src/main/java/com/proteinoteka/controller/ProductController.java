@@ -304,8 +304,11 @@ public class ProductController {
 
     private ProductDTO convertToDTO(Product product) {
         Double prevPrice = product.getPriceHistories().stream()
-                .max(Comparator.comparing(PriceHistory::getTimestamp))
+                .filter(h -> h.getNumericPrice() != null && h.getNumericPrice() > 0)
+                .sorted(Comparator.comparing(PriceHistory::getTimestamp).reversed())
+                .skip(1)
                 .map(PriceHistory::getNumericPrice)
+                .findFirst()
                 .orElse(null);
 
         return new ProductDTO(
