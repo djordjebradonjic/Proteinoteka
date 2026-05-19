@@ -565,6 +565,9 @@ public class ScraperService {
     }
 
     private double extractPackageGrams(Product p) {
+        if (p.getPrimaryWeightGrams() != null && p.getPrimaryWeightGrams() > 0) {
+            return p.getPrimaryWeightGrams();
+        }
         if (p.getPackage_weight() == null || p.getPackage_weight().isEmpty()) return 0;
 
         for (String raw : p.getPackage_weight()) {
