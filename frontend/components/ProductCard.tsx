@@ -203,24 +203,26 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           />
         </button>
 
-        {/* Value Score badge — bottom of image */}
+        {/* Value Score badge — bottom of image, full width */}
         {vsBg && vs != null && (
-          <div className="absolute bottom-2 inset-x-2 z-10 flex flex-col items-center gap-1 pointer-events-none">
+          <div className="absolute bottom-0 inset-x-0 z-10 pointer-events-none">
             <div
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white shadow-lg"
+              className="flex items-center justify-between px-3 py-2 text-white"
               style={{ backgroundColor: vsBg }}
             >
-              <span className="text-xs leading-none">⚡</span>
-              <span className="text-sm font-black tabular-nums leading-none">{vs.toFixed(1)}</span>
-              <span className="hidden sm:block text-[9px] font-semibold uppercase tracking-widest opacity-90 leading-none">
-                {vsLabel}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs leading-none">⚡</span>
+                <span className="text-sm font-black tabular-nums leading-none">{vs.toFixed(1)}</span>
+                <span className="text-[10px] font-semibold uppercase tracking-wider opacity-90 leading-none">
+                  {vsLabel}
+                </span>
+              </div>
+              {vsPercentile && (
+                <span className="text-[9px] font-semibold opacity-80 leading-none">
+                  {vsPercentile}
+                </span>
+              )}
             </div>
-            {vsPercentile && (
-              <span className="text-[9px] font-semibold text-white bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-full leading-none">
-                {vsPercentile}
-              </span>
-            )}
           </div>
         )}
       </div>
