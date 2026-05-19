@@ -205,17 +205,22 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
 
         {/* Value Score badge */}
         {vsBg && vs != null && (
-          <div className="absolute bottom-2 inset-x-2 z-10 flex justify-center pointer-events-none">
+          <div className="absolute bottom-2 inset-x-2 z-10 flex flex-col items-center gap-1 pointer-events-none">
             <div
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white shadow-lg"
               style={{ backgroundColor: vsBg }}
             >
               <span className="text-xs leading-none">⚡</span>
               <span className="text-sm font-black tabular-nums leading-none">{vs.toFixed(1)}</span>
-              <span className="text-[9px] font-semibold uppercase tracking-widest opacity-90 leading-none">
+              <span className="text-[10px] font-semibold tracking-wide opacity-90 leading-none">
                 {vsLabel}
               </span>
             </div>
+            {vsPercentile && (
+              <span className="text-[9px] font-semibold text-white bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-full leading-none">
+                {vsPercentile}
+              </span>
+            )}
           </div>
         )}
       </div>
