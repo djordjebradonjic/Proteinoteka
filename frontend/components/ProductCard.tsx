@@ -96,16 +96,16 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
   const pct = product.percentileRank;
   const vsBg =
     vs == null || vs <= 0 ? null
-    : vs >= 8.0 ? "#16a34a"
+    : vs >= 8.0 ? "#86efac"
     : vs >= 6.5 ? "#22c55e"
-    : vs >= 5.0 ? "#FF9900"
-    : "#ef4444";
+    : vs >= 5.0 ? "#f59e0b"
+    : "#ea580c";
   const vsLabel =
     vs == null || vs <= 0 ? null
-    : vs >= 8.0 ? "Izuzetna vrednost"
-    : vs >= 6.5 ? "Dobra vrednost"
-    : vs >= 5.0 ? "Prosečna vrednost"
-    : "Slaba vrednost";
+    : vs >= 8.0 ? "Izuzetna"
+    : vs >= 6.5 ? "Dobra"
+    : vs >= 5.0 ? "Prosečna"
+    : "Slaba";
   const vsPercentile =
     pct != null && pct >= 10
       ? `Bolje od ${pct}% proteina`

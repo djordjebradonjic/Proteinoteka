@@ -7,10 +7,10 @@ import { productUrl } from "@/lib/productUrl";
 interface Props { product: Product }
 
 function vsConfig(vs: number) {
-  if (vs >= 8.0) return { bg: "bg-green-50", border: "border-green-200", text: "text-green-700", dot: "🏆", label: "Izuzetna vrednost" };
-  if (vs >= 6.5) return { bg: "bg-emerald-50", border: "border-emerald-100", text: "text-emerald-600", dot: "✅", label: "Dobra vrednost" };
-  if (vs >= 5.0) return { bg: "bg-amber-50",  border: "border-amber-100",  text: "text-amber-600",  dot: "➡️", label: "Prosečna vrednost" };
-  return          { bg: "bg-red-50",    border: "border-red-100",    text: "text-red-600",    dot: "⚠️", label: "Slaba vrednost" };
+  if (vs >= 8.0) return { bg: "bg-green-50",  border: "border-green-200",  text: "text-green-500",  dot: "🏆", label: "Izuzetna", color: "#86efac" };
+  if (vs >= 6.5) return { bg: "bg-green-50",  border: "border-green-100",  text: "text-green-600",  dot: "✅", label: "Dobra",     color: "#22c55e" };
+  if (vs >= 5.0) return { bg: "bg-amber-50",  border: "border-amber-100",  text: "text-amber-500",  dot: "➡️", label: "Prosečna", color: "#f59e0b" };
+  return          { bg: "bg-orange-50", border: "border-orange-100", text: "text-orange-600", dot: "⚠️", label: "Slaba",     color: "#ea580c" };
 }
 
 export default function FeaturedValueCard({ product }: Props) {

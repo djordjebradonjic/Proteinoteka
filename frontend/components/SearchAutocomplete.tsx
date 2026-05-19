@@ -29,16 +29,16 @@ function debounce<T extends (...args: any[]) => void>(fn: T, delay: number): T {
 
 function ValueBadge({ score }: { score: number }) {
   const color =
-    score >= 8.0 ? "#16a34a"
+    score >= 8.0 ? "#86efac"
       : score >= 6.5 ? "#22c55e"
-      : score >= 5.0 ? "#FF9900"
-      : "#ef4444";
+      : score >= 5.0 ? "#f59e0b"
+      : "#ea580c";
 
   const label =
-    score >= 8.0 ? "Izuzetna vrednost"
-      : score >= 6.5 ? "Dobra vrednost"
-      : score >= 5.0 ? "Prosečna vrednost"
-      : "Slaba vrednost";
+    score >= 8.0 ? "Izuzetna"
+      : score >= 6.5 ? "Dobra"
+      : score >= 5.0 ? "Prosečna"
+      : "Slaba";
 
 
   return (

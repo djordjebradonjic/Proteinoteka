@@ -4,10 +4,10 @@ import { Product } from "@/types/product";
 import { productUrl } from "@/lib/productUrl";
 
 function scoreColor(s: number) {
-  if (s >= 8.0) return "#16a34a";
+  if (s >= 8.0) return "#86efac";
   if (s >= 6.5) return "#22c55e";
-  if (s >= 5.0) return "#FF9900";
-  return "#ef4444";
+  if (s >= 5.0) return "#f59e0b";
+  return "#ea580c";
 }
 
 export function SEOProductCard({ product, rank }: { product: Product; rank: number }) {

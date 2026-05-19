@@ -199,17 +199,17 @@ const CATEGORY_SLUGS: Record<string, string> = {
 };
 
 function scoreColor(score: number) {
-  if (score >= 8.0) return "#16a34a";
+  if (score >= 8.0) return "#86efac";
   if (score >= 6.5) return "#22c55e";
-  if (score >= 5.0) return "#FF9900";
-  return "#ef4444";
+  if (score >= 5.0) return "#f59e0b";
+  return "#ea580c";
 }
 
 function scoreLabel(score: number) {
-  if (score >= 8.0) return "Izuzetna vrednost";
-  if (score >= 6.5) return "Dobra vrednost";
-  if (score >= 5.0) return "Prosečna vrednost";
-  return "Slaba vrednost";
+  if (score >= 8.0) return "Izuzetna";
+  if (score >= 6.5) return "Dobra";
+  if (score >= 5.0) return "Prosečna";
+  return "Slaba";
 }
 
 function NutritionRow({ label, value, unit, icon }: {
