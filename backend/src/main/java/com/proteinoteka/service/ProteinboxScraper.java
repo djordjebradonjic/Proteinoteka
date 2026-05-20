@@ -49,6 +49,8 @@ public class ProteinboxScraper implements StoreScraper {
         try {
             page.waitForSelector("li.product",
                     new Page.WaitForSelectorOptions().setTimeout(8000));
+            // Give WooCommerce JS time to populate variable product prices
+            page.waitForTimeout(2500);
         } catch (Exception e) {
             log.warn("[{}] Playwright blocked — falling back to JSoup for listing: {}", STORE_NAME, page.url());
             try {
@@ -124,8 +126,8 @@ public class ProteinboxScraper implements StoreScraper {
                 }
 
                 if (isBlocked(page)) {
-                    log.error("[{}] FIREWALL DETECTED on {}! Stopping.", STORE_NAME, p.getUrl());
-                    return;
+                    log.warn("[{}] FIREWALL on {}, skipping product", STORE_NAME, p.getUrl());
+                    continue;
                 }
 
                 page.waitForTimeout(500 + (long)(Math.random() * 1000));
@@ -134,6 +136,7 @@ public class ProteinboxScraper implements StoreScraper {
 
                 Document doc = Jsoup.parse(page.content());
 
+                enrichPriceIfMissing(doc, p);
                 enrichBrand(doc, p);
                 enrichPackageWeights(doc, p);
                 enrichFlavours(doc, p);
@@ -231,7 +234,7 @@ public class ProteinboxScraper implements StoreScraper {
                 if (per100gCol >= 0) break;
             }
 
-            if (per100gCol < 1) return;
+            if (per100gCol < 0) return;
 
             for (Element row : rows) {
                 Elements cells = row.select("td");
@@ -344,6 +347,20 @@ public class ProteinboxScraper implements StoreScraper {
     }
 
     // -------------------- Other enrichment --------------------
+
+    private void enrichPriceIfMissing(Document doc, Product p) {
+        if (p.getPrice() != null && !p.getPrice().isBlank() && !p.getPrice().startsWith("0")) return;
+        // Variable products show 0,00 in listing — try to get real price from detail page
+        Element priceEl = doc.selectFirst(".summary .price .woocommerce-Price-amount.amount bdi");
+        if (priceEl == null) priceEl = doc.selectFirst(".price .woocommerce-Price-amount.amount bdi");
+        if (priceEl != null) {
+            String raw = priceEl.text().replace(" ", "").replace("RSD", "").trim();
+            if (!raw.isBlank() && !raw.startsWith("0")) {
+                p.setPrice(raw);
+                log.info("[{}] Updated price from detail page for '{}': {}", STORE_NAME, p.getName(), raw);
+            }
+        }
+    }
 
     private void enrichBrand(Document doc, Product p) {
         Element brandEl = doc.selectFirst("div.product-proizvodjaci a");
