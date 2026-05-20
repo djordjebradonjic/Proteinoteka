@@ -212,7 +212,7 @@ public class ProductController {
                 .toList();
     }
 
-    @Cacheable("products")
+    @Cacheable(value = "products", unless = "#result.isEmpty()")
     @GetMapping("/price-drops")
     public List<ProductDTO> getPriceDrops(
             @RequestParam(defaultValue = "5") int limit) {
@@ -306,7 +306,6 @@ public class ProductController {
         Double prevPrice = product.getPriceHistories().stream()
                 .filter(h -> h.getNumericPrice() != null && h.getNumericPrice() > 0)
                 .sorted(Comparator.comparing(PriceHistory::getTimestamp).reversed())
-                .skip(1)
                 .map(PriceHistory::getNumericPrice)
                 .findFirst()
                 .orElse(null);

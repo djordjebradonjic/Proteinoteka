@@ -17,7 +17,7 @@ public interface PriceHistoryRepository extends JpaRepository<PriceHistory, Long
     @Query("SELECT DISTINCT h.product FROM PriceHistory h WHERE h.timestamp >= :since")
     List<Product> findProductsWithHistorySince(@Param("since") LocalDateTime since);
 
-    @Query("SELECT p FROM products p WHERE SIZE(p.priceHistories) >= 2")
+    @Query("SELECT p FROM products p WHERE SIZE(p.priceHistories) >= 1")
     List<Product> findProductsWithMultiplePriceEntries();
 
     // Returns the lowest recorded price in the last 30 days for a given product.
