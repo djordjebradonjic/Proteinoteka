@@ -150,6 +150,15 @@ public class ScraperService {
                                 ))
                 );
 
+                context.addInitScript("""
+                        Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+                        window.chrome = { runtime: {}, loadTimes: function(){}, csi: function(){}, app: {} };
+                        Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
+                        Object.defineProperty(navigator, 'languages', { get: () => ['sr-RS', 'sr', 'en-US', 'en'] });
+                        Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => 8 });
+                        Object.defineProperty(navigator, 'deviceMemory', { get: () => 8 });
+                        """);
+
                 try {
                     Page page = context.newPage();
 
