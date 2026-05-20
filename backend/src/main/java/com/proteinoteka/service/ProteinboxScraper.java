@@ -102,8 +102,6 @@ public class ProteinboxScraper implements StoreScraper {
     // -------------------- Detail page enrichment --------------------
 
     private void enrichWithDetails(Page page, List<Product> products) {
-        page.route("**/*.{png,jpg,jpeg,gif,svg,css,woff2}", route -> route.abort());
-
         if (page.title().contains("Cloudflare") || page.title().contains("Attention Required")) {
             log.error("[{}] DETECTED BY FIREWALL! Stopping scraper.", STORE_NAME);
             return;

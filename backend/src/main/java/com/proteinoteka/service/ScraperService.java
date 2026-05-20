@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
@@ -59,11 +60,19 @@ public class ScraperService {
     @Value("${scraping.stale.max-removal-percent:50}")
     private int maxRemovalPercent;
 
+    // Playwright 1.42 bundles Chromium 123 — keep UA versions close to engine to avoid sec-ch-ua mismatch.
+    // No Firefox/Safari — TLS fingerprint would mismatch the Chromium engine.
     private static final List<String> USER_AGENTS = List.of(
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36 Edg/123.0.0.0",
             "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
-            "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1"
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
     );
 
     // -------------------- Public API --------------------
@@ -133,11 +142,16 @@ public class ScraperService {
                                 .setLocale("sr-RS")
                                 .setTimezoneId("Europe/Belgrade")
                                 .setDeviceScaleFactor(1)
+                                .setExtraHTTPHeaders(Map.of(
+                                        "Accept-Language", "sr-RS,sr;q=0.9,en-US;q=0.8,en;q=0.7",
+                                        "Accept-Encoding", "gzip, deflate, br",
+                                        "DNT", "1",
+                                        "Upgrade-Insecure-Requests", "1"
+                                ))
                 );
 
                 try {
                     Page page = context.newPage();
-                    page.route("**/*.{png,jpg,jpeg,gif,svg,webp}", route -> route.abort());
 
                     int currentPage = 0;
 
@@ -308,12 +322,15 @@ public class ScraperService {
 
     private void simulateHumanScroll(Page page) {
         try {
-            page.mouse().wheel(0, 400);
-            Thread.sleep(300);
-            page.mouse().wheel(0, 600);
-            Thread.sleep(200);
-            page.mouse().wheel(0, -300);
-            Thread.sleep(150);
+            int scrolls = 2 + ThreadLocalRandom.current().nextInt(4);
+            for (int i = 0; i < scrolls; i++) {
+                int delta = i == 0
+                        ? 250 + ThreadLocalRandom.current().nextInt(450)
+                        : (ThreadLocalRandom.current().nextBoolean() ? 1 : -1)
+                          * (100 + ThreadLocalRandom.current().nextInt(550));
+                page.mouse().wheel(0, delta);
+                Thread.sleep(120 + ThreadLocalRandom.current().nextLong(680));
+            }
         } catch (Exception ignored) {}
     }
 

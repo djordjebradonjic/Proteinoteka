@@ -452,12 +452,15 @@ public class FitLabScraper implements StoreScraper {
 
     private void simulateReading(Page page) {
         try {
-            page.mouse().wheel(0, 300 + ThreadLocalRandom.current().nextInt(200));
-            Thread.sleep(500 + ThreadLocalRandom.current().nextInt(500));
-            page.mouse().wheel(0, 400 + ThreadLocalRandom.current().nextInt(300));
-            Thread.sleep(700 + ThreadLocalRandom.current().nextInt(500));
-            page.mouse().wheel(0, -200 - ThreadLocalRandom.current().nextInt(100));
-            Thread.sleep(300 + ThreadLocalRandom.current().nextInt(300));
+            int scrolls = 3 + ThreadLocalRandom.current().nextInt(4);
+            for (int i = 0; i < scrolls; i++) {
+                int delta = i == 0
+                        ? 200 + ThreadLocalRandom.current().nextInt(400)
+                        : (ThreadLocalRandom.current().nextBoolean() ? 1 : -1)
+                          * (100 + ThreadLocalRandom.current().nextInt(500));
+                page.mouse().wheel(0, delta);
+                Thread.sleep(400 + ThreadLocalRandom.current().nextLong(800));
+            }
         } catch (Exception ignored) {}
     }
 

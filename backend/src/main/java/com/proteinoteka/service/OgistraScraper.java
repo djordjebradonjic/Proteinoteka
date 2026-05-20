@@ -160,7 +160,7 @@ public class OgistraScraper implements StoreScraper {
 
 
             try {
-                Thread.sleep(ThreadLocalRandom.current().nextLong(2500, 5000));
+                Thread.sleep(ThreadLocalRandom.current().nextLong(6000, 12000));
 
                 if (!navigateWithRetry(page, p.getUrl(), 3)) {
                     log.error("[{}] Failed to load {} after retries, skipping", STORE_NAME, p.getUrl());
@@ -192,6 +192,7 @@ public class OgistraScraper implements StoreScraper {
                 if (count % 15 == 0) {
                     long longSleep = ThreadLocalRandom.current().nextLong(40000, 60000);
                     log.info("[{}] Batch of 15 done, sleeping {}s...", STORE_NAME, longSleep / 1000);
+                    try { page.navigate("about:blank"); } catch (Exception ignored) {}
                     Thread.sleep(longSleep);
                 }
 
