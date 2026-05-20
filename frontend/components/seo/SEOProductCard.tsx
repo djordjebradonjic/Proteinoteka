@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Product } from "@/types/product";
 import { productUrl } from "@/lib/productUrl";
-import { formatPrice } from "@/lib/formatPrice";
+import PriceTag from "@/components/PriceTag";
 
 function scoreColor(s: number) {
   if (s >= 8.0) return "#86efac";
@@ -55,7 +55,7 @@ export function SEOProductCard({ product, rank }: { product: Product; rank: numb
           </span>
         </div>
         <div className="flex items-center gap-2 mt-2 flex-wrap">
-          <span className="text-base font-black text-slate-900">{formatPrice(product.numericPrice)}</span>
+          <PriceTag price={product.numericPrice} className="text-base font-black text-slate-900" />
           {score != null && (
             <span
               className="text-[10px] font-bold px-2 py-0.5 rounded-full"

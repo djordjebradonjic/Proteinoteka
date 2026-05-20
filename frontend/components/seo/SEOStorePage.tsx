@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Product } from "@/types/product";
 import { productUrl } from "@/lib/productUrl";
-import { formatPrice } from "@/lib/formatPrice";
+import PriceTag from "@/components/PriceTag";
 import Header from "@/components/Header";
 import { SEOProductCard } from "./SEOProductCard";
 
@@ -82,7 +82,7 @@ function DecisionSummary({ products }: { products: Product[] }) {
             <div className="text-[10px] font-bold uppercase text-slate-400 tracking-wide mb-1">{label}</div>
             <div className="font-bold text-sm text-slate-900 line-clamp-2 leading-snug flex-1">{product.name}</div>
             <div className="mt-2 flex items-center justify-between flex-wrap gap-1">
-              <span className="text-base font-black text-[#FF9900]">{formatPrice(product.numericPrice)}</span>
+              <PriceTag price={product.numericPrice} className="text-base font-black text-[#FF9900]" currencyClassName="text-[0.7em] font-medium text-[#FF9900] opacity-70 ml-1" />
               {extra && <span className="text-[10px] text-slate-400">{extra}</span>}
             </div>
           </Link>

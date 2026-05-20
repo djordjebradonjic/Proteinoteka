@@ -3,7 +3,7 @@ import Image from "next/image";
 import { Package } from "lucide-react";
 import { Product } from "@/types/product";
 import { productUrl } from "@/lib/productUrl";
-import { formatPrice } from "@/lib/formatPrice";
+import PriceTag from "@/components/PriceTag";
 
 interface Props { product: Product }
 
@@ -73,7 +73,7 @@ export default function FeaturedValueCard({ product }: Props) {
 
         {/* Price + RSD/g */}
         <div className="mt-auto pt-1">
-          <p className="text-lg font-semibold text-slate-900">{formatPrice(product.numericPrice)}</p>
+          <PriceTag price={product.numericPrice} className="text-lg font-semibold text-slate-900" />
           {ppg != null && ppg < 50 && (
             <p className="text-xs text-slate-400">🏷️ {ppg.toFixed(1)} RSD/g proteina</p>
           )}

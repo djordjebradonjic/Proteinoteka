@@ -4,6 +4,7 @@ import { Package } from "lucide-react";
 import { Product } from "@/types/product";
 import { productUrl } from "@/lib/productUrl";
 import { formatPrice } from "@/lib/formatPrice";
+import PriceTag from "@/components/PriceTag";
 
 interface Props { product: Product }
 
@@ -57,19 +58,19 @@ export default function FeaturedPriceDropCard({ product }: Props) {
             </p>
             <div className="flex items-baseline gap-2 flex-wrap">
               {prev != null && (
-                <span className="text-sm line-through text-slate-400">{formatPrice(prev)}</span>
+                <span className="text-sm line-through text-slate-400"><PriceTag price={prev} className="text-sm line-through text-slate-400" currencyClassName="text-[0.85em] ml-0.5 text-slate-400" /></span>
               )}
-              <span className="text-lg font-bold text-slate-900">{formatPrice(product.numericPrice)}</span>
+              <PriceTag price={product.numericPrice} className="text-lg font-bold text-slate-900" />
             </div>
             {savings > 0 && (
               <p className="text-sm text-green-600 font-semibold mt-1.5">
-                Uštedite {formatPrice(savings)}
+                Uštedite <PriceTag price={savings} className="text-sm text-green-600 font-semibold" currencyClassName="text-[0.85em] ml-0.5 text-green-500" />
               </p>
             )}
           </div>
         ) : (
           <div className="mt-auto pt-1">
-            <p className="text-lg font-semibold text-slate-900">{formatPrice(product.numericPrice)}</p>
+            <PriceTag price={product.numericPrice} className="text-lg font-semibold text-slate-900" />
           </div>
         )}
 
