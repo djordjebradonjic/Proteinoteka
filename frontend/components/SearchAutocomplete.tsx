@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { analytics } from "@/lib/analytics";
 import { productUrl } from "@/lib/productUrl";
+import { formatPrice } from "@/lib/formatPrice";
 
 interface ProductSuggestion {
   id: number;
@@ -322,7 +323,7 @@ export default function SearchAutocomplete({
               {/* Cena + badge */}
               <div className="shrink-0 flex flex-col items-end gap-1">
                 <span className="text-sm font-bold text-[#131921] whitespace-nowrap">
-                  {product.price}
+                  {formatPrice(product.numericPrice)}
                 </span>
                 {product.valueScore != null && (
                   <ValueBadge score={product.valueScore} />

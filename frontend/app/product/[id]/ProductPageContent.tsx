@@ -16,6 +16,7 @@ import { productUrl } from "@/lib/productUrl";
 import { getAlert, hasAlert, loadAlerts, deleteAlert, AlertEntry } from "@/lib/alerts";
 import { getWishlistEmail } from "@/lib/wishlistSync";
 import PriceAlertModal from "@/components/PriceAlertModal";
+import { formatPrice } from "@/lib/formatPrice";
 
 const PriceHistoryChart = dynamic(() => import("@/components/PriceHistoryChart"), { ssr: false });
 
@@ -377,11 +378,11 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
                product.previousPrice > 0 &&
                product.previousPrice !== product.numericPrice && (
                 <p className="text-sm text-[#9CA3AF] line-through leading-none mb-1">
-                  {product.previousPrice.toLocaleString()} RSD
+                  {formatPrice(product.previousPrice)}
                 </p>
               )}
               <div className="flex items-center flex-wrap gap-2 mb-2">
-                <p className="text-3xl sm:text-4xl font-black text-slate-900 leading-none">{product.price}</p>
+                <p className="text-3xl sm:text-4xl font-black text-slate-900 leading-none">{formatPrice(product.numericPrice)}</p>
                 <PriceTrendIndicator
                   currentPrice={product.numericPrice}
                   previousPrice={product.previousPrice}

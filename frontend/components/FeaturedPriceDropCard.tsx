@@ -3,12 +3,9 @@ import Image from "next/image";
 import { Package } from "lucide-react";
 import { Product } from "@/types/product";
 import { productUrl } from "@/lib/productUrl";
+import { formatPrice } from "@/lib/formatPrice";
 
 interface Props { product: Product }
-
-function fmtPrice(n: number): string {
-  return Math.round(n).toLocaleString("de-DE").replace(".", ".") + " RSD";
-}
 
 export default function FeaturedPriceDropCard({ product }: Props) {
   const curr    = product.numericPrice;
@@ -60,19 +57,19 @@ export default function FeaturedPriceDropCard({ product }: Props) {
             </p>
             <div className="flex items-baseline gap-2 flex-wrap">
               {prev != null && (
-                <span className="text-sm line-through text-slate-400">{fmtPrice(prev)}</span>
+                <span className="text-sm line-through text-slate-400">{formatPrice(prev)}</span>
               )}
-              <span className="text-lg font-bold text-slate-900">{product.price}</span>
+              <span className="text-lg font-bold text-slate-900">{formatPrice(product.numericPrice)}</span>
             </div>
             {savings > 0 && (
               <p className="text-sm text-green-600 font-semibold mt-1.5">
-                Uštedite {savings.toLocaleString("de-DE")} RSD
+                Uštedite {formatPrice(savings)}
               </p>
             )}
           </div>
         ) : (
           <div className="mt-auto pt-1">
-            <p className="text-lg font-semibold text-slate-900">{product.price}</p>
+            <p className="text-lg font-semibold text-slate-900">{formatPrice(product.numericPrice)}</p>
           </div>
         )}
 

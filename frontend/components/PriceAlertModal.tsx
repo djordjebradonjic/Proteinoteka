@@ -242,7 +242,7 @@ export default function PriceAlertModal({ product, initialAlert, onClose }: Prop
                   )}
                   <div className="min-w-0">
                     <p className="text-xs font-semibold text-slate-800 truncate leading-tight">{product.name}</p>
-                    <p className="text-base font-black text-slate-900 mt-0.5">{product.price}</p>
+                    <p className="text-base font-black text-slate-900 mt-0.5">{formatPrice(product.numericPrice ?? 0)} RSD</p>
                   </div>
                 </div>
 

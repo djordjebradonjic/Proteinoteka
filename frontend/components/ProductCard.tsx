@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { PriceTrendIndicator } from "@/components/PriceTrendIndicator";
 import PricePerGramBadge from "@/components/PricePerGramBadge";
+import { formatPrice } from "@/lib/formatPrice";
 import { Bell, Heart } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
@@ -245,12 +246,11 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
            product.previousPrice > 0 &&
            product.previousPrice !== product.numericPrice && (
             <span className="text-[10px] text-[#9CA3AF] line-through leading-none">
-              {product.previousPrice.toLocaleString()} RSD
+              {formatPrice(product.previousPrice)}
             </span>
           )}
           <p className="text-sm md:text-base font-semibold text-[#1A1A1A] flex items-center gap-1.5 leading-none">
-            {product.price.toLocaleString()}
-            <span className="text-[10px] font-medium text-[#8A8A9A]">RSD</span>
+            {formatPrice(product.numericPrice)}
             <PriceTrendIndicator currentPrice={product.numericPrice} previousPrice={product.previousPrice} />
           </p>
         </div>

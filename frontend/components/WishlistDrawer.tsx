@@ -32,6 +32,7 @@ import {
   getAlert,
 } from "@/lib/alerts";
 import PriceAlertModal from "@/components/PriceAlertModal";
+import { formatPrice } from "@/lib/formatPrice";
 
 function ValueBadge({ score }: { score: number }) {
   const color =
@@ -231,7 +232,7 @@ export default function WishlistDrawer() {
                         {product.storeName && <span>{product.storeName}</span>}
                       </p>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        <span className="text-xs font-bold text-slate-800">{product.price}</span>
+                        <span className="text-xs font-bold text-slate-800">{formatPrice(product.numericPrice)}</span>
                         {product.valueScore != null && <ValueBadge score={product.valueScore} />}
                       </div>
                       <button
