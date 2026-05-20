@@ -76,11 +76,6 @@ export default function FeaturedPriceDropCard({ product }: Props) {
           </div>
         )}
 
-        {/* Price when no drop data */}
-        {!hasDrop && (
-          <p className="text-lg font-semibold text-slate-900 mt-auto">{product.price}</p>
-        )}
-
         {/* CTA */}
         <Link
           href={detailUrl}
