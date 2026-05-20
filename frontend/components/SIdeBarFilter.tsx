@@ -168,6 +168,77 @@ function PriceRange({
   );
 }
 
+export const WEIGHT_RANGES = [
+  { value: "0-500",     label: "0.0 – 0.5 kg" },
+  { value: "500-1000",  label: "0.5 – 1.0 kg" },
+  { value: "1000-3000", label: "1.0 – 3.0 kg" },
+  { value: "3000-6000", label: "3.0 – 6.0 kg" },
+];
+
+function WeightRangeFilter({
+  selected,
+  counts,
+  onChange,
+}: {
+  selected: string[];
+  counts: Record<string, number>;
+  onChange: (val: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="border-b border-slate-200 py-3">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center justify-between w-full text-left"
+      >
+        <span className="text-sm font-bold text-[#1A1A1A] uppercase tracking-wide flex items-center gap-2">
+          Pakovanje
+          {selected.length > 0 && (
+            <span className="bg-[#FF9900] text-[#1B2B4B] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+              {selected.length}
+            </span>
+          )}
+        </span>
+        {open ? (
+          <Minus className="w-4 h-4 text-slate-400" />
+        ) : (
+          <Plus className="w-4 h-4 text-slate-400" />
+        )}
+      </button>
+      {open && (
+        <div className="mt-2 flex flex-col gap-0.5">
+          {WEIGHT_RANGES.map(({ value, label }) => {
+            const isSelected = selected.includes(value);
+            const count = counts[value] ?? 0;
+            return (
+              <button
+                key={value}
+                onClick={() => onChange(value)}
+                className="text-left text-sm px-0 py-1.5 flex items-center gap-2 text-[#1A1A1A] hover:text-[#FF9900] transition-colors"
+              >
+                <span
+                  className={`w-4 h-4 border rounded flex items-center justify-center shrink-0 transition-colors ${
+                    isSelected
+                      ? "bg-[#1B2B4B] border-[#1B2B4B]"
+                      : "border-slate-300"
+                  }`}
+                >
+                  {isSelected && (
+                    <span className="text-white text-[10px]">✓</span>
+                  )}
+                </span>
+                <span>{label}</span>
+                <span className="text-slate-400 text-xs ml-auto">({count})</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export interface SidebarFilterProps {
   brands: string[];
   flavours: string[];
@@ -175,12 +246,15 @@ export interface SidebarFilterProps {
   selectedBrand: string[];
   selectedFlavour: string[];
   selectedCategory: string[];
+  selectedWeightRange: string[];
+  weightCounts: Record<string, number>;
   minPrice: string;
   maxPrice: string;
   onStoreChange: (val: string) => void;
   onBrandChange: (val: string) => void;
   onFlavourChange: (val: string) => void;
   onCategoryChange: (val: string) => void;
+  onWeightRangeChange: (val: string) => void;
   onMinChange: (val: string) => void;
   onMaxChange: (val: string) => void;
   onReset: () => void;
@@ -204,12 +278,15 @@ function FilterContent({
   selectedBrand,
   selectedFlavour,
   selectedCategory,
+  selectedWeightRange,
+  weightCounts,
   minPrice,
   maxPrice,
   onStoreChange,
   onBrandChange,
   onFlavourChange,
   onCategoryChange,
+  onWeightRangeChange,
   onMinChange,
   onMaxChange,
   onReset,
@@ -284,6 +361,11 @@ function FilterContent({
         options={flavours}
         selected={selectedFlavour}
         onChange={onFlavourChange}
+      />
+      <WeightRangeFilter
+        selected={selectedWeightRange}
+        counts={weightCounts}
+        onChange={onWeightRangeChange}
       />
       <PriceRange
         minPrice={minPrice}

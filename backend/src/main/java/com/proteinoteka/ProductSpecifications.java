@@ -76,4 +76,29 @@ public class ProductSpecifications {
             return predicates.length == 1 ? predicates[0] : cb.or(predicates);
         };
     }
+
+    public static Specification<Product> hasWeightRange(String ranges) {
+        return (root, query, cb) -> {
+            if (ranges == null || ranges.isEmpty()) return cb.conjunction();
+            Predicate[] predicates = Arrays.stream(ranges.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .map(range -> {
+                        String[] parts = range.split("-");
+                        if (parts.length != 2) return cb.conjunction();
+                        try {
+                            double min = Double.parseDouble(parts[0]);
+                            double max = Double.parseDouble(parts[1]);
+                            return cb.and(
+                                    cb.greaterThanOrEqualTo(root.get("primaryWeightGrams"), min),
+                                    cb.lessThan(root.get("primaryWeightGrams"), max)
+                            );
+                        } catch (NumberFormatException e) {
+                            return cb.conjunction();
+                        }
+                    })
+                    .toArray(Predicate[]::new);
+            return predicates.length == 1 ? predicates[0] : cb.or(predicates);
+        };
+    }
 }

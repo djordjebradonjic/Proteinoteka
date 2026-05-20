@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import api from "@/lib/axios";
 import { Product } from "@/types/product";
-import SidebarFilter from "./SIdeBarFilter";
+import SidebarFilter, { WEIGHT_RANGES } from "./SIdeBarFilter";
 import SortSelect from "./SortSelect";
 import ProductGrid from "./ProductGrid";
 import { X } from "lucide-react";
@@ -37,6 +37,7 @@ function hasAnyUrlFilter(live: URLSearchParams): boolean {
     live.get("maxPrice") ||
     (live.get("page") && live.get("page") !== "0") ||
     live.get("category") ||
+    live.get("pakovanje") ||
     (sort && sort !== "id,desc")
   );
 }
@@ -53,28 +54,30 @@ export default function ProductSection({
   // Read display state directly from live URL on every render.
   // getLiveParams() returns empty on SSR → defaults, which matches initialProducts.
   // After hydration, tick changes keep this in sync.
-  const lp               = getLiveParams();
-  const search           = lp.get("query")    || "";
-  const selectedStores   = parseList(lp.get("store"));
-  const selectedBrands   = parseList(lp.get("brand"));
-  const selectedFlavours = parseList(lp.get("flavour"));
-  const urlCategories    = parseList(lp.get("category"));
-  const minPrice         = lp.get("minPrice") || "";
-  const maxPrice         = lp.get("maxPrice") || "";
-  const page             = Number(lp.get("page")) || 0;
-  const sort             = lp.get("sort") || "id,desc";
+  const lp                  = getLiveParams();
+  const search              = lp.get("query")     || "";
+  const selectedStores      = parseList(lp.get("store"));
+  const selectedBrands      = parseList(lp.get("brand"));
+  const selectedFlavours    = parseList(lp.get("flavour"));
+  const urlCategories       = parseList(lp.get("category"));
+  const selectedWeightRanges = parseList(lp.get("pakovanje"));
+  const minPrice            = lp.get("minPrice")  || "";
+  const maxPrice            = lp.get("maxPrice")  || "";
+  const page                = Number(lp.get("page")) || 0;
+  const sort                = lp.get("sort") || "id,desc";
 
   const selectedCategories =
     initialCategory && !urlCategories.includes(initialCategory)
       ? [initialCategory, ...urlCategories]
       : urlCategories;
 
-  const [products, setProducts]     = useState<Product[]>(initialProducts);
-  const [totalPages, setTotalPages] = useState(initialTotalPages);
-  const [totalItems, setTotalItems] = useState(0);
-  const [loading, setLoading]       = useState(false);
-  const [brands, setBrands]         = useState<string[]>([]);
-  const [flavours, setFlavours]     = useState<string[]>([]);
+  const [products, setProducts]       = useState<Product[]>(initialProducts);
+  const [totalPages, setTotalPages]   = useState(initialTotalPages);
+  const [totalItems, setTotalItems]   = useState(0);
+  const [loading, setLoading]         = useState(false);
+  const [brands, setBrands]           = useState<string[]>([]);
+  const [flavours, setFlavours]       = useState<string[]>([]);
+  const [weightCounts, setWeightCounts] = useState<Record<string, number>>({});
 
   // Update URL without triggering Next.js navigation — no reload, no scroll-to-top.
   const updateUrl = useCallback((url: string) => {
@@ -126,6 +129,7 @@ export default function ProductSection({
   useEffect(() => {
     api.get("/products/brands").then((res) => setBrands(res.data)).catch(() => {});
     api.get("/products/flavours").then((res) => setFlavours(res.data)).catch(() => {});
+    api.get("/products/weight-distribution").then((res) => setWeightCounts(res.data)).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -137,12 +141,13 @@ export default function ProductSection({
     const pageVal  = live.get("page")     || "0";
     const sortVal  = live.get("sort")     || "id,desc";
     const nameVal  = live.get("query")    || "";
-    const storeVal = live.get("store")    || "";
-    const brandVal = live.get("brand")    || "";
-    const flavVal  = live.get("flavour")  || "";
-    const minVal   = live.get("minPrice") || "";
-    const maxVal   = live.get("maxPrice") || "";
-    const catList  = parseList(live.get("category"));
+    const storeVal  = live.get("store")     || "";
+    const brandVal  = live.get("brand")     || "";
+    const flavVal   = live.get("flavour")   || "";
+    const minVal    = live.get("minPrice")  || "";
+    const maxVal    = live.get("maxPrice")  || "";
+    const weightVal = live.get("pakovanje") || "";
+    const catList   = parseList(live.get("category"));
     const allCats  = initialCategory && !catList.includes(initialCategory)
       ? [...catList, initialCategory]
       : catList;
@@ -156,13 +161,14 @@ export default function ProductSection({
         params.set("page", pageVal);
         params.set("size", "12");
         params.set("sort", sortVal);
-        if (nameVal)        params.set("name",      nameVal);
-        if (storeVal)       params.set("storeName",  storeVal);
-        if (brandVal)       params.set("brand",      brandVal);
-        if (flavVal)        params.set("flavour",    flavVal);
-        if (allCats.length) params.set("category",   allCats.join(","));
-        if (minVal)         params.set("minPrice",   minVal);
-        if (maxVal)         params.set("maxPrice",   maxVal);
+        if (nameVal)        params.set("name",        nameVal);
+        if (storeVal)       params.set("storeName",    storeVal);
+        if (brandVal)       params.set("brand",        brandVal);
+        if (flavVal)        params.set("flavour",      flavVal);
+        if (allCats.length) params.set("category",     allCats.join(","));
+        if (minVal)         params.set("minPrice",     minVal);
+        if (maxVal)         params.set("maxPrice",     maxVal);
+        if (weightVal)      params.set("weightRange",  weightVal);
 
         const res = await api.get(`/products?${params.toString()}`);
         if (cancelled) return;
@@ -220,6 +226,7 @@ export default function ProductSection({
     selectedBrands.length +
     selectedFlavours.length +
     urlCategories.length +
+    selectedWeightRanges.length +
     (minPrice ? 1 : 0) +
     (maxPrice ? 1 : 0);
 
@@ -231,6 +238,7 @@ export default function ProductSection({
     ...selectedBrands.map( b => ({ key: `brand-${b}`,    label: b,             onRemove: () => toggleFilter("brand",   b) })),
     ...selectedFlavours.map(f => ({ key: `flavour-${f}`, label: `Ukus: ${f}`,  onRemove: () => toggleFilter("flavour", f) })),
     ...urlCategories.map(  c => ({ key: `cat-${c}`,      label: getCategoryByValue(c)?.label ?? c, onRemove: () => toggleFilter("category", c) })),
+    ...selectedWeightRanges.map(w => ({ key: `pak-${w}`, label: WEIGHT_RANGES.find(r => r.value === w)?.label ?? w, onRemove: () => toggleFilter("pakovanje", w) })),
     minPrice  ? { key: "minPrice", label: `od ${minPrice} RSD`, onRemove: () => updateFilters("minPrice", "") } : null,
     maxPrice  ? { key: "maxPrice", label: `do ${maxPrice} RSD`, onRemove: () => updateFilters("maxPrice", "") } : null,
   ].filter(Boolean) as Chip[];
@@ -247,14 +255,17 @@ export default function ProductSection({
         selectedBrand={selectedBrands}
         selectedFlavour={selectedFlavours}
         selectedCategory={selectedCategories}
+        selectedWeightRange={selectedWeightRanges}
+        weightCounts={weightCounts}
         minPrice={minPrice}
         maxPrice={maxPrice}
-        onStoreChange={(val) => toggleFilter("store",   val)}
-        onBrandChange={(val) => toggleFilter("brand",   val)}
-        onFlavourChange={(val) => toggleFilter("flavour", val)}
+        onStoreChange={(val) => toggleFilter("store",    val)}
+        onBrandChange={(val) => toggleFilter("brand",    val)}
+        onFlavourChange={(val) => toggleFilter("flavour",  val)}
         onCategoryChange={(val) => toggleFilter("category", val)}
-        onMinChange={(val) => updateFilters("minPrice", val)}
-        onMaxChange={(val) => updateFilters("maxPrice", val)}
+        onWeightRangeChange={(val) => toggleFilter("pakovanje", val)}
+        onMinChange={(val) => updateFilters("minPrice",  val)}
+        onMaxChange={(val) => updateFilters("maxPrice",  val)}
         onReset={handleReset}
         hasActiveFilters={hasActiveFilters}
         activeCount={activeCount}

@@ -57,9 +57,10 @@ public class ProductController {
             @RequestParam(required = false) String category,
             @RequestParam(required = false) Double minPrice,
             @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) String weightRange,
             Pageable pageable) {
 
-        Specification<Product> spec = buildSpec(name, storeName, brand, flavour, category, minPrice, maxPrice);
+        Specification<Product> spec = buildSpec(name, storeName, brand, flavour, category, minPrice, maxPrice, weightRange);
 
         // JPA Criteria API doesn't support NULLS LAST — exclude nulls via spec instead.
         // Products with no valueScore/proteinPerRsd are irrelevant when sorting by those fields.
@@ -75,7 +76,7 @@ public class ProductController {
 
     private Specification<Product> buildSpec(String name, String storeName, String brand,
                                              String flavour, String category,
-                                             Double minPrice, Double maxPrice) {
+                                             Double minPrice, Double maxPrice, String weightRange) {
         Specification<Product> spec = Specification.where(null);
         if (name != null && !name.isEmpty())
             spec = spec.and(ProductSpecifications.hasName(name));
@@ -91,6 +92,8 @@ public class ProductController {
             spec = spec.and(ProductSpecifications.priceGreaterThan(minPrice));
         if (maxPrice != null)
             spec = spec.and(ProductSpecifications.priceLessThan(maxPrice));
+        if (weightRange != null && !weightRange.isEmpty())
+            spec = spec.and(ProductSpecifications.hasWeightRange(weightRange));
         return spec;
     }
 
@@ -268,6 +271,26 @@ public class ProductController {
     @GetMapping("/flavours")
     List<String> getAllFlavours() {
         return productRepository.findAllUniqueFlavours();
+    }
+
+    @Cacheable(value = "products-meta", key = "'weight-distribution'")
+    @GetMapping("/weight-distribution")
+    Map<String, Long> getWeightDistribution() {
+        List<Product> all = productRepository.findAll();
+        Map<String, Long> dist = new java.util.LinkedHashMap<>();
+        dist.put("0-500",     countInRange(all, 0, 500));
+        dist.put("500-1000",  countInRange(all, 500, 1000));
+        dist.put("1000-3000", countInRange(all, 1000, 3000));
+        dist.put("3000-6000", countInRange(all, 3000, 6000));
+        return dist;
+    }
+
+    private long countInRange(List<Product> products, double min, double max) {
+        return products.stream()
+                .filter(p -> p.getPrimaryWeightGrams() != null
+                        && p.getPrimaryWeightGrams() >= min
+                        && p.getPrimaryWeightGrams() < max)
+                .count();
     }
 
     @GetMapping("/compare")
