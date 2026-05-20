@@ -238,6 +238,8 @@ public class FitLabScraper implements StoreScraper {
                 if (count % 5 == 0) {
                     long batchSleep = 60000 + ThreadLocalRandom.current().nextLong(60000);
                     log.info("[{}] Batch pause after {} products: {}s...", STORE_NAME, count, batchSleep / 1000);
+                    // Navigate to blank to release Chromium's DOM/JS heap from previous pages.
+                    try { page.navigate("about:blank"); } catch (Exception ignored) {}
                     Thread.sleep(batchSleep);
                 }
 

@@ -244,7 +244,7 @@ public class ProductController {
             @RequestParam String name,
             @RequestParam(required = false) String brand) {
 
-        return productRepository.findSameProductAcrossStores(name, brand)
+        return productRepository.findSameProductAcrossStores(name.trim(), brand != null ? brand.trim() : null)
                 .stream()
                 .map(p -> new StorePriceDTO(
                         p.getId(),
