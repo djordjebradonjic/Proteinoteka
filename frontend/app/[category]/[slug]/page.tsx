@@ -73,7 +73,16 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
   const canonical   = `${BASE_URL}${productUrl(product)}`;
   const title       = buildProductTitle(product.name);
-  const description = `${product.name} — uporedi cene u srpskim prodavnicama. Trenutna najniža cena i dostupnost na jednom mestu.`;
+
+  const descParts: string[] = [];
+  if (product.proteinPer100g != null) descParts.push(`${product.proteinPer100g}g proteina/100g`);
+  if (product.primaryWeightGrams != null) {
+    descParts.push(product.primaryWeightGrams >= 1000
+      ? `${(product.primaryWeightGrams / 1000).toFixed(1)}kg pakovanje`
+      : `${product.primaryWeightGrams}g pakovanje`);
+  }
+  const nutritionHint = descParts.length > 0 ? ` (${descParts.join(", ")})` : "";
+  const description = `${product.name}${nutritionHint} — uporedi cene u srpskim prodavnicama. Najniža cena i value score na jednom mestu.`;
 
   return {
     title:       { absolute: title },
@@ -126,7 +135,9 @@ export default async function ProductSlugPage({ params }: Params) {
   const catLabel       = PRODUCT_CATEGORY_LABELS[catKey] ?? null;
   const kategorijSlug  = product.proteinSource ? KATEGORIJA_SLUGS[product.proteinSource] : null;
 
-  const plainDescription = product.description
+  const plainDescription = product.aiDescription
+    ? product.aiDescription.slice(0, 500)
+    : product.description
     ? product.description.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 500)
     : undefined;
 
@@ -145,31 +156,30 @@ export default async function ProductSlugPage({ params }: Params) {
     breadcrumbItems.push({ "@type": "ListItem", position: 2, name: product.name, item: canonicalUrl });
   }
 
+  const priceValidUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split("T")[0];
+
   const jsonLd = [
     {
       "@context": "https://schema.org",
       "@type": "Product",
       name: product.name,
+      sku: String(product.id),
       ...(product.imageUrl && { image: product.imageUrl }),
       ...(product.brand && { brand: { "@type": "Brand", name: product.brand } }),
       ...(plainDescription && { description: plainDescription }),
+      ...(catLabel && { category: catLabel }),
       offers: {
         "@type": "Offer",
         price: product.numericPrice,
         priceCurrency: "RSD",
         availability: "https://schema.org/InStock",
+        itemCondition: "https://schema.org/NewCondition",
+        priceValidUntil,
         url: canonicalUrl,
         seller: { "@type": "Organization", name: product.storeName },
       },
-      ...(product.valueScore != null && {
-        aggregateRating: {
-          "@type": "AggregateRating",
-          ratingValue: product.valueScore.toFixed(1),
-          bestRating: "10",
-          worstRating: "1",
-          reviewCount: "1",
-        },
-      }),
     },
     {
       "@context": "https://schema.org",

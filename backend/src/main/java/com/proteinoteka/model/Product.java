@@ -89,4 +89,7 @@ public class Product {
 
     @Column(name = "ai_description", columnDefinition = "TEXT")
     private String aiDescription;
+
+    @Column(name = "canonical_slug")
+    private String canonicalSlug;
 }

@@ -359,7 +359,9 @@ public class ProductController {
                 product.getProteinSource(),
                 product.getAiDescription(),
                 prevPrice,
-                product.getPercentileRank()
+                product.getPercentileRank(),
+                product.getLastUpdated(),
+                product.getCanonicalSlug()
         );
     }
 }

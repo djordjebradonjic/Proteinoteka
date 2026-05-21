@@ -26,4 +26,6 @@ export interface Product {
   aiDescription?: string;
   previousPrice?: number | null;
   percentileRank?: number | null;
+  lastUpdated?: string | null;
+  canonicalSlug?: string | null;
 }

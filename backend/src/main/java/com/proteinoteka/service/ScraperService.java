@@ -472,6 +472,7 @@ public class ScraperService {
             scraped.setValueScore(valueScore);
             if (weightGrams > 0) scraped.setPrimaryWeightGrams(weightGrams);
             scraped.setProteinPerRsd(computeProteinPerRsd(numericPrice, scraped));
+            scraped.setCanonicalSlug(slugify(scraped.getName()));
             productRepository.save(scraped);
             log.info("[{}] New product saved: '{}'", store.getName(), scraped.getName());
             return true;
@@ -611,6 +612,22 @@ public class ScraperService {
 
         log.warn("Cannot parse any package weight from: '{}'", p.getPackage_weight());
         return 0;
+    }
+
+    // ── URL slug generation ───────────────────────────────────────────────────────
+
+    static String slugify(String text) {
+        if (text == null) return "";
+        return text
+                .replace("Š", "s").replace("š", "s")
+                .replace("Č", "c").replace("č", "c")
+                .replace("Ć", "c").replace("ć", "c")
+                .replace("Ž", "z").replace("ž", "z")
+                .replace("Đ", "d").replace("đ", "d")
+                .toLowerCase(java.util.Locale.ROOT)
+                .replaceAll("[^a-z0-9\\s-]", "")
+                .replaceAll("[\\s-]+", "-")
+                .replaceAll("^-|-$", "");
     }
 
     // ── Price drop detection ──────────────────────────────────────────────────────

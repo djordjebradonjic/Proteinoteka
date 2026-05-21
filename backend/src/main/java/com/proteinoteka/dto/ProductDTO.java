@@ -1,5 +1,6 @@
 package com.proteinoteka.dto;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public record ProductDTO(Long id,
@@ -23,6 +24,8 @@ public record ProductDTO(Long id,
                          String proteinSource,
                          String aiDescription,
                          Double previousPrice,
-                         Integer percentileRank)
+                         Integer percentileRank,
+                         LocalDateTime lastUpdated,
+                         String canonicalSlug)
     {
 }

@@ -56,12 +56,13 @@ export function productUrl(product: {
   id: number;
   name: string;
   proteinSource?: string | null;
+  canonicalSlug?: string | null;
 }): string {
   const category =
     product.proteinSource && PRODUCT_CATEGORY_SLUGS[product.proteinSource]
       ? PRODUCT_CATEGORY_SLUGS[product.proteinSource]
       : "suplementi";
-  const nameSlug = slugify(product.name);
+  const nameSlug = product.canonicalSlug || slugify(product.name);
   return `/${category}/${nameSlug}-${product.id}`;
 }
 
