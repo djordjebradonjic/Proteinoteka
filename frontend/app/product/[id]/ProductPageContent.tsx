@@ -17,6 +17,7 @@ import { getAlert, hasAlert, loadAlerts, deleteAlert, AlertEntry } from "@/lib/a
 import { getWishlistEmail } from "@/lib/wishlistSync";
 import PriceAlertModal from "@/components/PriceAlertModal";
 import PriceTag from "@/components/PriceTag";
+import { formatPrice } from "@/lib/formatPrice";
 
 const PriceHistoryChart = dynamic(() => import("@/components/PriceHistoryChart"), { ssr: false });
 
@@ -300,6 +301,13 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
 
   const chartData = currentPoint ? [...historyPoints, currentPoint] : historyPoints;
 
+  const chartPrices    = chartData.map(d => d.cena);
+  const chartMin       = chartPrices.length ? Math.min(...chartPrices) : 0;
+  const chartMax       = chartPrices.length ? Math.max(...chartPrices) : 0;
+  const chartFirst     = chartData[0]?.cena ?? 0;
+  const chartCurrent   = chartData[chartData.length - 1]?.cena ?? 0;
+  const chartChangePct = chartFirst > 0 ? ((chartCurrent - chartFirst) / chartFirst) * 100 : 0;
+
   const proteinPct = product.proteinPer100g ?? 0;
   const proteinPurityScore = Math.round(Math.min(10, Math.max(0, 10 * Math.pow(Math.max(0, (proteinPct - 60) / 40), 0.7))));
 
@@ -542,8 +550,40 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
         {/* ── Price history ──────────────────────────────────────────── */}
         {chartData.length >= 2 && (
           <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm mb-6">
-            <h2 className="text-base font-bold text-slate-900 mb-6">Istorija cene</h2>
-            <div className="h-52">
+
+            {/* Header */}
+            <div className="flex items-start justify-between mb-5">
+              <div>
+                <h2 className="text-base font-bold text-slate-900">Istorija cene</h2>
+                <p className="text-xs text-slate-400 mt-0.5">od {chartData[0]?.datum}</p>
+              </div>
+              {Math.abs(chartChangePct) >= 1 && (
+                <span className={`flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full ${
+                  chartChangePct < 0
+                    ? "bg-green-50 text-green-700 border border-green-100"
+                    : "bg-red-50 text-red-600 border border-red-100"
+                }`}>
+                  {chartChangePct < 0 ? "▼" : "▲"} {Math.abs(chartChangePct).toFixed(0)}%
+                </span>
+              )}
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-3 mb-5">
+              {[
+                { label: "Najniža",  val: chartMin,     cls: "text-green-600" },
+                { label: "Trenutna", val: chartCurrent, cls: "text-slate-900" },
+                { label: "Najviša",  val: chartMax,     cls: "text-slate-700" },
+              ].map(({ label, val, cls }) => (
+                <div key={label} className="bg-slate-50 rounded-xl p-3 text-center">
+                  <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1">{label}</p>
+                  <p className={`text-sm font-black ${cls} leading-tight`}>{formatPrice(val)}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Chart */}
+            <div className="h-48">
               <PriceHistoryChart data={chartData} />
             </div>
           </div>

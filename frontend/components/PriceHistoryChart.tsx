@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid,
+  AreaChart, Area, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer,
 } from "recharts";
 
@@ -10,28 +10,66 @@ interface ChartPoint {
   cena: number;
 }
 
+function fmt(val: number) {
+  return Math.round(val).toLocaleString("de-DE");
+}
+
 export default function PriceHistoryChart({ data }: { data: ChartPoint[] }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <LineChart data={data}>
+      <AreaChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+        <defs>
+          <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stopColor="#FF9900" stopOpacity={0.18} />
+            <stop offset="100%" stopColor="#FF9900" stopOpacity={0}    />
+          </linearGradient>
+        </defs>
+
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-        <XAxis dataKey="datum" axisLine={false} tickLine={false}
-               tick={{ fill: "#94a3b8", fontSize: 11 }} dy={8} />
-        <YAxis hide domain={["dataMin - 200", "dataMax + 200"]} />
+
+        <XAxis
+          dataKey="datum"
+          axisLine={false}
+          tickLine={false}
+          tick={{ fill: "#94a3b8", fontSize: 11 }}
+          dy={8}
+          interval="preserveStartEnd"
+        />
+
+        <YAxis
+          axisLine={false}
+          tickLine={false}
+          tick={{ fill: "#94a3b8", fontSize: 11 }}
+          tickFormatter={fmt}
+          width={58}
+          domain={["auto", "auto"]}
+        />
+
         <Tooltip
-          cursor={{ stroke: "#e2e8f0", strokeWidth: 2 }}
+          cursor={{ stroke: "#e2e8f0", strokeWidth: 1, strokeDasharray: "4 4" }}
           content={({ active, payload }) =>
             active && payload?.length ? (
-              <div className="bg-slate-900 text-white px-3 py-2 rounded-lg shadow-xl text-xs">
-                <p className="font-bold mb-0.5">{payload[0].payload.datum}</p>
-                <p className="text-[#FF9900]">{payload[0].value?.toLocaleString("sr-RS")} RSD</p>
+              <div className="bg-white border border-slate-200 shadow-xl rounded-xl px-4 py-3 pointer-events-none">
+                <p className="text-[11px] text-slate-400 mb-1">{payload[0].payload.datum}</p>
+                <p className="text-[15px] font-black text-slate-900 leading-none">
+                  {fmt(payload[0].value as number)}{" "}
+                  <span className="text-xs font-semibold text-slate-400">RSD</span>
+                </p>
               </div>
             ) : null
           }
         />
-        <Line type="stepAfter" dataKey="cena" stroke="#FF9900" strokeWidth={3}
-              dot={{ r: 0 }} activeDot={{ r: 5, fill: "#FF9900" }} />
-      </LineChart>
+
+        <Area
+          type="stepAfter"
+          dataKey="cena"
+          stroke="#FF9900"
+          strokeWidth={2.5}
+          fill="url(#priceGradient)"
+          dot={{ r: 3.5, fill: "#FF9900", stroke: "#fff", strokeWidth: 2 }}
+          activeDot={{ r: 6, fill: "#FF9900", stroke: "#fff", strokeWidth: 2.5 }}
+        />
+      </AreaChart>
     </ResponsiveContainer>
   );
 }
