@@ -345,6 +345,16 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
                 className="max-h-full max-w-full object-contain hover:scale-105 transition-transform duration-300"
                 priority
               />
+            ) : product.storeName?.toLowerCase().includes("pansport") ? (
+              <Image
+                src="/protein-gym.jpg"
+                alt={product.name}
+                width={400}
+                height={400}
+                sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 624px"
+                className="max-h-full max-w-full object-contain hover:scale-105 transition-transform duration-300"
+                priority
+              />
             ) : (
               <Package className="w-24 h-24 text-slate-200" />
             )}
