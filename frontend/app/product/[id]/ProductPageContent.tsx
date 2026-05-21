@@ -363,7 +363,7 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
                 width={400}
                 height={400}
                 sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 624px"
-                className="max-h-full max-w-full object-contain hover:scale-105 transition-transform duration-300"
+                className="max-h-full max-w-full object-cover hover:scale-105 transition-transform duration-300"
                 priority
               />
             ) : (
