@@ -1,5 +1,6 @@
 export interface PriceHistory {
   price: string;
+  numericPrice: number | null;
   timestamp: string;
 }
 

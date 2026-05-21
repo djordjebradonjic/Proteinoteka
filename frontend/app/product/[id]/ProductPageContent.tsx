@@ -284,12 +284,21 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
   const catLabel = product.proteinSource ? CATEGORY_LABELS[product.proteinSource] ?? product.proteinSource : null;
   const catSlug  = product.proteinSource ? CATEGORY_SLUGS[product.proteinSource] : null;
 
-  const chartData = [...(product.priceHistory ?? [])]
+  const historyPoints = [...(product.priceHistory ?? [])]
+    .filter((h) => h.numericPrice != null && h.numericPrice > 0)
     .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
     .map((h) => ({
       datum: new Date(h.timestamp).toLocaleDateString("sr-RS", { day: "2-digit", month: "short" }),
-      cena: parseFloat(String(h.price).replace(/[^0-9.,]/g, "").replace(",", ".")),
+      cena: h.numericPrice as number,
     }));
+
+  // Add current price as the final point so the chart always ends at today's price
+  const currentPoint = product.numericPrice > 0 ? {
+    datum: new Date(product.lastUpdated ?? Date.now()).toLocaleDateString("sr-RS", { day: "2-digit", month: "short" }),
+    cena: product.numericPrice,
+  } : null;
+
+  const chartData = currentPoint ? [...historyPoints, currentPoint] : historyPoints;
 
   const proteinPct = product.proteinPer100g ?? 0;
   const proteinPurityScore = Math.round(Math.min(10, Math.max(0, 10 * Math.pow(Math.max(0, (proteinPct - 60) / 40), 0.7))));
@@ -531,7 +540,7 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
         </div>
 
         {/* ── Price history ──────────────────────────────────────────── */}
-        {chartData.length > 1 && (
+        {chartData.length >= 2 && (
           <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm mb-6">
             <h2 className="text-base font-bold text-slate-900 mb-6">Istorija cene</h2>
             <div className="h-52">
