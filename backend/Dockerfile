@@ -23,4 +23,10 @@ ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=0
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-Dserver.port=${PORT}", "-jar", "app.jar"]
+ENTRYPOINT ["java", \
+  "-Dserver.port=${PORT}", \
+  "-Xmx768m", \
+  "-XX:+UseG1GC", \
+  "-XX:MaxGCPauseMillis=200", \
+  "-XX:+ExitOnOutOfMemoryError", \
+  "-jar", "app.jar"]

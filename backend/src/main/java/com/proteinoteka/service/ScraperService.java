@@ -127,7 +127,9 @@ public class ScraperService {
                             .setArgs(Arrays.asList(
                                     "--disable-dev-shm-usage",
                                     "--no-sandbox",
-                                    "--disable-setuid-sandbox"
+                                    "--disable-setuid-sandbox",
+                                    "--disable-extensions",
+                                    "--disable-plugins"
                             ))
             );
 
@@ -161,8 +163,8 @@ public class ScraperService {
 
                 try {
                     Page page = context.newPage();
-
-                    int currentPage = 0;
+                    try {
+                        int currentPage = 0;
 
                     while (true) {
                         long delay = testMode ? 500 : humanDelay();
@@ -235,6 +237,9 @@ public class ScraperService {
                         }
                     }
 
+                    } finally {
+                        page.close();
+                    }
                 } finally {
                     context.close();
                 }
