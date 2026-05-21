@@ -266,6 +266,7 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
   const router = useRouter();
   const [descExpanded, setDescExpanded] = useState(false);
   const [descOverflows, setDescOverflows] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const descRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -335,7 +336,7 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
 
           {/* Image */}
           <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-8 flex items-center justify-center h-64 sm:h-80 md:aspect-square md:h-auto shadow-sm">
-            {product.imageUrl ? (
+            {product.imageUrl && !imgError ? (
               <Image
                 src={product.imageUrl}
                 alt={product.name}
@@ -344,6 +345,7 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
                 sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 624px"
                 className="max-h-full max-w-full object-contain hover:scale-105 transition-transform duration-300"
                 priority
+                onError={() => setImgError(true)}
               />
             ) : product.storeName?.toLowerCase().includes("pansport") ? (
               <Image
