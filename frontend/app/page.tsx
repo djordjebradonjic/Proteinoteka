@@ -87,9 +87,10 @@ async function getInitialProducts() {
     return {
       content: data.content ?? [],
       totalPages: data.page?.totalPages ?? 0,
+      totalItems: data.page?.totalElements ?? 0,
     };
   } catch {
-    return { content: [], totalPages: 0 };
+    return { content: [], totalPages: 0, totalItems: 0 };
   }
 }
 
@@ -128,6 +129,7 @@ export default async function Home() {
         <HomeContent
           initialProducts={initialData.content}
           initialTotalPages={initialData.totalPages}
+          initialTotalItems={initialData.totalItems}
           topValueProducts={topValueProducts}
           priceDropProducts={priceDropProducts}
         />

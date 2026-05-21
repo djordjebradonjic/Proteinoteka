@@ -12,6 +12,7 @@ import { getCategoryByValue } from "@/lib/categories";
 interface Props {
   initialProducts: Product[];
   initialTotalPages: number;
+  initialTotalItems?: number;
   initialCategory?: string;
 }
 
@@ -45,6 +46,7 @@ function hasAnyUrlFilter(live: URLSearchParams): boolean {
 export default function ProductSection({
   initialProducts,
   initialTotalPages,
+  initialTotalItems = 0,
   initialCategory = "",
 }: Props) {
   const pendingGridScroll = useRef(false);
@@ -73,7 +75,7 @@ export default function ProductSection({
 
   const [products, setProducts]       = useState<Product[]>(initialProducts);
   const [totalPages, setTotalPages]   = useState(initialTotalPages);
-  const [totalItems, setTotalItems]   = useState(0);
+  const [totalItems, setTotalItems]   = useState(initialTotalItems);
   const [loading, setLoading]         = useState(false);
   const [brands, setBrands]           = useState<string[]>([]);
   const [flavours, setFlavours]       = useState<string[]>([]);

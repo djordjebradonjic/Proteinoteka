@@ -15,6 +15,7 @@ const ProteinCalculatorWizard = dynamic(() => import("@/components/ProteinCalcul
 interface Props {
   initialProducts: Product[];
   initialTotalPages: number;
+  initialTotalItems?: number;
   initialCategory?: string;
   topValueProducts?: Product[];
   priceDropProducts?: Product[];
@@ -24,6 +25,7 @@ interface Props {
 export default function HomeContent({
   initialProducts,
   initialTotalPages,
+  initialTotalItems = 0,
   initialCategory = "",
   topValueProducts = [],
   priceDropProducts = [],
@@ -44,6 +46,7 @@ export default function HomeContent({
       <ProductSection
         initialProducts={initialProducts}
         initialTotalPages={initialTotalPages}
+        initialTotalItems={initialTotalItems}
         initialCategory={initialCategory}
       />
 
