@@ -369,7 +369,7 @@ function ComparePage() {
 
                     {p.imageUrl ? (
                       <Image src={p.imageUrl} alt={p.name}
-                        width={80} height={80} className="w-20 h-20 object-contain" />
+                        width={80} height={80} className="w-20 h-20 object-contain" unoptimized />
                     ) : (
                       <div className="w-20 h-20 bg-slate-100 rounded flex items-center justify-center">
                         <Package className="w-8 h-8 text-slate-300" />

@@ -147,6 +147,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
               priority={priority}
               referrerPolicy="no-referrer-when-downgrade"
               onError={() => setImgError(true)}
+              unoptimized
             />
           </div>
         ) : product.storeName?.toLowerCase().includes("pansport") ? (

@@ -363,6 +363,7 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
                 className="max-h-full max-w-full object-contain hover:scale-105 transition-transform duration-300"
                 priority
                 onError={() => setImgError(true)}
+                unoptimized
               />
             ) : product.storeName?.toLowerCase().includes("pansport") ? (
               <Image
@@ -647,7 +648,7 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
                 >
                   {p.imageUrl && (
                     <div className="aspect-square bg-slate-50 rounded-lg mb-2 overflow-hidden relative">
-                      <Image src={p.imageUrl} alt={p.name} fill sizes="176px" className="object-contain p-2" />
+                      <Image src={p.imageUrl} alt={p.name} fill sizes="176px" className="object-contain p-2" unoptimized />
                     </div>
                   )}
                   <p className="text-xs font-semibold text-slate-800 leading-tight line-clamp-2 mb-1">{p.name}</p>

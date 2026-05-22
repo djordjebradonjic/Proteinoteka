@@ -33,7 +33,7 @@ export default function FeaturedValueCard({ product }: Props) {
         <div className="h-40 bg-slate-50 flex items-center justify-center p-4">
           {product.imageUrl ? (
             <Image src={product.imageUrl} alt={product.name} width={120} height={120}
-              className="object-contain max-h-full" referrerPolicy="no-referrer-when-downgrade" />
+              className="object-contain max-h-full" referrerPolicy="no-referrer-when-downgrade" unoptimized />
           ) : (
             <Package className="w-12 h-12 text-slate-200" />
           )}

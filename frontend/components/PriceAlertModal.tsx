@@ -237,6 +237,7 @@ export default function PriceAlertModal({ product, initialAlert, onClose }: Prop
                         width={48}
                         height={48}
                         className="object-contain"
+                        unoptimized
                       />
                     </div>
                   )}

@@ -296,6 +296,7 @@ export default function SearchAutocomplete({
                     onError={(e) => {
                       (e.currentTarget as HTMLImageElement).style.display = "none";
                     }}
+                    unoptimized
                   />
                 ) : (
                   <TrendingUp className="w-5 h-5 text-slate-300" />
