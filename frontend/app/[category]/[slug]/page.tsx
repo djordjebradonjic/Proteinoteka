@@ -8,6 +8,7 @@ import {
   isValidProductCategory,
   PRODUCT_CATEGORY_LABELS,
   KATEGORIJA_SLUGS,
+  PRODUCT_CATEGORY_TO_KATEGORIJA,
 } from "@/lib/productUrl";
 
 export const revalidate = 86400;
@@ -116,7 +117,11 @@ export default async function ProductSlugPage({ params }: Params) {
   if (!id) notFound();
 
   const product = await fetchProduct(id);
-  if (!product) notFound();
+  if (!product) {
+    // Product deleted or never existed — 301 to the category listing so Google
+    // can recrawl a useful page instead of accumulating 404s in GSC.
+    permanentRedirect(PRODUCT_CATEGORY_TO_KATEGORIJA[category] ?? "/");
+  }
 
   // Canonical enforcement: stale or mistyped URLs redirect to the current canonical form
   const canonical = productUrl(product);

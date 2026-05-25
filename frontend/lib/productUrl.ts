@@ -66,6 +66,18 @@ export function productUrl(product: {
   return `/${category}/${nameSlug}-${product.id}`;
 }
 
+// Maps the product URL category segment back to the /kategorija/ listing URL.
+// Used to redirect deleted-product URLs to the appropriate category page (301).
+export const PRODUCT_CATEGORY_TO_KATEGORIJA: Record<string, string> = {
+  "whey-protein":   "/kategorija/whey-concentrate",
+  "whey-izolat":    "/kategorija/whey-isolate",
+  "hidrolizat":     "/kategorija/hidrolizat",
+  "kazein":         "/kategorija/kazein",
+  "biljni-protein": "/kategorija/biljni-protein",
+  "protein-blend":  "/kategorija/blend",
+  "suplementi":     "/",
+};
+
 // Extracts the numeric product ID from the trailing segment of the slug.
 // URL pattern: /{category}/{anything}-{id}  e.g. /whey-protein/on-gold-standard-2000g-42
 export function extractProductId(slug: string): number | null {
