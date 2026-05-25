@@ -118,8 +118,16 @@ public class BaseScraperEnricher {
     public boolean isNonProteinProduct(String name) {
         if (name == null) return true;
         String lower = name.toLowerCase();
-        return lower.contains("cap") || lower.contains("kapsula") ||
-                lower.contains("tab") || lower.contains("tableta") ||
+        return lower.contains("collagen") || lower.contains("kolagen") || lower.contains("kolostrum") ||
+                lower.contains("gainer") || lower.contains("myogainer") ||
+                lower.contains("hyper mass") || lower.contains("pro mass") ||
+                lower.contains("beefmass") || lower.contains("instant mass") ||
+                lower.contains("namaz") || lower.contains("keks") || lower.contains("kaša") ||
+                lower.contains("dekstroza") || lower.contains("dextrose") ||
+                lower.contains("+ creatine") || lower.contains("+ kreatin") ||
+                lower.contains("gratis kreatin") ||
+                lower.contains("cap") || lower.contains("kapsula") ||
+                lower.contains("tableta") ||
                 lower.contains("vitamin") || lower.contains("mineral") ||
                 lower.contains("omega") || lower.contains("zma") ||
                 lower.contains("thyro") || lower.contains("fat burn") ||

@@ -47,6 +47,7 @@ public class ScraperService {
     private final BrandNormalizerService brandNormalizer;
     private final ScrapeLogRepository scrapeLogRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final BaseScraperEnricher baseEnricher;
 
     @Autowired
     private NutritionParserService nutritionParser;
@@ -363,6 +364,12 @@ public class ScraperService {
 
     @Transactional
     public boolean saveOrUpdateProduct(Product scraped, Store store) {
+
+        // 0. Provera da li je proizvod proteinski suplement
+        if (baseEnricher.isNonProteinProduct(scraped.getName())) {
+            log.info("[{}] Skipping '{}' - not a protein supplement", store.getName(), scraped.getName());
+            return false;
+        }
 
         // 1. Normalizuj brend
         if (scraped.getBrand() != null) {
