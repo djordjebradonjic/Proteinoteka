@@ -10,7 +10,7 @@ type Tier = { label: string; valueCls: string; badgeCls: string };
 function getTier(v: number): Tier {
   if (v < 5)  return { label: "Odlična vrednost", valueCls: "text-green-700", badgeCls: "bg-green-100 text-green-700" };
   if (v <= 9) return { label: "Prosečna vrednost", valueCls: "text-amber-700",  badgeCls: "bg-amber-100  text-amber-700"  };
-  return       { label: "Skupo",               valueCls: "text-red-700",   badgeCls: "bg-red-100   text-red-700"   };
+  return       { label: "Visoka cena",          valueCls: "text-red-700",   badgeCls: "bg-red-100   text-red-700"   };
 }
 
 export default function PricePerGramBadge({
