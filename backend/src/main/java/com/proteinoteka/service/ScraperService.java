@@ -129,7 +129,9 @@ public class ScraperService {
                                     "--no-sandbox",
                                     "--disable-setuid-sandbox",
                                     "--disable-extensions",
-                                    "--disable-plugins"
+                                    "--disable-plugins",
+                                    "--js-flags=--max-old-space-size=128",
+                                    "--memory-pressure-thresholds=0"
                             ))
             );
 

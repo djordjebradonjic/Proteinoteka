@@ -6,6 +6,11 @@ spring:
     username: ${DATABASE_USERNAME:proteinoteka_2026}
     password: ${DATABASE_PASSWORD:proteinoteka_19032026}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 15
+      minimum-idle: 5
+      connection-timeout: 20000
+      max-lifetime: 600000
   jpa:
     hibernate:
       ddl-auto: validate
