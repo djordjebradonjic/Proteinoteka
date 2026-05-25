@@ -216,7 +216,7 @@ public class ProductController {
                 .toList();
     }
 
-    @Cacheable(value = "products", unless = "#result.isEmpty()")
+    @Cacheable("price-drops")
     @GetMapping("/price-drops")
     public List<ProductDTO> getPriceDrops(
             @RequestParam(defaultValue = "5") int limit) {

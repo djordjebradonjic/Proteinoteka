@@ -22,6 +22,14 @@ public class CacheConfig {
                 .expireAfterWrite(5, TimeUnit.MINUTES)
                 .maximumSize(1000)
         );
+        // price-drops is expensive to compute (full table scan + Java-side sort),
+        // changes only after a scrape, so it gets its own longer-lived cache.
+        manager.registerCustomCache("price-drops",
+                Caffeine.newBuilder()
+                        .expireAfterWrite(30, TimeUnit.MINUTES)
+                        .maximumSize(50)
+                        .build()
+        );
         return manager;
     }
 }
