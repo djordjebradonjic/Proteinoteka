@@ -99,6 +99,7 @@ function Logo() {
 }
 
 const GUIDES = [
+  { label: "Protein za mršavljenje",     href: "/vodici/protein-za-mrsavljenje"      },
   { label: "Koliko proteina dnevno?",    href: "/vodici/koliko-proteina-dnevno"      },
   { label: "Isolate vs Concentrate",     href: "/vodici/whey-isolate-vs-concentrate" },
   { label: "Da li protein goji?",        href: "/vodici/da-li-protein-goji"          },

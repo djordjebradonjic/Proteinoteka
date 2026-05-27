@@ -20,6 +20,12 @@ export const metadata: Metadata = {
 
 const ARTICLES = [
   {
+    href: "/vodici/protein-za-mrsavljenje",
+    title: "Protein za mršavljenje u Srbiji — koji tip stvarno pomaže i šta košta",
+    excerpt: "Whey izolat, concentrate ili biljni protein? Aktuelne cene i konkretna računica koliko košta mesec dana suplementacije.",
+    readMin: 8,
+  },
+  {
     href: "/vodici/koliko-proteina-dnevno",
     title: "Koliko proteina dnevno treba uzimati?",
     excerpt: "Konkretna preporuka: 1.6–2.2g/kg za aktivne ljude. Saznaj kako da dostigneš taj unos kroz hranu i suplemente.",

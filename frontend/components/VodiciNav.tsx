@@ -6,6 +6,11 @@ import { X, ChevronUp, BookOpen } from "lucide-react";
 
 const GUIDES = [
   {
+    slug: "protein-za-mrsavljenje",
+    title: "Protein za mršavljenje — koji tip pomaže i šta košta",
+    readMin: 8,
+  },
+  {
     slug: "koliko-proteina-dnevno",
     title: "Koliko proteina dnevno treba uzimati?",
     readMin: 4,
