@@ -19,5 +19,11 @@ public class CorsConfig implements WebMvcConfigurer {
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE")
                 .allowedHeaders("*");
+
+        // B2B API is accessed by third-party developers — allow all origins
+        registry.addMapping("/api/v1/b2b/**")
+                .allowedOriginPatterns("*")
+                .allowedMethods("GET")
+                .allowedHeaders("*");
     }
 }

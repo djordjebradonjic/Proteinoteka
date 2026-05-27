@@ -49,6 +49,11 @@ anthropic:
 admin:
   token: ${ADMIN_TOKEN:}
 
+b2b:
+  api:
+    # Comma-separated list of valid B2B API keys. Set via env var B2B_API_KEYS.
+    keys: ${B2B_API_KEYS:}
+
 resend:
   api-key: ${RESEND_API_KEY:}
   from: "Proteinoteka <alerts@proteinoteka.rs>"

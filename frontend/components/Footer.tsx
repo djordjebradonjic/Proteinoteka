@@ -51,6 +51,7 @@ const NAV_LINKS = [
   { label: "Početna",              href: "/"              },
   { label: "O nama",               href: "/o-nama"        },
   { label: "Kontakt",              href: "/#kontakt"      },
+  { label: "Baza podataka (B2B)",  href: "/baza-podataka" },
   { label: "Najjeftiniji proteini",href: "/?sort=numericPrice,asc"    },
   { label: "Poređenje cena",       href: "/?sort=valueScore,desc"     },
 ];

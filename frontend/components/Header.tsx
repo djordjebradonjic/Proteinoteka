@@ -235,6 +235,7 @@ export default function Header() {
 
         <nav className="hidden md:flex items-center gap-5">
           <GuidesDropdown />
+          <NavLink href="/baza-podataka">Baza podataka</NavLink>
           <NavLink href="/#kontakt">Kontakt</NavLink>
 
           {/* Desktop Wishlist */}
