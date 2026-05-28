@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { Product } from "@/types/product";
 import Header from "@/components/Header";
 import Link from "next/link";
-import { ShoppingCart, ArrowLeft, Package, Zap, Droplets, Flame, Store, Bell, BellOff } from "lucide-react";
+import { ShoppingCart, ArrowLeft, Package, Zap, Droplets, Flame, Store, Bell, BellOff, BookOpen, ArrowRight } from "lucide-react";
+import { GUIDES, CATEGORY_GUIDES } from "@/lib/guides";
 import ScrollableRow from "@/components/ScrollableRow";
 import Image from "next/image";
 import { analytics } from "@/lib/analytics";
@@ -634,6 +635,29 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
             )}
           </div>
         )}
+
+        {/* ── Related guide ─────────────────────────────────────────── */}
+        {product.proteinSource && CATEGORY_GUIDES[product.proteinSource] && (() => {
+          const slug = CATEGORY_GUIDES[product.proteinSource!][0];
+          const guide = GUIDES[slug];
+          return (
+            <Link
+              href={guide.path}
+              className="group flex items-center gap-3 bg-orange-50 border border-orange-100 rounded-2xl px-5 py-4 mb-6 hover:border-[#FF9900] hover:bg-[#FFF8EC] active:border-[#FF9900] active:bg-[#FFF8EC] transition-all duration-150"
+            >
+              <div className="shrink-0 w-8 h-8 rounded-full bg-white border border-orange-100 flex items-center justify-center">
+                <BookOpen className="w-4 h-4 text-[#FF9900]" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Vodič</p>
+                <p className="text-sm font-bold text-slate-900 group-hover:text-[#FF9900] transition-colors leading-snug">
+                  {guide.title} — {guide.description}
+                </p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-[#FF9900] shrink-0" />
+            </Link>
+          );
+        })()}
 
         {/* ── Similar products ──────────────────────────────────────── */}
         {similar.length > 0 && (

@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import ProductSection from "@/components/ProductSection";
 import FeaturedSection from "@/components/FeaturedSection";
+import RelatedGuides from "@/components/RelatedGuides";
 
 const CompareBar = dynamic(() => import("./CompareBar"), { ssr: false });
 const KontaktSekcija = dynamic(() => import("./KontaktFoma"));
@@ -50,6 +51,7 @@ export default function HomeContent({
         initialCategory={initialCategory}
       />
 
+      {initialCategory && <RelatedGuides categoryValue={initialCategory} />}
       <CompareBar />
       <KontaktSekcija />
       <WishlistDrawer />
