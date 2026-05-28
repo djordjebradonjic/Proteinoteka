@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,6 +25,46 @@ public class SupplementShopScraper implements StoreScraper {
 
     private static final String STORE_NAME = "Supplementshop";
     private static final String BASE_URL = "https://supplementshop.rs/kategorija-proizvoda/proteini/";
+
+    private static final Map<String, String> FLAVOUR_MAP = Map.ofEntries(
+            Map.entry("Chocolate", "Čokolada"),
+            Map.entry("Cokolada", "Čokolada"),
+            Map.entry("Belgian Chocolate", "Belgijska čokolada"),
+            Map.entry("Double Chocolate", "Dupla čokolada"),
+            Map.entry("Milk Choc Hazelnut", "Mlečna čokolada - lešnik"),
+            Map.entry("Dark Choc Mocha", "Tamna čokolada - kafa"),
+            Map.entry("Dark Choc Raspberry", "Tamna čokolada - malina"),
+            Map.entry("Rich Chocolate Flavour", "Čokolada"),
+            Map.entry("Chocolate Brownie", "Čokoladni brauni"),
+            Map.entry("Chocolate Cookie", "Čokolada kolačić"),
+            Map.entry("Chocolate Mint", "Čokolada - menta"),
+            Map.entry("Chocolate Orange Deluxe", "Čokolada - pomorandža"),
+            Map.entry("Chocolate Peanut", "Čokolada - kikiriki"),
+            Map.entry("Chocolate Perfection", "Čokolada"),
+            Map.entry("Choco Peanut Brownie", "Čokolada - kikiriki brauni"),
+            Map.entry("Choc Peanut Butter", "Čokolada - kikiriki puter"),
+            Map.entry("White Choc Blondie", "Bela čokolada"),
+            Map.entry("White Chocolate Deluxe", "Bela čokolada"),
+            Map.entry("Raspberry & White Chocolate", "Malina - bela čokolada"),
+            Map.entry("Vanilla", "Vanila"),
+            Map.entry("Vanilla Bean", "Vanila"),
+            Map.entry("Vanilla Creme", "Vanila krem"),
+            Map.entry("Vanilla Ice Cream", "Vanila sladoled"),
+            Map.entry("Creamy Vanilla", "Vanila"),
+            Map.entry("Strawberry", "Jagoda"),
+            Map.entry("Strawberry Delight", "Jagoda"),
+            Map.entry("Strawberries & Cream", "Jagoda krem"),
+            Map.entry("Strawberries Creme", "Jagoda krem"),
+            Map.entry("Salted Caramel", "Slana karamela"),
+            Map.entry("Salted Fudge Brownie", "Slana karamela brauni"),
+            Map.entry("Caramel Crunch", "Karamela"),
+            Map.entry("Cacao & Caramel", "Kakao - karamela"),
+            Map.entry("Peanut Butter Jelly", "Kikiriki puter - džem"),
+            Map.entry("Cookies & Cream", "Kolačić i krem"),
+            Map.entry("Birthday Cake", "Torta"),
+            Map.entry("Cherry Bakewell", "Trešnja"),
+            Map.entry("Banana", "Banana")
+    );
 
     private final NutritionParserService nutritionParser;
     private final BaseScraperEnricher baseEnricher;
@@ -359,7 +400,7 @@ public class SupplementShopScraper implements StoreScraper {
         boolean found = false;
         for (Element opt : options) {
             if (opt.attr("value").isBlank()) continue;
-            String flavour = opt.text().trim();
+            String flavour = normalizeFlavour(opt.text().trim());
             if (!flavour.isBlank() && !p.getFlavours().contains(flavour)) {
                 p.getFlavours().add(flavour);
                 found = true;
@@ -371,12 +412,16 @@ public class SupplementShopScraper implements StoreScraper {
                     "tr.woocommerce-product-attributes-item--attribute_pa_ukus td");
             if (flavRow != null) {
                 for (Element term : flavRow.select("span.wd-attr-term p")) {
-                    String flavour = term.text().trim();
+                    String flavour = normalizeFlavour(term.text().trim());
                     if (!flavour.isBlank() && !p.getFlavours().contains(flavour))
                         p.getFlavours().add(flavour);
                 }
             }
         }
+    }
+
+    private String normalizeFlavour(String raw) {
+        return FLAVOUR_MAP.getOrDefault(raw, raw);
     }
 
     private void enrichDescription(Document doc, Product p) {

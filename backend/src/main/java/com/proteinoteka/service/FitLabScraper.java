@@ -405,20 +405,65 @@ public class FitLabScraper implements StoreScraper {
     }
 
     private void enrichFlavours(Document doc, Product p) {
+        // Strategy 1 — select with "ukus"/"flavor" placeholder option (original approach)
         for (Element opt : doc.select("select option")) {
             String optText = opt.text().toLowerCase();
-            if (optText.contains("ukus") || optText.contains("flavor")) {
+            if (optText.contains("ukus") || optText.contains("flavor") || optText.contains("ukusa")) {
                 Element select = opt.parent();
                 if (select != null) {
-                    for (Element flavorOpt : select.select("option")) {
-                        String text = flavorOpt.text().trim();
-                        if (!flavorOpt.attr("value").isBlank() && !text.isBlank()
+                    for (Element fo : select.select("option")) {
+                        String text = fo.text().trim();
+                        if (!fo.attr("value").isBlank() && !text.isBlank()
                                 && !text.equals("--") && !p.getFlavours().contains(text))
                             p.getFlavours().add(text);
                     }
                 }
-                return;
+                if (!p.getFlavours().isEmpty()) return;
             }
+        }
+
+        // Strategy 2 — any select whose options don't look like weights/sizes
+        for (Element select : doc.select("select")) {
+            Elements opts = select.select("option[value!='']");
+            if (opts.size() < 2) continue;
+            long weightCount = 0;
+            for (Element o : opts) {
+                if (o.text().trim().matches("(?i).*\\d+\\s*(g|kg|ml|l)\\b.*")) weightCount++;
+            }
+            if (weightCount < opts.size()) {
+                for (Element o : opts) {
+                    String text = o.text().trim();
+                    if (!text.isBlank() && !text.equals("--") && !p.getFlavours().contains(text))
+                        p.getFlavours().add(text);
+                }
+                if (!p.getFlavours().isEmpty()) return;
+            }
+        }
+
+        // Strategy 3 — variant buttons/chips (React stores often avoid <select>)
+        String[] variantSelectors = {
+            "button[data-option-value]",
+            "button[data-variant-id]",
+            "[class*='swatch'] button",
+            "[class*='variant'] button",
+            "[class*='option-item'] button",
+            "[class*='ProductVariant'] button",
+            "[data-option-name*='ukus'] [role='radio']",
+            "[data-option-name*='flavor'] [role='radio']",
+            "label[data-value]"
+        };
+        for (String sel : variantSelectors) {
+            Elements els = doc.select(sel);
+            if (els.isEmpty()) continue;
+            for (Element el : els) {
+                String text = el.text().trim();
+                if (text.isBlank()) text = el.attr("data-option-value").trim();
+                if (text.isBlank()) text = el.attr("data-value").trim();
+                if (text.isBlank()) text = el.attr("title").trim();
+                if (!text.isBlank() && !p.getFlavours().contains(text))
+                    p.getFlavours().add(text);
+            }
+            if (!p.getFlavours().isEmpty()) return;
         }
     }
 

@@ -58,7 +58,35 @@ public class ProteiniSiScraper implements StoreScraper {
             Map.entry("wheytella", "Wheytella"),
             Map.entry("cokolada-kokos", "Čokolada - kokos"),
             Map.entry("chocolate-brownies", "Čokolada brauni"),
-            Map.entry("chocolate-cookie", "Čokolada kolačić")
+            Map.entry("chocolate-cookie", "Čokolada kolačić"),
+            // Previously missing — caused slug storage in DB
+            Map.entry("apple-cinnamon", "Jabuka - cimet"),
+            Map.entry("banan-pancake", "Banana palačinka"),
+            Map.entry("banana-pancake", "Banana palačinka"),
+            Map.entry("chocolate-cake", "Čokoladni kolač"),
+            Map.entry("chocolate-caramel", "Čokolada - karamela"),
+            Map.entry("chocolate-cocoa", "Čokolada"),
+            Map.entry("double-rich-chocolate", "Čokolada"),
+            Map.entry("extreme-milk-chocolate", "Mlečna čokolada"),
+            Map.entry("french-vanilla-cream", "Vanila krem"),
+            Map.entry("ice-coffee", "Ledena kafa"),
+            Map.entry("kokos", "Kokos"),
+            Map.entry("coconut", "Kokos"),
+            Map.entry("strawberry-cream", "Jagoda krem"),
+            Map.entry("strawberry-white-chocolate", "Jagoda - bela čokolada"),
+            Map.entry("strawberry-whit-chocolate", "Jagoda - bela čokolada"),
+            Map.entry("vanilla-ice-cream", "Vanila sladoled"),
+            Map.entry("white-chocolatecoconut", "Bela čokolada - kokos"),
+            Map.entry("white-chocolate-coconut", "Bela čokolada - kokos"),
+            Map.entry("caramel", "Karamela"),
+            Map.entry("hazelnut", "Lešnik"),
+            Map.entry("peanut-butter", "Kikiriki puter"),
+            Map.entry("lemon-cheesecake", "Limun - čizkejk"),
+            Map.entry("blueberry-cheesecake", "Borovnica - čizkejk"),
+            Map.entry("raspberry-cheesecake", "Malina čizkejk"),
+            Map.entry("tiramisu", "Tiramisu"),
+            Map.entry("pistachio", "Pistać"),
+            Map.entry("salted-caramel", "Slana karamela")
     );
 
     private static final String STORE_NAME = "Proteini.si";
