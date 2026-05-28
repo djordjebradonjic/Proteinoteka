@@ -237,13 +237,14 @@ export interface SEOLandingPageProps {
   faqs?: PageFAQ[];
   extraLinks?: { href: string; label: string }[];
   disclaimer?: string;
+  middleSection?: React.ReactNode;
 }
 
 const BASE_URL = "https://proteinoteka.rs";
 
 export function SEOLandingPage({
   h1, intro, quickAnswer, products, tableCaption, listHeading, currentSlug,
-  faqs, extraLinks, disclaimer,
+  faqs, extraLinks, disclaimer, middleSection,
 }: SEOLandingPageProps) {
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
@@ -295,6 +296,9 @@ export function SEOLandingPage({
 
         {/* Quick Answer */}
         {quickAnswer && <QuickAnswer text={quickAnswer} />}
+
+        {/* Page-specific custom section (e.g. price breakdown table) */}
+        {middleSection}
 
         {/* Decision summary — shown on extended pages (price-range, etc.) */}
         {faqs && products.length > 0 && <DecisionSummary products={products} />}
