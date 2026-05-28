@@ -20,6 +20,8 @@ interface Props {
   initialCategory?: string;
   topValueProducts?: Product[];
   priceDropProducts?: Product[];
+  categoryHero?: React.ReactNode;
+  categoryFaq?: React.ReactNode;
 }
 
 
@@ -30,6 +32,8 @@ export default function HomeContent({
   initialCategory = "",
   topValueProducts = [],
   priceDropProducts = [],
+  categoryHero,
+  categoryFaq,
 }: Props) {
   return (
     <main className="min-h-screen bg-white overflow-x-hidden">
@@ -44,12 +48,16 @@ export default function HomeContent({
         />
       )}
 
+      {categoryHero}
+
       <ProductSection
         initialProducts={initialProducts}
         initialTotalPages={initialTotalPages}
         initialTotalItems={initialTotalItems}
         initialCategory={initialCategory}
       />
+
+      {categoryFaq}
 
       <CompareBar />
       <KontaktSekcija />
