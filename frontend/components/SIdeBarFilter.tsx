@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Plus, Minus, SlidersHorizontal, X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Plus, Minus, SlidersHorizontal, X, Search } from "lucide-react";
 import { CATEGORIES } from "@/lib/categories";
 
 function FilterGroup({
@@ -10,14 +10,30 @@ function FilterGroup({
   selected,
   onChange,
   defaultOpen = false,
+  searchable = false,
 }: {
   label: string;
   options: string[];
   selected: string[];
   onChange: (val: string) => void;
   defaultOpen?: boolean;
+  searchable?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+  const [search, setSearch] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  const filtered = searchable && search.trim()
+    ? options.filter((o) => o.toLowerCase().includes(search.toLowerCase()))
+    : options;
+
+  // Focus search input when panel opens
+  useEffect(() => {
+    if (open && searchable) {
+      setTimeout(() => searchRef.current?.focus(), 50);
+    }
+    if (!open) setSearch("");
+  }, [open, searchable]);
 
   return (
     <div className="border-b border-slate-200 py-3">
@@ -40,33 +56,59 @@ function FilterGroup({
         )}
       </button>
       {open && (
-        <div className="mt-2 flex flex-col gap-0.5 max-h-[260px] overflow-y-auto pr-1">
-          {options.length === 0 && (
-            <p className="text-xs text-slate-400 py-1">Učitavanje...</p>
-          )}
-          {options.map((opt) => {
-            const isSelected = selected.includes(opt);
-            return (
-              <button
-                key={opt}
-                onClick={() => onChange(opt)}
-                className="text-left text-sm px-0 py-1.5 flex items-center gap-2 text-[#1A1A1A] hover:text-[#FF9900] transition-colors"
-              >
-                <span
-                  className={`w-4 h-4 border rounded flex items-center justify-center shrink-0 transition-colors ${
-                    isSelected
-                      ? "bg-[#1B2B4B] border-[#1B2B4B]"
-                      : "border-slate-300"
-                  }`}
+        <div className="mt-2">
+          {searchable && (
+            <div className="relative mb-2">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+              <input
+                ref={searchRef}
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Pretraži ukus..."
+                className="w-full border border-slate-200 rounded-md pl-8 pr-7 py-1.5 text-sm outline-none focus:ring-1 focus:ring-[#FF9900] focus:border-[#FF9900] placeholder:text-slate-400"
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                 >
-                  {isSelected && (
-                    <span className="text-white text-[10px]">✓</span>
-                  )}
-                </span>
-                {opt}
-              </button>
-            );
-          })}
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          )}
+          <div className="flex flex-col gap-0.5 max-h-[260px] overflow-y-auto pr-1">
+            {options.length === 0 && (
+              <p className="text-xs text-slate-400 py-1">Učitavanje...</p>
+            )}
+            {filtered.length === 0 && options.length > 0 && (
+              <p className="text-xs text-slate-400 py-1">Nema rezultata za &ldquo;{search}&rdquo;</p>
+            )}
+            {filtered.map((opt) => {
+              const isSelected = selected.includes(opt);
+              return (
+                <button
+                  key={opt}
+                  onClick={() => onChange(opt)}
+                  className="text-left text-sm px-0 py-1.5 flex items-center gap-2 text-[#1A1A1A] hover:text-[#FF9900] transition-colors"
+                >
+                  <span
+                    className={`w-4 h-4 border rounded flex items-center justify-center shrink-0 transition-colors ${
+                      isSelected
+                        ? "bg-[#1B2B4B] border-[#1B2B4B]"
+                        : "border-slate-300"
+                    }`}
+                  >
+                    {isSelected && (
+                      <span className="text-white text-[10px]">✓</span>
+                    )}
+                  </span>
+                  {opt}
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
@@ -361,6 +403,7 @@ function FilterContent({
         options={flavours}
         selected={selectedFlavour}
         onChange={onFlavourChange}
+        searchable
       />
       <WeightRangeFilter
         selected={selectedWeightRange}
