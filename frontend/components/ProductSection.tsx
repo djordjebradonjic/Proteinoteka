@@ -8,6 +8,7 @@ import SortSelect from "./SortSelect";
 import ProductGrid from "./ProductGrid";
 import { X } from "lucide-react";
 import { getCategoryByValue } from "@/lib/categories";
+import RelatedGuides from "@/components/RelatedGuides";
 
 interface Props {
   initialProducts: Product[];
@@ -245,7 +246,11 @@ export default function ProductSection({
     maxPrice  ? { key: "maxPrice", label: `do ${maxPrice} RSD`, onRemove: () => updateFilters("maxPrice", "") } : null,
   ].filter(Boolean) as Chip[];
 
+  // Show guides when exactly one category is active (dedicated page or single filter)
+  const guideCategory = initialCategory || (urlCategories.length === 1 ? urlCategories[0] : "");
+
   return (
+    <>
     <div
       id="product-grid"
       className="max-w-7xl mx-auto px-4 py-8 flex flex-col md:flex-row gap-6 items-start relative"
@@ -327,5 +332,7 @@ export default function ProductSection({
         />
       </div>
     </div>
+    {guideCategory && <RelatedGuides categoryValue={guideCategory} />}
+    </>
   );
 }
