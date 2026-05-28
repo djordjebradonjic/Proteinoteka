@@ -13,6 +13,8 @@ const BRAND_PAGE_SLUGS: Record<string, string> = {
   "Optimum Nutrition": "/optimum-nutrition-proteini",
   "Scitec Nutrition":  "/scitec-nutrition-proteini",
   "Dymatize":          "/dymatize-proteini",
+  "BioTech USA":       "/biotech-usa-proteini",
+  "Biotech":           "/biotech-usa-proteini",
 };
 import ScrollableRow from "@/components/ScrollableRow";
 import Image from "next/image";

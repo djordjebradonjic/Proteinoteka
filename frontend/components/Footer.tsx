@@ -51,6 +51,7 @@ const BRAND_PAGES = [
   { label: "Optimum Nutrition", href: "/optimum-nutrition-proteini" },
   { label: "Scitec Nutrition",  href: "/scitec-nutrition-proteini"  },
   { label: "Dymatize",          href: "/dymatize-proteini"          },
+  { label: "BioTech USA",       href: "/biotech-usa-proteini"       },
 ];
 
 const NAV_LINKS = [
