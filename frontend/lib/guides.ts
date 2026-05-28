@@ -14,15 +14,25 @@ export const GUIDES = {
     title: "Koliko proteina dnevno",
     description: "Konkretan odgovor za aktivne ljude",
   },
+  "da-li-protein-goji": {
+    path: "/vodici/da-li-protein-goji",
+    title: "Da li protein goji?",
+    description: "Istina o proteinima i telesnoj masi",
+  },
+  "protein-za-mrsavljenje": {
+    path: "/vodici/protein-za-mrsavljenje",
+    title: "Protein za mršavljenje",
+    description: "Koji protein odabrati i kako ga koristiti",
+  },
 } as const;
 
 export type GuideSlug = keyof typeof GUIDES;
 
 export const CATEGORY_GUIDES: Record<string, GuideSlug[]> = {
-  whey_isolate:     ["whey-isolate-vs-concentrate", "kada-piti-protein", "koliko-proteina-dnevno"],
-  whey_concentrate: ["whey-isolate-vs-concentrate", "kada-piti-protein", "koliko-proteina-dnevno"],
-  vegan:            ["koliko-proteina-dnevno", "kada-piti-protein"],
-  casein:           ["kada-piti-protein", "koliko-proteina-dnevno"],
-  hydrolysate:      ["kada-piti-protein", "koliko-proteina-dnevno"],
-  blend:            ["koliko-proteina-dnevno", "kada-piti-protein"],
+  whey_isolate:     ["whey-isolate-vs-concentrate", "protein-za-mrsavljenje", "koliko-proteina-dnevno"],
+  whey_concentrate: ["whey-isolate-vs-concentrate", "kada-piti-protein",      "koliko-proteina-dnevno"],
+  vegan:            ["koliko-proteina-dnevno",       "protein-za-mrsavljenje", "kada-piti-protein"],
+  casein:           ["kada-piti-protein",            "koliko-proteina-dnevno", "da-li-protein-goji"],
+  hydrolysate:      ["kada-piti-protein",            "protein-za-mrsavljenje", "koliko-proteina-dnevno"],
+  blend:            ["koliko-proteina-dnevno",       "kada-piti-protein",      "da-li-protein-goji"],
 };

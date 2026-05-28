@@ -66,10 +66,14 @@ const SEO_GUIDES = [
   { label: "Koliko proteina dnevno?",  href: "/vodici/koliko-proteina-dnevno"      },
   { label: "Da li protein goji?",      href: "/vodici/da-li-protein-goji"          },
   { label: "Kada piti protein?",       href: "/vodici/kada-piti-protein"           },
+  { label: "Protein za mršavljenje",   href: "/vodici/protein-za-mrsavljenje"      },
   { label: "Isolate vs Concentrate",   href: "/vodici/whey-isolate-vs-concentrate" },
   { label: "Najbolji whey protein",    href: "/najbolji-whey-protein-srbija"       },
   { label: "Whey do 3000 dinara",      href: "/whey-protein-do-3000-dinara"        },
   { label: "Whey do 5000 dinara",      href: "/whey-protein-do-5000-dinara"        },
+  { label: "Kazein protein",           href: "/kazein-protein-srbija"              },
+  { label: "Biljni protein",           href: "/biljni-protein-srbija"              },
+  { label: "Hidrolizat proteina",      href: "/hidrolizat-protein-srbija"          },
   { label: "Kako računamo Value Score", href: "/kako-racunamo-value-score"          },
 ];
 
