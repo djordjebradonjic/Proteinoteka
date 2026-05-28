@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { BookOpen, ArrowRight } from "lucide-react";
 import { GUIDES, CATEGORY_GUIDES } from "@/lib/guides";
