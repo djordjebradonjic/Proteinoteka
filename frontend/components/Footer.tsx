@@ -47,6 +47,12 @@ const STORE_PAGES = [
   { label: "Proteini.si",    href: "/proteini-si-srbija"      },
 ];
 
+const BRAND_PAGES = [
+  { label: "Optimum Nutrition", href: "/optimum-nutrition-proteini" },
+  { label: "Scitec Nutrition",  href: "/scitec-nutrition-proteini"  },
+  { label: "Dymatize",          href: "/dymatize-proteini"          },
+];
+
 const NAV_LINKS = [
   { label: "Početna",              href: "/"              },
   { label: "O nama",               href: "/o-nama"        },
@@ -129,9 +135,17 @@ export default function Footer() {
 
             {/* Store pages */}
             <ColHeading>Prodavnice</ColHeading>
-            <ul className="flex flex-col gap-2.5">
+            <ul className="flex flex-col gap-2.5 mb-6">
               {STORE_PAGES.map((s) => (
                 <FooterLink key={s.href} href={s.href}>{s.label}</FooterLink>
+              ))}
+            </ul>
+
+            {/* Brand pages */}
+            <ColHeading>Brendovi</ColHeading>
+            <ul className="flex flex-col gap-2.5">
+              {BRAND_PAGES.map((b) => (
+                <FooterLink key={b.href} href={b.href}>{b.label}</FooterLink>
               ))}
             </ul>
           </div>

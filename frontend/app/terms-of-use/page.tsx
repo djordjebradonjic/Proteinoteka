@@ -32,7 +32,7 @@ export default function TermsOfUsePage() {
           <h1 className="text-3xl font-extrabold text-slate-900 mb-2">
             Uslovi korišćenja
           </h1>
-          <p className="text-sm text-slate-400">Poslednje ažuriranje: april 2025.</p>
+          <p className="text-sm text-slate-400">Poslednje ažuriranje: maj 2026.</p>
         </div>
 
         <Section title="1. Prihvatanje uslova">

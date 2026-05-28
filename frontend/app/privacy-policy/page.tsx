@@ -32,7 +32,7 @@ export default function PrivacyPolicyPage() {
           <h1 className="text-3xl font-extrabold text-slate-900 mb-2">
             Politika privatnosti
           </h1>
-          <p className="text-sm text-slate-400">Poslednje ažuriranje: april 2025.</p>
+          <p className="text-sm text-slate-400">Poslednje ažuriranje: maj 2026.</p>
         </div>
 
         <Section title="1. Ko smo mi">
@@ -47,6 +47,9 @@ export default function PrivacyPolicyPage() {
           </p>
           <p>
             <strong>Kontakt forma:</strong> Kada nam pošaljete poruku putem kontakt forme, prikupljamo vaše ime, email adresu i tekst poruke isključivo radi odgovora na vaš upit. Ovi podaci se ne dele sa trećim stranama.
+          </p>
+          <p>
+            <strong>Price alert sistem:</strong> Ako aktivirate praćenje cene za neki proizvod, prikupljamo vašu email adresu i ciljnu cenu koju ste uneli. Ovi podaci se čuvaju na našim serverima isključivo radi slanja notifikacije kada cena padne ispod željene vrednosti. Email se ne koristi u marketinške svrhe i ne deli se sa trećim stranama osim servisa za slanje emailova (Resend). Možete ukloniti alert u svakom trenutku putem linka u poslatom emailu ili direktno na stranici proizvoda.
           </p>
           <p>
             <strong>Lokalno skladištenje (localStorage):</strong> Koristimo browser localStorage za čuvanje liste željenih proizvoda (wishlist) i lista za poređenje. Ovi podaci ostaju samo na vašem uređaju i ne šaljemo ih na naše servere.
@@ -89,7 +92,7 @@ export default function PrivacyPolicyPage() {
           <ul className="list-disc pl-5 space-y-1">
             <li><strong>Google Analytics</strong> — anonimna analitika poseta</li>
             <li><strong>Vercel</strong> — hosting platforme</li>
-            <li><strong>Resend</strong> — slanje emailova putem kontakt forme</li>
+            <li><strong>Resend</strong> — slanje emailova putem kontakt forme i price alert notifikacija</li>
           </ul>
         </Section>
 

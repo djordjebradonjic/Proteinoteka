@@ -8,6 +8,12 @@ import Header from "@/components/Header";
 import Link from "next/link";
 import { ShoppingCart, ArrowLeft, Package, Zap, Droplets, Flame, Store, Bell, BellOff, BookOpen, ArrowRight } from "lucide-react";
 import { GUIDES, CATEGORY_GUIDES } from "@/lib/guides";
+
+const BRAND_PAGE_SLUGS: Record<string, string> = {
+  "Optimum Nutrition": "/optimum-nutrition-proteini",
+  "Scitec Nutrition":  "/scitec-nutrition-proteini",
+  "Dymatize":          "/dymatize-proteini",
+};
 import ScrollableRow from "@/components/ScrollableRow";
 import Image from "next/image";
 import { analytics } from "@/lib/analytics";
@@ -385,9 +391,18 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
           <div className="flex flex-col gap-4">
             <div className="flex flex-wrap gap-2">
               {product.brand && (
-                <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
-                  {product.brand}
-                </span>
+                BRAND_PAGE_SLUGS[product.brand] ? (
+                  <Link
+                    href={BRAND_PAGE_SLUGS[product.brand]}
+                    className="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100 hover:bg-blue-100 hover:border-blue-200 active:bg-blue-100 active:border-blue-200 transition-colors"
+                  >
+                    {product.brand} ↗
+                  </Link>
+                ) : (
+                  <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+                    {product.brand}
+                  </span>
+                )
               )}
               <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
                 {product.storeName}
@@ -682,6 +697,22 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
               ))}
             </ScrollableRow>
           </div>
+        )}
+
+        {/* ── Brand page CTA ────────────────────────────────────────── */}
+        {product.brand && BRAND_PAGE_SLUGS[product.brand] && (
+          <Link
+            href={BRAND_PAGE_SLUGS[product.brand]}
+            className="group flex items-center gap-3 bg-blue-50 border border-blue-100 rounded-2xl px-5 py-4 mb-6 hover:border-blue-300 hover:bg-blue-100 active:border-blue-300 active:bg-blue-100 transition-all duration-150"
+          >
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Brend</p>
+              <p className="text-sm font-bold text-slate-900 group-hover:text-blue-700 transition-colors leading-snug">
+                Svi {product.brand} proizvodi u Srbiji — poređenje cena
+              </p>
+            </div>
+            <ArrowRight className="w-4 h-4 text-blue-400 shrink-0" />
+          </Link>
         )}
 
       </div>
