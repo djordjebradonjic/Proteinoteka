@@ -5,12 +5,12 @@ import { SEOLandingPage } from "@/components/seo/SEOLandingPage";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "Whey Protein Cena u Srbiji 2025 — Poređenje po tipu i prodavnici | Proteinoteka",
+  title: "Whey Protein Cena u Srbiji 2026 — Poređenje po tipu i prodavnici | Proteinoteka",
   description:
     "Cene whey proteina u Srbiji kreću se od ~2.500 do ~12.000 RSD/kg, zavisno od tipa. Poredimo concentrate, isolate i hidrolizat iz svih prodavnica — RSD po gramu proteina.",
   alternates: { canonical: "https://proteinoteka.rs/whey-protein-cena" },
   openGraph: {
-    title: "Whey Protein Cena u Srbiji 2025 | Proteinoteka",
+    title: "Whey Protein Cena u Srbiji 2026 | Proteinoteka",
     description:
       "Aktuelni pregled cena whey proteina u Srbiji po tipu i prodavnici. Concentrate od ~2.500, isolate od ~4.000, hidrolizat od ~6.000 RSD/kg.",
     url: "https://proteinoteka.rs/whey-protein-cena",
@@ -33,7 +33,7 @@ function PriceByTypeTable() {
   return (
     <section>
       <h2 className="text-xl font-extrabold text-slate-900 mb-2">
-        Cene whey proteina po tipu — 2025
+        Cene whey proteina po tipu — 2026
       </h2>
       <p className="text-sm text-slate-500 mb-4">
         Okvirni rasponi za standardno pakovanje od 1&nbsp;kg. Cene variraju po brendu, prodavnici i veličini pakovanja.
@@ -67,7 +67,7 @@ function PriceByTypeTable() {
         </div>
         <div className="px-5 py-3 bg-slate-50 border-t border-slate-100">
           <p className="text-[11px] text-slate-400">
-            * Veća pakovanja (2–4&nbsp;kg) su obično 15–25% isplativija po gramu proteina. Cene se ažuriraju nedeljno.
+            * Rasponi su okvirni za standardna pakovanja od 1&nbsp;kg. Aktuelne cene po proizvodima prikazane su u listi ispod.
           </p>
         </div>
       </div>
@@ -89,17 +89,17 @@ export default async function Page() {
 
   return (
     <SEOLandingPage
-      h1="Whey Protein Cena u Srbiji 2025"
+      h1="Whey Protein Cena u Srbiji 2026"
       intro="Transparentan pregled svih aktuelnih cena whey proteina na srpskom tržištu. Upoređujemo concentrate, isolate, hidrolizat, kazein i biljni protein iz svih prodavnica — i računamo realnu cenu po gramu proteina, jedini podatak koji zaista meri vrednost."
       quickAnswer={quickAnswer}
       products={products}
       listHeading="Whey proteini sortirani po ceni — od najjeftinijeg"
-      tableCaption="Pregled cena whey proteina u Srbiji 2025"
+      tableCaption="Pregled cena whey proteina u Srbiji 2026"
       currentSlug="whey-protein-cena"
       middleSection={<PriceByTypeTable />}
       faqs={[
         {
-          q: "Koliko košta whey protein u Srbiji u 2025. godini?",
+          q: "Koliko košta whey protein u Srbiji u 2026. godini?",
           a: "Cene se kreću od oko 2.500 RSD/kg za whey concentrate do 12.000+ RSD/kg za premium hidrolizat. Najpopularniji segment — concentrate od poznatih brendova — obično košta između 3.500 i 5.500 RSD za kilogram. Za realnu procenu uvek gledaj cenu po gramu proteina, ne ukupnu cenu pakovanja.",
         },
         {

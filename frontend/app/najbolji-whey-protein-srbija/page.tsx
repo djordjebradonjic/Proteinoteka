@@ -6,12 +6,12 @@ import Link from "next/link";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "Najbolji Whey Protein u Srbiji 2025 — Top 10 po vrednosti | Proteinoteka",
+  title: "Najbolji Whey Protein u Srbiji 2026 — Top 10 po vrednosti | Proteinoteka",
   description:
-    "Top 10 whey proteina u Srbiji za 2025. rangiranih po value score-u. Poredimo cenu, protein na 100g i nutritivni profil iz svih prodavnica — i odgovaramo kome koji tip odgovara.",
+    "Top 10 whey proteina u Srbiji za 2026. rangiranih po value score-u. Poredimo cenu, protein na 100g i nutritivni profil iz svih prodavnica — i odgovaramo kome koji tip odgovara.",
   alternates: { canonical: "https://proteinoteka.rs/najbolji-whey-protein-srbija" },
   openGraph: {
-    title: "Najbolji Whey Protein u Srbiji 2025 — Top 10 | Proteinoteka",
+    title: "Najbolji Whey Protein u Srbiji 2026 — Top 10 | Proteinoteka",
     description:
       "Top 10 whey proteina u Srbiji rangirani po value score-u. Cena, protein/100g i nutritivni profil iz svih prodavnica na jednom mestu.",
     url: "https://proteinoteka.rs/najbolji-whey-protein-srbija",
@@ -123,12 +123,12 @@ export default async function Page() {
 
   return (
     <SEOLandingPage
-      h1="Najbolji Whey Protein u Srbiji 2025"
-      intro={`Analizirali smo ${products.length > 0 ? `${products.length}+` : "sve"} whey proteine dostupne u srpskim prodavnicama. Poredimo cenu, sadržaj proteina na 100g, šećere, masti i ukupnu vrednost — i rangiramo koji nudi najviše za tvoj novac u 2025. godini.`}
+      h1="Najbolji Whey Protein u Srbiji 2026"
+      intro={`Analizirali smo ${products.length > 0 ? `${products.length}+` : "sve"} whey proteine dostupne u srpskim prodavnicama. Poredimo cenu, sadržaj proteina na 100g, šećere, masti i ukupnu vrednost — i rangiramo koji nudi najviše za tvoj novac u 2026. godini.`}
       quickAnswer={quickAnswer}
       products={products}
-      listHeading="Top 10 whey proteina u Srbiji 2025 — rangirani po vrednosti za novac"
-      tableCaption="Whey proteini u Srbiji — rang lista po value score 2025"
+      listHeading="Top 10 whey proteina u Srbiji 2026 — rangirani po vrednosti za novac"
+      tableCaption="Whey proteini u Srbiji — rang lista po value score 2026"
       currentSlug="najbolji-whey-protein-srbija"
       middleSection={<UseCaseSection />}
       faqs={[
