@@ -45,9 +45,11 @@ public class BrandNormalizerService {
         }
 
         if (bestMatch != null && bestScore >= MATCH_THRESHOLD) {
-            log.info("Brand normalized: '{}' → '{}' (score: {})",
-                    rawBrand, bestMatch.getBrandName(), bestScore);
-            return bestMatch.getBrandName();
+            String resolved = bestMatch.getCanonicalName() != null
+                    ? bestMatch.getCanonicalName()
+                    : bestMatch.getBrandName();
+            log.info("Brand normalized: '{}' → '{}' (score: {})", rawBrand, resolved, bestScore);
+            return resolved;
         }
 
         // Nije nađen match — vrati očišćeni original

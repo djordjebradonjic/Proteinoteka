@@ -28,6 +28,9 @@ public class BrandReputation {
 
     private String notes;
 
+    @Column(name = "canonical_name")
+    private String canonicalName;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

@@ -388,12 +388,20 @@ public class FitLabScraper implements StoreScraper {
     private void enrichBrand(Document doc, Product p) {
         Element brandSchema = doc.selectFirst("[itemprop=brand]");
         if (brandSchema != null && !brandSchema.text().isBlank()) {
-            p.setBrand(brandSchema.text().trim());
+            p.setBrand(cleanBrand(brandSchema.text().trim()));
             return;
         }
         Element meta = doc.selectFirst("meta[property='product:brand']");
         if (meta != null && !meta.attr("content").isBlank())
-            p.setBrand(meta.attr("content").trim());
+            p.setBrand(cleanBrand(meta.attr("content").trim()));
+    }
+
+    private String cleanBrand(String raw) {
+        if (raw.contains("/")) {
+            String afterSlash = raw.substring(raw.lastIndexOf('/') + 1).trim();
+            if (!afterSlash.isBlank()) raw = afterSlash;
+        }
+        return raw.replaceAll("^[★☆✦✧⭐*\\s]+", "").trim();
     }
 
     private void enrichFlavours(Document doc, Product p) {
