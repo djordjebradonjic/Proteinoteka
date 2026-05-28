@@ -12,7 +12,7 @@ import { GUIDES, CATEGORY_GUIDES } from "@/lib/guides";
 const BRAND_PAGE_SLUGS: Record<string, string> = {
   "Optimum Nutrition": "/optimum-nutrition-proteini",
   "Scitec Nutrition":  "/scitec-nutrition-proteini",
-  "Dymatize":          "/dymatize-proteini",
+  "Dymatize Nutrition": "/dymatize-proteini",
   "BioTech USA":       "/biotech-usa-proteini",
   "Biotech":           "/biotech-usa-proteini",
 };

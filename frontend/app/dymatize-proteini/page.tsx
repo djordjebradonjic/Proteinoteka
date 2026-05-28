@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
-  const products = await fetchBrandProducts({ brand: "Dymatize", limit: 50 });
+  const products = await fetchBrandProducts({ brand: "Dymatize Nutrition", limit: 50 });
 
   return (
     <SEOBrandPage
