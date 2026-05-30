@@ -99,10 +99,12 @@ export default async function Image({
   if (product.imageUrl) {
     try {
       const imgRes = await fetch(product.imageUrl, { signal: AbortSignal.timeout(3000) });
-      if (imgRes.ok) {
+      const mime = imgRes.headers.get("content-type") ?? "";
+      if (imgRes.ok && mime.startsWith("image/")) {
         const buf = await imgRes.arrayBuffer();
-        const mime = imgRes.headers.get("content-type") ?? "image/jpeg";
-        imgData = `data:${mime};base64,${Buffer.from(buf).toString("base64")}`;
+        if (buf.byteLength <= 2 * 1024 * 1024) {
+          imgData = `data:${mime};base64,${Buffer.from(buf).toString("base64")}`;
+        }
       }
     } catch {
       // image unavailable — skip
@@ -111,7 +113,7 @@ export default async function Image({
 
   const hasImage = imgData !== null;
 
-  return new ImageResponse(
+  try { return new ImageResponse(
     (
       <div
         style={{
@@ -328,5 +330,7 @@ export default async function Image({
       </div>
     ),
     { ...size }
-  );
+  ); } catch {
+    return new ImageResponse(FALLBACK, { ...size });
+  }
 }
