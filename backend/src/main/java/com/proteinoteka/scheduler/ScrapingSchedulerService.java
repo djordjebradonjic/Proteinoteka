@@ -3,6 +3,7 @@ package com.proteinoteka.scheduler;
 import com.proteinoteka.model.ScrapeLog;
 import com.proteinoteka.model.ScrapeStatus;
 import com.proteinoteka.repository.ScrapeLogRepository;
+import com.proteinoteka.service.AiDescriptionJob;
 import com.proteinoteka.service.ScraperService;
 import com.proteinoteka.service.StoreScraper;
 import lombok.RequiredArgsConstructor;
@@ -51,6 +52,7 @@ public class ScrapingSchedulerService {
     private final ScrapeLogRepository scrapeLogRepository;
     private final TaskScheduler taskScheduler;
     private final CacheManager cacheManager;
+    private final AiDescriptionJob aiDescriptionJob;
 
     @Value("${scraping.schedule.enabled:true}")
     private boolean schedulingEnabled;
@@ -164,6 +166,7 @@ public class ScrapingSchedulerService {
 
             if (entry.getStatus() == ScrapeStatus.SUCCESS) {
                 evictProductCaches();
+                aiDescriptionJob.enrichAllMissingDescriptions();
             }
 
         } catch (Exception e) {
