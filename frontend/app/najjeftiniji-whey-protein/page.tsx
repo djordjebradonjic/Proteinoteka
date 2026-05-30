@@ -7,7 +7,7 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: { absolute: "Najjeftiniji Whey Protein u Srbiji 2026 | Proteinoteka" },
   description:
-    "Pronađi najjeftiniji whey protein u Srbiji. Aktuelne cene iz svih prodavnica — Pansport, Proteini.si, Proteinbox i ostalih — sortiranih od najniže cene.",
+    "Automatski poredimo cene whey proteina iz 6 srpskih prodavnica. Vidi koji košta najmanje po gramu proteina — ažurirano nedeljno, bez ručnog pretraživanja.",
   alternates: { canonical: "https://proteinoteka.rs/najjeftiniji-whey-protein" },
   openGraph: {
     title: "Najjeftiniji Whey Protein u Srbiji | Proteinoteka",

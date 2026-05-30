@@ -17,12 +17,12 @@ const META: Record<string, { title: string; description: string }> = {
   whey_concentrate: {
     title: "Whey Concentrate – Uporedi cene u Srbiji 2026",
     description:
-      "Pronađi najisplativiji whey concentrate protein u Srbiji. Poredimo cene iz svih prodavnica i računamo RSD po gramu proteina.",
+      "Poredi cene whey concentrate proteina iz 6 srpskih prodavnica. Vidi koliko košta gram proteina u svakom paketu — nađi najboljу vrednost za novac.",
   },
   whey_isolate: {
     title: "Whey Isolate – Uporedi cene u Srbiji 2026",
     description:
-      "Pronađi najisplativiji whey isolate protein u Srbiji. Čist protein, minimalno masti i laktoze – po najboljoj ceni.",
+      "Poredi cene whey izolata iz 6 srpskih prodavnica. Filtriraj po ceni ili gramu proteina — nađi najisplativiji izolat odmah.",
   },
   hydrolysate: {
     title: "Hidrolizat proteina – Uporedi cene u Srbiji 2026",

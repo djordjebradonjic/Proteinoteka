@@ -8,7 +8,7 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: "Najbolji Whey Protein u Srbiji 2026 — Top 10 po vrednosti | Proteinoteka",
   description:
-    "Top 10 whey proteina u Srbiji za 2026. rangiranih po value score-u. Poredimo cenu, protein na 100g i nutritivni profil iz svih prodavnica — i odgovaramo kome koji tip odgovara.",
+    "Koji whey protein je vrednost za novac u Srbiji 2026? Rangiramo 200+ proteina po ceni, čistoći i sastojcima — i kažemo koji odgovara tvom cilju i budžetu.",
   alternates: { canonical: "https://proteinoteka.rs/najbolji-whey-protein-srbija" },
   openGraph: {
     title: "Najbolji Whey Protein u Srbiji 2026 — Top 10 | Proteinoteka",
