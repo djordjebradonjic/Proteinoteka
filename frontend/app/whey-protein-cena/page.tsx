@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { fetchTopProducts } from "@/lib/seo-data";
 import { SEOLandingPage } from "@/components/seo/SEOLandingPage";
+import Link from "next/link";
 
 export const revalidate = 86400;
 
@@ -28,6 +29,87 @@ const PRICE_ROWS = [
   { type: "Biljni protein",   href: "/kategorija/biljni-protein",    range: "3.000 – 7.000 RSD/kg",  protein: "65–80g", note: "Vegan opcija, grašak ili soja baza" },
   { type: "Blend",            href: "/kategorija/blend",             range: "3.000 – 6.500 RSD/kg",  protein: "70–85g", note: "Mešavina vrsta za duži efekat" },
 ];
+
+function PriceFactorsSection() {
+  return (
+    <section className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4">
+      <h2 className="text-xl font-extrabold text-slate-900">
+        Šta određuje cenu whey proteina?
+      </h2>
+      <p className="text-sm text-slate-600 leading-relaxed">
+        Cena whey proteina u Srbiji varira i do <strong>4 puta</strong> za sličan kvalitet — uglavnom zbog četiri faktora:
+      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="bg-slate-50 rounded-lg p-4">
+          <h3 className="font-bold text-slate-900 text-sm mb-1">1. Tip proteina</h3>
+          <p className="text-xs text-slate-600 leading-relaxed">
+            Concentrate prolazi manje faza filtracije i jeftiniji je. Isolate ima 90%+ čistog proteina i manje laktoze, ali košta više. Hidrolizat je pre-digestovan i najskuplji — nema razloga da ga kupuješ osim ako imaš ozbiljne probleme sa varenjem.
+          </p>
+        </div>
+        <div className="bg-slate-50 rounded-lg p-4">
+          <h3 className="font-bold text-slate-900 text-sm mb-1">2. Brend</h3>
+          <p className="text-xs text-slate-600 leading-relaxed">
+            Optimum Nutrition, Scitec i BioTech imaju prepoznatljivost i veće marketinške budžete — to plaćaš u ceni. Manje poznati brendovi često nude isti kvalitet sirovine po nižoj ceni. Value Score na Proteinoteci računa da li je ta razlika opravdana.
+          </p>
+        </div>
+        <div className="bg-slate-50 rounded-lg p-4">
+          <h3 className="font-bold text-slate-900 text-sm mb-1">3. Veličina pakovanja</h3>
+          <p className="text-xs text-slate-600 leading-relaxed">
+            Pakovanje od 2kg ili 5kg skoro uvek daje bolju cenu po gramu proteina nego pakovanje od 1kg. Ako koristiš protein redovno, veće pakovanje se isplati — uz uslov da ga možeš potrošiti pre isteka roka (obično 2–3 godine).
+          </p>
+        </div>
+        <div className="bg-slate-50 rounded-lg p-4">
+          <h3 className="font-bold text-slate-900 text-sm mb-1">4. Prodavnica i akcije</h3>
+          <p className="text-xs text-slate-600 leading-relaxed">
+            Isti protein može se razlikovati <strong>20–30% u ceni</strong> između srpskih prodavnica. Prodavnice povremeno imaju akcije na specifične brendove. Zato ima smisla proveriti više mesta — što Proteinoteka radi automatski za sve prodavnice.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function BudgetGuideSection() {
+  return (
+    <section className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4">
+      <h2 className="text-xl font-extrabold text-slate-900">
+        Koji whey protein kupiti — prema budžetu
+      </h2>
+      <p className="text-sm text-slate-600 leading-relaxed">
+        Nije svaki protein vredan iste cene. Evo šta je realno za svaki budžet na srpskom tržištu:
+      </p>
+      <div className="space-y-3">
+        <div className="border border-slate-200 rounded-lg p-4">
+          <div className="flex flex-wrap items-start gap-x-3 gap-y-1 mb-2">
+            <h3 className="font-bold text-slate-900 text-sm">Do 3.000 RSD po pakovanju</h3>
+            <Link href="/whey-protein-do-3000-dinara" className="text-xs font-bold text-[#FF9900] hover:underline whitespace-nowrap">Pogledaj ponudu →</Link>
+          </div>
+          <p className="text-xs text-slate-600 leading-relaxed">
+            U ovom rangu naći ćeš uglavnom manja pakovanja (500g–1kg) whey concentrate proteina. Dobar izbor za početnike koji žele da isprobaju suplementaciju bez velikog ulaganja. Budi pažljiv na sadržaj proteina — neki proizvodi u ovom rangu imaju svega 60g proteina na 100g.
+          </p>
+        </div>
+        <div className="border border-amber-200 bg-amber-50 rounded-lg p-4">
+          <div className="flex flex-wrap items-start gap-x-3 gap-y-1 mb-2">
+            <h3 className="font-bold text-slate-900 text-sm">3.000 – 5.000 RSD po pakovanju ⭐ Preporučeni opseg</h3>
+            <Link href="/najjeftiniji-whey-protein" className="text-xs font-bold text-[#FF9900] hover:underline whitespace-nowrap">Pogledaj ponudu →</Link>
+          </div>
+          <p className="text-xs text-slate-600 leading-relaxed">
+            Ovde se nalazi <strong>najveći izbor kvalitetnih proteina</strong> u Srbiji. Za 3.000–5.000 RSD možeš dobiti pakovanje od 1–2kg poznatog whey concentrate brenda sa 75–80g proteina na 100g. Ovo je opseg u kome vrednost za novac je obično najveća — ne treba da platiš više da bi dobio dobar protein.
+          </p>
+        </div>
+        <div className="border border-slate-200 rounded-lg p-4">
+          <div className="flex flex-wrap items-start gap-x-3 gap-y-1 mb-2">
+            <h3 className="font-bold text-slate-900 text-sm">Iznad 5.000 RSD po pakovanju</h3>
+            <Link href="/whey-isolate-srbija" className="text-xs font-bold text-[#FF9900] hover:underline whitespace-nowrap">Pogledaj izolate →</Link>
+          </div>
+          <p className="text-xs text-slate-600 leading-relaxed">
+            U ovom opsegu dominiraju whey isolate i hidrolizat, kao i velika pakovanja (2kg+) premium brendova. Isolate je opravdan izbor ako imaš intoleranciju na laktozu ili preferiraš čistiji proteinski profil. Hidrolizat retko opravdava premijum cenu osim u specifičnim sportskim kontekstima.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 function PriceByTypeTable() {
   return (
@@ -96,7 +178,13 @@ export default async function Page() {
       listHeading="Whey proteini sortirani po ceni — od najjeftinijeg"
       tableCaption="Pregled cena whey proteina u Srbiji 2026"
       currentSlug="whey-protein-cena"
-      middleSection={<PriceByTypeTable />}
+      middleSection={
+        <>
+          <PriceByTypeTable />
+          <PriceFactorsSection />
+          <BudgetGuideSection />
+        </>
+      }
       faqs={[
         {
           q: "Koliko košta whey protein u Srbiji u 2026. godini?",
