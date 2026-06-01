@@ -1,4 +1,4 @@
-import { notFound, permanentRedirect } from "next/navigation";
+import { permanentRedirect } from "next/navigation";
 import { Product } from "@/types/product";
 import { productUrl } from "@/lib/productUrl";
 
@@ -21,7 +21,7 @@ export default async function ProductRedirectPage({
   if (!id || id === "undefined" || isNaN(Number(id))) notFound();
 
   const product = await fetchProduct(id);
-  if (!product) notFound();
+  if (!product) permanentRedirect("/");
 
   permanentRedirect(productUrl(product));
 }
