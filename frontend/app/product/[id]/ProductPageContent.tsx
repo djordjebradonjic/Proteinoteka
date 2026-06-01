@@ -132,7 +132,7 @@ function PriceAlertSection({ product }: { product: Product }) {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <Bell className="w-4 h-4 text-emerald-600" fill="#16a34a" />
-                <span className="text-sm font-bold text-emerald-700">Price alert aktivan</span>
+                <span className="text-sm font-bold text-emerald-700">Obaveštenje aktivno</span>
               </div>
               <p className="text-xs text-slate-500">
                 {alertData?.targetPrice
@@ -175,7 +175,7 @@ function PriceAlertSection({ product }: { product: Product }) {
               className="shrink-0 flex items-center gap-2 px-4 py-2.5 bg-[#1B2B4B] text-white font-bold text-sm rounded-xl hover:bg-[#243860] transition-colors"
             >
               <Bell className="w-4 h-4" />
-              Aktiviraj alert
+              Obavesti me
             </button>
           </div>
         )}

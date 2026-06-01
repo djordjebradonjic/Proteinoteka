@@ -333,7 +333,7 @@ export default function PriceAlertModal({ product, initialAlert, onClose }: Prop
                   ) : (
                     <>
                       <Bell className="w-4 h-4" />
-                      {isEditMode ? "Sačuvaj izmene" : "Aktiviraj alert"}
+                      {isEditMode ? "Sačuvaj izmene" : "Obavesti me"}
                     </>
                   )}
                 </button>
