@@ -1,4 +1,4 @@
-import { permanentRedirect } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { Product } from "@/types/product";
 import { productUrl } from "@/lib/productUrl";
 
