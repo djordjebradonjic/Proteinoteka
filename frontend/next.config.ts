@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
       { source: '/kako-racunamo', destination: '/kako-racunamo-value-score', permanent: true },
       { source: '/brendovi',      destination: '/',                           permanent: true },
       { source: '/blog',          destination: '/vodici',                     permanent: true },
+      { source: '/korpa',         destination: '/',                           permanent: true },
+      { source: '/wishlist',      destination: '/',                           permanent: true },
     ];
   },
   experimental: {
