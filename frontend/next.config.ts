@@ -2,6 +2,13 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  async redirects() {
+    return [
+      { source: '/kako-racunamo', destination: '/kako-racunamo-value-score', permanent: true },
+      { source: '/brendovi',      destination: '/',                           permanent: true },
+      { source: '/blog',          destination: '/vodici',                     permanent: true },
+    ];
+  },
   experimental: {
     scrollRestoration: true,
   },
