@@ -4,14 +4,14 @@ import Header from "@/components/Header";
 import VodiciNav from "@/components/VodiciNav";
 
 export const metadata: Metadata = {
-  title: { absolute: "Whey Isolate vs Concentrate — koja je razlika i šta da odabereš? | Proteinoteka" },
+  title: { absolute: "Whey Isolate vs Concentrate: šta da odabereš? | Proteinoteka" },
   description:
-    "Whey isolate ima 85–95% proteina i minimalnu laktozu. Concentrate ima 70–80% proteina i košta manje. Saznaj kome odgovara koji, sa cenama iz srpskog tržišta.",
+    "Isolate: 85–94g proteina/100g, skoro bez laktoze, skuplje 20–40%. Concentrate: 70–80g proteina, niža cena, isti rezultati za većinu. Tabela razlika + preporuka za Srbiju.",
   alternates: { canonical: "https://proteinoteka.rs/vodici/whey-isolate-vs-concentrate" },
   openGraph: {
-    title: "Whey Isolate vs Concentrate — koja je razlika i šta da odabereš? | Proteinoteka",
+    title: "Whey Isolate vs Concentrate: šta da odabereš? | Proteinoteka",
     description:
-      "Whey isolate ima 85–95% proteina i minimalnu laktozu. Concentrate ima 70–80% proteina i košta manje. Saznaj kome odgovara koji, sa cenama iz srpskog tržišta.",
+      "Isolate: 85–94g proteina/100g, skoro bez laktoze, skuplje 20–40%. Concentrate: 70–80g proteina, niža cena, isti rezultati za većinu. Tabela razlika + preporuka za Srbiju.",
     url: "https://proteinoteka.rs/vodici/whey-isolate-vs-concentrate",
     siteName: "Proteinoteka",
     locale: "sr_RS",
@@ -45,7 +45,7 @@ export default function Page() {
       "@context": "https://schema.org",
       "@type": "Article",
       headline: "Whey Isolate vs Concentrate — koja je razlika i šta da odabereš?",
-      datePublished: "2025-05-01",
+      datePublished: "2026-06-05",
       author: { "@type": "Organization", name: "Proteinoteka", url: BASE },
       publisher: { "@type": "Organization", name: "Proteinoteka", url: BASE },
       url: `${BASE}${SLUG}`,
@@ -94,7 +94,7 @@ export default function Page() {
             <div className="flex items-center gap-3 text-sm text-slate-400">
               <span>{READ_MIN} min čitanja</span>
               <span>·</span>
-              <span>Ažurirano: maj 2025.</span>
+              <span>Ažurirano: jun 2026.</span>
             </div>
           </div>
 
@@ -106,13 +106,45 @@ export default function Page() {
           {/* Section 1 */}
           <section className="mb-10">
             <h2 className="text-xl font-bold text-slate-900 mb-4">Konkretna razlika u sastavu</h2>
-            <div className="space-y-4 text-[15px] leading-relaxed text-slate-700">
+            <div className="space-y-4 text-[15px] leading-relaxed text-slate-700 mb-6">
               <p>
                 Whey concentrate prolazi kroz manje filtracionih koraka, pa zadržava više masti, ugljenih hidrata i laktoze — ali i neke bioaktivne frakcije (laktoferin, imunoglobulini) koje isolate gubi u procesu prečišćavanja.
               </p>
               <p>
-                Tipičan concentrate ima oko 75g proteina na 100g, 4–8g ugljenih hidrata, 3–5g masti i 3–5g laktoze. Tipičan isolate ima 88–92g proteina na 100g, ispod 2g ugljenih hidrata, ispod 1g masti i manje od 0.5g laktoze. Razlika po porciji (30g) je mala u apsolutnim brojevima — možda 3–5g proteina više uz isolate.
+                Razlika po porciji (30g) je mala u apsolutnim brojevima — možda 3–5g proteina više uz isolate. Evo tačnog poređenja na 100g:
               </p>
+            </div>
+
+            {/* Comparison table */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-6">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-slate-50">
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 min-w-[150px]">Parametar</th>
+                      <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 whitespace-nowrap">Whey Concentrate</th>
+                      <th className="px-4 py-3 text-center text-xs font-semibold text-[#FF9900] whitespace-nowrap">Whey Isolate</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {[
+                      { param: "Proteini na 100g", conc: "70–80g", isol: "85–94g", highlight: true },
+                      { param: "Masti na 100g", conc: "3–5g", isol: "<1g", highlight: false },
+                      { param: "Ugljeni hidrati", conc: "4–8g", isol: "<2g", highlight: false },
+                      { param: "Laktoza na 100g", conc: "3–5g", isol: "<0.5g", highlight: true },
+                      { param: "Kalorije na 100g", conc: "~380 kcal", isol: "~360 kcal", highlight: false },
+                      { param: "Brzina apsorpcije", conc: "Brza", isol: "Brža", highlight: false },
+                      { param: "Cena 2kg (Srbija)", conc: "4.000–7.000 RSD", isol: "6.000–11.000 RSD", highlight: true },
+                    ].map(({ param, conc, isol, highlight }) => (
+                      <tr key={param} className={highlight ? "bg-slate-50/50" : ""}>
+                        <td className="px-4 py-3 text-slate-700 font-medium">{param}</td>
+                        <td className="px-4 py-3 text-center text-slate-600">{conc}</td>
+                        <td className="px-4 py-3 text-center font-semibold text-slate-800">{isol}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </section>
 

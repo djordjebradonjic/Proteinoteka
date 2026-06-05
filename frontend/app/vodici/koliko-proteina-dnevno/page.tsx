@@ -4,14 +4,14 @@ import Header from "@/components/Header";
 import VodiciNav from "@/components/VodiciNav";
 
 export const metadata: Metadata = {
-  title: { absolute: "Koliko proteina dnevno treba uzimati? | Proteinoteka" },
+  title: { absolute: "Koliko proteina dnevno? Tačan broj za tvoju težinu | Proteinoteka" },
   description:
-    "Konkretan odgovor: 1.6–2.2g proteina po kilogramu telesne mase dnevno za aktivne ljude. Saznaj kako da dostigneš taj unos kroz hranu i suplemente.",
+    "Za 80kg osobu koja trenira: 128–176g proteina dnevno (1.6–2.2g/kg). Tabela preporuka po cilju i težini — masa, mršavljenje, rekreacija. Konkretna računica.",
   alternates: { canonical: "https://proteinoteka.rs/vodici/koliko-proteina-dnevno" },
   openGraph: {
-    title: "Koliko proteina dnevno treba uzimati? | Proteinoteka",
+    title: "Koliko proteina dnevno? Tačan broj za tvoju težinu | Proteinoteka",
     description:
-      "Konkretan odgovor: 1.6–2.2g proteina po kilogramu telesne mase dnevno za aktivne ljude. Saznaj kako da dostigneš taj unos kroz hranu i suplemente.",
+      "Za 80kg osobu koja trenira: 128–176g proteina dnevno (1.6–2.2g/kg). Tabela preporuka po cilju i težini — masa, mršavljenje, rekreacija. Konkretna računica.",
     url: "https://proteinoteka.rs/vodici/koliko-proteina-dnevno",
     siteName: "Proteinoteka",
     locale: "sr_RS",
@@ -45,7 +45,7 @@ export default function Page() {
       "@context": "https://schema.org",
       "@type": "Article",
       headline: "Koliko proteina dnevno treba uzimati?",
-      datePublished: "2025-05-01",
+      datePublished: "2026-06-05",
       author: { "@type": "Organization", name: "Proteinoteka", url: BASE },
       publisher: { "@type": "Organization", name: "Proteinoteka", url: BASE },
       url: `${BASE}${SLUG}`,
@@ -94,7 +94,7 @@ export default function Page() {
             <div className="flex items-center gap-3 text-sm text-slate-400">
               <span>{READ_MIN} min čitanja</span>
               <span>·</span>
-              <span>Ažurirano: maj 2025.</span>
+              <span>Ažurirano: jun 2026.</span>
             </div>
           </div>
 
@@ -106,13 +106,51 @@ export default function Page() {
           {/* Section 1 */}
           <section className="mb-10">
             <h2 className="text-xl font-bold text-slate-900 mb-4">Kako se računa tvoj konkretni unos</h2>
-            <div className="space-y-4 text-[15px] leading-relaxed text-slate-700">
+            <div className="space-y-4 text-[15px] leading-relaxed text-slate-700 mb-6">
               <p>
                 Uzmi svoju telesnu masu u kilogramima i pomnoži je sa 1.6 za minimalni unos, ili sa 2.2 za gornju granicu. Ako si u fazi izgradnje mišića, ciljaj gornju trećinu tog raspona. Ako skijaš kilograme, 1.8–2g/kg ti pomaže da sačuvaš mišiće dok si u kalorijskom deficitu.
               </p>
               <p>
                 Za starije od 50 godina istraživanja preporučuju blago viši unos — oko 1.8–2g/kg — jer mišići sa godinama postaju manje efikasni u iskorišćavanju proteina (anabolička rezistencija).
               </p>
+            </div>
+
+            {/* Goal + weight table */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="px-4 py-3 border-b border-slate-100">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Preporučen dnevni unos proteina</span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-slate-50">
+                      <th className="px-4 py-2.5 text-left text-xs font-semibold text-slate-500 min-w-[160px]">Profil / Cilj</th>
+                      <th className="px-4 py-2.5 text-center text-xs font-semibold text-slate-500 whitespace-nowrap">g/kg</th>
+                      <th className="hidden sm:table-cell px-4 py-2.5 text-center text-xs font-semibold text-slate-500 whitespace-nowrap">70 kg</th>
+                      <th className="px-4 py-2.5 text-center text-xs font-semibold text-slate-500 whitespace-nowrap">80 kg</th>
+                      <th className="hidden sm:table-cell px-4 py-2.5 text-center text-xs font-semibold text-slate-500 whitespace-nowrap">90 kg</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {[
+                      { profile: "Neaktivan / sedentaran", range: "0.8", v70: "56g", v80: "64g", v90: "72g" },
+                      { profile: "Rekreativac (3× nedeljno)", range: "1.2–1.6", v70: "84–112g", v80: "96–128g", v90: "108–144g" },
+                      { profile: "Aktivan (5× nedeljno)", range: "1.6–2.0", v70: "112–140g", v80: "128–160g", v90: "144–180g" },
+                      { profile: "Izgradnja mišića", range: "1.8–2.2", v70: "126–154g", v80: "144–176g", v90: "162–198g", highlight: true },
+                      { profile: "Mršavljenje + trening", range: "2.0–2.4", v70: "140–168g", v80: "160–192g", v90: "180–216g", highlight: true },
+                      { profile: "50+ godina", range: "1.8–2.0", v70: "126–140g", v80: "144–160g", v90: "162–180g" },
+                    ].map(({ profile, range, v70, v80, v90, highlight }) => (
+                      <tr key={profile} className={highlight ? "bg-[#FFF8EC]" : ""}>
+                        <td className="px-4 py-3 text-slate-800 font-medium">{profile}</td>
+                        <td className="px-4 py-3 text-center text-slate-600 whitespace-nowrap">{range}</td>
+                        <td className="hidden sm:table-cell px-4 py-3 text-center text-slate-600 whitespace-nowrap">{v70}</td>
+                        <td className="px-4 py-3 text-center font-semibold text-slate-800 whitespace-nowrap">{v80}</td>
+                        <td className="hidden sm:table-cell px-4 py-3 text-center text-slate-600 whitespace-nowrap">{v90}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </section>
 

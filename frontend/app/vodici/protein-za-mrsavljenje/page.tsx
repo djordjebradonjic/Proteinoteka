@@ -8,9 +8,9 @@ import { Product } from "@/types/product";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: { absolute: "Protein za mršavljenje u Srbiji — koji tip pomaže i šta košta | Proteinoteka" },
+  title: { absolute: "Koji protein za mršavljenje? + Cene u Srbiji | Proteinoteka" },
   description:
-    "Koji protein birati za mršavljenje i koliko košta mesec dana suplementacije? Aktuelne cene whey izolata i biljnih proteina iz srpskih prodavnica — sa konkretnim brojevima.",
+    "Whey izolat je optimalan — 85–94g proteina/100g, minimum masti i laktoze. Evo poređenja tipova i koliko košta mesec dana suplementacije u srpskim prodavnicama.",
   alternates: { canonical: "https://proteinoteka.rs/vodici/protein-za-mrsavljenje" },
   keywords: [
     "protein za mršavljenje srbija",
@@ -20,9 +20,9 @@ export const metadata: Metadata = {
     "izolat proteina srbija cena",
   ],
   openGraph: {
-    title: "Protein za mršavljenje u Srbiji — koji tip pomaže i šta košta | Proteinoteka",
+    title: "Koji protein za mršavljenje? + Cene u Srbiji | Proteinoteka",
     description:
-      "Koji protein birati za mršavljenje i koliko košta mesec dana suplementacije? Aktuelne cene iz srpskih prodavnica.",
+      "Whey izolat je optimalan — 85–94g proteina/100g, minimum masti i laktoze. Evo poređenja tipova i koliko košta mesec dana suplementacije u srpskim prodavnicama.",
     url: "https://proteinoteka.rs/vodici/protein-za-mrsavljenje",
     siteName: "Proteinoteka",
     locale: "sr_RS",

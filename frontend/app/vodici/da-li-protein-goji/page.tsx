@@ -45,7 +45,7 @@ export default function Page() {
       "@context": "https://schema.org",
       "@type": "Article",
       headline: "Da li protein goji? Šta kaže nauka o whey proteinu i gojenju",
-      datePublished: "2025-05-01",
+      datePublished: "2026-06-05",
       author: { "@type": "Organization", name: "Proteinoteka", url: BASE },
       publisher: { "@type": "Organization", name: "Proteinoteka", url: BASE },
       url: `${BASE}${SLUG}`,
@@ -94,7 +94,7 @@ export default function Page() {
             <div className="flex items-center gap-3 text-sm text-slate-400">
               <span>{READ_MIN} min čitanja</span>
               <span>·</span>
-              <span>Ažurirano: maj 2025.</span>
+              <span>Ažurirano: jun 2026.</span>
             </div>
           </div>
 

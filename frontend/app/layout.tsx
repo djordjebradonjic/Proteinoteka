@@ -5,6 +5,7 @@ import "./globals.css";
 import Providers from "@/components/Providers";
 import { DM_Sans } from "next/font/google";
 import Footer from "@/components/Footer";
+import CookieBanner from "@/components/CookieBanner";
 
 // Variable font: one file covers all weights instead of 5 separate requests
 const dmSans = DM_Sans({
@@ -88,6 +89,7 @@ export default function RootLayout({
           {children} <Footer />
         </Providers>
         <Analytics />
+        <CookieBanner />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -103,23 +105,32 @@ export default function RootLayout({
             }),
           }}
         />
-        {/* lazyOnload: no <link rel="preload"> injected, fires after idle — keeps GA off the critical path */}
+        {/*
+          GA Consent Mode — fires afterInteractive so localStorage is available.
+          Sets analytics_storage=denied by default; upgrades to granted if user
+          previously accepted. The gtag.js src is appended programmatically so
+          consent default is guaranteed to be set before GA initializes.
+        */}
         <Script
           id="ga-init"
-          strategy="lazyOnload"
+          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               window.dataLayer = window.dataLayer || [];
               function gtag(){dataLayer.push(arguments);}
+              var _c = localStorage.getItem('cookie_consent');
+              gtag('consent', 'default', {
+                analytics_storage: _c === 'accepted' ? 'granted' : 'denied',
+                ad_storage: 'denied',
+              });
               gtag('js', new Date());
               gtag('config', 'G-JR077S64MV');
+              var _s = document.createElement('script');
+              _s.src = 'https://www.googletagmanager.com/gtag/js?id=G-JR077S64MV';
+              _s.async = true;
+              document.head.appendChild(_s);
             `,
           }}
-        />
-        <Script
-          id="ga-src"
-          strategy="lazyOnload"
-          src="https://www.googletagmanager.com/gtag/js?id=G-JR077S64MV"
         />
       </body>
     </html>

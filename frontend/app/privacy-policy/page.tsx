@@ -35,9 +35,17 @@ export default function PrivacyPolicyPage() {
           <p className="text-sm text-slate-400">Poslednje ažuriranje: maj 2026.</p>
         </div>
 
-        <Section title="1. Ko smo mi">
+        <Section title="1. Ko smo mi i ko je rukovalac podacima">
           <p>
             Proteinoteka (<strong>proteinoteka.rs</strong>) je platforma za poređenje cena proteinskih suplemenata u Srbiji. Nismo prodavnica — poredimo javno dostupne cene i informacije o proizvodima sa sajtova partnerskih prodavnica.
+          </p>
+          <p>
+            <strong>Rukovalac podacima o ličnosti:</strong><br />
+            Đorđe Bradonjić<br />
+            Email:{" "}
+            <a href="mailto:kontakt@proteinoteka.rs" className="text-[#FF9900] hover:underline">
+              kontakt@proteinoteka.rs
+            </a>
           </p>
         </Section>
 
@@ -49,7 +57,7 @@ export default function PrivacyPolicyPage() {
             <strong>Kontakt forma:</strong> Kada nam pošaljete poruku putem kontakt forme, prikupljamo vaše ime, email adresu i tekst poruke isključivo radi odgovora na vaš upit. Ovi podaci se ne dele sa trećim stranama.
           </p>
           <p>
-            <strong>Price alert sistem:</strong> Ako aktivirate praćenje cene za neki proizvod, prikupljamo vašu email adresu i ciljnu cenu koju ste uneli. Ovi podaci se čuvaju na našim serverima isključivo radi slanja notifikacije kada cena padne ispod željene vrednosti. Email se ne koristi u marketinške svrhe i ne deli se sa trećim stranama osim servisa za slanje emailova (Resend). Možete ukloniti alert u svakom trenutku putem linka u poslatom emailu ili direktno na stranici proizvoda.
+            <strong>Price alert sistem:</strong> Ako aktivirate praćenje cene za neki proizvod, prikupljamo vašu email adresu i ciljnu cenu koju ste uneli. Ovi podaci se čuvaju na našim serverima isključivo radi slanja notifikacije kada cena padne ispod željene vrednosti. <strong>Email adresa se briše najkasnije 12 meseci od aktivacije alerta</strong>, ili odmah nakon što ga vi uklonite. Email se ne koristi u marketinške svrhe i ne deli se sa trećim stranama osim servisa za slanje emailova (Resend). Možete ukloniti alert u svakom trenutku putem linka u poslatom emailu ili direktno na stranici proizvoda.
           </p>
           <p>
             <strong>Lokalno skladištenje (localStorage):</strong> Koristimo browser localStorage za čuvanje liste željenih proizvoda (wishlist) i lista za poređenje. Ovi podaci ostaju samo na vašem uređaju i ne šaljemo ih na naše servere.
