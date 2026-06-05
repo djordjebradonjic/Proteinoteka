@@ -64,6 +64,7 @@ const NAV_LINKS = [
 ];
 
 const SEO_GUIDES = [
+  { label: "Protein za početnike",     href: "/vodici/whey-protein-za-pocetnike"   },
   { label: "Koliko proteina dnevno?",  href: "/vodici/koliko-proteina-dnevno"      },
   { label: "Da li protein goji?",      href: "/vodici/da-li-protein-goji"          },
   { label: "Kada piti protein?",       href: "/vodici/kada-piti-protein"           },

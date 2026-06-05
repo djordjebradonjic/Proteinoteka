@@ -20,6 +20,12 @@ export const metadata: Metadata = {
 
 const ARTICLES = [
   {
+    href: "/vodici/whey-protein-za-pocetnike",
+    title: "Whey protein za početnike — šta, koliko i odakle?",
+    excerpt: "WPC je sve što trebaš kao početnik. Koji tip uzeti, koliko dnevno, i koliko košta mesec dana — sa aktuelnim cenama iz Srbije.",
+    readMin: 7,
+  },
+  {
     href: "/vodici/protein-za-mrsavljenje",
     title: "Protein za mršavljenje u Srbiji — koji tip stvarno pomaže i šta košta",
     excerpt: "Whey izolat, concentrate ili biljni protein? Aktuelne cene i konkretna računica koliko košta mesec dana suplementacije.",
