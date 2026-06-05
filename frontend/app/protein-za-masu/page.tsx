@@ -5,7 +5,7 @@ import { SEOLandingPage } from "@/components/seo/SEOLandingPage";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "Protein za Masu u Srbiji — Izbor i Cene | Proteinoteka",
+  title: { absolute: "Protein za Masu u Srbiji — Izbor i Cene | Proteinoteka" },
   description:
     "Koji protein je najbolji za izgradnju mišićne mase u Srbiji? Poredimo whey proteine i blendove po ceni, kalorijama i sadržaju proteina iz svih srpskih prodavnica.",
   alternates: { canonical: "https://proteinoteka.rs/protein-za-masu" },

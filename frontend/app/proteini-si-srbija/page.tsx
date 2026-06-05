@@ -5,7 +5,7 @@ import { SEOStorePage } from "@/components/seo/SEOStorePage";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "Proteini.si — dostava u Srbiju i cene | Proteinoteka",
+  title: { absolute: "Proteini.si — dostava u Srbiju i cene | Proteinoteka" },
   description:
     "Aktuelne cene proteina sa Proteini.si sajta uz dostavu u Srbiju. Poredi sa domaćim prodavnicama po value score i pronađi da li se uvoz isplati za protein koji tražiš.",
   alternates: { canonical: "https://proteinoteka.rs/proteini-si-srbija" },

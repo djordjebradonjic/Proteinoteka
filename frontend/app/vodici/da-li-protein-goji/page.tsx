@@ -4,7 +4,7 @@ import Header from "@/components/Header";
 import VodiciNav from "@/components/VodiciNav";
 
 export const metadata: Metadata = {
-  title: "Da li protein goji? Šta kaže nauka o whey proteinu i gojenju | Proteinoteka",
+  title: { absolute: "Da li protein goji? Šta kaže nauka o whey proteinu i gojenju | Proteinoteka" },
   description:
     "Whey protein sam po sebi ne goji — goji kalorijski suficit. Saznaj kako protein utiče na sitost, metabolizam i mršavljenje, i kada šejk može da ti pomogne.",
   alternates: { canonical: "https://proteinoteka.rs/vodici/da-li-protein-goji" },

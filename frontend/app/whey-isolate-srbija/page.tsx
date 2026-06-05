@@ -5,7 +5,7 @@ import { SEOLandingPage } from "@/components/seo/SEOLandingPage";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "Whey Izolat Proteina u Srbiji — Cene i Pregled | Proteinoteka",
+  title: { absolute: "Whey Izolat Proteina u Srbiji — Cene i Pregled | Proteinoteka" },
   description:
     "Svi whey izolati dostupni u Srbiji — cene iz 6 prodavnica, protein na 100g i vrednost za novac. Čist protein bez viška laktoze i masti, po najboljoj ceni.",
   alternates: { canonical: "https://proteinoteka.rs/whey-isolate-srbija" },

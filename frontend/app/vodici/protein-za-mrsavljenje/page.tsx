@@ -8,7 +8,7 @@ import { Product } from "@/types/product";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "Protein za mršavljenje u Srbiji — koji tip pomaže i šta košta | Proteinoteka",
+  title: { absolute: "Protein za mršavljenje u Srbiji — koji tip pomaže i šta košta | Proteinoteka" },
   description:
     "Koji protein birati za mršavljenje i koliko košta mesec dana suplementacije? Aktuelne cene whey izolata i biljnih proteina iz srpskih prodavnica — sa konkretnim brojevima.",
   alternates: { canonical: "https://proteinoteka.rs/vodici/protein-za-mrsavljenje" },

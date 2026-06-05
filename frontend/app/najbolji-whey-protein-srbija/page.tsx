@@ -6,7 +6,7 @@ import Link from "next/link";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "Najbolji Whey Protein u Srbiji 2026 — Top 10 po vrednosti | Proteinoteka",
+  title: { absolute: "Najbolji Whey Protein u Srbiji 2026 — Top 10 po vrednosti | Proteinoteka" },
   description:
     "Koji whey protein je vrednost za novac u Srbiji 2026? Rangiramo 200+ proteina po ceni, čistoći i sastojcima — i kažemo koji odgovara tvom cilju i budžetu.",
   alternates: { canonical: "https://proteinoteka.rs/najbolji-whey-protein-srbija" },

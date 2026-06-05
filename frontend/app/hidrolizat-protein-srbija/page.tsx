@@ -5,7 +5,7 @@ import { SEOLandingPage } from "@/components/seo/SEOLandingPage";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "Hidrolizat Proteina u Srbiji 2026 — Cene i Poređenje | Proteinoteka",
+  title: { absolute: "Hidrolizat Proteina u Srbiji 2026 — Cene i Poređenje | Proteinoteka" },
   description:
     "Hidrolizovani whey protein u Srbiji — cene od ~5.000 do ~12.000 RSD/kg. Najbrža apsorpcija, premium segment. Dymatize ISO100, ON Platinum — poredimo sve.",
   alternates: { canonical: "https://proteinoteka.rs/hidrolizat-protein-srbija" },

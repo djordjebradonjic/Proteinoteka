@@ -5,7 +5,7 @@ import { SEOBrandPage } from "@/components/seo/SEOBrandPage";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "Scitec Nutrition proteini u Srbiji — cene i poređenje 2026 | Proteinoteka",
+  title: { absolute: "Scitec Nutrition proteini u Srbiji — cene i poređenje 2026 | Proteinoteka" },
   description:
     "Aktuelne cene Scitec Nutrition proteina u srpskim prodavnicama. 100% Whey Protein Professional, Jumbo — poredimo cene i value score iz svih prodavnica na jednom mestu.",
   alternates: { canonical: "https://proteinoteka.rs/scitec-nutrition-proteini" },

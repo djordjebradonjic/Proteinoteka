@@ -5,7 +5,7 @@ import { SEOBrandPage } from "@/components/seo/SEOBrandPage";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "Dymatize proteini u Srbiji — cene i poređenje 2026 | Proteinoteka",
+  title: { absolute: "Dymatize proteini u Srbiji — cene i poređenje 2026 | Proteinoteka" },
   description:
     "Aktuelne cene Dymatize proteina u srpskim prodavnicama. ISO100 hidrolizat, Elite Whey — poredimo cene i value score iz svih prodavnica. Gde je Dymatize najjeftiniji?",
   alternates: { canonical: "https://proteinoteka.rs/dymatize-proteini" },

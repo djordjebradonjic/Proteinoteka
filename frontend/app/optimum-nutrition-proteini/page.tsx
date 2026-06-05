@@ -5,7 +5,7 @@ import { SEOBrandPage } from "@/components/seo/SEOBrandPage";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "Optimum Nutrition proteini u Srbiji — cene i poređenje 2026 | Proteinoteka",
+  title: { absolute: "Optimum Nutrition proteini u Srbiji — cene i poređenje 2026 | Proteinoteka" },
   description:
     "Aktuelne cene Optimum Nutrition proteina u srpskim prodavnicama. Gold Standard, Serious Mass, Platinum Hydrowhey — poredimo cene i value score iz svih prodavnica.",
   alternates: { canonical: "https://proteinoteka.rs/optimum-nutrition-proteini" },

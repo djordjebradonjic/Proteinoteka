@@ -4,7 +4,7 @@ import Header from "@/components/Header";
 import VodiciNav from "@/components/VodiciNav";
 
 export const metadata: Metadata = {
-  title: "Kada piti protein — pre, posle treninga ili ujutru? | Proteinoteka",
+  title: { absolute: "Kada piti protein — pre, posle treninga ili ujutru? | Proteinoteka" },
   description:
     "Mit o 30-minutnom anaboličkom prozoru je preuveličan. Saznaj kada zapravo ima smisla uzeti protein za masu, mršavljenje i oporavak — konkretno i bez teorije.",
   alternates: { canonical: "https://proteinoteka.rs/vodici/kada-piti-protein" },

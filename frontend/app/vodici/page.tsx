@@ -3,7 +3,7 @@ import Link from "next/link";
 import Header from "@/components/Header";
 
 export const metadata: Metadata = {
-  title: "Vodiči o proteinima i suplementaciji | Proteinoteka",
+  title: { absolute: "Vodiči o proteinima i suplementaciji | Proteinoteka" },
   description:
     "Praktični vodiči o proteinima na srpskom jeziku — koliko proteina dnevno, razlika između whey isolate i concentrate, da li protein goji, i kada piti protein.",
   alternates: { canonical: "https://proteinoteka.rs/vodici" },

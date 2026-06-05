@@ -5,7 +5,7 @@ import { SEOLandingPage } from "@/components/seo/SEOLandingPage";
 export const revalidate = 43200;
 
 export const metadata: Metadata = {
-  title: "Whey protein do 5000 dinara — uporedi cene | Proteinoteka",
+  title: { absolute: "Whey protein do 5000 dinara — uporedi cene | Proteinoteka" },
   description:
     "Pregled whey proteina do 5000 dinara u Srbiji. Sortirano po value score — pronađi protein koji nudi najviše proteina i nutritivnu vrednost za budžet do 5000 RSD.",
   alternates: { canonical: "https://proteinoteka.rs/whey-protein-do-5000-dinara" },

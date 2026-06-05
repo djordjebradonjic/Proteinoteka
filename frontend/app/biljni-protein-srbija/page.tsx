@@ -5,7 +5,7 @@ import { SEOLandingPage } from "@/components/seo/SEOLandingPage";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "Biljni Protein u Srbiji 2026 — Veganski Proteini, Cene i Poređenje | Proteinoteka",
+  title: { absolute: "Biljni Protein u Srbiji 2026 — Veganski Proteini, Cene i Poređenje | Proteinoteka" },
   description:
     "Biljni i veganski proteini u Srbiji — cene od ~3.000 do ~7.000 RSD/kg. Grašak, soja, pirinač protein — poredimo sve opcije iz srpskih prodavnica.",
   alternates: { canonical: "https://proteinoteka.rs/biljni-protein-srbija" },

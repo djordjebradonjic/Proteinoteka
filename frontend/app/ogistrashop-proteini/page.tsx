@@ -5,7 +5,7 @@ import { SEOStorePage } from "@/components/seo/SEOStorePage";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "Ogistrashop proteini — cene i poređenje | Proteinoteka",
+  title: { absolute: "Ogistrashop proteini — cene i poređenje | Proteinoteka" },
   description:
     "Pregled svih proteina iz Ogistrashop asortimana sa aktuelnim cenama. Poredi value score, nutritivne vrednosti i pronađi najisplativiji protein u Ogistrashop-u.",
   alternates: { canonical: "https://proteinoteka.rs/ogistrashop-proteini" },

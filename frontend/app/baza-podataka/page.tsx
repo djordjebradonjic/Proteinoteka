@@ -5,7 +5,7 @@ import Header from "@/components/Header";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "B2B Baza Podataka Proteina | Proteinoteka",
+  title: { absolute: "B2B Baza Podataka Proteina | Proteinoteka" },
   description:
     "Strukturisana baza podataka proteina i suplemenata u Srbiji. API pristup i CSV/SQL dump za developere i e-commerce prodavnice. Aktuelne cene, nutritivne vrednosti i istorija cena.",
   keywords: [

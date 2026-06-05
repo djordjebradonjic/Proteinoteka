@@ -4,7 +4,7 @@ import Header from "@/components/Header";
 import VodiciNav from "@/components/VodiciNav";
 
 export const metadata: Metadata = {
-  title: "Whey Isolate vs Concentrate — koja je razlika i šta da odabereš? | Proteinoteka",
+  title: { absolute: "Whey Isolate vs Concentrate — koja je razlika i šta da odabereš? | Proteinoteka" },
   description:
     "Whey isolate ima 85–95% proteina i minimalnu laktozu. Concentrate ima 70–80% proteina i košta manje. Saznaj kome odgovara koji, sa cenama iz srpskog tržišta.",
   alternates: { canonical: "https://proteinoteka.rs/vodici/whey-isolate-vs-concentrate" },

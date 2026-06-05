@@ -4,7 +4,7 @@ import Header from "@/components/Header";
 import VodiciNav from "@/components/VodiciNav";
 
 export const metadata: Metadata = {
-  title: "Koliko proteina dnevno treba uzimati? | Proteinoteka",
+  title: { absolute: "Koliko proteina dnevno treba uzimati? | Proteinoteka" },
   description:
     "Konkretan odgovor: 1.6–2.2g proteina po kilogramu telesne mase dnevno za aktivne ljude. Saznaj kako da dostigneš taj unos kroz hranu i suplemente.",
   alternates: { canonical: "https://proteinoteka.rs/vodici/koliko-proteina-dnevno" },

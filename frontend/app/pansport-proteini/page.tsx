@@ -5,7 +5,7 @@ import { SEOStorePage } from "@/components/seo/SEOStorePage";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "Pansport proteini — cene i poređenje | Proteinoteka",
+  title: { absolute: "Pansport proteini — cene i poređenje | Proteinoteka" },
   description:
     "Sve cene proteina iz Pansport asortimana na jednom mestu. Poredi whey protein cenu u Pansport-u sa ostalim srpskim prodavnicama i pronađi najisplativiju opciju.",
   alternates: { canonical: "https://proteinoteka.rs/pansport-proteini" },

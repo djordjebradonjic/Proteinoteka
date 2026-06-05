@@ -5,7 +5,7 @@ import { SEOStorePage } from "@/components/seo/SEOStorePage";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "Proteinbox proteini — cene i poređenje | Proteinoteka",
+  title: { absolute: "Proteinbox proteini — cene i poređenje | Proteinoteka" },
   description:
     "Pregled svih proteina iz Proteinbox-a sa aktuelnim cenama. Poredi Proteinbox sa ostalim srpskim prodavnicama po value score i pronađi najisplativiji protein.",
   alternates: { canonical: "https://proteinoteka.rs/proteinbox-proteini" },

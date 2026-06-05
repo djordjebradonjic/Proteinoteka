@@ -5,7 +5,7 @@ import { SEOBrandPage } from "@/components/seo/SEOBrandPage";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "BioTech USA proteini u Srbiji — cene i poređenje 2026 | Proteinoteka",
+  title: { absolute: "BioTech USA proteini u Srbiji — cene i poređenje 2026 | Proteinoteka" },
   description:
     "Aktuelne cene BioTech USA proteina u srpskim prodavnicama. ISO Whey Zero, 100% Whey Protein, Hydro Whey Zero — poredimo cene i value score iz svih prodavnica.",
   alternates: { canonical: "https://proteinoteka.rs/biotech-usa-proteini" },

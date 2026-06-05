@@ -5,7 +5,7 @@ import Header from "@/components/Header";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "Kako računamo Value Score | Proteinoteka",
+  title: { absolute: "Kako računamo Value Score | Proteinoteka" },
   description:
     "Saznaj kako Proteinoteka računa Value Score i kako upoređujemo odnos cene i kvaliteta whey proteina u Srbiji.",
   alternates: { canonical: "https://proteinoteka.rs/kako-racunamo-value-score" },

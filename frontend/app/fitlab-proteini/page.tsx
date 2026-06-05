@@ -5,7 +5,7 @@ import { SEOStorePage } from "@/components/seo/SEOStorePage";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "FitLab proteini — cene i poređenje | Proteinoteka",
+  title: { absolute: "FitLab proteini — cene i poređenje | Proteinoteka" },
   description:
     "Sve cene FitLab suplemenata i proteina na jednom mestu. Poredi FitLab sa ostalim srpskim prodavnicama po ceni, sadržaju proteina i value score — bez lutanja po sajtovima.",
   alternates: { canonical: "https://proteinoteka.rs/fitlab-proteini" },

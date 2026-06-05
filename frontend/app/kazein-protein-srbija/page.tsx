@@ -5,7 +5,7 @@ import { SEOLandingPage } from "@/components/seo/SEOLandingPage";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "Kazein Protein u Srbiji 2026 — Cene i Poređenje | Proteinoteka",
+  title: { absolute: "Kazein Protein u Srbiji 2026 — Cene i Poređenje | Proteinoteka" },
   description:
     "Kazein protein u Srbiji — cene od ~4.000 do ~8.000 RSD/kg. Idealan pre spavanja za noćni oporavak. Poredimo sve kazein proteine iz srpskih prodavnica.",
   alternates: { canonical: "https://proteinoteka.rs/kazein-protein-srbija" },
