@@ -4,14 +4,14 @@ import Header from "@/components/Header";
 import VodiciNav from "@/components/VodiciNav";
 
 export const metadata: Metadata = {
-  title: { absolute: "Da li protein goji? Šta kaže nauka o whey proteinu i gojenju | Proteinoteka" },
+  title: { absolute: "Da li protein goji? Ne — ali postoji jedan uslov | Proteinoteka" },
   description:
-    "Whey protein sam po sebi ne goji — goji kalorijski suficit. Saznaj kako protein utiče na sitost, metabolizam i mršavljenje, i kada šejk može da ti pomogne.",
+    "Kratki odgovor: ne. Goji te kalorijski suficit — a whey protein ima viši termički efekat od ugljenih hidrata i pomaže sitosti. Evo kada šejk zapravo može da te ugoji i kada pomaže mršavljenju.",
   alternates: { canonical: "https://proteinoteka.rs/vodici/da-li-protein-goji" },
   openGraph: {
-    title: "Da li protein goji? Šta kaže nauka o whey proteinu i gojenju | Proteinoteka",
+    title: "Da li protein goji? Ne — ali postoji jedan uslov | Proteinoteka",
     description:
-      "Whey protein sam po sebi ne goji — goji kalorijski suficit. Saznaj kako protein utiče na sitost, metabolizam i mršavljenje, i kada šejk može da ti pomogne.",
+      "Kratki odgovor: ne. Goji te kalorijski suficit — a whey protein ima viši termički efekat od ugljenih hidrata i pomaže sitosti. Evo kada šejk zapravo može da te ugoji i kada pomaže mršavljenju.",
     url: "https://proteinoteka.rs/vodici/da-li-protein-goji",
     siteName: "Proteinoteka",
     locale: "sr_RS",

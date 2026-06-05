@@ -4,14 +4,14 @@ import Header from "@/components/Header";
 import VodiciNav from "@/components/VodiciNav";
 
 export const metadata: Metadata = {
-  title: { absolute: "Kada piti protein — pre, posle treninga ili ujutru? | Proteinoteka" },
+  title: { absolute: "Kada piti protein: pre ili posle treninga? | Proteinoteka" },
   description:
-    "Mit o 30-minutnom anaboličkom prozoru je preuveličan. Saznaj kada zapravo ima smisla uzeti protein za masu, mršavljenje i oporavak — konkretno i bez teorije.",
+    "Posle treninga nije jedini dobar momenat — ujutru i pre sna imaju podjednaku naučnu podlogu. Evo konkretnog rasporeda za osobu od 80kg koja trenira 4x nedeljno, plus kada tajming uopšte nije bitan.",
   alternates: { canonical: "https://proteinoteka.rs/vodici/kada-piti-protein" },
   openGraph: {
-    title: "Kada piti protein — pre, posle treninga ili ujutru? | Proteinoteka",
+    title: "Kada piti protein: pre ili posle treninga? | Proteinoteka",
     description:
-      "Mit o 30-minutnom anaboličkom prozoru je preuveličan. Saznaj kada zapravo ima smisla uzeti protein za masu, mršavljenje i oporavak — konkretno i bez teorije.",
+      "Posle treninga nije jedini dobar momenat — ujutru i pre sna imaju podjednaku naučnu podlogu. Evo konkretnog rasporeda za osobu od 80kg koja trenira 4x nedeljno, plus kada tajming uopšte nije bitan.",
     url: "https://proteinoteka.rs/vodici/kada-piti-protein",
     siteName: "Proteinoteka",
     locale: "sr_RS",
