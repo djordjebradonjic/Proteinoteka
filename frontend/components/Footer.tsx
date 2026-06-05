@@ -193,6 +193,17 @@ export default function Footer() {
             <ul className="flex flex-col gap-2.5">
               <FooterLink href="/privacy-policy">Politika privatnosti</FooterLink>
               <FooterLink href="/terms-of-use">Uslovi korišćenja</FooterLink>
+              <li>
+                <button
+                  onClick={() => window.dispatchEvent(new Event("cookie-settings"))}
+                  className="text-sm transition-colors duration-150 cursor-pointer"
+                  style={{ color: "rgba(255,255,255,0.55)" }}
+                  onMouseEnter={(e) => ((e.target as HTMLElement).style.color = "#FF9900")}
+                  onMouseLeave={(e) => ((e.target as HTMLElement).style.color = "rgba(255,255,255,0.55)")}
+                >
+                  Cookie postavke
+                </button>
+              </li>
             </ul>
 
             <div className="mt-6 p-3 rounded-lg"

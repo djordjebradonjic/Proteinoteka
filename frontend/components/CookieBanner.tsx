@@ -10,6 +10,20 @@ export default function CookieBanner() {
     if (!localStorage.getItem("cookie_consent")) {
       setVisible(true);
     }
+
+    const handleOpen = () => {
+      localStorage.removeItem("cookie_consent");
+      // Revoke GA consent if previously granted
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (typeof window !== "undefined" && (window as any).gtag) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (window as any).gtag("consent", "update", { analytics_storage: "denied" });
+      }
+      setVisible(true);
+    };
+
+    window.addEventListener("cookie-settings", handleOpen);
+    return () => window.removeEventListener("cookie-settings", handleOpen);
   }, []);
 
   const handleAccept = () => {
@@ -30,7 +44,12 @@ export default function CookieBanner() {
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#131921] border-t border-white/10 shadow-2xl">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Saglasnost za kolačiće"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-[#131921] border-t border-white/10 shadow-2xl"
+    >
       <div className="max-w-4xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
         <p className="text-sm text-white/65 leading-relaxed flex-1">
           Koristimo kolačiće za anonimnu analitiku poseta (Google Analytics) kako bismo poboljšali korisničko iskustvo.{" "}
