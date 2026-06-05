@@ -6,6 +6,11 @@ import { X, ChevronUp, BookOpen } from "lucide-react";
 
 const GUIDES = [
   {
+    slug: "whey-protein-za-pocetnike",
+    title: "Whey protein za početnike — šta, koliko i odakle?",
+    readMin: 7,
+  },
+  {
     slug: "protein-za-mrsavljenje",
     title: "Protein za mršavljenje — koji tip pomaže i šta košta",
     readMin: 8,
