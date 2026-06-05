@@ -34,7 +34,7 @@ public class AiDescriptionService {
             String prompt = buildPrompt(product);
 
             Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("model", "claude-haiku-4-5");
+            requestBody.put("model", "claude-haiku-4-5-20251001");
             requestBody.put("max_tokens", 600);
             requestBody.put("messages", List.of(
                     Map.of("role", "user", "content", prompt)
