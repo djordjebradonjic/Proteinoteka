@@ -88,7 +88,8 @@ Pravila:
 - Dužina: 120-150 reči
 - Ton: informativan, poverljiv, ne reklamni
 - Bez superlativa ("najbolji", "vrhunski", "jedinstven")
-- Samo prirodan tekst — bez tabela, bez bullet points, bez sekcija kao "Nutritivne vrednosti:", bez formatiranja
+- KRITIČNO: Samo čist tekst bez ikakvog formatiranja — bez Markdown, bez #, bez *, bez -, bez naslova, bez sekcija, bez bullet points
+- Počni DIREKTNO prvom rečenicom opisa — nikada ne počinji sa imenom proizvoda kao naslovom
 - Nutritivne vrednosti pomeni prirodno u rečenici ako postoje, primer: "Sa 74g proteina na 100g, ovaj whey..." NE ovako: "Protein: 74g, Masti: 4g"
 - Pomeni: tip proteina, procenat proteina ako postoji, težinu pakovanja, za koga je idealan (masa/mršavljenje/oporavak)
 - Prirodno uključi ključne reči: ime brenda, whey protein, cena, Srbija — bez spama

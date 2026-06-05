@@ -621,7 +621,7 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
                 {product.aiDescription ? (
                   <div className="max-w-prose">
                     {product.aiDescription.split("\n").filter(Boolean).map((para, i) => (
-                      <p key={i} className="text-[15px] leading-[1.75] text-slate-700 mb-4 last:mb-0">{para}</p>
+                      <p key={i} className="text-[15px] leading-[1.75] text-slate-700 mb-4 last:mb-0">{para.replace(/^#+\s*/, "")}</p>
                     ))}
                   </div>
                 ) : (
