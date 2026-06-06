@@ -2,22 +2,39 @@ import { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
 import VodiciNav from "@/components/VodiciNav";
+import GuideToc, { TocSection } from "@/components/GuideToc";
+import GuideDisclaimer from "@/components/GuideDisclaimer";
 
 export const metadata: Metadata = {
   title: { absolute: "Kada piti protein: pre ili posle treninga? | Proteinoteka" },
   description:
-    "Posle treninga nije jedini dobar momenat — ujutru i pre sna imaju podjednaku naučnu podlogu. Evo konkretnog rasporeda za osobu od 80kg koja trenira 4x nedeljno, plus kada tajming uopšte nije bitan.",
+    "Posle treninga nije jedini dobar momenat — ujutru i pre sna imaju podjednaku naučnu podlogu. Konkretni raspored za osobu od 80 kg koja trenira 4× nedeljno, plus kada tajming uopšte nije bitan.",
   alternates: { canonical: "https://proteinoteka.rs/vodici/kada-piti-protein" },
   openGraph: {
     title: "Kada piti protein: pre ili posle treninga? | Proteinoteka",
     description:
-      "Posle treninga nije jedini dobar momenat — ujutru i pre sna imaju podjednaku naučnu podlogu. Evo konkretnog rasporeda za osobu od 80kg koja trenira 4x nedeljno, plus kada tajming uopšte nije bitan.",
+      "Posle treninga nije jedini dobar momenat — ujutru i pre sna imaju podjednaku naučnu podlogu. Konkretni raspored za osobu od 80 kg koja trenira 4× nedeljno, plus kada tajming uopšte nije bitan.",
     url: "https://proteinoteka.rs/vodici/kada-piti-protein",
     siteName: "Proteinoteka",
     locale: "sr_RS",
     type: "article",
   },
 };
+
+const TOC: TocSection[] = [
+  { id: "anabolicki-prozor", title: "Mit o anaboličkom prozoru od 30 minuta" },
+  { id: "sta-kaze-nauka", title: "Šta nauka zapravo kaže?", level: 3 },
+  { id: "optimalno-vreme", title: "Optimalno vreme za različite ciljeve" },
+  { id: "izgradnja-misica", title: "Izgradnja mišića — raspored je važniji od tajminga", level: 3 },
+  { id: "mrsavljenje-timing", title: "Mršavljenje i fasted trening", level: 3 },
+  { id: "jutarnji-protein", title: "Jutarnji protein i kazein pre sna" },
+  { id: "ujutru", title: "Whey ujutru — zašto ima smisla", level: 3 },
+  { id: "kazein-pre-sna", title: "Kazein pre sna — 40g protokol", level: 3 },
+  { id: "meduobrok", title: "Protein između obroka" },
+  { id: "raspored", title: "Praktičan raspored za prosečnog vežbača" },
+  { id: "trening-dan", title: "Trening dan vs. netrenirajući dan", level: 3 },
+  { id: "faq", title: "Česta pitanja" },
+];
 
 const faqItems = [
   {
@@ -26,18 +43,20 @@ const faqItems = [
   },
   {
     q: "Mogu li da popijem protein pre spavanja?",
-    a: "Da, i ima smisla — naročito kazein protein koji se polako apsorbuje tokom noći. Studije su pokazale da 40g kazeina pre sna povećava sintezu mišićnih proteina tokom spavanja bez negativnog uticaja na sagorevanje masti. Whey pre sna je manje efikasan zbog brzine apsorpcije, ali i dalje bolji nego ništa.",
+    a: "Da, i ima smisla — naročito kazein koji se polako apsorbuje tokom noći. Studija Res i saradnika (2012) pokazala je da 40g kazeina pre sna povećava sintezu mišićnih proteina tokom spavanja bez negativnog uticaja na sagorevanje masti. Whey pre sna je manje efikasan zbog brzine apsorpcije, ali i dalje bolji nego ništa.",
   },
   {
     q: "Šta ako ne mogu da popijem protein odmah posle treninga?",
-    a: "Ništa dramatično. Istraživanja pokazuju da je ukupan dnevni unos proteina daleko važniji od preciznog tajminga. Ako si pojeo/la protein sat pre treninga, telo još uvek ima aminokiseline na raspolaganju. Fokusiraj se na to da uneseš dovoljno proteina tokom dana — ne na sat na satu.",
+    a: "Ništa dramatično. Istraživanja pokazuju da je ukupan dnevni unos proteina daleko važniji od preciznog tajminga. Ako si jeo protein sat-dva pre treninga, telo još uvek ima aminokiseline na raspolaganju. Fokusiraj se na to da uneseš dovoljno tokom dana.",
+  },
+  {
+    q: "Koliko puta dnevno treba uzimati protein?",
+    a: "Optimalno je rasporediti unos proteina na 3–5 obroka dnevno, sa 25–40g proteina po obroku. Svaki obrok aktivira sintezu mišićnih proteina. Jedan veliki unos od 80g odjednom nije efikasniji od podeljenog unosa.",
   },
 ];
 
 const BASE = "https://proteinoteka.rs";
 const SLUG = "/vodici/kada-piti-protein";
-const WORDS = 630;
-const READ_MIN = Math.ceil(WORDS / 200);
 
 export default function Page() {
   const jsonLd = [
@@ -46,6 +65,7 @@ export default function Page() {
       "@type": "Article",
       headline: "Kada piti protein — pre, posle treninga ili ujutru?",
       datePublished: "2026-06-05",
+      dateModified: new Date().toISOString().split("T")[0],
       author: { "@type": "Organization", name: "Proteinoteka", url: BASE },
       publisher: { "@type": "Organization", name: "Proteinoteka", url: BASE },
       url: `${BASE}${SLUG}`,
@@ -77,7 +97,6 @@ export default function Page() {
         <Header />
         <main className="max-w-3xl mx-auto px-4 py-10">
 
-          {/* Breadcrumb */}
           <nav className="flex items-center gap-1.5 text-xs text-slate-400 mb-8 flex-wrap">
             <Link href="/" className="hover:text-[#FF9900] transition-colors">Početna</Link>
             <span>/</span>
@@ -86,89 +105,172 @@ export default function Page() {
             <span className="text-slate-600">Kada piti protein</span>
           </nav>
 
-          {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 leading-tight mb-4">
               Kada piti protein — pre, posle treninga ili ujutru?
             </h1>
             <div className="flex items-center gap-3 text-sm text-slate-400">
-              <span>{READ_MIN} min čitanja</span>
+              <span>7 min čitanja</span>
               <span>·</span>
-              <span>Ažurirano: jun 2026.</span>
+              <span>Ažurirano: {new Date().toLocaleDateString("sr-RS", { month: "long", year: "numeric" })}</span>
             </div>
           </div>
 
-          {/* Intro */}
-          <p className="text-lg text-slate-700 leading-relaxed mb-10 p-5 bg-white rounded-2xl border border-slate-200 shadow-sm">
-            Najvažnija stvar kod uzimanja proteina nije <em>kada</em> — nego <strong className="text-slate-900">koliko ukupno uneseš tokom dana</strong>. Tajming je sekundarna optimizacija. Ali ako već brineš o tome, posle treninga, za doručak i pre sna su tri momenta koja imaju naučnu podlogu.
+          <p className="text-lg text-slate-700 leading-relaxed mb-8 p-5 bg-white rounded-2xl border border-slate-200 shadow-sm">
+            Najvažnija stvar kod uzimanja proteina nije <em>kada</em> — nego <strong className="text-slate-900">koliko ukupno uneseš tokom dana</strong>. Tajming je sekundarna optimizacija. Ali ako već razmišljaš o tome, posle treninga, za doručak i pre sna su tri momenta sa naučnom podlogom.
           </p>
 
-          {/* Section 1 */}
-          <section className="mb-10">
+          <GuideToc sections={TOC} />
+
+          <section className="mb-10" id="anabolicki-prozor">
             <h2 className="text-xl font-bold text-slate-900 mb-4">Mit o anaboličkom prozoru od 30 minuta</h2>
             <div className="space-y-4 text-[15px] leading-relaxed text-slate-700">
               <p>
-                Godinama je vladalo uverenje da moraš da popiješ šejk unutar 30 minuta posle treninga ili "gubite sve". To je preuveličano. Novija meta-analiza istraživanja pokazuje da je anabolički odgovor mišića povišen 4–6 sati posle treninga, ne samo 30 minuta.
+                Godinama je vladalo uverenje da moraš da popiješ šejk unutar 30 minuta posle treninga ili "gubite sve". Taj mit je izrastao iz ranih istraživanja na atletičarima visokog intenziteta u stanju gladovanja. Za prosečnog rekreativca koji jede normalno, situacija je drugačija.
+              </p>
+            </div>
+
+            <h3 id="sta-kaze-nauka" className="text-[17px] font-bold text-slate-800 mt-6 mb-3">Šta nauka zapravo kaže?</h3>
+            <div className="space-y-4 text-[15px] leading-relaxed text-slate-700">
+              <p>
+                Meta-analiza Schoenfeldа i Aragona (2013, <em>Journal of the International Society of Sports Nutrition</em>) analizirala je dostupne studije o tajmingu proteina i zaključila: <strong className="text-slate-900">anabolički prozor traje 4–6 sati, ne 30 minuta</strong>. Ako si jeo/la normalan obrok bogat proteinima sat-dva pre treninga, telo ima aminokiseline na raspolaganju i posle poslednjeg seta.
               </p>
               <p>
-                Ako si pojeo/la normalan obrok bogat proteinima sat-dva pre treninga, tvoje telo još uvek ima aminokiseline u sistemu i posle treninga. Panika oko brzine šejka posle poslednjeg seta je nepotrebna.
+                Isti autori su u naknadnim radovima utvrdili da je ukupan dnevni unos proteina konzistentno važniji faktor za rast mišića od preciznog tajminga — kada i šta jedeš oko treninga daleko je manje bitno od toga koliko ukupno uneseš tokom dana.
               </p>
+              <div className="bg-[#FFF8EC] border border-[#FF9900]/30 rounded-xl p-4">
+                <p className="text-[14px] text-slate-700">
+                  <strong className="text-slate-900">Praktična poruka:</strong> Ako trebaš da biraš između "popiti šejk odmah posle treninga a ne jesti godinu dana dovoljno proteina" i "propustiti prozor ali jesti 160g proteina dnevno" — drugi scenario daje bolje rezultate.
+                </p>
+              </div>
             </div>
           </section>
 
-          {/* Section 2 */}
-          <section className="mb-10">
+          <section className="mb-10" id="optimalno-vreme">
             <h2 className="text-xl font-bold text-slate-900 mb-4">Optimalno vreme za različite ciljeve</h2>
+
+            <h3 id="izgradnja-misica" className="text-[17px] font-bold text-slate-800 mt-4 mb-3">Izgradnja mišića — raspored je važniji od tajminga</h3>
             <div className="space-y-4 text-[15px] leading-relaxed text-slate-700">
               <p>
-                <strong className="text-slate-800">Za izgradnju mišića:</strong> Rasporedi protein na 3–4 obroka dnevno od po 30–40g. Svaki obrok aktivira sintezu mišićnih proteina. Jedan šejk posle treninga je zgodan za logistiku, ali nije čaroban bez ostatka dnevnog unosa.
+                Za hipertrofiju, ključno je rasporediti ukupan dnevni unos proteina na <strong className="text-slate-900">3–5 obroka od 25–40g</strong>. Svaki obrok nezavisno aktivira sintezu mišićnih proteina (MPS). Jedan šejk od 80g odjednom nije efikasniji od dva obroka po 40g.
               </p>
               <p>
-                <strong className="text-slate-800">Za mršavljenje:</strong> Protein ujutru i pre treninga pomaže sitosti i smanjuje šansu za prejedanje. Ako treniraš na prazan stomak (fasted training), šejk odmah posle ima više smisla nego inače.
+                Šejk posle treninga je <em>logistički zgodan</em> — ali nije magičan. Telo ne čeka na prozor; ono koristi aminokiseline koje su dostupne u sistemu u periodu od nekoliko sati nakon treninga.
+              </p>
+            </div>
+
+            <h3 id="mrsavljenje-timing" className="text-[17px] font-bold text-slate-800 mt-6 mb-3">Mršavljenje i fasted trening</h3>
+            <div className="space-y-4 text-[15px] leading-relaxed text-slate-700">
+              <p>
+                Ako treniraš ujutru na prazan stomak (fasted cardio), šejk odmah po treningu ima više smisla nego inače — jer telo nije imalo unos proteina od prethodne večeri. Ovde tajming ima opipljiv efekat: unos proteina u prvom satu posle gladnog jutarnjeg treninga pomaže da zaustavi razgradnju mišića.
               </p>
               <p>
-                <strong className="text-slate-800">Za oporavak:</strong> Protein unutar 2 sata posle treninga ubrzava oporavak mišića, naročito ako si imao/la intenzivan trening ili dugu sesiju.
+                Za mršavljenje, protein ujutru pre treninga (ili odmah posle) pomaže sitosti tokom dana i smanjuje verovatnoću prejedanja u drugoj polovini dana.
               </p>
             </div>
           </section>
 
-          {/* Section 3 */}
-          <section className="mb-10">
-            <h2 className="text-xl font-bold text-slate-900 mb-4">Jutarnji protein vs. kazein pre sna</h2>
+          <section className="mb-10" id="jutarnji-protein">
+            <h2 className="text-xl font-bold text-slate-900 mb-4">Jutarnji protein i kazein pre sna</h2>
+
+            <h3 id="ujutru" className="text-[17px] font-bold text-slate-800 mt-4 mb-3">Whey ujutru — zašto ima smisla</h3>
             <div className="space-y-4 text-[15px] leading-relaxed text-slate-700">
               <p>
-                <strong className="text-slate-800">Ujutru:</strong> Whey protein je idealan — brzo se apsorbuje i brzo "budi" sintezu mišićnih proteina posle noćnog posta. Možeš ga kombinovati sa ovsenim pahuljicama ili voćem za kompletniji doručak.
+                Posle 7–9 sati noćnog posta mišići su u blagom kataboličkom stanju — telo je iscrpilo aminokiseline iz cirkulacije i počelo da ih uzima iz mišićnog tkiva. Whey protein je idealan ujutru jer <strong className="text-slate-900">brzo se apsorbuje</strong> (dostupan u krvi za 30–60 min) i efikasno gasi kataboličko stanje.
               </p>
               <p>
-                <strong className="text-slate-800">Pre sna:</strong> Tu kazein proteini imaju prednost. Kazein se apsorbuje 6–8 sati — savršeno za noć. Istraživanja (Res et al., 2012) pokazala su da 40g kazeina pre sna povećava sintezu mišićnih proteina tokom spavanja i ne utiče negativno na sagorevanje masti.
+                Kombinacija whey šejka sa ovsenim pahuljicama i voćem pruža brzo (protein) + sporo (vlakna, ugljeni hidrati) gorivo i drži energiju stabilnom do ručka.
+              </p>
+            </div>
+
+            <h3 id="kazein-pre-sna" className="text-[17px] font-bold text-slate-800 mt-6 mb-3">Kazein pre sna — 40g protokol</h3>
+            <div className="space-y-4 text-[15px] leading-relaxed text-slate-700">
+              <p>
+                Kazein se apsorbuje 6–8 sati, što ga čini idealnim za noćni period. Studija Res i saradnika (<em>Medicine & Science in Sports & Exercise</em>, 2012) pokazala je da <strong className="text-slate-900">40g kazeina pre sna</strong> značajno povećava sintezu mišićnih proteina tokom spavanja i ne utiče negativno na oksidaciju masti.
               </p>
               <p>
-                Ako nemaš kazein, grčki jogurt ili svježi sir pre sna daje sličan efekat — oba su bogati kazeinom i daleko jeftiniji od kazeinske formule.
+                Ako nemaš kazein u prahu, <strong className="text-slate-900">grčki jogurt ili svježi sir</strong> pre sna daje sličan efekat — oba su prirodno bogata kazeinom i znatno su jeftiniji. 200g svežeg sira sadrži ~22g kazeina.
+              </p>
+              <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-slate-50">
+                        <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">Opcija pre sna</th>
+                        <th className="px-3 py-2 text-center text-xs font-semibold text-slate-500">Proteini</th>
+                        <th className="px-3 py-2 text-center text-xs font-semibold text-slate-500">Kalorije</th>
+                        <th className="px-3 py-2 text-center text-xs font-semibold text-slate-500 hidden sm:table-cell">Apsorpcija</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {[
+                        { o: "Kazein protein (40g praška)", p: "~32g", k: "~160 kcal", a: "6–8 h" },
+                        { o: "Svježi sir 200g", p: "~22g", k: "~160 kcal", a: "4–6 h" },
+                        { o: "Grčki jogurt 200g", p: "~18g", k: "~130 kcal", a: "3–5 h" },
+                        { o: "Whey protein (30g praška)", p: "~24g", k: "~120 kcal", a: "1–2 h" },
+                      ].map(({ o, p, k, a }) => (
+                        <tr key={o}>
+                          <td className="px-3 py-2.5 text-slate-700 text-[13px]">{o}</td>
+                          <td className="px-3 py-2.5 text-center font-medium text-slate-800 text-[13px]">{p}</td>
+                          <td className="px-3 py-2.5 text-center text-slate-600 text-[13px]">{k}</td>
+                          <td className="px-3 py-2.5 text-center text-slate-600 text-[13px] hidden sm:table-cell">{a}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="mb-10" id="meduobrok">
+            <h2 className="text-xl font-bold text-slate-900 mb-4">Protein između obroka</h2>
+            <div className="space-y-4 text-[15px] leading-relaxed text-slate-700">
+              <p>
+                Protein kao međuobrok ima smisla kad imaš više od 4–5 sati između obroka ili kad tražiš nešto zasitno sa malo kalorija. 30g whey proteina u vodi = ~120 kcal i ~25g proteina. Poređenja radi, jabuka ima 80 kcal ali svega ~0.4g proteina.
+              </p>
+              <p>
+                Za mišićni rast, idealno je da nijedan period od buđenja do spavanja ne traje duže od 4–5 sati bez unosa proteina. Šejk između obroka pomaže da ne probijete taj interval.
               </p>
             </div>
           </section>
 
-          {/* Section 4 */}
-          <section className="mb-10">
-            <h2 className="text-xl font-bold text-slate-900 mb-4">Praktičan raspored za prosečnog čoveka</h2>
+          <section className="mb-10" id="raspored">
+            <h2 className="text-xl font-bold text-slate-900 mb-4">Praktičan raspored za prosečnog vežbača</h2>
+            <div className="space-y-4 text-[15px] leading-relaxed text-slate-700 mb-5">
+              <p>
+                Primer za osobu od 80 kg, cilj ~160g proteina dnevno, trening poslepodne:
+              </p>
+            </div>
+            <div className="space-y-3 mb-6">
+              {[
+                { time: "07:00 — Doručak", items: ["3 jaja (~19g)", "200g grčkog jogurta (~18g)", "Ukupno: ~37g"] },
+                { time: "12:30 — Ručak", items: ["200g piletine (~44g)", "Prilog (pirinač, povrće)", "Ukupno: ~46g"] },
+                { time: "16:00 — Pre treninga", items: ["Whey šejk 30g (~25g) ili obrok", "Opciono: banana za energiju"] },
+                { time: "18:30 — Posle treninga", items: ["Ako nisi jeo pre treninga: whey šejk 30g", "Ako jesi jeo: direktno na večeru"] },
+                { time: "20:00 — Večera", items: ["200g lososa ili mesa (~40g)", "Povrće, salata"] },
+                { time: "22:00 — Pre sna", items: ["200g svežeg sira (~22g)", "Ukupno dana: ~160–170g ✓"] },
+              ].map(({ time, items }) => (
+                <div key={time} className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+                  <p className="font-bold text-[#FF9900] text-[13px] mb-1">{time}</p>
+                  <ul className="text-[14px] text-slate-600 space-y-0.5">
+                    {items.map((item, i) => (
+                      <li key={i} className={item.startsWith("Ukupno") ? "font-semibold text-slate-800 mt-1" : ""}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+
+            <h3 id="trening-dan" className="text-[17px] font-bold text-slate-800 mt-4 mb-3">Trening dan vs. netrenirajući dan</h3>
             <div className="space-y-4 text-[15px] leading-relaxed text-slate-700">
               <p>
-                Ako treniraš 4 puta nedeljno i težiš 80kg (cilj ~160g proteina):
-              </p>
-              <ul className="list-disc pl-5 space-y-2">
-                <li><strong className="text-slate-800">Doručak:</strong> 3 jaja + šaka oraha → ~25g proteina</li>
-                <li><strong className="text-slate-800">Ručak:</strong> 200g piletine ili tune → ~42g proteina</li>
-                <li><strong className="text-slate-800">Posle treninga (ili kao međuobrok):</strong> whey šejk 30g u vodi → ~25g proteina</li>
-                <li><strong className="text-slate-800">Večera:</strong> 200g mesa + 200g jogurta → ~50g proteina</li>
-              </ul>
-              <p className="mt-2">
-                Ukupno ~142g — blizu cilja. Šejk ti tu služi kao praktično popunjavanje, ne kao zamena za hranu.
+                Netrenirajući dan ne znači da ti ne treba protein. Oporavak i rast mišića dešavaju se <em>između</em> treninga — tokom mirovanja. Ciljaj isti dnevni unos proteina bez obzira da li treniraš tog dana. Tajming je manje bitan — samo obezbedi raspoređen unos kroz ceo dan.
               </p>
             </div>
           </section>
 
-          {/* FAQ */}
-          <section className="mb-10">
+          <section className="mb-10" id="faq">
             <h2 className="text-xl font-bold text-slate-900 mb-6">Česta pitanja</h2>
             <div className="space-y-4">
               {faqItems.map(({ q, a }, i) => (
@@ -180,35 +282,44 @@ export default function Page() {
             </div>
           </section>
 
-          {/* Internal links */}
-          <section className="mb-10">
-            <h2 className="text-xl font-bold text-slate-900 mb-4">Korisni linkovi</h2>
+          <section className="mb-8">
+            <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Naučne reference</h2>
+            <ol className="space-y-1.5 text-[13px] text-slate-500 list-decimal pl-4">
+              <li>Schoenfeld BJ & Aragon AA (2013). The effect of protein timing on muscle strength and hypertrophy. <em>Journal of the International Society of Sports Nutrition</em>, 10(1), 53.</li>
+              <li>Res PT et al. (2012). Protein ingestion before sleep improves postexercise overnight recovery. <em>Medicine & Science in Sports & Exercise</em>, 44(8), 1560–1569.</li>
+              <li>Areta JL et al. (2013). Timing and distribution of protein ingestion during prolonged recovery. <em>Journal of Physiology</em>, 591(9), 2319–2331.</li>
+            </ol>
+          </section>
+
+          <GuideDisclaimer />
+
+          <section className="mt-10 mb-10">
+            <h2 className="text-xl font-bold text-slate-900 mb-4">Korisni vodiči</h2>
             <div className="flex flex-wrap gap-3">
               <Link href="/vodici/koliko-proteina-dnevno" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
                 Koliko proteina dnevno?
               </Link>
               <Link href="/vodici/whey-isolate-vs-concentrate" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
-                Whey Isolate vs Concentrate
-              </Link>
-              <Link href="/kategorija/casein?sort=valueScore,desc" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
-                Kazein proteini
+                Isolate vs Concentrate
               </Link>
               <Link href="/vodici/da-li-protein-goji" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
                 Da li protein goji?
               </Link>
+              <Link href="/kategorija/casein?sort=valueScore,desc" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
+                Kazein proteini
+              </Link>
             </div>
           </section>
 
-          {/* CTA */}
           <div className="bg-[#1B2B4B] rounded-2xl p-6 text-white text-center">
             <p className="text-base leading-relaxed mb-4">
-              Pronađi whey protein koji odgovara tvom rasporedu — uporedi cene svih brendova dostupnih u Srbiji.
+              Pronađi whey protein koji odgovara tvom rasporedu — uporedi sve brendove dostupne u Srbiji.
             </p>
             <Link
               href="/?sort=valueScore,desc"
               className="inline-block px-6 py-3 bg-[#FF9900] hover:bg-[#e68a00] text-[#131921] font-bold rounded-xl text-sm transition-colors"
             >
-              Uporedi whey proteine na Proteinoteka.rs
+              Uporedi proteine →
             </Link>
           </div>
 

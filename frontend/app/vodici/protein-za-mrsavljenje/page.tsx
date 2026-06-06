@@ -2,10 +2,12 @@ import { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
 import VodiciNav from "@/components/VodiciNav";
+import GuideToc, { TocSection } from "@/components/GuideToc";
+import GuideDisclaimer from "@/components/GuideDisclaimer";
 import { fetchTopProducts } from "@/lib/seo-data";
 import { Product } from "@/types/product";
 
-export const revalidate = 86400;
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: { absolute: "Koji protein za mršavljenje? + Cene u Srbiji | Proteinoteka" },
@@ -32,6 +34,19 @@ export const metadata: Metadata = {
 
 const BASE = "https://proteinoteka.rs";
 const SLUG = "/vodici/protein-za-mrsavljenje";
+
+const tocSections: TocSection[] = [
+  { id: "da-li-pomaze", title: "Da li protein zaista pomaže pri mršavljenju?" },
+  { id: "termicki-efekat", title: "Termički efekat i sitost", level: 3 },
+  { id: "koji-tip", title: "Koji tip proteina birati?" },
+  { id: "izolat", title: "Whey izolat — optimalni izbor za deficit", level: 3 },
+  { id: "concentrate-mrsavljenje", title: "Whey concentrate uz manji budžet", level: 3 },
+  { id: "izbegavati", title: "Šta izbegavati pri mršavljenju" },
+  { id: "koliko-proteina", title: "Koliko proteina unositi pri mršavljenju" },
+  { id: "koliko-kosta", title: "Koliko košta mesec dana upotrebe" },
+  { id: "kada-piti", title: "Kada piti protein pri mršavljenju" },
+  { id: "faq", title: "Česta pitanja" },
+];
 
 function pricePerGramProtein(p: Product): number | null {
   if (!p.numericPrice || !p.primaryWeightGrams || !p.proteinPer100g) return null;
@@ -137,19 +152,21 @@ export default async function Page() {
             <div className="flex items-center gap-3 text-sm text-slate-400">
               <span>8 min čitanja</span>
               <span>·</span>
-              <span>Ažurirano: maj 2026.</span>
+              <span>Ažurirano: jun 2026.</span>
             </div>
           </div>
 
           {/* Intro */}
-          <p className="text-lg text-slate-700 leading-relaxed mb-10 p-5 bg-white rounded-2xl border border-slate-200 shadow-sm">
+          <p className="text-lg text-slate-700 leading-relaxed mb-8 p-5 bg-white rounded-2xl border border-slate-200 shadow-sm">
             Protein ne sagoreva mast direktno. Ali pomaže ti da <strong className="text-slate-900">sačuvaš mišićnu masu</strong> dok si u kalorijskom deficitu, smanji glad, i olakša ti da uneseš dovoljno proteina bez viška kalorija. Ovaj vodič je baziran na stvarnim cenama iz srpskih prodavnica — ne na marketinškim tvrdnjama.
           </p>
 
+          <GuideToc sections={tocSections} />
+
           {/* Section 1 */}
           <section className="mb-10">
-            <h2 className="text-xl font-bold text-slate-900 mb-4">Da li protein zaista pomaže pri mršavljenju?</h2>
-            <div className="space-y-4 text-[15px] leading-relaxed text-slate-700">
+            <h2 id="da-li-pomaze" className="text-xl font-bold text-slate-900 mb-4">Da li protein zaista pomaže pri mršavljenju?</h2>
+            <div className="space-y-4 text-[15px] leading-relaxed text-slate-700 mb-6">
               <p>
                 Da — ali ne na način koji se često reklamira. Protein nema "fat burning" efekat. Ono što ima je <strong className="text-slate-900">termički efekat ishrane</strong> — telo troši 20–30% kalorija iz proteina samo na njegovu preradu, što je znatno više nego za ugljene hidrate (5–10%) ili masti (0–3%).
               </p>
@@ -160,19 +177,29 @@ export default async function Page() {
                 I na kraju — <strong className="text-slate-900">očuvanje mišića</strong>. Kada si u kalorijskom deficitu, telo može da razgrađuje i mišiće za energiju. Dovoljan unos proteina (1.8–2.2g/kg telesne mase) štiti mišiće dok gubiš masnoću.
               </p>
             </div>
+
+            <h3 id="termicki-efekat" className="text-lg font-bold text-slate-900 mb-3">Termički efekat i sitost — brojevi iza tvrdnji</h3>
+            <div className="space-y-3 text-[15px] leading-relaxed text-slate-700">
+              <p>
+                Westerterp-Plantenga i sar. (2012) u pregledu 87 studija utvrdili su da visoko-proteinska dijeta (<strong className="text-slate-800">25–30% kalorija iz proteina</strong>) povećava termogenezu za 75–100 kcal dnevno u poređenju sa standardnom ishranom. Za nekoga ko jede 2.000 kcal dnevno, to je razlika od ~4–5% ukupnih kalorija — bez ikakve promene u aktivnosti.
+              </p>
+              <p>
+                Kombinacija termičkog efekta i hormona sitosti (GLP-1, PYY) objašnjava zašto visoko-proteinska dijeta smanjuje ad libitum unos hrane. Ukratko: jedeš protein, manje si gladan, prirodno unosiš manje kalorija.
+              </p>
+            </div>
           </section>
 
           {/* Section 2 — Koji tip */}
           <section className="mb-10">
-            <h2 className="text-xl font-bold text-slate-900 mb-4">Koji tip proteina birati za mršavljenje?</h2>
+            <h2 id="koji-tip" className="text-xl font-bold text-slate-900 mb-4">Koji tip proteina birati za mršavljenje?</h2>
             <div className="space-y-4 text-[15px] leading-relaxed text-slate-700 mb-6">
-              <p>Nisu svi proteini jednaki kada je cilj mršavljenje.</p>
+              <p>Nisu svi proteini jednaki kada je cilj mršavljenje. Evo jasnog rangiranja:</p>
             </div>
 
             {/* Isolate subsection */}
             <div className="mb-8">
-              <h3 className="text-lg font-bold text-slate-900 mb-2">
-                Whey izolat — najbolji izbor
+              <h3 id="izolat" className="text-lg font-bold text-slate-900 mb-2">
+                Whey izolat — optimalni izbor za deficit
               </h3>
               <div className="space-y-4 text-[15px] leading-relaxed text-slate-700 mb-5">
                 <p>
@@ -195,7 +222,7 @@ export default async function Page() {
                         <tr className="bg-slate-50 text-left">
                           <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 min-w-[180px]">Proizvod</th>
                           <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 text-right whitespace-nowrap">Prot/100g</th>
-                          <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 text-right whitespace-nowrap">Cena/g prot.</th>
+                          <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 text-right whitespace-nowrap hidden sm:table-cell">Cena/g prot.</th>
                           <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 text-right whitespace-nowrap">Value Score</th>
                         </tr>
                       </thead>
@@ -221,7 +248,7 @@ export default async function Page() {
                             <td className="px-4 py-3 text-right font-medium text-slate-700 whitespace-nowrap">
                               {p.proteinPer100g?.toFixed(0) ?? "—"}g
                             </td>
-                            <td className="px-4 py-3 text-right font-medium text-slate-700 whitespace-nowrap">
+                            <td className="px-4 py-3 text-right font-medium text-slate-700 whitespace-nowrap hidden sm:table-cell">
                               {p.ppg ? `${p.ppg.toFixed(1)} RSD` : "—"}
                             </td>
                             <td className="px-4 py-3 text-right whitespace-nowrap">
@@ -246,7 +273,7 @@ export default async function Page() {
 
             {/* Concentrate subsection */}
             <div className="mb-8">
-              <h3 className="text-lg font-bold text-slate-900 mb-2">Whey concentrate — solidna opcija uz manji budžet</h3>
+              <h3 id="concentrate-mrsavljenje" className="text-lg font-bold text-slate-900 mb-2">Whey concentrate — solidna opcija uz manji budžet</h3>
               <div className="space-y-3 text-[15px] leading-relaxed text-slate-700">
                 <p>
                   Concentrate ima nešto više masti i laktoze od izolata, ali je generalno jeftiniji. Za mršavljenje nije idealan ali je daleko od lošeg — ako ti je kalorijski deficit velik i unos proteina na mestu, razlika u mastima po porciji neće srušiti tvoje rezultate.
@@ -280,7 +307,7 @@ export default async function Page() {
 
           {/* Section 3 — Šta izbegavati */}
           <section className="mb-10">
-            <h2 className="text-xl font-bold text-slate-900 mb-4">Šta izbegavati pri mršavljenju</h2>
+            <h2 id="izbegavati" className="text-xl font-bold text-slate-900 mb-4">Šta izbegavati pri mršavljenju</h2>
             <div className="space-y-3">
               {[
                 {
@@ -305,7 +332,7 @@ export default async function Page() {
 
           {/* Section 4 — Koliko proteina */}
           <section className="mb-10">
-            <h2 className="text-xl font-bold text-slate-900 mb-4">Koliko proteina unositi pri mršavljenju</h2>
+            <h2 id="koliko-proteina" className="text-xl font-bold text-slate-900 mb-4">Koliko proteina unositi pri mršavljenju</h2>
             <div className="space-y-4 text-[15px] leading-relaxed text-slate-700">
               <p>
                 Ne pita se "koliko šejkova", nego "koliko grama proteina ukupno dnevno". Za osobu koja skida kilograme uz trening: <strong className="text-slate-900">1.8–2.2g proteina po kilogramu telesne mase</strong> je optimalni raspon.
@@ -320,7 +347,7 @@ export default async function Page() {
 
           {/* Section 5 — Koliko košta */}
           <section className="mb-10">
-            <h2 className="text-xl font-bold text-slate-900 mb-4">Koliko košta mesec dana upotrebe</h2>
+            <h2 id="koliko-kosta" className="text-xl font-bold text-slate-900 mb-4">Koliko košta mesec dana upotrebe</h2>
             <div className="space-y-4 text-[15px] leading-relaxed text-slate-700 mb-5">
               <p>
                 Uzimamo 30g proteina dnevno kao standardnu porciju, 30 dana — ukupno 900g proteina iz praška mesečno.
@@ -366,7 +393,7 @@ export default async function Page() {
 
           {/* Section 6 — Kada piti */}
           <section className="mb-10">
-            <h2 className="text-xl font-bold text-slate-900 mb-4">Kada piti protein pri mršavljenju</h2>
+            <h2 id="kada-piti" className="text-xl font-bold text-slate-900 mb-4">Kada piti protein pri mršavljenju</h2>
             <div className="space-y-3">
               {[
                 {
@@ -391,7 +418,7 @@ export default async function Page() {
           </section>
 
           {/* FAQ */}
-          <section className="mb-10">
+          <section id="faq" className="mb-10">
             <h2 className="text-xl font-bold text-slate-900 mb-6">Česta pitanja</h2>
             <div className="space-y-4">
               {faqItems.map(({ q, a }, i) => (
@@ -439,7 +466,7 @@ export default async function Page() {
           </section>
 
           {/* CTA */}
-          <div className="bg-[#1B2B4B] rounded-2xl p-6 text-white text-center">
+          <div className="bg-[#1B2B4B] rounded-2xl p-6 text-white text-center mb-10">
             <p className="text-base leading-relaxed mb-4">
               Pronađi koji whey izolat trenutno nudi najviše proteina za najmanji novac.
             </p>
@@ -450,6 +477,16 @@ export default async function Page() {
               Uporedi whey izolate →
             </Link>
           </div>
+
+          {/* Citations */}
+          <div className="mb-6 text-xs text-slate-400 leading-relaxed border-t border-slate-200 pt-4">
+            <p className="font-semibold text-slate-500 mb-1">Izvori</p>
+            <p>Westerterp-Plantenga et al., <em>Nutr Metab (Lond)</em> 2012 — termički efekat proteina i sitost.</p>
+            <p>Paddon-Jones et al., <em>Am J Clin Nutr</em> 2008 — očuvanje mišićne mase u kalorijskom deficitu.</p>
+            <p>Halton & Hu, <em>J Am Coll Nutr</em> 2004 — sitost i spontano smanjenje kalorijskog unosa pri visokom unosu proteina.</p>
+          </div>
+
+          <GuideDisclaimer />
 
           <VodiciNav currentSlug="protein-za-mrsavljenje" />
         </main>

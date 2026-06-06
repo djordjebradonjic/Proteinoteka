@@ -35,6 +35,11 @@ const GUIDES = [
     title: "Kada piti protein — pre ili posle treninga?",
     readMin: 4,
   },
+  {
+    slug: "koliko-novca-mesecno-za-proteine",
+    title: "Koliko novca mesečno treba za proteine u Srbiji?",
+    readMin: 5,
+  },
 ];
 
 interface Props {

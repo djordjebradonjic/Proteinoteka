@@ -26,6 +26,12 @@ const ARTICLES = [
     readMin: 7,
   },
   {
+    href: "/vodici/koliko-novca-mesecno-za-proteine",
+    title: "Koliko novca mesečno treba za proteine u Srbiji?",
+    excerpt: "Konkretna računica za 60–90 kg: WPC 3.900–6.000 din, isolate 5.700–8.300 din, biljni 4.200–7.300 din. Cene iz 6 prodavnica, ažurirane sedmično.",
+    readMin: 5,
+  },
+  {
     href: "/vodici/protein-za-mrsavljenje",
     title: "Protein za mršavljenje u Srbiji — koji tip stvarno pomaže i šta košta",
     excerpt: "Whey izolat, concentrate ili biljni protein? Aktuelne cene i konkretna računica koliko košta mesec dana suplementacije.",

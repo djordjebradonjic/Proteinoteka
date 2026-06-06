@@ -2,10 +2,12 @@ import { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
 import VodiciNav from "@/components/VodiciNav";
+import GuideToc, { TocSection } from "@/components/GuideToc";
+import GuideDisclaimer from "@/components/GuideDisclaimer";
 import { fetchTopProducts } from "@/lib/seo-data";
 import { Product } from "@/types/product";
 
-export const revalidate = 86400;
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: { absolute: "Whey protein za početnike: šta, koliko i odakle? | Proteinoteka" },
@@ -29,6 +31,18 @@ function pricePerGramProtein(p: Product): number | null {
   if (totalProteinG <= 0) return null;
   return p.numericPrice / totalProteinG;
 }
+
+const tocSections: TocSection[] = [
+  { id: "da-li-treba", title: "Da li ti uopšte treba proteinski šejk?" },
+  { id: "koji-tip", title: "Koji tip proteina uzeti kao početnik?" },
+  { id: "wpc-prednosti", title: "Zašto WPC za početnike", level: 3 },
+  { id: "koliko-dnevno", title: "Koliko proteina trebaš dnevno?" },
+  { id: "kada-uzimati", title: "Kako i kada uzimati protein?" },
+  { id: "tajming-mit", title: "Mit o 30-minutnom anaboličkom prozoru", level: 3 },
+  { id: "cena", title: "Koliko košta mesec dana?" },
+  { id: "izbegavati", title: "Šta izbegavati kao početnik" },
+  { id: "faq", title: "Česta pitanja" },
+];
 
 const faqItems = [
   {
@@ -133,15 +147,17 @@ export default async function Page() {
           </div>
 
           {/* Quick answer */}
-          <div className="mb-10 p-5 bg-white rounded-2xl border border-slate-200 shadow-sm">
+          <div className="mb-8 p-5 bg-white rounded-2xl border border-slate-200 shadow-sm">
             <p className="text-lg text-slate-700 leading-relaxed">
               <strong className="text-slate-900">Kratki odgovor:</strong> uzmi <strong className="text-slate-900">whey concentrate (WPC)</strong> — najjeftiniji tip whey proteina sa 70–80g proteina na 100g. Efikasan, dostupan u svim prodavnicama, i za 90% početnika je sve što treba. Nema razloga za skuplje opcije dok ne savladaš osnove treninga i ishrane.
             </p>
           </div>
 
+          <GuideToc sections={tocSections} />
+
           {/* Section 1 */}
           <section className="mb-10">
-            <h2 className="text-xl font-bold text-slate-900 mb-4">Da li ti uopšte treba proteinski šejk?</h2>
+            <h2 id="da-li-treba" className="text-xl font-bold text-slate-900 mb-4">Da li ti uopšte treba proteinski šejk?</h2>
             <div className="space-y-4 text-[15px] leading-relaxed text-slate-700">
               <p>
                 Protein u prahu nije lek niti čarobni suplement — to je hrana u drugačijem obliku. Ako svakodnevno jedeš 3–4 obroka sa kvalitetnim proteinima (jaja, piletina, riba, mlečni proizvodi), moguće je da šejk uopšte ne trebaš.
@@ -157,7 +173,7 @@ export default async function Page() {
 
           {/* Section 2 */}
           <section className="mb-10">
-            <h2 className="text-xl font-bold text-slate-900 mb-4">Koji tip proteina uzeti kao početnik?</h2>
+            <h2 id="koji-tip" className="text-xl font-bold text-slate-900 mb-4">Koji tip proteina uzeti kao početnik?</h2>
             <div className="space-y-4 text-[15px] leading-relaxed text-slate-700 mb-6">
               <p>
                 Postoje tri tipa koja ćeš sresti u prodavnicama — evo razlike i jasne preporuke:
@@ -196,11 +212,21 @@ export default async function Page() {
                 </div>
               ))}
             </div>
+
+            <h3 id="wpc-prednosti" className="text-lg font-bold text-slate-900 mb-3">Zašto WPC za početnike</h3>
+            <div className="space-y-3 text-[15px] leading-relaxed text-slate-700 mb-4">
+              <p>
+                Studija Tanga i sar. (2009) poredila je WPC, WPI i sojinog izolata — sve tri forme su izazvale sličan rast mišićne mase uz isti trening protokol. Razlika između WPC i skupljeg WPI nije statistički značajna za rekreativce i početnike. Plati manje, troši duže, treniraj više.
+              </p>
+              <p>
+                Jedini opravdan razlog za WPI od prvog dana je dijagnostikovana intolerancija na laktozu (ne samo "neprijatnost" — pravi pozitivan test).
+              </p>
+            </div>
           </section>
 
           {/* Section 3 */}
           <section className="mb-10">
-            <h2 className="text-xl font-bold text-slate-900 mb-4">Koliko proteina trebaš dnevno?</h2>
+            <h2 id="koliko-dnevno" className="text-xl font-bold text-slate-900 mb-4">Koliko proteina trebaš dnevno?</h2>
             <div className="space-y-4 text-[15px] leading-relaxed text-slate-700">
               <p>
                 Formula je prosta: pomnoži svoju telesnu masu sa <strong className="text-slate-900">1.6 do 2.2</strong>. Rezultat je ciljani dnevni unos u gramima. Za početnika koji je tek počeo da trenira, donja granica (1.6g/kg) je sasvim dovoljna.
@@ -221,7 +247,7 @@ export default async function Page() {
 
           {/* Section 4 */}
           <section className="mb-10">
-            <h2 className="text-xl font-bold text-slate-900 mb-4">Kako i kada uzimati protein?</h2>
+            <h2 id="kada-uzimati" className="text-xl font-bold text-slate-900 mb-4">Kako i kada uzimati protein?</h2>
             <div className="space-y-3">
               {[
                 {
@@ -244,13 +270,23 @@ export default async function Page() {
               ))}
             </div>
             <p className="text-[14px] text-slate-500 mt-4 leading-relaxed">
-              <strong className="text-slate-700">Sa vodom ili mlekom?</strong> Sa vodom je brža apsorpcija i manje kalorija. Sa mlekom je ukusnije, ali dodaješ 150 kcal i usporavas apsorpciju. Za post-workout — voda. Za doručak ili između obroka — mleko je sasvim ok.
+              <strong className="text-slate-700">Sa vodom ili mlekom?</strong> Sa vodom je brža apsorpcija i manje kalorija. Sa mlekom je ukusnije, ali dodaješ 150 kcal i usporavaš apsorpciju. Za post-workout — voda. Za doručak ili između obroka — mleko je sasvim ok.
             </p>
+
+            <h3 id="tajming-mit" className="text-lg font-bold text-slate-900 mb-3 mt-6">Mit o 30-minutnom anaboličkom prozoru</h3>
+            <div className="space-y-3 text-[15px] leading-relaxed text-slate-700">
+              <p>
+                Dugo se verovalo da protein mora biti popijen tačno 30 minuta posle treninga jer se inače "prozor zatvori". Meta-analiza Schoenfelda i Aragona (2013) pokazala je da je ovaj prozor zapravo <strong className="text-slate-800">nekoliko sati</strong>, ne 30 minuta. Ono što je važno: ukupan dnevni unos proteina, a ne minut posle treninga.
+              </p>
+              <p>
+                Dakle, ako si jeo normalan obrok 2 sata pre treninga, post-workout šejk možeš popiti i sat vremena posle — nema razlike. Samo ne zaboravi da jedeš.
+              </p>
+            </div>
           </section>
 
           {/* Section 5 — live data */}
           <section className="mb-10">
-            <h2 className="text-xl font-bold text-slate-900 mb-4">Koliko košta mesec dana?</h2>
+            <h2 id="cena" className="text-xl font-bold text-slate-900 mb-4">Koliko košta mesec dana?</h2>
             <div className="space-y-4 text-[15px] leading-relaxed text-slate-700 mb-5">
               <p>
                 Računamo sa 30g proteina dnevno × 30 dana = 900g proteina iz šejka mesečno. Evo top whey concentrate opcija trenutno dostupnih u Srbiji, sortirano po Value Score-u:
@@ -328,7 +364,7 @@ export default async function Page() {
 
           {/* Section 6 */}
           <section className="mb-10">
-            <h2 className="text-xl font-bold text-slate-900 mb-4">Šta izbegavati kao početnik</h2>
+            <h2 id="izbegavati" className="text-xl font-bold text-slate-900 mb-4">Šta izbegavati kao početnik</h2>
             <div className="space-y-3">
               {[
                 {
@@ -360,7 +396,7 @@ export default async function Page() {
           </section>
 
           {/* FAQ */}
-          <section className="mb-10">
+          <section id="faq" className="mb-10">
             <h2 className="text-xl font-bold text-slate-900 mb-6">Česta pitanja</h2>
             <div className="space-y-4">
               {faqItems.map(({ q, a }, i) => (
@@ -395,7 +431,7 @@ export default async function Page() {
           </section>
 
           {/* CTA */}
-          <div className="bg-[#1B2B4B] rounded-2xl p-6 text-white text-center">
+          <div className="bg-[#1B2B4B] rounded-2xl p-6 text-white text-center mb-10">
             <p className="text-base leading-relaxed mb-4">
               Pronađi koji whey concentrate trenutno nudi najviše proteina za najmanji novac — sortirano po Value Score-u.
             </p>
@@ -406,6 +442,16 @@ export default async function Page() {
               Uporedi whey concentrate proteine →
             </Link>
           </div>
+
+          {/* Citations */}
+          <div className="mb-6 text-xs text-slate-400 leading-relaxed border-t border-slate-200 pt-4">
+            <p className="font-semibold text-slate-500 mb-1">Izvori</p>
+            <p>Tang et al., <em>J Appl Physiol</em> 2009 — poređenje WPC, WPI i sojinog izolata.</p>
+            <p>Schoenfeld & Aragon, <em>J Int Soc Sports Nutr</em> 2013 — "anabolički prozor" meta-analiza.</p>
+            <p>Morton et al., <em>Br J Sports Med</em> 2018 — gornja granica efikasnog unosa proteina.</p>
+          </div>
+
+          <GuideDisclaimer />
 
           <VodiciNav currentSlug="whey-protein-za-pocetnike" />
         </main>
