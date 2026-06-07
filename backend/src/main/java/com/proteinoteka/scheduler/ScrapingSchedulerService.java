@@ -41,10 +41,8 @@ public class ScrapingSchedulerService {
         // 3 = REST
         4, List.of(new ScrapeWindow(List.of("Pansport", "FitLab"),        9, 12)),
         // 5 = REST
-        6, List.of(new ScrapeWindow(List.of("Proteinbox", "Proteini.si"), 14, 17)),
-        // 7 = REST
-        8, List.of(new ScrapeWindow(List.of("Ogistrashop", "Supplementshop"), 19, 22)),
-        9, List.of(new ScrapeWindow(List.of("Pansport", "FitLab", "Proteinbox", "Proteini.si"), 8, 11))
+        6, List.of(new ScrapeWindow(List.of("Proteinbox", "Proteini.si"), 14, 17))
+        // 7, 8, 9 = REST — each store scraped once per 9-day cycle (~weekly)
     );
 
     private final ScraperService scraperService;
