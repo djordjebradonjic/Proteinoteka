@@ -65,4 +65,6 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
     @Query("SELECT p FROM products p WHERE p.aiDescription IS NULL")
     List<Product> findByAiDescriptionIsNull();
+
+    List<Product> findByGroupId(Long groupId);
 }

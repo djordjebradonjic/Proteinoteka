@@ -48,6 +48,7 @@ public class ScraperService {
     private final ScrapeLogRepository scrapeLogRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final BaseScraperEnricher baseEnricher;
+    private final ProductGroupService productGroupService;
 
     @Autowired
     private NutritionParserService nutritionParser;
@@ -482,6 +483,7 @@ public class ScraperService {
 
             existing.setProteinPerRsd(computeProteinPerRsd(numericPrice, existing));
             productRepository.save(existing);
+            productGroupService.tryAutoAssign(existing);
 
             publishPriceDropEventIfSignificant(existing, oldNumericPrice, numericPrice);
 
@@ -495,6 +497,7 @@ public class ScraperService {
             scraped.setProteinPerRsd(computeProteinPerRsd(numericPrice, scraped));
             scraped.setCanonicalSlug(slugify(scraped.getName()));
             productRepository.save(scraped);
+            productGroupService.tryAutoAssign(scraped);
             log.info("[{}] New product saved: '{}'", store.getName(), scraped.getName());
             return true;
         }

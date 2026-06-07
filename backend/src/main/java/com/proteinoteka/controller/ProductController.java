@@ -13,6 +13,7 @@ import com.proteinoteka.repository.AffiliateLinkRepository;
 import com.proteinoteka.repository.ClickEventRepository;
 import com.proteinoteka.repository.PriceHistoryRepository;
 import com.proteinoteka.repository.ProductRepository;
+import com.proteinoteka.service.ProductGroupService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -45,6 +46,7 @@ public class ProductController {
     private final PriceHistoryRepository priceHistoryRepository;
     private final ClickEventRepository clickEventRepository;
     private final AffiliateLinkRepository affiliateLinkRepository;
+    private final ProductGroupService productGroupService;
 
     private static final java.util.Set<String> NULLABLE_SORT_COLS =
             java.util.Set.of("valueScore", "proteinPerRsd");
@@ -237,6 +239,11 @@ public class ProductController {
                         (ProductDTO dto) -> (dto.previousPrice() - dto.numericPrice()) / dto.previousPrice()).reversed())
                 .limit(safeLimit)
                 .toList();
+    }
+
+    @GetMapping("/{id}/store-prices")
+    public List<StorePriceDTO> getStorePrices(@PathVariable Long id) {
+        return productGroupService.getStorePrices(id);
     }
 
     @GetMapping("/by-name")

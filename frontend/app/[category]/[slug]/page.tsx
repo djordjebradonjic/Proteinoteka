@@ -38,11 +38,9 @@ async function fetchSimilar(category: string, excludeId: number): Promise<Produc
   } catch { return []; }
 }
 
-async function fetchStorePrices(name: string, brand: string | null): Promise<StorePrice[]> {
+async function fetchStorePrices(productId: number): Promise<StorePrice[]> {
   try {
-    const params = new URLSearchParams({ name });
-    if (brand) params.set("brand", brand);
-    const res = await fetch(`${API}/api/v1/products/by-name?${params}`, { next: { revalidate: 3600, tags: ["products"] } });
+    const res = await fetch(`${API}/api/v1/products/${productId}/store-prices`, { next: { revalidate: 3600, tags: ["products"] } });
     if (!res.ok) return [];
     return res.json();
   } catch { return []; }
@@ -131,7 +129,7 @@ export default async function ProductSlugPage({ params }: Params) {
 
   const [similar, storePrices] = await Promise.all([
     product.proteinSource ? fetchSimilar(product.proteinSource, product.id) : [],
-    product.name          ? fetchStorePrices(product.name, product.brand)   : [],
+    fetchStorePrices(product.id),
   ]);
 
   // ── Schema.org ─────────────────────────────────────────────────────────────

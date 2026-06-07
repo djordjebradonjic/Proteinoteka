@@ -92,4 +92,7 @@ public class Product {
 
     @Column(name = "canonical_slug")
     private String canonicalSlug;
+
+    @Column(name = "group_id")
+    private Long groupId;
 }
