@@ -4,6 +4,7 @@ import com.proteinoteka.model.ScrapeLog;
 import com.proteinoteka.model.ScrapeStatus;
 import com.proteinoteka.repository.ScrapeLogRepository;
 import com.proteinoteka.service.AiDescriptionJob;
+import com.proteinoteka.service.DataQualityService;
 import com.proteinoteka.service.ScraperService;
 import com.proteinoteka.service.StoreScraper;
 import lombok.RequiredArgsConstructor;
