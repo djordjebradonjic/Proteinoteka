@@ -28,30 +28,30 @@ export default function ValueScoreBanner() {
   if (!visible) return null;
 
   return (
-    <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
+    <div className="relative mb-4 rounded-xl border border-slate-200 bg-slate-50 px-4 pt-4 pb-4 pr-10">
 
-      {/* Gornji red: badge + naslov + X */}
-      <div className="flex items-center gap-3 mb-3">
+      {/* X — apsolutno gore-desno, ne gura ostali sadržaj */}
+      <button
+        onClick={dismiss}
+        aria-label="Zatvori"
+        className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 transition-colors"
+      >
+        <X className="w-4 h-4" />
+      </button>
+
+      {/* Badge + naslov — uvek u koloni na mobilnom, red na sm+ */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
         <div
-          className="flex items-center gap-2 px-4 py-2 rounded-full text-white shadow-md shrink-0"
+          className="flex items-center gap-2 px-4 py-2 rounded-full text-white shadow-md self-start sm:self-auto shrink-0"
           style={{ backgroundColor: "#4ade80" }}
         >
           <span className="text-base leading-none">⚡</span>
           <span className="text-lg font-black tabular-nums leading-none">8.4</span>
-          <span className="text-sm font-semibold tracking-wide opacity-95 leading-none">
-            Izuzetna
-          </span>
+          <span className="text-sm font-semibold opacity-95 leading-none">Izuzetna</span>
         </div>
-        <p className="flex-1 text-base font-semibold text-slate-700 leading-snug">
+        <p className="text-sm font-semibold text-slate-700 leading-snug">
           Šta predstavlja ova ocena?
         </p>
-        <button
-          onClick={dismiss}
-          aria-label="Zatvori"
-          className="shrink-0 text-slate-400 hover:text-slate-600 transition-colors"
-        >
-          <X className="w-4 h-4" />
-        </button>
       </div>
 
       {/* Opis */}
@@ -59,14 +59,14 @@ export default function ValueScoreBanner() {
         Objektivna i sveobuhvatna ocena proteina, na skali od 1 do 10. Ovih 5 faktora formira ocenu:
       </p>
 
-      {/* Faktori — 2 kolone na mobilnom, red na desktopu */}
+      {/* Faktori — 2 kolone na mobilnom, red na sm+ */}
       <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
         {pillars.map((p) => (
           <div
             key={p.label}
-            className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5"
+            className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5"
           >
-            <span className="text-base">{p.icon}</span>
+            <span className="text-sm">{p.icon}</span>
             <span className="text-sm text-slate-700 font-medium">{p.label}</span>
             <span className="text-sm text-slate-400 ml-auto sm:ml-0">{p.weight}</span>
           </div>
