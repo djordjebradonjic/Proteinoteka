@@ -206,7 +206,7 @@ export default function ProductSection({
     if (pendingGridScroll.current) {
       pendingGridScroll.current = false;
       requestAnimationFrame(() => {
-        const el = document.getElementById("product-grid");
+        const el = document.getElementById("product-list-start");
         if (!el) return;
         const top = el.getBoundingClientRect().top + window.scrollY - 80;
         window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
@@ -281,7 +281,7 @@ export default function ProductSection({
 
       <div className="flex-1 min-w-0 w-full">
         <ValueScoreBanner />
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 gap-2">
+        <div id="product-list-start" className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 gap-2">
           <SortSelect value={sort} onSortChange={(val) => updateFilters("sort", val)} />
           {!loading && totalItems > 0 && (
             <p className="text-sm text-slate-500">
