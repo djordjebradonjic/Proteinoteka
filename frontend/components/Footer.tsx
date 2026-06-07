@@ -64,20 +64,13 @@ const NAV_LINKS = [
 ];
 
 const SEO_GUIDES = [
-  { label: "Protein za početnike",     href: "/vodici/whey-protein-za-pocetnike"   },
-  { label: "Koliko novca za proteine", href: "/vodici/koliko-novca-mesecno-za-proteine" },
-  { label: "Koliko proteina dnevno?",  href: "/vodici/koliko-proteina-dnevno"      },
-  { label: "Da li protein goji?",      href: "/vodici/da-li-protein-goji"          },
-  { label: "Kada piti protein?",       href: "/vodici/kada-piti-protein"           },
-  { label: "Protein za mršavljenje",   href: "/vodici/protein-za-mrsavljenje"      },
-  { label: "Isolate vs Concentrate",   href: "/vodici/whey-isolate-vs-concentrate" },
-  { label: "Najbolji whey protein",    href: "/najbolji-whey-protein-srbija"       },
-  { label: "Whey do 3000 dinara",      href: "/whey-protein-do-3000-dinara"        },
-  { label: "Whey do 5000 dinara",      href: "/whey-protein-do-5000-dinara"        },
-  { label: "Kazein protein",           href: "/kazein-protein-srbija"              },
-  { label: "Biljni protein",           href: "/biljni-protein-srbija"              },
-  { label: "Hidrolizat proteina",      href: "/hidrolizat-protein-srbija"          },
-  { label: "Kako računamo Value Score", href: "/kako-racunamo-value-score"          },
+  { label: "Protein za početnike",     href: "/vodici/whey-protein-za-pocetnike"        },
+  { label: "Koliko proteina dnevno?",  href: "/vodici/koliko-proteina-dnevno"           },
+  { label: "Protein za mršavljenje",   href: "/vodici/protein-za-mrsavljenje"           },
+  { label: "Da li protein goji?",      href: "/vodici/da-li-protein-goji"              },
+  { label: "Kada piti protein?",       href: "/vodici/kada-piti-protein"               },
+  { label: "Isolate vs Concentrate",   href: "/vodici/whey-isolate-vs-concentrate"      },
+  { label: "Svi vodiči →",             href: "/vodici"                                  },
 ];
 
 function ColHeading({ children }: { children: React.ReactNode }) {
@@ -108,10 +101,10 @@ function FooterLink({ href, children }: { href: string; children: React.ReactNod
 export default function Footer() {
   return (
     <footer id="site-footer" style={{ backgroundColor: "#131921" }} className="text-white mt-auto">
-      <div className="max-w-7xl mx-auto px-4 pt-14 pb-6">
+      <div className="max-w-7xl mx-auto px-4 pt-8 sm:pt-14 pb-6">
 
         {/* ── Four-column grid ────────────────────────────────────────── */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-10 pb-10 border-b"
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 pb-10 border-b"
              style={{ borderColor: "rgba(255,255,255,0.08)" }}>
 
           {/* Col 1 — O nama + Prodavnice */}
@@ -219,42 +212,12 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* ── Legal disclosure ─────────────────────────────────────────── */}
-        <div className="py-8 space-y-3 border-b"
-             style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-          <p className="text-xs leading-relaxed max-w-4xl"
-             style={{ color: "rgba(255,255,255,0.30)" }}>
-            Proteinoteka nije prodavnica i ne prodaje proizvode. Prikazane cene i informacije su informativnog karaktera i mogu se razlikovati od cena na sajtu prodavca. Uvek proverite aktuelnu cenu direktno na sajtu prodavnice pre kupovine.
-          </p>
-          <p className="text-xs leading-relaxed max-w-4xl"
-             style={{ color: "rgba(255,255,255,0.30)" }}>
-            Podaci su prikupljeni iz javno dostupnih online prodavnica i automatski ažurirani. Sva prava na brendove i proizvode pripadaju njihovim vlasnicima. Proteinoteka ne garantuje tačnost, potpunost ni ažurnost prikazanih informacija.
-          </p>
-          <p className="text-xs leading-relaxed max-w-4xl"
-             style={{ color: "rgba(255,255,255,0.30)" }}>
-            Neki linkovi mogu biti affiliate linkovi, što znači da možemo ostvariti proviziju bez dodatnog troška za korisnika.
-          </p>
-        </div>
-
         {/* ── Bottom bar ───────────────────────────────────────────────── */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-5">
-          <p className="text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>
-            © {new Date().getFullYear()} Proteinoteka. Sva prava zadržana.
+        <div className="pt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <p className="text-xs leading-relaxed max-w-2xl"
+             style={{ color: "rgba(255,255,255,0.28)" }}>
+            © {new Date().getFullYear()} Proteinoteka. Cene su informativnog karaktera — uvek proverite aktuelnu cenu na sajtu prodavca. Podaci su automatski ažurirani. Neki linkovi mogu biti affiliate.
           </p>
-          <div className="flex items-center gap-4">
-            {[
-              { label: "Politika privatnosti", href: "/privacy-policy" },
-              { label: "Uslovi korišćenja",    href: "/terms-of-use"   },
-            ].map((l) => (
-              <Link key={l.href} href={l.href}
-                    className="text-xs transition-colors duration-150"
-                    style={{ color: "rgba(255,255,255,0.30)" }}
-                    onMouseEnter={(e) => ((e.target as HTMLElement).style.color = "#FF9900")}
-                    onMouseLeave={(e) => ((e.target as HTMLElement).style.color = "rgba(255,255,255,0.30)")}>
-                {l.label}
-              </Link>
-            ))}
-          </div>
         </div>
 
       </div>
