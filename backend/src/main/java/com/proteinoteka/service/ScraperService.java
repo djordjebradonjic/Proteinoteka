@@ -584,12 +584,14 @@ public class ScraperService {
         double confidencePenalty = Math.max(0.84, 1.0 - (missing * 0.04));
 
         // FINAL SCORE
+        // Brand weight raised to 15% (from 10%) to prevent unknown cheap brands from
+        // outranking established, tested brands purely on price.
         double total =
-                (0.40 * valueMoney)    +
+                (0.35 * valueMoney)    +
                         (0.20 * proteinPurity) +
                         (0.15 * digestibility) +
                         (0.15 * ingredients)   +
-                        (0.10 * brandScore);
+                        (0.15 * brandScore);
 
         total *= confidencePenalty;
 
