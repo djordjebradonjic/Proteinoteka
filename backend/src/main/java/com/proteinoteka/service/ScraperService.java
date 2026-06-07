@@ -523,6 +523,10 @@ public class ScraperService {
         double pricePerGramProtein = numericPrice / proteinTotalGrams;
         if (pricePerGramProtein > 50) return null;
         double benchmark = getCategoryBenchmark(p.getProteinSource());
+        // Trusted brands justify a price premium — shift the benchmark up so they aren't penalized
+        // for costing more than no-name locals (9.5 brand = 25% tolerance, 7.0+ = 12%)
+        if (brandScore >= 8.0)      benchmark *= 1.25;
+        else if (brandScore >= 7.0) benchmark *= 1.12;
         double ratio = pricePerGramProtein / benchmark;
 
         double valueMoney = 10.0 / (1.0 + Math.exp(3.5 * (ratio - 1.2)));
