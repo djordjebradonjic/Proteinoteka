@@ -2,6 +2,7 @@ package com.proteinoteka.controller;
 
 import com.proteinoteka.model.ProductGroup;
 import com.proteinoteka.service.ProductGroupService;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -43,8 +44,12 @@ public class ProductGroupController {
     /** Manually create a group from specific product IDs. */
     @PostMapping("/confirm")
     public ResponseEntity<ProductGroup> confirmGroup(@RequestBody ConfirmRequest body) {
-        return ResponseEntity.ok(productGroupService.confirmGroup(body.productIds(), body.canonicalName()));
+        return ResponseEntity.ok(productGroupService.confirmGroup(body.getProductIds(), body.getCanonicalName()));
     }
 
-    record ConfirmRequest(List<Long> productIds, String canonicalName) {}
+    @Data
+    static class ConfirmRequest {
+        private List<Long> productIds;
+        private String canonicalName;
+    }
 }
