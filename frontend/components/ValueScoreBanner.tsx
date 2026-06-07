@@ -28,21 +28,21 @@ export default function ValueScoreBanner() {
   if (!visible) return null;
 
   return (
-    <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+    <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
 
       {/* Gornji red: badge + naslov + X */}
-      <div className="flex items-center gap-3 mb-2">
+      <div className="flex items-center gap-3 mb-3">
         <div
           className="flex items-center gap-2 px-4 py-2 rounded-full text-white shadow-md shrink-0"
           style={{ backgroundColor: "#4ade80" }}
         >
-          <span className="text-sm leading-none">⚡</span>
-          <span className="text-base font-black tabular-nums leading-none">8.4</span>
-          <span className="text-xs font-semibold tracking-wide opacity-95 leading-none">
+          <span className="text-base leading-none">⚡</span>
+          <span className="text-lg font-black tabular-nums leading-none">8.4</span>
+          <span className="text-sm font-semibold tracking-wide opacity-95 leading-none">
             Izuzetna
           </span>
         </div>
-        <p className="flex-1 text-sm font-semibold text-slate-700 leading-snug">
+        <p className="flex-1 text-base font-semibold text-slate-700 leading-snug">
           Šta predstavlja ova ocena?
         </p>
         <button
@@ -55,20 +55,20 @@ export default function ValueScoreBanner() {
       </div>
 
       {/* Opis */}
-      <p className="text-xs text-slate-500 mb-2.5">
+      <p className="text-sm text-slate-500 mb-3">
         Objektivna i sveobuhvatna ocena proteina, na skali od 1 do 10. Ovih 5 faktora formira ocenu:
       </p>
 
-      {/* Faktori — horizontal scroll na mobilnom, wrap na desktopu */}
-      <div className="flex gap-2 overflow-x-auto pb-0.5 sm:flex-wrap sm:overflow-x-visible sm:pb-0 [&::-webkit-scrollbar]:hidden">
+      {/* Faktori — 2 kolone na mobilnom, red na desktopu */}
+      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
         {pillars.map((p) => (
           <div
             key={p.label}
-            className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 shrink-0"
+            className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5"
           >
-            <span className="text-sm">{p.icon}</span>
-            <span className="text-xs text-slate-700 font-medium whitespace-nowrap">{p.label}</span>
-            <span className="text-xs text-slate-400">{p.weight}</span>
+            <span className="text-base">{p.icon}</span>
+            <span className="text-sm text-slate-700 font-medium">{p.label}</span>
+            <span className="text-sm text-slate-400 ml-auto sm:ml-0">{p.weight}</span>
           </div>
         ))}
       </div>
