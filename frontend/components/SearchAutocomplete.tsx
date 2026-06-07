@@ -353,7 +353,7 @@ export default function SearchAutocomplete({
                       if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
                     });
                   } else {
-                    window.location.href = url;
+                    window.location.href = url + "#product-grid";
                   }
                 }}
               >
