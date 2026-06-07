@@ -6,6 +6,7 @@ import GuideToc, { TocSection } from "@/components/GuideToc";
 import GuideDisclaimer from "@/components/GuideDisclaimer";
 import { fetchTopProducts } from "@/lib/seo-data";
 import { Product } from "@/types/product";
+import { productUrl } from "@/lib/productUrl";
 
 export const revalidate = 3600;
 
@@ -315,10 +316,8 @@ export default async function Page() {
                       {concentratesWithPPG.map((p, i) => (
                         <tr key={p.id} className="hover:bg-slate-50 transition-colors">
                           <td className="px-4 py-3">
-                            <a
-                              href={p.productUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                            <Link
+                              href={productUrl(p)}
                               className="font-medium text-slate-800 hover:text-[#FF9900] transition-colors leading-snug block"
                             >
                               {i === 0 && (
@@ -327,7 +326,7 @@ export default async function Page() {
                                 </span>
                               )}
                               {p.name}
-                            </a>
+                            </Link>
                             <span className="text-xs text-slate-400">{p.storeName} · {p.price}</span>
                           </td>
                           <td className="px-4 py-3 text-right font-medium text-slate-700 whitespace-nowrap">

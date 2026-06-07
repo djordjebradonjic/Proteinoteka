@@ -6,6 +6,7 @@ import GuideToc, { TocSection } from "@/components/GuideToc";
 import GuideDisclaimer from "@/components/GuideDisclaimer";
 import { fetchTopProducts } from "@/lib/seo-data";
 import { Product } from "@/types/product";
+import { productUrl } from "@/lib/productUrl";
 
 export const revalidate = 3600;
 
@@ -285,14 +286,12 @@ export default async function Page() {
                     <div className="flex items-start justify-between gap-3 mb-2">
                       <div>
                         <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">{label}</span>
-                        <a
-                          href={p.productUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <Link
+                          href={productUrl(p)}
                           className="block font-semibold text-slate-900 hover:text-[#FF9900] transition-colors text-[14px] leading-snug mt-0.5"
                         >
                           {p.name}
-                        </a>
+                        </Link>
                         <span className="text-xs text-slate-400">{p.storeName} · {p.price}</span>
                       </div>
                       {pricePG && (
