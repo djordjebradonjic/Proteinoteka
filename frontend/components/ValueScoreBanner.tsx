@@ -29,54 +29,50 @@ export default function ValueScoreBanner() {
 
   return (
     <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1 min-w-0">
 
-          {/* Badge + naslov */}
-          <div className="flex items-center gap-3 mb-2">
-            <div
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white shadow-md shrink-0"
-              style={{ backgroundColor: "#86efac" }}
-            >
-              <span className="text-xs leading-none">⚡</span>
-              <span className="text-sm font-black tabular-nums leading-none text-white">8.4</span>
-              <span className="text-[10px] font-semibold tracking-wide opacity-90 leading-none text-white">
-                Izuzetna
-              </span>
-            </div>
-            <p className="text-sm font-semibold text-slate-700">
-              Šta predstavlja ova ocena?
-            </p>
-          </div>
-
-          {/* Opis */}
-          <p className="text-sm text-slate-500 mb-3">
-            Objektivna i sveobuhvatna ocena proteina, na skali od 1 do 10. Ovih 5 faktora formira ocenu:
-          </p>
-
-          {/* Faktori */}
-          <div className="flex flex-wrap gap-2">
-            {pillars.map((p) => (
-              <div
-                key={p.label}
-                className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1"
-              >
-                <span className="text-sm">{p.icon}</span>
-                <span className="text-xs text-slate-700 font-medium">{p.label}</span>
-                <span className="text-xs text-slate-400">{p.weight}</span>
-              </div>
-            ))}
-          </div>
+      {/* Gornji red: badge + naslov + X */}
+      <div className="flex items-center gap-3 mb-2">
+        <div
+          className="flex items-center gap-2 px-4 py-2 rounded-full text-white shadow-md shrink-0"
+          style={{ backgroundColor: "#4ade80" }}
+        >
+          <span className="text-sm leading-none">⚡</span>
+          <span className="text-base font-black tabular-nums leading-none">8.4</span>
+          <span className="text-xs font-semibold tracking-wide opacity-95 leading-none">
+            Izuzetna
+          </span>
         </div>
-
+        <p className="flex-1 text-sm font-semibold text-slate-700 leading-snug">
+          Šta predstavlja ova ocena?
+        </p>
         <button
           onClick={dismiss}
           aria-label="Zatvori"
-          className="shrink-0 mt-0.5 text-slate-400 hover:text-slate-600 transition-colors"
+          className="shrink-0 text-slate-400 hover:text-slate-600 transition-colors"
         >
           <X className="w-4 h-4" />
         </button>
       </div>
+
+      {/* Opis */}
+      <p className="text-xs text-slate-500 mb-2.5">
+        Objektivna i sveobuhvatna ocena proteina, na skali od 1 do 10. Ovih 5 faktora formira ocenu:
+      </p>
+
+      {/* Faktori — horizontal scroll na mobilnom, wrap na desktopu */}
+      <div className="flex gap-2 overflow-x-auto pb-0.5 sm:flex-wrap sm:overflow-x-visible sm:pb-0 [&::-webkit-scrollbar]:hidden">
+        {pillars.map((p) => (
+          <div
+            key={p.label}
+            className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 shrink-0"
+          >
+            <span className="text-sm">{p.icon}</span>
+            <span className="text-xs text-slate-700 font-medium whitespace-nowrap">{p.label}</span>
+            <span className="text-xs text-slate-400">{p.weight}</span>
+          </div>
+        ))}
+      </div>
+
     </div>
   );
 }
