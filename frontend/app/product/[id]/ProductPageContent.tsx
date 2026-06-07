@@ -26,6 +26,7 @@ import { getAlert, hasAlert, loadAlerts, deleteAlert, AlertEntry } from "@/lib/a
 import { getWishlistEmail } from "@/lib/wishlistSync";
 import PriceAlertModal from "@/components/PriceAlertModal";
 import PriceTag from "@/components/PriceTag";
+import ValueScoreCard from "@/components/ValueScoreCard";
 import { formatPrice } from "@/lib/formatPrice";
 
 const PriceHistoryChart = dynamic(() => import("@/components/PriceHistoryChart"), { ssr: false });
@@ -531,15 +532,13 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
 
         {/* ── Score breakdown ────────────────────────────────────────── */}
         {score != null && (
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm mb-6">
-            <h2 className="text-base font-bold text-slate-900 mb-5">Proteinoteka Score — detalji</h2>
-            <div className="space-y-4">
-              <ScoreBar label="Vrednost za novac (40%)"  pct={(score / 10) * 100}      score={`${score.toFixed(1)}/10`} />
-              <ScoreBar label="Čistoća proteina (20%)"   pct={proteinPurityScore * 10} score={`${proteinPurityScore}/10`} />
-              <ScoreBar label="Apsorpcija (15%)"         pct={digestScore * 10}         score={`${digestScore}/10`} />
-              <ScoreBar label="Sastojci/šećer (15%)"     pct={ingredientsScore * 10}    score={`${ingredientsScore.toFixed(1)}/10`} />
-            </div>
-          </div>
+          <ValueScoreCard
+            score={score}
+            product={product}
+            proteinPurityScore={proteinPurityScore}
+            digestScore={digestScore}
+            ingredientsScore={ingredientsScore}
+          />
         )}
 
         {/* ── Nutrition ──────────────────────────────────────────────── */}
