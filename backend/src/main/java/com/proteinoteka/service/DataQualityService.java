@@ -169,6 +169,67 @@ public class DataQualityService {
         return w;
     }
 
+    /**
+     * Detects products with physically impossible or suspicious nutrition values.
+     * Returns a list of human-readable issue strings and logs them as warnings.
+     */
+    public List<String> checkOutliers() {
+        List<String> issues = new ArrayList<>();
+
+        for (Object[] row : repo.findHighProteinOutliers()) {
+            String msg = String.format("PROTEIN_TOO_HIGH — id=%s [%s] '%s' protein=%.1fg/100g (max realistic: 95g)",
+                    row[0], row[1], row[2], ((Number) row[3]).doubleValue());
+            issues.add(msg);
+            log.warn("[DataQuality] {}", msg);
+        }
+
+        for (Object[] row : repo.findLowProteinOutliers()) {
+            String msg = String.format("PROTEIN_TOO_LOW — id=%s [%s] '%s' protein=%.1fg/100g (min expected: 20g)",
+                    row[0], row[1], row[2], ((Number) row[3]).doubleValue());
+            issues.add(msg);
+            log.warn("[DataQuality] {}", msg);
+        }
+
+        for (Object[] row : repo.findCalorieTooLowOutliers()) {
+            String msg = String.format("CALORIE_IMPOSSIBLE — id=%s [%s] '%s' protein=%.1fg but calorie=%.1fkcal (min: protein×4=%.0f)",
+                    row[0], row[1], row[2],
+                    ((Number) row[3]).doubleValue(),
+                    ((Number) row[4]).doubleValue(),
+                    ((Number) row[3]).doubleValue() * 4);
+            issues.add(msg);
+            log.warn("[DataQuality] {}", msg);
+        }
+
+        for (Object[] row : repo.findCalorieTooHighOutliers()) {
+            String msg = String.format("CALORIE_TOO_HIGH — id=%s [%s] '%s' calorie=%.1fkcal/100g (max expected: 600)",
+                    row[0], row[1], row[2], ((Number) row[3]).doubleValue());
+            issues.add(msg);
+            log.warn("[DataQuality] {}", msg);
+        }
+
+        for (Object[] row : repo.findHighFatOutliers()) {
+            String msg = String.format("FAT_TOO_HIGH — id=%s [%s] '%s' fat=%.1fg/100g (max expected: 50g)",
+                    row[0], row[1], row[2], ((Number) row[3]).doubleValue());
+            issues.add(msg);
+            log.warn("[DataQuality] {}", msg);
+        }
+
+        for (Object[] row : repo.findHighSugarOutliers()) {
+            String msg = String.format("SUGAR_TOO_HIGH — id=%s [%s] '%s' sugar=%.1fg/100g (max expected: 30g)",
+                    row[0], row[1], row[2], ((Number) row[3]).doubleValue());
+            issues.add(msg);
+            log.warn("[DataQuality] {}", msg);
+        }
+
+        if (issues.isEmpty()) {
+            log.info("[DataQuality] Outlier check passed — no suspicious values found.");
+        } else {
+            log.warn("[DataQuality] Outlier check found {} issue(s). Review and fix manually or wait for next scrape.", issues.size());
+        }
+
+        return issues;
+    }
+
     private double pct(int part, int total) {
         if (total == 0) return 0;
         return Math.round(part * 1000.0 / total) / 10.0;

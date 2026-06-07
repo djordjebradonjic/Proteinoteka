@@ -47,6 +47,7 @@ public class AdminController {
     private final MetricsCollectorService metricsCollector;
     private final DecisionRulesEngine rulesEngine;
     private final AiNutritionService aiNutritionService;
+    private final com.proteinoteka.service.DataQualityService dataQualityService;
 
 
     // All scrape endpoints run in a background thread and return 202 immediately.
@@ -239,6 +240,13 @@ public class AdminController {
             if (cache != null) cache.clear();
         });
         return ResponseEntity.ok("Updated " + updated + " products");
+    }
+
+    @GetMapping("/data-quality")
+    public ResponseEntity<Map<String, Object>> dataQuality() {
+        var report = dataQualityService.generateReport();
+        var outliers = dataQualityService.checkOutliers();
+        return ResponseEntity.ok(Map.of("report", report, "outliers", outliers));
     }
 
     @PostMapping("/enrich-nutrition")

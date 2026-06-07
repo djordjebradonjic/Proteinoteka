@@ -83,4 +83,56 @@ public interface DataQualityRepository extends JpaRepository<Product, Long> {
     LIMIT 20
     """, nativeQuery = true)
     List<Object[]> findTopDuplicates();
-    }
+
+    // ── Outlier detection ────────────────────────────────────────────────────
+
+    @Query(value = """
+        SELECT p.id, s.name AS store, p.name, p.protein_per_100g
+        FROM products p JOIN stores s ON p.store_id = s.id
+        WHERE p.protein_per_100g > 95
+        ORDER BY p.protein_per_100g DESC
+        """, nativeQuery = true)
+    List<Object[]> findHighProteinOutliers();
+
+    @Query(value = """
+        SELECT p.id, s.name AS store, p.name, p.protein_per_100g
+        FROM products p JOIN stores s ON p.store_id = s.id
+        WHERE p.protein_per_100g < 20
+        ORDER BY p.protein_per_100g
+        """, nativeQuery = true)
+    List<Object[]> findLowProteinOutliers();
+
+    @Query(value = """
+        SELECT p.id, s.name AS store, p.name, p.protein_per_100g, p.calorie_per_100g
+        FROM products p JOIN stores s ON p.store_id = s.id
+        WHERE p.calorie_per_100g IS NOT NULL
+          AND p.protein_per_100g IS NOT NULL
+          AND p.calorie_per_100g < p.protein_per_100g * 4
+        ORDER BY p.calorie_per_100g
+        """, nativeQuery = true)
+    List<Object[]> findCalorieTooLowOutliers();
+
+    @Query(value = """
+        SELECT p.id, s.name AS store, p.name, p.calorie_per_100g
+        FROM products p JOIN stores s ON p.store_id = s.id
+        WHERE p.calorie_per_100g > 600
+        ORDER BY p.calorie_per_100g DESC
+        """, nativeQuery = true)
+    List<Object[]> findCalorieTooHighOutliers();
+
+    @Query(value = """
+        SELECT p.id, s.name AS store, p.name, p.fat_per_100g
+        FROM products p JOIN stores s ON p.store_id = s.id
+        WHERE p.fat_per_100g > 50
+        ORDER BY p.fat_per_100g DESC
+        """, nativeQuery = true)
+    List<Object[]> findHighFatOutliers();
+
+    @Query(value = """
+        SELECT p.id, s.name AS store, p.name, p.sugar_per_100g
+        FROM products p JOIN stores s ON p.store_id = s.id
+        WHERE p.sugar_per_100g > 30
+        ORDER BY p.sugar_per_100g DESC
+        """, nativeQuery = true)
+    List<Object[]> findHighSugarOutliers();
+}

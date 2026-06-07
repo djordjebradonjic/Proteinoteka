@@ -51,6 +51,7 @@ public class ScrapingSchedulerService {
     private final TaskScheduler taskScheduler;
     private final CacheManager cacheManager;
     private final AiDescriptionJob aiDescriptionJob;
+    private final DataQualityService dataQualityService;
 
     @Value("${scraping.schedule.enabled:true}")
     private boolean schedulingEnabled;
@@ -172,6 +173,7 @@ public class ScrapingSchedulerService {
                 evictProductCaches();
                 aiDescriptionJob.enrichAllMissingDescriptions();
                 triggerFrontendRevalidation();
+                dataQualityService.checkOutliers();
             }
 
         } catch (Exception e) {
