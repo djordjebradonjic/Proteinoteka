@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Metadata } from "next";
+import Link from "next/link";
 import HomeContent from "@/components/HomeContent";
 import { CATEGORIES, getCategoryBySlug } from "@/lib/categories";
 import { CATEGORY_CONTENT } from "@/lib/category-content";
@@ -135,15 +136,33 @@ export default async function KategorijaPage({ params }: Props) {
   ) : null;
 
   const categoryFaq = content ? (
-    <div className="max-w-7xl mx-auto px-4 pb-10">
-      <h2 className="text-xl font-extrabold text-slate-900 mb-4">Česta pitanja</h2>
-      <div className="space-y-3">
-        {content.faqs.map((faq, i) => (
-          <div key={i} className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-            <h3 className="font-bold text-slate-900 text-sm mb-2">{faq.q}</h3>
-            <p className="text-sm text-slate-600 leading-relaxed">{faq.a}</p>
+    <div className="max-w-7xl mx-auto px-4 pb-10 space-y-8">
+      {content.guides && content.guides.length > 0 && (
+        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+          <h2 className="text-base font-bold text-slate-800 mb-3">Relevantni vodiči</h2>
+          <div className="flex flex-wrap gap-2">
+            {content.guides.map(guide => (
+              <Link
+                key={guide.href}
+                href={guide.href}
+                className="px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-all"
+              >
+                {guide.label}
+              </Link>
+            ))}
           </div>
-        ))}
+        </div>
+      )}
+      <div>
+        <h2 className="text-xl font-extrabold text-slate-900 mb-4">Česta pitanja</h2>
+        <div className="space-y-3">
+          {content.faqs.map((faq, i) => (
+            <div key={i} className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+              <h3 className="font-bold text-slate-900 text-sm mb-2">{faq.q}</h3>
+              <p className="text-sm text-slate-600 leading-relaxed">{faq.a}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   ) : null;

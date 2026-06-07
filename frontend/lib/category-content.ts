@@ -1,6 +1,7 @@
 export interface CategoryContent {
   h1: string;
   intro: string;
+  guides?: { href: string; label: string }[];
   faqs: { q: string; a: string }[];
 }
 
@@ -9,6 +10,13 @@ export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
     h1: "Whey Concentrate Proteini — Cene u Srbiji 2026",
     intro:
       "Whey concentrate je najpopularniji tip proteinskog suplementa — visok sadržaj proteina (70–80g/100g), dobar ukus i pristupačna cena čine ga prvim izborom za većinu rekreativaca i sportista. Proteinoteka poredi cene iz svih srpskih prodavnica i računa realnu vrednost: RSD po gramu proteina.",
+    guides: [
+      { href: "/vodici/whey-protein-za-pocetnike",        label: "📖 Vodič za početnike" },
+      { href: "/vodici/koliko-proteina-dnevno",           label: "📊 Koliko proteina dnevno?" },
+      { href: "/vodici/whey-isolate-vs-concentrate",      label: "⚗️ Isolate vs Concentrate" },
+      { href: "/vodici/kada-piti-protein",                label: "⏰ Kada piti protein" },
+      { href: "/vodici/koliko-novca-mesecno-za-proteine", label: "💸 Mesečni trošak proteina" },
+    ],
     faqs: [
       {
         q: "Šta je whey concentrate i od čega se pravi?",
@@ -33,6 +41,13 @@ export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
     h1: "Whey Isolate Proteini — Cene u Srbiji 2026",
     intro:
       "Whey isolate prolazi kroz dodatnu filtraciju koja uklanja većinu masti i laktoze, rezultujući u 85–95g proteina na 100g. Idealan je za osobe sa intolerancijom na laktozu, periode definicije ili svakoga ko želi maksimalnu čistoću. Poredimo cene iz svih srpskih prodavnica.",
+    guides: [
+      { href: "/vodici/whey-isolate-vs-concentrate",      label: "⚗️ Isolate vs Concentrate" },
+      { href: "/vodici/protein-za-mrsavljenje",           label: "🔥 Protein za mršavljenje" },
+      { href: "/vodici/koliko-proteina-dnevno",           label: "📊 Koliko proteina dnevno?" },
+      { href: "/vodici/kada-piti-protein",                label: "⏰ Kada piti protein" },
+      { href: "/vodici/koliko-novca-mesecno-za-proteine", label: "💸 Mesečni trošak" },
+    ],
     faqs: [
       {
         q: "Koja je razlika između whey isolate i concentrate?",
@@ -57,6 +72,12 @@ export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
     h1: "Hidrolizat Proteina — Cene u Srbiji 2026",
     intro:
       "Hidrolizovani whey protein prolazi kroz enzimsku razgradnju koja deli proteinske lance na manje peptide. Rezultat je najbrža apsorpcija od svih vrsta proteina. Premium segment — idealan za intenzivan post-workout oporavak. Poredimo sve hidrolizate dostupne u Srbiji.",
+    guides: [
+      { href: "/vodici/kada-piti-protein",                label: "⏰ Kada piti protein" },
+      { href: "/vodici/whey-isolate-vs-concentrate",      label: "⚗️ Isolate vs Concentrate" },
+      { href: "/vodici/koliko-proteina-dnevno",           label: "📊 Koliko proteina dnevno?" },
+      { href: "/vodici/koliko-novca-mesecno-za-proteine", label: "💸 Mesečni trošak proteina" },
+    ],
     faqs: [
       {
         q: "Šta je hidrolizat proteina i po čemu se razlikuje od isolate-a?",
@@ -81,6 +102,12 @@ export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
     h1: "Kazein Protein — Cene u Srbiji 2026",
     intro:
       "Kazein je mlečni protein koji se polako vari — 5 do 7 sati. Za razliku od whey proteina, kazein oslobađa aminokiseline postepeno, što ga čini idealnim za unos pre spavanja ili u periodima dužeg posta između obroka. Poredimo cene kazeina iz srpskih prodavnica.",
+    guides: [
+      { href: "/vodici/kada-piti-protein",                label: "⏰ Kada piti protein" },
+      { href: "/vodici/koliko-proteina-dnevno",           label: "📊 Koliko proteina dnevno?" },
+      { href: "/vodici/da-li-protein-goji",               label: "🔬 Da li protein goji?" },
+      { href: "/vodici/koliko-novca-mesecno-za-proteine", label: "💸 Mesečni trošak proteina" },
+    ],
     faqs: [
       {
         q: "Zašto se kazein uzima pre spavanja?",
@@ -105,6 +132,13 @@ export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
     h1: "Biljni Proteini — Cene u Srbiji 2026",
     intro:
       "Biljni proteini su idealna opcija za vegane, vegetarijance i sve koji žele da izbegnu mlečne derivate. Najčešće baze su grašak, soja, pirinač i konoplja. Sa 65–80g proteina na 100g i sve boljim ukusom, moderan biljni protein je ravnopravan izbor u odnosu na whey. Poredimo sve dostupne opcije u Srbiji.",
+    guides: [
+      { href: "/biljni-protein-srbija",                   label: "🌱 Vodič: Biljni proteini u Srbiji" },
+      { href: "/vodici/koliko-proteina-dnevno",           label: "📊 Koliko proteina dnevno?" },
+      { href: "/vodici/da-li-protein-goji",               label: "🔬 Da li protein goji?" },
+      { href: "/vodici/protein-za-mrsavljenje",           label: "🔥 Protein za mršavljenje" },
+      { href: "/vodici/koliko-novca-mesecno-za-proteine", label: "💸 Mesečni trošak proteina" },
+    ],
     faqs: [
       {
         q: "Koji biljni protein ima kompletan aminokiselinski profil?",
@@ -129,6 +163,12 @@ export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
     h1: "Protein Blend — Cene u Srbiji 2026",
     intro:
       "Protein blend kombinuje više izvora proteina — najčešće whey concentrate, isolate i kazein. Rezultat je slojevitija apsorpcija: whey daje brzu dozu aminokiselina, kazein produžava efekat satima. Dobar kompromis za svakodnevnu upotrebu. Poredimo sve blend proteine dostupne u Srbiji.",
+    guides: [
+      { href: "/vodici/koliko-proteina-dnevno",           label: "📊 Koliko proteina dnevno?" },
+      { href: "/vodici/kada-piti-protein",                label: "⏰ Kada piti protein" },
+      { href: "/vodici/whey-isolate-vs-concentrate",      label: "⚗️ Isolate vs Concentrate" },
+      { href: "/vodici/koliko-novca-mesecno-za-proteine", label: "💸 Mesečni trošak proteina" },
+    ],
     faqs: [
       {
         q: "Šta je protein blend i zašto se koristi?",

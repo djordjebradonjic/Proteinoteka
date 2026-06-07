@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import VodiciNav from "@/components/VodiciNav";
 import GuideToc, { TocSection } from "@/components/GuideToc";
 import GuideDisclaimer from "@/components/GuideDisclaimer";
+import ProteinCalculator from "@/components/ProteinCalculator";
 
 export const metadata: Metadata = {
   title: { absolute: "Koliko proteina dnevno? Tačan broj za tvoju težinu | Proteinoteka" },
@@ -126,6 +127,8 @@ export default function Page() {
           </p>
 
           <GuideToc sections={tocSections} />
+
+          <ProteinCalculator />
 
           {/* Section 1 */}
           <section className="mb-10">
