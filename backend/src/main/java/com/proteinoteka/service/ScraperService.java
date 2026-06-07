@@ -430,13 +430,15 @@ public class ScraperService {
             Double oldNumericPrice = existing.getNumericPrice();
 
             String oldPrice = existing.getPrice();
-            if (oldPrice != null && !oldPrice.equals(scraped.getPrice())) {
-                log.info("[{}] Price change for '{}': {} -> {}",
-                        store.getName(), existing.getName(), oldPrice, scraped.getPrice());
+            if (oldNumericPrice != null && numericPrice != null
+                    && Math.abs(oldNumericPrice - numericPrice) > 0.01) {
+                log.info("[{}] Price change for '{}': {} -> {} RSD",
+                        store.getName(), existing.getName(),
+                        Math.round(oldNumericPrice), Math.round(numericPrice));
                 PriceHistory history = new PriceHistory();
                 history.setProduct(existing);
                 history.setPrice(oldPrice);
-                history.setNumericPrice(priceParser.parse(oldPrice));
+                history.setNumericPrice(oldNumericPrice);
                 history.setTimestamp(LocalDateTime.now());
                 priceHistoryRepository.save(history);
             }
