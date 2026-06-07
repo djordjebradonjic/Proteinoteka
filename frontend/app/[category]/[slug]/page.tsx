@@ -23,7 +23,7 @@ interface Params { params: Promise<{ category: string; slug: string }> }
 
 async function fetchProduct(id: number): Promise<Product | null> {
   try {
-    const res = await fetch(`${API}/api/v1/products/${id}`, { next: { revalidate: 86400 } });
+    const res = await fetch(`${API}/api/v1/products/${id}`, { next: { revalidate: 86400, tags: ["products"] } });
     if (!res.ok) return null;
     return res.json();
   } catch { return null; }
@@ -31,7 +31,7 @@ async function fetchProduct(id: number): Promise<Product | null> {
 
 async function fetchSimilar(category: string, excludeId: number): Promise<Product[]> {
   try {
-    const res = await fetch(`${API}/api/v1/products?category=${category}&size=7`, { next: { revalidate: 3600 } });
+    const res = await fetch(`${API}/api/v1/products?category=${category}&size=7`, { next: { revalidate: 3600, tags: ["products"] } });
     if (!res.ok) return [];
     const data = await res.json();
     return (data.content as Product[]).filter((p) => p.id !== excludeId).slice(0, 6);
@@ -42,7 +42,7 @@ async function fetchStorePrices(name: string, brand: string | null): Promise<Sto
   try {
     const params = new URLSearchParams({ name });
     if (brand) params.set("brand", brand);
-    const res = await fetch(`${API}/api/v1/products/by-name?${params}`, { next: { revalidate: 3600 } });
+    const res = await fetch(`${API}/api/v1/products/by-name?${params}`, { next: { revalidate: 3600, tags: ["products"] } });
     if (!res.ok) return [];
     return res.json();
   } catch { return []; }

@@ -55,6 +55,12 @@ public class ScrapingSchedulerService {
     @Value("${scraping.schedule.enabled:true}")
     private boolean schedulingEnabled;
 
+    @Value("${app.frontend-url:https://proteinoteka.rs}")
+    private String frontendUrl;
+
+    @Value("${admin.token:}")
+    private String adminToken;
+
     // ── Called by ScrapingScheduler every morning at 06:50 ──────────────────
 
     public void runDailyCheck() {
@@ -165,6 +171,7 @@ public class ScrapingSchedulerService {
             if (entry.getStatus() == ScrapeStatus.SUCCESS) {
                 evictProductCaches();
                 aiDescriptionJob.enrichAllMissingDescriptions();
+                triggerFrontendRevalidation();
             }
 
         } catch (Exception e) {
@@ -179,6 +186,26 @@ public class ScrapingSchedulerService {
         }
 
         return entry;
+    }
+
+    private void triggerFrontendRevalidation() {
+        if (adminToken.isBlank()) {
+            log.warn("[Scheduler] ADMIN_TOKEN not set — skipping frontend revalidation");
+            return;
+        }
+        try {
+            var client = java.net.http.HttpClient.newHttpClient();
+            var request = java.net.http.HttpRequest.newBuilder()
+                    .uri(java.net.URI.create(frontendUrl + "/api/revalidate"))
+                    .header("Authorization", "Bearer " + adminToken)
+                    .header("Content-Type", "application/json")
+                    .POST(java.net.http.HttpRequest.BodyPublishers.noBody())
+                    .build();
+            var response = client.send(request, java.net.http.HttpResponse.BodyHandlers.ofString());
+            log.info("[Scheduler] Frontend revalidation: HTTP {} — {}", response.statusCode(), response.body());
+        } catch (Exception e) {
+            log.warn("[Scheduler] Frontend revalidation failed: {}", e.getMessage());
+        }
     }
 
     private void evictProductCaches() {
