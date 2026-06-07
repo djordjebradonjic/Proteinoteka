@@ -289,10 +289,9 @@ public class OgistraScraper implements StoreScraper {
                     || (label.contains("ugljeni hidrati") && label.contains("šećer"))) {
                 if (rounded <= 100) p.setSugarPer100g(rounded);
             }
-            // Calories
-            else if (label.contains("energetska") || label.contains("kalorij")
+            // Calories — "Energija" / "energetska vrednost" / "kcal" / "energy"
+            else if (label.contains("energij") || label.contains("energetska") || label.contains("kalorij")
                     || label.contains("kcal") || label.contains("energy")) {
-                // For calories don't scale — use raw value as approx per serving
                 p.setCaloriePer100g((value / servingSizeGrams) * 100.0);
             }
         }
@@ -347,8 +346,8 @@ public class OgistraScraper implements StoreScraper {
                     || (label.contains("ugljeni hidrati") && label.contains("šećer"))) {
                 if (value <= 100) p.setSugarPer100g(value);
             }
-            // Calories
-            else if (label.contains("energetska") || label.contains("kalorij")
+            // Calories — "Energija" / "energetska vrednost" / "kcal" / "energy"
+            else if (label.contains("energij") || label.contains("energetska") || label.contains("kalorij")
                     || label.contains("kcal") || label.contains("energy")) {
                 String rawCell = cells.get(per100gCol).text();
                 java.util.regex.Matcher kcalM = java.util.regex.Pattern
