@@ -102,7 +102,7 @@ export default async function Page() {
     {
       "@context": "https://schema.org",
       "@type": "Article",
-      headline: "Protein za mršavljenje u Srbiji — koji tip pomaže i šta košta",
+      headline: "Protein za mršavljenje u Srbiji — koji tip pomaže i koliko košta",
       datePublished: "2026-05-28",
       dateModified: new Date().toISOString().split("T")[0],
       author: { "@type": "Organization", name: "Proteinoteka", url: BASE },
@@ -148,7 +148,7 @@ export default async function Page() {
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 leading-tight mb-4">
-              Protein za mršavljenje u Srbiji — koji tip stvarno pomaže i šta košta
+              Protein za mršavljenje u Srbiji — koji tip stvarno pomaže i koliko košta
             </h1>
             <div className="flex items-center gap-3 text-sm text-slate-400">
               <span>8 min čitanja</span>

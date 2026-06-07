@@ -12,7 +12,7 @@ const GUIDES = [
   },
   {
     slug: "protein-za-mrsavljenje",
-    title: "Protein za mršavljenje — koji tip pomaže i šta košta",
+    title: "Protein za mršavljenje — koji tip pomaže i koliko košta",
     readMin: 8,
   },
   {

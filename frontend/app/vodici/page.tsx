@@ -33,7 +33,7 @@ const ARTICLES = [
   },
   {
     href: "/vodici/protein-za-mrsavljenje",
-    title: "Protein za mršavljenje u Srbiji — koji tip stvarno pomaže i šta košta",
+    title: "Protein za mršavljenje u Srbiji — koji tip stvarno pomaže i koliko košta",
     excerpt: "Whey izolat, concentrate ili biljni protein? Aktuelne cene i konkretna računica koliko košta mesec dana suplementacije.",
     readMin: 8,
   },
