@@ -61,7 +61,7 @@ export default function PriceHistoryChart({ data }: { data: ChartPoint[] }) {
         />
 
         <Area
-          type="stepAfter"
+          type="linear"
           dataKey="cena"
           stroke="#FF9900"
           strokeWidth={2.5}
