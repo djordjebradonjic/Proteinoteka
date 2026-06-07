@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { analytics } from "@/lib/analytics";
 import { productUrl } from "@/lib/productUrl";
+import { navigateTo } from "@/lib/navigation";
 import PriceTag from "@/components/PriceTag";
 
 interface ProductSuggestion {
@@ -342,7 +343,19 @@ export default function SearchAutocomplete({
               <button
                 type="button"
                 className="text-xs font-semibold text-[#FF9900] hover:underline"
-                onClick={() => setOpen(false)}
+                onClick={() => {
+                  setOpen(false);
+                  const url = `/?query=${encodeURIComponent(query.trim())}`;
+                  if (window.location.pathname === "/") {
+                    navigateTo(url);
+                    requestAnimationFrame(() => {
+                      const el = document.getElementById("product-grid");
+                      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                    });
+                  } else {
+                    window.location.href = url;
+                  }
+                }}
               >
                 Prikaži sve →
               </button>
