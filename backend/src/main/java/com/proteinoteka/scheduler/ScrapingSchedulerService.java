@@ -42,7 +42,7 @@ public class ScrapingSchedulerService {
         4, List.of(new ScrapeWindow(List.of("Pansport", "FitLab"),        9, 12)),
         // 5 = REST
         6, List.of(new ScrapeWindow(List.of("Proteinbox", "Proteini.si"), 14, 17))
-        // 7, 8, 9 = REST — each store scraped once per 9-day cycle (~weekly)
+        // 7, 8 = REST — each store scraped once per 8-day cycle (~weekly)
     );
 
     private final ScraperService scraperService;
@@ -64,7 +64,7 @@ public class ScrapingSchedulerService {
         }
 
         int cycleDay = currentCycleDay();
-        log.info("[Scheduler] Daily check — cycle day {}/9", cycleDay);
+        log.info("[Scheduler] Daily check — cycle day {}/8", cycleDay);
 
         List<ScrapeWindow> windows = SCHEDULE.getOrDefault(cycleDay, List.of());
         if (windows.isEmpty()) {
@@ -198,7 +198,7 @@ public class ScrapingSchedulerService {
 
     public int currentCycleDay() {
         long days = ChronoUnit.DAYS.between(CYCLE_EPOCH, LocalDate.now(BELGRADE));
-        return (int)(days % 9) + 1; // 1–9
+        return (int)(days % 8) + 1; // 1–8
     }
 
     private LocalTime randomTimeInWindow(int fromHour, int toHour) {
@@ -208,8 +208,8 @@ public class ScrapingSchedulerService {
     }
 
     private String computeNextScheduledTime(String storeName, int todayCycleDay) {
-        for (int offset = 0; offset < 9; offset++) {
-            int checkDay = (todayCycleDay - 1 + offset) % 9 + 1;
+        for (int offset = 0; offset < 8; offset++) {
+            int checkDay = (todayCycleDay - 1 + offset) % 8 + 1;
             List<ScrapeWindow> windows = SCHEDULE.getOrDefault(checkDay, List.of());
             for (ScrapeWindow w : windows) {
                 if (w.stores().stream().anyMatch(s -> s.equalsIgnoreCase(storeName))) {
