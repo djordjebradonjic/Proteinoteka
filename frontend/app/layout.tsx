@@ -122,6 +122,8 @@ export default function RootLayout({
               gtag('consent', 'default', {
                 analytics_storage: _c === 'accepted' ? 'granted' : 'denied',
                 ad_storage: 'denied',
+                ad_user_data: 'denied',
+                ad_personalization: 'denied',
               });
               gtag('js', new Date());
               gtag('config', 'G-JR077S64MV');

@@ -17,7 +17,12 @@ export default function CookieBanner() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (typeof window !== "undefined" && (window as any).gtag) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (window as any).gtag("consent", "update", { analytics_storage: "denied" });
+        (window as any).gtag("consent", "update", {
+          analytics_storage: "denied",
+          ad_storage: "denied",
+          ad_user_data: "denied",
+          ad_personalization: "denied",
+        });
       }
       setVisible(true);
     };
@@ -31,7 +36,12 @@ export default function CookieBanner() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (typeof window !== "undefined" && (window as any).gtag) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (window as any).gtag("consent", "update", { analytics_storage: "granted" });
+      (window as any).gtag("consent", "update", {
+        analytics_storage: "granted",
+        ad_storage: "denied",
+        ad_user_data: "denied",
+        ad_personalization: "denied",
+      });
     }
     setVisible(false);
   };
