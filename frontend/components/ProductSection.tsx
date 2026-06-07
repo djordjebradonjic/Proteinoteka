@@ -9,6 +9,7 @@ import ProductGrid from "./ProductGrid";
 import { X } from "lucide-react";
 import { getCategoryByValue } from "@/lib/categories";
 import RelatedGuides from "@/components/RelatedGuides";
+import ValueScoreBanner from "@/components/ValueScoreBanner";
 
 interface Props {
   initialProducts: Product[];
@@ -279,6 +280,7 @@ export default function ProductSection({
       />
 
       <div className="flex-1 min-w-0 w-full">
+        <ValueScoreBanner />
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 gap-2">
           <SortSelect value={sort} onSortChange={(val) => updateFilters("sort", val)} />
           {!loading && totalItems > 0 && (
