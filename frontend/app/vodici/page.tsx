@@ -99,6 +99,21 @@ const SEO_PAGES = [
     title: "Whey protein do 5000 dinara",
     excerpt: "Pregled whey proteina do 5000 RSD — uključujući i kvalitetne izolate.",
   },
+  {
+    href: "/biljni-protein-srbija",
+    title: "Biljni protein u Srbiji 2026",
+    excerpt: "Grašak, soja, pirinač — poredimo sve biljne proteine sa aktuelnim cenama i objašnjenjem aminokiselinskog profila.",
+  },
+  {
+    href: "/kazein-protein-srbija",
+    title: "Kazein protein u Srbiji",
+    excerpt: "Sporo-apsorpujući protein za noćni oporavak — sve dostupne opcije iz srpskih prodavnica.",
+  },
+  {
+    href: "/hidrolizat-protein-srbija",
+    title: "Hidrolizat proteina u Srbiji",
+    excerpt: "Najbrža apsorpcija od svih vrsta proteina — premium segment sa aktuelnim cenama.",
+  },
 ];
 
 const INFO_PAGES = [
