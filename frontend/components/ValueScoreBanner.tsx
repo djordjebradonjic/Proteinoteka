@@ -28,9 +28,9 @@ export default function ValueScoreBanner() {
   if (!visible) return null;
 
   return (
-    <div className="relative mb-4 rounded-xl border border-slate-200 bg-slate-50 px-4 pt-4 pb-4 pr-10">
+    <div className="relative mb-4 rounded-xl border border-slate-200 bg-slate-50 px-4 pt-4 pb-3 pr-9">
 
-      {/* X — apsolutno gore-desno, ne gura ostali sadržaj */}
+      {/* X — apsolutno gore-desno */}
       <button
         onClick={dismiss}
         aria-label="Zatvori"
@@ -39,15 +39,15 @@ export default function ValueScoreBanner() {
         <X className="w-4 h-4" />
       </button>
 
-      {/* Badge + naslov — uvek u koloni na mobilnom, red na sm+ */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+      {/* Badge + naslov */}
+      <div className="flex items-center gap-2.5 mb-2">
         <div
-          className="flex items-center gap-2 px-4 py-2 rounded-full text-white shadow-md self-start sm:self-auto shrink-0"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white shadow-sm shrink-0"
           style={{ backgroundColor: "#4ade80" }}
         >
-          <span className="text-base leading-none">⚡</span>
-          <span className="text-lg font-black tabular-nums leading-none">8.4</span>
-          <span className="text-sm font-semibold opacity-95 leading-none">Izuzetna</span>
+          <span className="text-sm leading-none">⚡</span>
+          <span className="text-base font-black tabular-nums leading-none">8.4</span>
+          <span className="text-xs font-semibold opacity-95 leading-none">Izuzetna</span>
         </div>
         <p className="text-sm font-semibold text-slate-700 leading-snug">
           Šta predstavlja ova ocena?
@@ -55,20 +55,20 @@ export default function ValueScoreBanner() {
       </div>
 
       {/* Opis */}
-      <p className="text-sm text-slate-500 mb-3">
-        Objektivna i sveobuhvatna ocena proteina, na skali od 1 do 10. Ovih 5 faktora formira ocenu:
+      <p className="text-xs text-slate-500 mb-2">
+        Objektivna ocena proteina 1–10. Ovih 5 faktora formira ocenu:
       </p>
 
-      {/* Faktori — 2 kolone na mobilnom, red na sm+ */}
-      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+      {/* Faktori — vertikalni kompaktni list na mobilnom, flex red na sm+ */}
+      <div className="flex flex-col gap-0.5 sm:flex-row sm:flex-wrap sm:gap-2">
         {pillars.map((p) => (
           <div
             key={p.label}
-            className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5"
+            className="flex items-center gap-2 py-1 sm:rounded-full sm:border sm:border-slate-200 sm:bg-white sm:px-3 sm:py-1.5"
           >
-            <span className="text-sm">{p.icon}</span>
+            <span className="text-sm w-5 shrink-0">{p.icon}</span>
             <span className="text-sm text-slate-700 font-medium">{p.label}</span>
-            <span className="text-sm text-slate-400 ml-auto sm:ml-0">{p.weight}</span>
+            <span className="text-xs text-slate-400 ml-auto sm:ml-0">{p.weight}</span>
           </div>
         ))}
       </div>
