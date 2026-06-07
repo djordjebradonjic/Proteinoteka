@@ -87,6 +87,19 @@ public class SupplementShopScraper implements StoreScraper {
     }
 
     @Override
+    public void waitForListing(Page page) {
+        // WoodMart AJAX shop loads products asynchronously — wait for them to appear
+        try {
+            page.waitForSelector("div.wd-product",
+                    new Page.WaitForSelectorOptions().setTimeout(12000));
+            page.waitForTimeout(1000);
+        } catch (Exception e) {
+            log.warn("[{}] wd-product not found after 12s — page may still be loading: {}",
+                    STORE_NAME, page.url());
+        }
+    }
+
+    @Override
     public List<Product> scrape(Page page, Document doc) {
         List<Product> products = new ArrayList<>();
 

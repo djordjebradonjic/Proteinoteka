@@ -350,16 +350,14 @@ public class OgistraScraper implements StoreScraper {
             // Calories
             else if (label.contains("energetska") || label.contains("kalorij")
                     || label.contains("kcal") || label.contains("energy")) {
-                String rawCell = cells.get(1).text();
-                // Extract kcal value specifically
+                String rawCell = cells.get(per100gCol).text();
                 java.util.regex.Matcher kcalM = java.util.regex.Pattern
                         .compile("(\\d+[.,]?\\d*)\\s*kcal", java.util.regex.Pattern.CASE_INSENSITIVE)
                         .matcher(rawCell);
                 if (kcalM.find()) {
                     try {
                         double kcal = Double.parseDouble(kcalM.group(1).replace(",", "."));
-                        double per100g = Math.round((kcal / 28 * 100) * 10.0) / 10.0;
-                        p.setCaloriePer100g(per100g);
+                        p.setCaloriePer100g(kcal);
                     } catch (Exception ignored) {
                     }
                 }

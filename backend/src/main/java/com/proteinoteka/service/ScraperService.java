@@ -199,13 +199,18 @@ public class ScraperService {
                         }
 
                         if (isBlockedByFirewall(page)) {
-                            log.error("[{}] FIREWALL DETECTED! Stopping scraper.", scraper.getStoreName());
-                            wasBlocked = true;
-                            break;
+                            log.warn("[{}] FIREWALL DETECTED on listing page — giving scraper waitForListing a chance to recover.", scraper.getStoreName());
+                            scraper.waitForListing(page);
+                            if (isBlockedByFirewall(page)) {
+                                log.error("[{}] FIREWALL persists after waitForListing. Stopping scraper.", scraper.getStoreName());
+                                wasBlocked = true;
+                                break;
+                            }
+                            log.info("[{}] Firewall bypassed via waitForListing fallback.", scraper.getStoreName());
+                        } else {
+                            simulateHumanScroll(page);
+                            scraper.waitForListing(page);
                         }
-
-                        simulateHumanScroll(page);
-                        scraper.waitForListing(page);
 
                         Document doc = Jsoup.parse(page.content());
                         List<Product> pageProducts = scraper.scrape(page, doc);
