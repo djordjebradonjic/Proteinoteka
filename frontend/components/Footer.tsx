@@ -2,33 +2,6 @@
 
 import Link from "next/link";
 
-const Logo = () => (
-  <svg
-    width="180"
-    height="46"
-    viewBox="0 0 690 210"
-    role="img"
-    aria-label="Proteinoteka logo"
-    xmlns="http://www.w3.org/2000/svg"
-    className="mb-3"
-  >
-    <g transform="translate(28, 35)">
-      <rect x="0"  y="85" width="16" height="35"  fill="#FF9900" rx="2" opacity="0.3" />
-      <rect x="20" y="68" width="16" height="52"  fill="#FF9900" rx="2" opacity="0.45" />
-      <rect x="40" y="50" width="16" height="70"  fill="#FF9900" rx="2" opacity="0.6" />
-      <rect x="60" y="30" width="16" height="90"  fill="#FF9900" rx="2" opacity="0.8" />
-      <rect x="80" y="8"  width="16" height="112" fill="#FF9900" rx="2" />
-      <polygon points="88,2 91,10 99,10 93,15 95,23 88,18 81,23 83,15 77,10 85,10" fill="#FF9900" />
-      <rect x="0" y="120" width="96" height="2" fill="#FF9900" rx="1" opacity="0.5" />
-    </g>
-    <line x1="153" y1="42" x2="153" y2="158" stroke="#FF9900" strokeWidth="1.5" opacity="0.3" />
-    <text x="171" y="138" fontFamily="Arial Black, sans-serif" fontSize="60" fontWeight="900">
-      <tspan fill="white">PROTEIN</tspan>
-      <tspan fill="#FF9900">OTEKA</tspan>
-    </text>
-  </svg>
-);
-
 const CATEGORIES = [
   { label: "Whey Concentrate", slug: "whey-concentrate" },
   { label: "Whey Isolate",     slug: "whey-isolate"     },
@@ -47,35 +20,28 @@ const STORE_PAGES = [
   { label: "Proteini.si",    href: "/proteini-si-srbija"      },
 ];
 
-const BRAND_PAGES = [
-  { label: "Optimum Nutrition", href: "/optimum-nutrition-proteini" },
-  { label: "Scitec Nutrition",  href: "/scitec-nutrition-proteini"  },
-  { label: "Dymatize",          href: "/dymatize-proteini"          },
-  { label: "BioTech USA",       href: "/biotech-usa-proteini"       },
+const GUIDES = [
+  { label: "Protein za početnike",    href: "/vodici/whey-protein-za-pocetnike"   },
+  { label: "Koliko proteina dnevno?", href: "/vodici/koliko-proteina-dnevno"      },
+  { label: "Protein za mršavljenje",  href: "/vodici/protein-za-mrsavljenje"      },
+  { label: "Da li protein goji?",     href: "/vodici/da-li-protein-goji"          },
+  { label: "Kada piti protein?",      href: "/vodici/kada-piti-protein"           },
+  { label: "Isolate vs Concentrate",  href: "/vodici/whey-isolate-vs-concentrate" },
+  { label: "Svi vodiči →",            href: "/vodici"                             },
 ];
 
-const NAV_LINKS = [
-  { label: "Početna",              href: "/"              },
-  { label: "O nama",               href: "/o-nama"        },
-  { label: "Kontakt",              href: "/#kontakt"      },
-  { label: "Baza podataka (B2B)",  href: "/baza-podataka" },
-  { label: "Najjeftiniji proteini",href: "/?sort=numericPrice,asc"    },
-  { label: "Poređenje cena",       href: "/?sort=valueScore,desc"     },
-];
-
-const SEO_GUIDES = [
-  { label: "Protein za početnike",     href: "/vodici/whey-protein-za-pocetnike"        },
-  { label: "Koliko proteina dnevno?",  href: "/vodici/koliko-proteina-dnevno"           },
-  { label: "Protein za mršavljenje",   href: "/vodici/protein-za-mrsavljenje"           },
-  { label: "Da li protein goji?",      href: "/vodici/da-li-protein-goji"              },
-  { label: "Kada piti protein?",       href: "/vodici/kada-piti-protein"               },
-  { label: "Isolate vs Concentrate",   href: "/vodici/whey-isolate-vs-concentrate"      },
-  { label: "Svi vodiči →",             href: "/vodici"                                  },
+const SITE_LINKS = [
+  { label: "Početna",              href: "/"                          },
+  { label: "O nama",               href: "/o-nama"                    },
+  { label: "Kontakt",              href: "/#kontakt"                  },
+  { label: "Kako računamo score",  href: "/kako-racunamo-value-score" },
+  { label: "Politika privatnosti", href: "/privacy-policy"           },
+  { label: "Uslovi korišćenja",    href: "/terms-of-use"             },
 ];
 
 function ColHeading({ children }: { children: React.ReactNode }) {
   return (
-    <h4 className="text-[11px] font-bold uppercase tracking-widest mb-4"
+    <h4 className="text-[10px] font-bold uppercase tracking-widest mb-3"
         style={{ color: "rgba(255,153,0,0.75)" }}>
       {children}
     </h4>
@@ -87,7 +53,7 @@ function FooterLink({ href, children }: { href: string; children: React.ReactNod
     <li>
       <Link
         href={href}
-        className="text-sm transition-colors duration-150"
+        className="text-[13px] leading-relaxed transition-colors duration-150"
         style={{ color: "rgba(255,255,255,0.55)" }}
         onMouseEnter={(e) => ((e.target as HTMLElement).style.color = "#FF9900")}
         onMouseLeave={(e) => ((e.target as HTMLElement).style.color = "rgba(255,255,255,0.55)")}
@@ -101,59 +67,15 @@ function FooterLink({ href, children }: { href: string; children: React.ReactNod
 export default function Footer() {
   return (
     <footer id="site-footer" style={{ backgroundColor: "#131921" }} className="text-white mt-auto">
-      <div className="max-w-7xl mx-auto px-4 pt-8 sm:pt-14 pb-6">
+      <div className="max-w-7xl mx-auto px-4 pt-8 pb-5">
 
-        {/* ── Four-column grid ────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 pb-10 border-b"
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 pb-7 border-b"
              style={{ borderColor: "rgba(255,255,255,0.08)" }}>
 
-          {/* Col 1 — O nama + Prodavnice */}
-          <div>
-            {/* Logo + tagline — hidden on mobile to save space */}
-            <div className="hidden sm:block">
-              <Logo />
-              <p className="text-sm leading-relaxed mb-5"
-                 style={{ color: "rgba(255,255,255,0.50)" }}>
-                Platforma za poređenje cena proteinskih suplemenata u Srbiji.
-              </p>
-
-              {/* Trust badges */}
-              <div className="flex flex-wrap gap-2 mb-5">
-                {["6+ prodavnica", "250+ proizvoda", "Auto ažurirano"].map((t) => (
-                  <span key={t}
-                        className="text-[11px] font-semibold px-2.5 py-1 rounded-full"
-                        style={{
-                          background: "rgba(255,153,0,0.12)",
-                          border: "1px solid rgba(255,153,0,0.25)",
-                          color: "#FF9900",
-                        }}>
-                    {t}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Store pages */}
-            <ColHeading>Prodavnice</ColHeading>
-            <ul className="flex flex-col gap-2.5 mb-6">
-              {STORE_PAGES.map((s) => (
-                <FooterLink key={s.href} href={s.href}>{s.label}</FooterLink>
-              ))}
-            </ul>
-
-            {/* Brand pages */}
-            <ColHeading>Brendovi</ColHeading>
-            <ul className="flex flex-col gap-2.5">
-              {BRAND_PAGES.map((b) => (
-                <FooterLink key={b.href} href={b.href}>{b.label}</FooterLink>
-              ))}
-            </ul>
-          </div>
-
-          {/* Col 2 — Kategorije */}
+          {/* Col 1 — Kategorije */}
           <div>
             <ColHeading>Kategorije</ColHeading>
-            <ul className="flex flex-col gap-2.5">
+            <ul className="flex flex-col gap-2">
               {CATEGORIES.map((c) => (
                 <FooterLink key={c.slug} href={`/kategorija/${c.slug}`}>
                   {c.label}
@@ -162,36 +84,37 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Col 3 — Brzi linkovi */}
+          {/* Col 2 — Prodavnice */}
           <div>
-            <ColHeading>Brzi linkovi</ColHeading>
-            <ul className="flex flex-col gap-2.5 mb-6">
-              {NAV_LINKS.map((l) => (
-                <FooterLink key={l.href} href={l.href}>
-                  {l.label}
-                </FooterLink>
-              ))}
-            </ul>
-            <ColHeading>Vodiči</ColHeading>
-            <ul className="flex flex-col gap-2.5">
-              {SEO_GUIDES.map((l) => (
-                <FooterLink key={l.href} href={l.href}>
-                  {l.label}
-                </FooterLink>
+            <ColHeading>Prodavnice</ColHeading>
+            <ul className="flex flex-col gap-2">
+              {STORE_PAGES.map((s) => (
+                <FooterLink key={s.href} href={s.href}>{s.label}</FooterLink>
               ))}
             </ul>
           </div>
 
-          {/* Col 4 — Pravne informacije */}
+          {/* Col 3 — Vodiči */}
           <div>
-            <ColHeading>Pravne informacije</ColHeading>
-            <ul className="flex flex-col gap-2.5">
-              <FooterLink href="/privacy-policy">Politika privatnosti</FooterLink>
-              <FooterLink href="/terms-of-use">Uslovi korišćenja</FooterLink>
+            <ColHeading>Vodiči</ColHeading>
+            <ul className="flex flex-col gap-2">
+              {GUIDES.map((g) => (
+                <FooterLink key={g.href} href={g.href}>{g.label}</FooterLink>
+              ))}
+            </ul>
+          </div>
+
+          {/* Col 4 — Sajt + Pravne */}
+          <div>
+            <ColHeading>Sajt</ColHeading>
+            <ul className="flex flex-col gap-2">
+              {SITE_LINKS.map((l) => (
+                <FooterLink key={l.href} href={l.href}>{l.label}</FooterLink>
+              ))}
               <li>
                 <button
                   onClick={() => window.dispatchEvent(new Event("cookie-settings"))}
-                  className="text-sm transition-colors duration-150 cursor-pointer"
+                  className="text-[13px] transition-colors duration-150 cursor-pointer"
                   style={{ color: "rgba(255,255,255,0.55)" }}
                   onMouseEnter={(e) => ((e.target as HTMLElement).style.color = "#FF9900")}
                   onMouseLeave={(e) => ((e.target as HTMLElement).style.color = "rgba(255,255,255,0.55)")}
@@ -200,23 +123,19 @@ export default function Footer() {
                 </button>
               </li>
             </ul>
-
-            <div className="mt-6 p-3 rounded-lg"
-                 style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
-              <p className="text-[11px] leading-relaxed"
-                 style={{ color: "rgba(255,255,255,0.35)" }}>
-                <span className="font-black text-[12px] tracking-wide" style={{ color: "#FF9900" }}>Napomena:</span>{" "}
-                Proteinoteka nije prodavnica. Cene su informativnog karaktera i mogu se razlikovati od aktuelnih cena kod prodavca.
-              </p>
-            </div>
           </div>
+
         </div>
 
-        {/* ── Bottom bar ───────────────────────────────────────────────── */}
-        <div className="pt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <p className="text-xs leading-relaxed max-w-2xl"
+        {/* ── Bottom bar ── */}
+        <div className="pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+          <span className="text-sm font-black tracking-wide">
+            <span style={{ color: "white" }}>PROTEIN</span>
+            <span style={{ color: "#FF9900" }}>OTEKA</span>
+          </span>
+          <p className="text-[11px] leading-relaxed"
              style={{ color: "rgba(255,255,255,0.28)" }}>
-            © {new Date().getFullYear()} Proteinoteka. Cene su informativnog karaktera — uvek proverite aktuelnu cenu na sajtu prodavca. Podaci su automatski ažurirani. Neki linkovi mogu biti affiliate.
+            © {new Date().getFullYear()} Proteinoteka. Cene su informativnog karaktera. Neki linkovi mogu biti affiliate.
           </p>
         </div>
 
