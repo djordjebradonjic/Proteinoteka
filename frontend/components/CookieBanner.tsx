@@ -53,49 +53,45 @@ export default function CookieBanner() {
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-6">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-
-      {/* Card */}
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label="Saglasnost za kolačiće"
-        className="relative w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl p-6"
-      >
-        <div className="flex items-start gap-3 mb-5">
-          <span className="text-2xl leading-none mt-0.5">🍪</span>
-          <div>
-            <h2 className="text-gray-900 font-bold text-base mb-1">
-              Koristimo kolačiće
-            </h2>
-            <p className="text-sm text-gray-600 leading-relaxed">
-              Koristimo anonimnu analitiku poseta (Google Analytics) kako bismo
-              poboljšali korisničko iskustvo. Ne pratimo lične podatke.{" "}
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Saglasnost za kolačiće"
+      className="fixed bottom-0 left-0 right-0 z-50"
+    >
+      {/* Card floating above bottom edge */}
+      <div className="mx-3 mb-3 sm:mx-6 sm:mb-4 md:mx-auto md:max-w-3xl bg-white rounded-2xl shadow-[0_-2px_24px_rgba(0,0,0,0.12),0_4px_24px_rgba(0,0,0,0.12)] px-5 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          {/* Text */}
+          <div className="flex items-start sm:items-center gap-2.5 flex-1 min-w-0">
+            <span className="text-xl shrink-0">🍪</span>
+            <p className="text-sm text-gray-700 leading-relaxed">
+              Pomozi nam da poboljšamo sajt — koristimo samo anonimnu statistiku
+              poseta.{" "}
               <Link
                 href="/privacy-policy"
-                className="text-[#e07b00] hover:underline font-medium"
+                className="text-[#e07b00] hover:underline font-medium whitespace-nowrap"
               >
-                Politika privatnosti
+                Saznaj više
               </Link>
             </p>
           </div>
-        </div>
 
-        <div className="flex gap-3">
-          <button
-            onClick={handleReject}
-            className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer"
-          >
-            Odbij sve
-          </button>
-          <button
-            onClick={handleAccept}
-            className="flex-1 px-4 py-2.5 text-sm font-bold bg-[#FF9900] hover:bg-[#e68a00] text-[#131921] rounded-xl transition-colors cursor-pointer"
-          >
-            Prihvati sve
-          </button>
+          {/* Buttons */}
+          <div className="flex gap-2 shrink-0 sm:pl-2">
+            <button
+              onClick={handleReject}
+              className="flex-1 sm:flex-none px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer"
+            >
+              Odbij
+            </button>
+            <button
+              onClick={handleAccept}
+              className="flex-1 sm:flex-none px-5 py-2 text-sm font-bold bg-[#FF9900] hover:bg-[#e68a00] text-[#131921] rounded-xl transition-colors cursor-pointer shadow-sm"
+            >
+              Prihvati
+            </button>
+          </div>
         </div>
       </div>
     </div>
