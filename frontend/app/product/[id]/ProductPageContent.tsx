@@ -487,6 +487,10 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
         {/* ── Cross-store prices ────────────────────────────────────── */}
         {storePrices.length > 1 && (() => {
           const cheapest = storePrices[0]?.numericPrice;
+          const allSamePrice = storePrices.every(sp => sp.numericPrice === cheapest);
+          const orderedPrices = allSamePrice
+            ? [...storePrices].sort((a, b) => (b.id === product.id ? 1 : 0) - (a.id === product.id ? 1 : 0))
+            : storePrices;
           return (
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm mb-6 overflow-hidden">
               <div className="flex items-center gap-2 px-6 py-4 border-b border-slate-100">
@@ -494,9 +498,9 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
                 <h2 className="text-base font-bold text-slate-900">Cena po prodavnicama</h2>
               </div>
               <ul>
-                {storePrices.map((sp, i) => {
-                  const isCheapest = i === 0;
-                  const diff = (cheapest != null && sp.numericPrice != null && !isCheapest)
+                {orderedPrices.map((sp, i) => {
+                  const isCheapest = !allSamePrice && i === 0;
+                  const diff = (!allSamePrice && cheapest != null && sp.numericPrice != null && !isCheapest)
                     ? Math.round(sp.numericPrice - cheapest) : null;
                   const isCurrent = sp.id === product.id;
                   return (
