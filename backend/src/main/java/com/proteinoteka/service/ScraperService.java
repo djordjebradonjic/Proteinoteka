@@ -130,10 +130,9 @@ public class ScraperService {
                                     "--disable-dev-shm-usage",
                                     "--no-sandbox",
                                     "--disable-setuid-sandbox",
-                                    "--disable-extensions",
-                                    "--disable-plugins",
-                                    "--js-flags=--max-old-space-size=128",
-                                    "--memory-pressure-thresholds=0"
+                                    "--disable-blink-features=AutomationControlled",
+                                    "--window-size=1920,1080",
+                                    "--js-flags=--max-old-space-size=128"
                             ))
             );
 
@@ -157,12 +156,68 @@ public class ScraperService {
                 );
 
                 context.addInitScript("""
+                        // 1. Remove webdriver flag — primary Cloudflare check
                         Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
-                        window.chrome = { runtime: {}, loadTimes: function(){}, csi: function(){}, app: {} };
-                        Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
-                        Object.defineProperty(navigator, 'languages', { get: () => ['sr-RS', 'sr', 'en-US', 'en'] });
-                        Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => 8 });
-                        Object.defineProperty(navigator, 'deviceMemory', { get: () => 8 });
+
+                        // 2. Full chrome object — headless omits these by default
+                        window.chrome = {
+                          app: {
+                            isInstalled: false,
+                            InstallState: { DISABLED: 'disabled', INSTALLED: 'installed', NOT_INSTALLED: 'not_installed' },
+                            RunningState: { CANNOT_RUN: 'cannot_run', READY_TO_RUN: 'ready_to_run', RUNNING: 'running' }
+                          },
+                          runtime: {
+                            OnInstalledReason: {}, OnRestartRequiredReason: {},
+                            PlatformArch: {}, PlatformNaclArch: {}, PlatformOs: {}, RequestUpdateCheckStatus: {}
+                          },
+                          loadTimes: function() {},
+                          csi: function() {}
+                        };
+
+                        // 3. Permissions — headless returns 'denied' for notifications; real browser returns 'default'
+                        const _origPermQuery = window.navigator.permissions.query.bind(navigator.permissions);
+                        window.navigator.permissions.query = (params) =>
+                          params.name === 'notifications'
+                            ? Promise.resolve({ state: Notification.permission })
+                            : _origPermQuery(params);
+
+                        // 4. Realistic plugins list (headless has none)
+                        Object.defineProperty(navigator, 'plugins', {
+                          get: () => {
+                            const p = [
+                              { name: 'Chrome PDF Plugin',  filename: 'internal-pdf-viewer',              description: 'Portable Document Format' },
+                              { name: 'Chrome PDF Viewer',  filename: 'mhjfbmdgcfjbbpaeojofohoefgiehjai', description: '' },
+                              { name: 'Native Client',      filename: 'internal-nacl-plugin',             description: '' }
+                            ];
+                            p.__proto__ = PluginArray.prototype;
+                            return p;
+                          }
+                        });
+
+                        // 5. Language + hardware fingerprint
+                        Object.defineProperty(navigator, 'languages',          { get: () => ['sr-RS', 'sr', 'en-US', 'en'] });
+                        Object.defineProperty(navigator, 'vendor',             { get: () => 'Google Inc.' });
+                        Object.defineProperty(navigator, 'hardwareConcurrency',{ get: () => 8 });
+                        Object.defineProperty(navigator, 'deviceMemory',       { get: () => 8 });
+
+                        // 6. Network info — headless omits navigator.connection
+                        Object.defineProperty(navigator, 'connection', {
+                          get: () => ({ rtt: 50, downlink: 10, effectiveType: '4g', saveData: false })
+                        });
+
+                        // 7. Window dimensions — headless outerWidth/Height differ from viewport
+                        window.outerWidth  = window.innerWidth;
+                        window.outerHeight = window.innerHeight + 100;
+
+                        // 8. WebGL renderer — headless shows SwiftShader/llvmpipe; spoof Intel
+                        try {
+                          const _getParam = WebGLRenderingContext.prototype.getParameter;
+                          WebGLRenderingContext.prototype.getParameter = function(param) {
+                            if (param === 37445) return 'Intel Inc.';
+                            if (param === 37446) return 'Intel Iris OpenGL Engine';
+                            return _getParam.call(this, param);
+                          };
+                        } catch(e) {}
                         """);
 
                 try {
