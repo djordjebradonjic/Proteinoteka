@@ -1,6 +1,7 @@
 package com.proteinoteka.service;
 
 import com.microsoft.playwright.*;
+import com.microsoft.playwright.options.Proxy;
 import com.microsoft.playwright.options.WaitUntilState;
 import com.proteinoteka.event.PriceDropEvent;
 import com.proteinoteka.model.BrandReputation;
@@ -55,6 +56,21 @@ public class ScraperService {
 
     @Value("${playwright.executable-path:}")
     private String playwrightExecutablePath;
+
+    @Value("${playwright.proxy.enabled:false}")
+    private boolean proxyEnabled;
+
+    @Value("${playwright.proxy.host:geo.iproyal.com}")
+    private String proxyHost;
+
+    @Value("${playwright.proxy.port:12321}")
+    private int proxyPort;
+
+    @Value("${playwright.proxy.username:}")
+    private String proxyUsername;
+
+    @Value("${playwright.proxy.password:}")
+    private String proxyPassword;
 
     @Value("${scraping.stale.enabled:true}")
     private boolean staleEnabled;
@@ -139,21 +155,30 @@ public class ScraperService {
             try {
                 String randomUA = getRandomUserAgent();
                 log.info("[{}] Using User-Agent: {}", scraper.getStoreName(), randomUA);
+                if (proxyEnabled) {
+                    log.info("[{}] Proxy enabled: {}:{}", scraper.getStoreName(), proxyHost, proxyPort);
+                }
 
-                BrowserContext context = browser.newContext(
-                        new Browser.NewContextOptions()
-                                .setUserAgent(randomUA)
-                                .setViewportSize(1920, 1080)
-                                .setLocale("sr-RS")
-                                .setTimezoneId("Europe/Belgrade")
-                                .setDeviceScaleFactor(1)
-                                .setExtraHTTPHeaders(Map.of(
-                                        "Accept-Language", "sr-RS,sr;q=0.9,en-US;q=0.8,en;q=0.7",
-                                        "Accept-Encoding", "gzip, deflate, br",
-                                        "DNT", "1",
-                                        "Upgrade-Insecure-Requests", "1"
-                                ))
-                );
+                Browser.NewContextOptions contextOptions = new Browser.NewContextOptions()
+                        .setUserAgent(randomUA)
+                        .setViewportSize(1920, 1080)
+                        .setLocale("sr-RS")
+                        .setTimezoneId("Europe/Belgrade")
+                        .setDeviceScaleFactor(1)
+                        .setExtraHTTPHeaders(Map.of(
+                                "Accept-Language", "sr-RS,sr;q=0.9,en-US;q=0.8,en;q=0.7",
+                                "Accept-Encoding", "gzip, deflate, br",
+                                "DNT", "1",
+                                "Upgrade-Insecure-Requests", "1"
+                        ));
+
+                if (proxyEnabled && !proxyHost.isBlank()) {
+                    contextOptions.setProxy(new Proxy("http://" + proxyHost + ":" + proxyPort)
+                            .setUsername(proxyUsername)
+                            .setPassword(proxyPassword));
+                }
+
+                BrowserContext context = browser.newContext(contextOptions);
 
                 context.addInitScript("""
                         // 1. Remove webdriver flag — primary Cloudflare check

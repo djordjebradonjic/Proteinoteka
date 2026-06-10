@@ -41,6 +41,12 @@ server:
 
 playwright:
   executable-path:
+  proxy:
+    enabled: ${PROXY_ENABLED:false}
+    host: ${PROXY_HOST:geo.iproyal.com}
+    port: ${PROXY_PORT:12321}
+    username: ${PROXY_USERNAME:}
+    password: ${PROXY_PASSWORD:}
 
 anthropic:
   api:
