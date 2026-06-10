@@ -209,7 +209,12 @@ public class ProductController {
 
         Specification<Product> spec = (root, query, cb) -> cb.and(
                 cb.isNotNull(root.get("valueScore")),
-                cb.greaterThan(root.get("numericPrice"), 0.0)
+                cb.greaterThan(root.get("numericPrice"), 0.0),
+                cb.isNotNull(root.get("sugarPer100g")),
+                cb.isNotNull(root.get("fatPer100g")),
+                cb.isNotNull(root.get("proteinSource")),
+                cb.isNotNull(root.get("description")),
+                cb.notEqual(cb.trim(root.get("description")), "")
         );
 
         return productRepository.findAll(spec, PageRequest.of(0, safeLimit, Sort.by("valueScore").descending()))
