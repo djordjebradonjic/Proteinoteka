@@ -134,6 +134,12 @@ public class ScraperService {
             log.info("[{}] Stale detection: {} existing products tracked", scraper.getStoreName(), existingUrlSet.size());
         }
 
+        // URLs whose nutrition (protein + fat) is already complete — skip detail page visit
+        Set<String> completeNutritionUrls = new HashSet<>(
+                productRepository.findCompleteNutritionUrlsByStoreName(store.getName()));
+        log.info("[{}] {} products already have complete nutrition — detail page will be skipped",
+                scraper.getStoreName(), completeNutritionUrls.size());
+
         Set<String> foundUrls = new HashSet<>();
         List<Product> products = new ArrayList<>();
         boolean wasBlocked = false;
@@ -325,7 +331,7 @@ public class ScraperService {
                         }
 
                         Document doc = Jsoup.parse(page.content());
-                        List<Product> pageProducts = scraper.scrape(page, doc);
+                        List<Product> pageProducts = scraper.scrape(page, doc, completeNutritionUrls);
 
                         log.info("[{}] Found {} products on page {}",
                                 scraper.getStoreName(), pageProducts.size(), currentPage);

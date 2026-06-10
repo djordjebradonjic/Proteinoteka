@@ -101,6 +101,11 @@ public class SupplementShopScraper implements StoreScraper {
 
     @Override
     public List<Product> scrape(Page page, Document doc) {
+        return scrape(page, doc, java.util.Collections.emptySet());
+    }
+
+    @Override
+    public List<Product> scrape(Page page, Document doc, java.util.Set<String> skipUrls) {
         List<Product> products = new ArrayList<>();
 
         Elements elements = doc.select("div.wd-product");
@@ -113,7 +118,7 @@ public class SupplementShopScraper implements StoreScraper {
         }
 
         if (page != null && !products.isEmpty()) {
-            enrichWithDetails(page, products);
+            enrichWithDetails(page, products, skipUrls);
         }
 
         return products;
@@ -183,12 +188,16 @@ public class SupplementShopScraper implements StoreScraper {
 
     // -------------------- Detail page enrichment --------------------
 
-    private void enrichWithDetails(Page page, List<Product> products) {
+    private void enrichWithDetails(Page page, List<Product> products, java.util.Set<String> skipUrls) {
         int count = 0;
         for (Product p : products) {
             if (p.getUrl() == null || p.getUrl().isBlank()) continue;
             if (baseEnricher.isNonProteinProduct(p.getName())) {
                 log.info("[{}] Skipping '{}' - not a protein product", STORE_NAME, p.getName());
+                continue;
+            }
+            if (skipUrls.contains(p.getUrl())) {
+                log.debug("[{}] Skipping detail page for '{}' — nutrition already complete", STORE_NAME, p.getName());
                 continue;
             }
 

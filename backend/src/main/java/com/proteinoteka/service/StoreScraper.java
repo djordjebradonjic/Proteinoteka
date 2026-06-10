@@ -5,6 +5,7 @@ import com.proteinoteka.model.Product;
 import org.jsoup.nodes.Document;
 
 import java.util.List;
+import java.util.Set;
 
 public interface StoreScraper {
     String getStoreName();
@@ -13,9 +14,14 @@ public interface StoreScraper {
 
     List<Product> scrape(Page page, Document doc);
 
+    default List<Product> scrape(Page page, Document doc, Set<String> skipUrls) {
+        return scrape(page, doc);
+    }
+
     boolean hasNextPage(Document doc);
 
     String buildPageUrl(int page);
+
     default boolean usePlaywrightForListing() {
         return true;
     }

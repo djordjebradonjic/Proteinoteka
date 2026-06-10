@@ -54,6 +54,10 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @Query("SELECT p.url FROM products p WHERE p.store.name = :storeName")
     List<String> findUrlsByStoreName(@Param("storeName") String storeName);
 
+    @Query("SELECT p.url FROM products p WHERE p.store.name = :storeName " +
+           "AND p.proteinPer100g IS NOT NULL AND p.fatPer100g IS NOT NULL")
+    List<String> findCompleteNutritionUrlsByStoreName(@Param("storeName") String storeName);
+
     @Modifying
     @Transactional
     @Query("DELETE FROM products p WHERE p.url IN :urls")
