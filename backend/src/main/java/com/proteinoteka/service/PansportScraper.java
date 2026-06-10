@@ -37,6 +37,9 @@ public class PansportScraper implements StoreScraper {
     }
 
     @Override
+    public boolean usePlaywrightForListing() { return false; }
+
+    @Override
     public boolean hasNextPage(Document doc) {
         return doc.selectFirst("li.pager__item--next a") != null;
     }

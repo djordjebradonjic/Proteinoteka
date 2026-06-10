@@ -470,7 +470,7 @@ public class SupplementShopScraper implements StoreScraper {
         for (int i = 0; i < maxRetries; i++) {
             try {
                 page.navigate(url, new Page.NavigateOptions()
-                        .setWaitUntil(WaitUntilState.NETWORKIDLE)
+                        .setWaitUntil(WaitUntilState.DOMCONTENTLOADED)
                         .setTimeout(30000));
                 page.waitForTimeout(300 + (long)(Math.random() * 500));
                 return true;

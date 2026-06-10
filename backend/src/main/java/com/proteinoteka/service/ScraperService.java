@@ -180,6 +180,29 @@ public class ScraperService {
 
                 BrowserContext context = browser.newContext(contextOptions);
 
+                // Block analytics, ads, tracking, fonts, and media — only HTML+CSS+JS needed for scraping.
+                // This prevents proxy bandwidth waste on third-party trackers and product images.
+                context.route("**/*", route -> {
+                    String url = route.request().url();
+                    String type = route.request().resourceType();
+                    boolean blockByType = type.equals("image") || type.equals("media")
+                            || type.equals("font") || type.equals("websocket");
+                    boolean blockByDomain =
+                            url.contains("google-analytics.com") || url.contains("googletagmanager.com")
+                            || url.contains("googlesyndication.com") || url.contains("doubleclick.net")
+                            || url.contains("facebook.net") || url.contains("facebook.com/tr")
+                            || url.contains("clarity.ms") || url.contains("bing.com/bat")
+                            || url.contains("omnisend") || url.contains("omnisnippet")
+                            || url.contains("ahrefs.com") || url.contains("grainql.com")
+                            || url.contains("holest.com") || url.contains("gstatic.com")
+                            || url.contains("cloudflareinsights.com");
+                    if (blockByType || blockByDomain) {
+                        route.abort();
+                    } else {
+                        route.resume();
+                    }
+                });
+
                 context.addInitScript("""
                         // 1. Remove webdriver flag — primary Cloudflare check
                         Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
@@ -258,28 +281,26 @@ public class ScraperService {
                         String url = scraper.buildPageUrl(currentPage);
                         log.info("[{}] Scraping page {}: {}", scraper.getStoreName(), currentPage, url);
 
-                        if (!navigateWithRetry(page, url, 3)) {
+                        if (!scraper.usePlaywrightForListing()) {
+                            // Server-rendered stores (PrestaShop, Drupal) — JSoup is enough for listing.
+                            // Avoids loading images/JS/tracking through proxy on listing pages.
+                            try {
+                                setupJsoupProxy();
+                                org.jsoup.Connection jsoupConn = buildJsoupConn(url);
+                                String html = jsoupConn.get().html();
+                                page.setContent(html);
+                                log.info("[{}] JSoup listing fetch succeeded for {}", scraper.getStoreName(), url);
+                            } catch (Exception jsoupEx) {
+                                log.error("[{}] JSoup listing fetch failed: {} — stopping scraper",
+                                        scraper.getStoreName(), jsoupEx.getMessage());
+                                break;
+                            }
+                        } else if (!navigateWithRetry(page, url, 3)) {
                             log.warn("[{}] Playwright navigation failed — trying JSoup direct fetch for {}",
                                     scraper.getStoreName(), url);
                             try {
-                                if (proxyEnabled && !proxyHost.isBlank() && !proxyUsername.isBlank()) {
-                                    java.net.Authenticator.setDefault(new java.net.Authenticator() {
-                                        @Override
-                                        protected java.net.PasswordAuthentication getPasswordAuthentication() {
-                                            return new java.net.PasswordAuthentication(proxyUsername, proxyPassword.toCharArray());
-                                        }
-                                    });
-                                }
-                                org.jsoup.Connection jsoupConn = Jsoup.connect(url)
-                                        .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36")
-                                        .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
-                                        .header("Accept-Language", "sr-RS,sr;q=0.9,en-US;q=0.8,en;q=0.7")
-                                        .referrer("https://www.google.com/")
-                                        .timeout(15000);
-                                if (proxyEnabled && !proxyHost.isBlank()) {
-                                    jsoupConn = jsoupConn.proxy(proxyHost, proxyPort);
-                                }
-                                String html = jsoupConn.get().html();
+                                setupJsoupProxy();
+                                String html = buildJsoupConn(url).get().html();
                                 page.setContent(html);
                                 log.info("[{}] JSoup direct fetch succeeded for {}", scraper.getStoreName(), url);
                             } catch (Exception jsoupEx) {
@@ -454,6 +475,30 @@ public class ScraperService {
 
     private String getRandomUserAgent() {
         return USER_AGENTS.get(ThreadLocalRandom.current().nextInt(USER_AGENTS.size()));
+    }
+
+    private void setupJsoupProxy() {
+        if (proxyEnabled && !proxyHost.isBlank() && !proxyUsername.isBlank()) {
+            java.net.Authenticator.setDefault(new java.net.Authenticator() {
+                @Override
+                protected java.net.PasswordAuthentication getPasswordAuthentication() {
+                    return new java.net.PasswordAuthentication(proxyUsername, proxyPassword.toCharArray());
+                }
+            });
+        }
+    }
+
+    private org.jsoup.Connection buildJsoupConn(String url) {
+        org.jsoup.Connection conn = Jsoup.connect(url)
+                .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36")
+                .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
+                .header("Accept-Language", "sr-RS,sr;q=0.9,en-US;q=0.8,en;q=0.7")
+                .referrer("https://www.google.com/")
+                .timeout(15000);
+        if (proxyEnabled && !proxyHost.isBlank()) {
+            conn = conn.proxy(proxyHost, proxyPort);
+        }
+        return conn;
     }
 
     // -------------------- Save / Update --------------------

@@ -40,6 +40,9 @@ public class OgistraScraper implements StoreScraper {
     }
 
     @Override
+    public boolean usePlaywrightForListing() { return false; }
+
+    @Override
     public boolean hasNextPage(Document doc) {
         Element next = doc.selectFirst("a[rel=next]");
         if (next != null) return true;
