@@ -139,6 +139,14 @@ public class BaseScraperEnricher {
                 lower.contains("protein brownie") || lower.contains("protein crisp") ||
                 lower.contains("protein muffin") || lower.contains("protein pancake") ||
                 lower.contains("protein chip") || lower.contains("protein snack") ||
+                lower.contains("protein food") || lower.contains("protein desert") ||
+                lower.contains("protein dessert") ||
+                lower.contains("waffle") || lower.contains("vafla") ||
+                lower.contains("trail mix") ||
+                lower.contains("oats & whey") || lower.contains("oats and whey") ||
+                lower.contains("ovsena") ||
+                lower.contains(" paket ") || lower.contains(" paket") && lower.contains("masu") ||
+                lower.contains("crunchy") && lower.contains("%") ||
                 (lower.contains(" bar ") && !lower.contains("whey")) ||
                 lower.endsWith(" bar") && !lower.contains("whey");
     }
