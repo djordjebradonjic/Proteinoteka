@@ -249,7 +249,7 @@ public class ProteinboxScraper implements StoreScraper {
                 Elements cells = row.select("th, td");
                 for (int i = 0; i < cells.size(); i++) {
                     String cellText = cells.get(i).text().trim().toLowerCase().replaceAll("\\s+", "");
-                    if (cellText.equals("100g") || cellText.equals("100gr")) {
+                    if (cellText.contains("100g") || cellText.contains("100gr")) {
                         per100gCol = i;
                         break;
                     }
