@@ -489,7 +489,13 @@ public class ProteinboxScraper implements StoreScraper {
             Element link = el.selectFirst("a.woocommerce-LoopProduct-link");
             p.setUrl(link != null ? link.attr("href") : "");
             Element img = el.selectFirst("img");
-            p.setImageUrl(img != null ? img.attr("src") : "");
+            if (img != null) {
+                String imgUrl = img.attr("src");
+                if (imgUrl.isEmpty() || imgUrl.startsWith("data:")) imgUrl = img.attr("data-src");
+                p.setImageUrl(imgUrl);
+            } else {
+                p.setImageUrl("");
+            }
             Element priceEl = el.selectFirst("span.woocommerce-Price-amount bdi");
             if (priceEl != null)
                 p.setPrice(priceEl.text().replace("\u00a0", "").replace("RSD", "").trim());

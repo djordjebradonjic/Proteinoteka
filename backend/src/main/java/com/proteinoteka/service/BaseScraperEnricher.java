@@ -131,7 +131,14 @@ public class BaseScraperEnricher {
                 lower.contains("vitamin") || lower.contains("mineral") ||
                 lower.contains("omega") || lower.contains("zma") ||
                 lower.contains("thyro") || lower.contains("fat burn") ||
-                lower.contains("pre-workout") || lower.contains("preworkout");
+                lower.contains("pre-workout") || lower.contains("preworkout") ||
+                lower.contains("protein bar") || lower.contains("proteinbar") ||
+                lower.contains("protein wafer") || lower.contains("protein cookie") ||
+                lower.contains("protein brownie") || lower.contains("protein crisp") ||
+                lower.contains("protein muffin") || lower.contains("protein pancake") ||
+                lower.contains("protein chip") || lower.contains("protein snack") ||
+                (lower.contains(" bar ") && !lower.contains("whey")) ||
+                lower.endsWith(" bar") && !lower.contains("whey");
     }
 
     private void calculateCaloriesIfPossible(Product p) {
