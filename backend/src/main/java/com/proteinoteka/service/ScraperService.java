@@ -502,6 +502,11 @@ public class ScraperService {
             log.warn("[{}] Skipping '{}' - no valid price", store.getName(), scraped.getName());
             return false;
         }
+        if (numericPrice < 1000) {
+            log.info("[{}] Skipping '{}' - price {} RSD below minimum 1000 RSD (likely sachet/single-serving)",
+                    store.getName(), scraped.getName(), Math.round(numericPrice));
+            return false;
+        }
 
         // 4. Validacija proteina
         if (scraped.getProteinPer100g() == null || scraped.getProteinPer100g() < 15) {
