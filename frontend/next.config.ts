@@ -11,14 +11,6 @@ const nextConfig: NextConfig = {
       { source: '/wishlist',      destination: '/',                           permanent: true },
     ];
   },
-  async rewrites() {
-    return [
-      {
-        source: "/_va/:path*",
-        destination: "https://va.vercel-scripts.com/:path*",
-      },
-    ];
-  },
   experimental: {
     scrollRestoration: true,
   },
