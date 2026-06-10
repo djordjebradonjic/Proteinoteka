@@ -214,11 +214,26 @@ public class ProductController {
                 cb.isNotNull(root.get("fatPer100g")),
                 cb.isNotNull(root.get("proteinSource")),
                 cb.isNotNull(root.get("description")),
-                cb.notEqual(cb.trim(root.get("description")), "")
+                cb.notEqual(cb.trim(root.get("description")), ""),
+                cb.greaterThanOrEqualTo(root.get("primaryWeightGrams"), 500.0)
         );
 
-        return productRepository.findAll(spec, PageRequest.of(0, safeLimit, Sort.by("valueScore").descending()))
+        // Fetch 5× more than needed so both deduplication passes still fill the limit.
+        // Guardrails: max 1 product per brand, max 2 products per protein_source.
+        java.util.Set<String> seenBrands    = new java.util.LinkedHashSet<>();
+        java.util.Map<String, Integer> sourceCounts = new java.util.HashMap<>();
+        return productRepository.findAll(spec, PageRequest.of(0, safeLimit * 5, Sort.by("valueScore").descending()))
                 .stream()
+                .filter(p -> p.getBrand() == null || seenBrands.add(p.getBrand().toLowerCase().trim()))
+                .filter(p -> {
+                    if (p.getProteinSource() == null) return true;
+                    String src = p.getProteinSource().toLowerCase().trim();
+                    int count = sourceCounts.getOrDefault(src, 0);
+                    if (count >= 2) return false;
+                    sourceCounts.put(src, count + 1);
+                    return true;
+                })
+                .limit(safeLimit)
                 .map(this::convertToDTO)
                 .toList();
     }
