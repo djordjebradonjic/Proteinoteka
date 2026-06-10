@@ -124,9 +124,6 @@ export default function RootLayout({
                 ad_storage: 'denied',
                 ad_user_data: 'denied',
                 ad_personalization: 'denied',
-                wait_for_update: _c ? 0 : 500,
-                url_passthrough: true,
-                ads_data_redaction: true,
               });
               gtag('js', new Date());
               gtag('config', 'G-JR077S64MV');

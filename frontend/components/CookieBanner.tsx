@@ -47,14 +47,6 @@ export default function CookieBanner() {
 
   const handleReject = () => {
     localStorage.setItem("cookie_consent", "rejected");
-    if (typeof window !== "undefined" && (window as any).gtag) {
-      (window as any).gtag("consent", "update", {
-        analytics_storage: "denied",
-        ad_storage: "denied",
-        ad_user_data: "denied",
-        ad_personalization: "denied",
-      });
-    }
     setVisible(false);
   };
 
