@@ -88,7 +88,7 @@ export default function RootLayout({
         <Providers>
           {children} <Footer />
         </Providers>
-        <Analytics scriptSrc="/_va/script.dataline.js" />
+        <Analytics scriptSrc="/_va/v1/script.dataline.js" />
         <CookieBanner />
         <script
           type="application/ld+json"
