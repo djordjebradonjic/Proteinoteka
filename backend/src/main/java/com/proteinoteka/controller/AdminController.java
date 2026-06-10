@@ -27,13 +27,26 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.concurrent.Executors;
+import org.springframework.beans.factory.annotation.Value;
+import lombok.extern.slf4j.Slf4j;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
+@Slf4j
 public class AdminController {
+
+    @Value("${app.frontend-url:}")
+    private String frontendUrl;
+
+    @Value("${admin.token:}")
+    private String adminToken;
 
     private final ScraperService scraperService;
     private final List<StoreScraper> scrapers;
@@ -239,6 +252,7 @@ public class AdminController {
             var cache = cacheManager.getCache(name);
             if (cache != null) cache.clear();
         });
+        invalidateFrontendCache();
         return ResponseEntity.ok("Updated " + updated + " products");
     }
 
@@ -309,5 +323,21 @@ public class AdminController {
 
         return ResponseEntity.accepted().body(
                 "Nutrition enrichment started for " + candidates.size() + " products");
+    }
+
+    private void invalidateFrontendCache() {
+        if (frontendUrl == null || frontendUrl.isBlank() || adminToken == null || adminToken.isBlank()) return;
+        try {
+            var request = HttpRequest.newBuilder()
+                    .uri(URI.create(frontendUrl + "/api/revalidate"))
+                    .header("Authorization", "Bearer " + adminToken)
+                    .POST(HttpRequest.BodyPublishers.noBody())
+                    .build();
+            var response = HttpClient.newHttpClient()
+                    .send(request, HttpResponse.BodyHandlers.ofString());
+            log.info("Frontend cache invalidated: HTTP {}", response.statusCode());
+        } catch (Exception e) {
+            log.warn("Failed to invalidate frontend cache: {}", e.getMessage());
+        }
     }
 }
