@@ -47,8 +47,10 @@ public class BaseScraperEnricher {
                 return;
             }
 
-            if (p.getProteinPer100g() == null && data.getProteinPer100g() != null
-                    && data.getProteinPer100g() <= 95)
+            // Allow AI to correct if protein is missing OR suspiciously low (likely per-serving value)
+            boolean proteinSuspect = p.getProteinPer100g() != null && p.getProteinPer100g() < 35;
+            if ((p.getProteinPer100g() == null || proteinSuspect) && data.getProteinPer100g() != null
+                    && data.getProteinPer100g() > 0 && data.getProteinPer100g() <= 95)
                 p.setProteinPer100g(data.getProteinPer100g());
 
             if (p.getSugarPer100g() == null && data.getSugarPer100g() != null)

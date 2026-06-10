@@ -215,7 +215,7 @@ public class OgistraScraper implements StoreScraper {
     private void enrichNutrition(Document doc, Product p) {
         extractNutritionFromTable(doc, p);
 
-        // Fallback for protein only
+        // Text fallback for protein — only if value looks like a real per-100g figure (>= 35g)
         if (p.getProteinPer100g() == null) {
             String allText = "";
             Element fullDesc = doc.selectFirst("div#description");
@@ -224,11 +224,11 @@ public class OgistraScraper implements StoreScraper {
 
             if (!allText.isBlank()) {
                 Double protein = nutritionParser.extractProteinPer100g(allText);
-                if (protein != null) p.setProteinPer100g(protein);
+                if (protein != null && protein >= 35) p.setProteinPer100g(protein);
             }
-            baseEnricher.enrichWithAiIfNeeded(doc, p, STORE_NAME);
-
         }
+
+        baseEnricher.enrichWithAiIfNeeded(doc, p, STORE_NAME);
 
         log.info("[{}] '{}' -> protein: {}, sugar: {}, fat: {}, cal: {}",
                 STORE_NAME, p.getName(),
@@ -296,10 +296,18 @@ public class OgistraScraper implements StoreScraper {
                     || (label.contains("ugljeni hidrati") && label.contains("šećer"))) {
                 if (rounded <= 100) p.setSugarPer100g(rounded);
             }
-            // Calories — "Energija" / "energetska vrednost" / "kcal" / "energy"
+            // Calories — extract only the kcal number to avoid picking up kJ values
             else if (label.contains("energij") || label.contains("energetska") || label.contains("kalorij")
                     || label.contains("kcal") || label.contains("energy")) {
-                p.setCaloriePer100g((value / servingSizeGrams) * 100.0);
+                String cellText = cells.get(1).text();
+                java.util.regex.Matcher kcalM = java.util.regex.Pattern
+                        .compile("(\\d+[.,]?\\d*)\\s*kcal", java.util.regex.Pattern.CASE_INSENSITIVE)
+                        .matcher(cellText);
+                double kcalPerServing = kcalM.find()
+                        ? Double.parseDouble(kcalM.group(1).replace(",", "."))
+                        : value;
+                double calPer100g = (kcalPerServing / servingSizeGrams) * 100.0;
+                if (calPer100g <= 900) p.setCaloriePer100g(Math.round(calPer100g * 10) / 10.0);
             }
         }
     }
