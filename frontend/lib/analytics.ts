@@ -1,5 +1,7 @@
-// Central analytics hub — GA4 + internal backend.
-// All tracking calls go through here. Do NOT call gtag or /api/track directly.
+// Central analytics hub — GA4 + Vercel Analytics + internal backend.
+// All tracking calls go through here. Do NOT call gtag or track() directly.
+
+import { track } from "@vercel/analytics";
 
 declare global {
   interface Window {
@@ -152,6 +154,7 @@ export const analytics = {
     if (_isDuplicateClick(key)) return;
     const p: EventParams = { product_id: productId, product_name: productName, store };
     _ga4("click_buy_details", p);
+    track("click_buy_details", { product_id: productId, product_name: productName, store });
     _log("click_buy_details", p);
   },
 
@@ -164,6 +167,7 @@ export const analytics = {
     if (_isDuplicateClick(key)) return;
     const p: EventParams = { product_id: productId, product_name: productName, store };
     _ga4("outbound_click", p);
+    track("outbound_click", { product_id: productId, product_name: productName, store });
     _log("outbound_click", p);
   },
 
@@ -175,6 +179,7 @@ export const analytics = {
     if (_isDuplicateClick(key)) return;
     const p = { search_term: query, product_id: productId, product_name: query, store: store ?? "" };
     _ga4("search", p as EventParams);
+    track("search", { search_term: query });
     _internal("SEARCH", productId ?? 0, store ?? "");
     _log("search", p);
   },
@@ -216,6 +221,7 @@ export const analytics = {
       ...(timeToCreateMs !== undefined && { time_to_create_ms: Math.round(timeToCreateMs) }),
     };
     _ga4("alert_created", p);
+    track("alert_created", { product_id: productId, product_name: productName, has_target_price: hasTargetPrice ? 1 : 0 });
     _log("alert_created", p);
   },
 
