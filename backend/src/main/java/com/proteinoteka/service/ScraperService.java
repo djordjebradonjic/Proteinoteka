@@ -479,6 +479,9 @@ public class ScraperService {
 
     private void setupJsoupProxy() {
         if (proxyEnabled && !proxyHost.isBlank() && !proxyUsername.isBlank()) {
+            // Java 8u111+ disables Basic auth for HTTPS proxy tunneling by default — re-enable it
+            System.setProperty("jdk.http.auth.tunneling.disabledSchemes", "");
+            System.setProperty("jdk.http.auth.proxying.disabledSchemes", "");
             java.net.Authenticator.setDefault(new java.net.Authenticator() {
                 @Override
                 protected java.net.PasswordAuthentication getPasswordAuthentication() {
