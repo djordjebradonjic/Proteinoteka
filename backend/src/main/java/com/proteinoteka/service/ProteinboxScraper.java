@@ -165,6 +165,7 @@ public class ProteinboxScraper implements StoreScraper {
                 enrichFlavours(doc, p);
                 enrichDescription(doc, p);
                 enrichNutrition(doc, p);
+                enrichImageIfMissing(doc, p);
 
                 log.info("[{}] Enriched '{}' -> brand={}, protein={}, fat={}, sugar={}, cal={}",
                         STORE_NAME, p.getName(), p.getBrand(),
@@ -185,6 +186,28 @@ public class ProteinboxScraper implements StoreScraper {
             } catch (Exception e) {
                 log.error("[{}] Failed to enrich {}: {}", STORE_NAME, p.getName(), e.getMessage());
                 try { Thread.sleep(5000); } catch (InterruptedException ignored) {}
+            }
+        }
+    }
+
+    // -------------------- Image extraction --------------------
+
+    private void enrichImageIfMissing(Document doc, Product p) {
+        if (p.getImageUrl() != null && !p.getImageUrl().isBlank()) return;
+        // WooCommerce product gallery — main image
+        for (String selector : new String[]{
+                ".woocommerce-product-gallery__image img",
+                "img.wp-post-image",
+                ".product_gallery img",
+                ".woocommerce-main-image img"
+        }) {
+            Element img = doc.selectFirst(selector);
+            if (img == null) continue;
+            String src = img.attr("src");
+            if (src.isEmpty() || src.startsWith("data:")) src = img.attr("data-src");
+            if (!src.isEmpty() && !src.startsWith("data:")) {
+                p.setImageUrl(src);
+                return;
             }
         }
     }

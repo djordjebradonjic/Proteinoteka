@@ -599,7 +599,7 @@ public class ScraperService {
         double brandScore = 4.5;
         if (p.getBrand() != null && !p.getBrand().isBlank()) {
             brandScore = brandReputationRepository
-                    .findByBrandNameIgnoreCase(p.getBrand())
+                    .findFirstByBrandNameIgnoreCase(p.getBrand())
                     .map(BrandReputation::getScore)
                     .orElse(4.5);
         }

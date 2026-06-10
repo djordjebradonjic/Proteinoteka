@@ -132,6 +132,7 @@ public class BaseScraperEnricher {
                 lower.contains("omega") || lower.contains("zma") ||
                 lower.contains("thyro") || lower.contains("fat burn") ||
                 lower.contains("pre-workout") || lower.contains("preworkout") ||
+                lower.contains("čokoladica") || lower.contains("cokoladica") ||
                 lower.contains("protein bar") || lower.contains("proteinbar") ||
                 lower.contains("protein wafer") || lower.contains("protein cookie") ||
                 lower.contains("protein brownie") || lower.contains("protein crisp") ||

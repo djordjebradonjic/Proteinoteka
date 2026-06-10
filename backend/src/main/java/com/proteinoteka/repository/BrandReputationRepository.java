@@ -7,5 +7,5 @@ import java.util.Optional;
 
 @Repository
 public interface BrandReputationRepository extends JpaRepository<BrandReputation, Long> {
-    Optional<BrandReputation> findByBrandNameIgnoreCase(String brandName);
+    Optional<BrandReputation> findFirstByBrandNameIgnoreCase(String brandName);
 }
