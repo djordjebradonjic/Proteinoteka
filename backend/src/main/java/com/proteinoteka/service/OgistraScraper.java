@@ -49,11 +49,6 @@ public class OgistraScraper implements StoreScraper {
     }
 
     @Override
-    public boolean usePlaywrightForListing() {
-        return false;
-    }
-
-    @Override
     public List<Product> scrape(Page page, Document doc) {
         List<Product> products = new ArrayList<>();
 

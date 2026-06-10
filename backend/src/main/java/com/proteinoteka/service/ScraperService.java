@@ -262,14 +262,24 @@ public class ScraperService {
                             log.warn("[{}] Playwright navigation failed — trying JSoup direct fetch for {}",
                                     scraper.getStoreName(), url);
                             try {
-                                String html = Jsoup.connect(url)
+                                if (proxyEnabled && !proxyHost.isBlank() && !proxyUsername.isBlank()) {
+                                    java.net.Authenticator.setDefault(new java.net.Authenticator() {
+                                        @Override
+                                        protected java.net.PasswordAuthentication getPasswordAuthentication() {
+                                            return new java.net.PasswordAuthentication(proxyUsername, proxyPassword.toCharArray());
+                                        }
+                                    });
+                                }
+                                org.jsoup.Connection jsoupConn = Jsoup.connect(url)
                                         .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36")
                                         .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
                                         .header("Accept-Language", "sr-RS,sr;q=0.9,en-US;q=0.8,en;q=0.7")
                                         .referrer("https://www.google.com/")
-                                        .timeout(15000)
-                                        .get()
-                                        .html();
+                                        .timeout(15000);
+                                if (proxyEnabled && !proxyHost.isBlank()) {
+                                    jsoupConn = jsoupConn.proxy(proxyHost, proxyPort);
+                                }
+                                String html = jsoupConn.get().html();
                                 page.setContent(html);
                                 log.info("[{}] JSoup direct fetch succeeded for {}", scraper.getStoreName(), url);
                             } catch (Exception jsoupEx) {
