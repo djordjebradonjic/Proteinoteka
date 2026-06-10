@@ -39,6 +39,18 @@ import java.util.concurrent.ThreadLocalRandom;
 @RequiredArgsConstructor
 public class ScraperService {
 
+    // Category median sugar (g/100g) derived from measured products in the catalogue.
+    // Used to impute missing sugar values so the ingredients penalty is applied fairly
+    // even when a product page omits nutrition details.
+    private static final Map<String, Double> SUGAR_MEDIAN_BY_SOURCE = Map.of(
+        "whey_concentrate", 6.3,
+        "blend",            4.4,
+        "whey_isolate",     1.0,
+        "hydrolysate",      3.0,
+        "casein",           3.0,
+        "vegan",            0.2
+    );
+
     private final ProductRepository productRepository;
     private final StoreRepository storeRepository;
     private final List<StoreScraper> scrapers;
@@ -705,12 +717,20 @@ public class ScraperService {
         }
 
         // 4. INGREDIENTS (0-10) - weight 0.15
+        // Sugar: use measured value when available; otherwise impute from category median.
         double ingredients = 10.0;
+        boolean sugarImputed = false;
+        double effectiveSugar;
         if (p.getSugarPer100g() != null) {
-            double sugar = p.getSugarPer100g();
-            if (sugar > 10)     ingredients -= 3.0;
-            else if (sugar > 5) ingredients -= 1.5;
+            effectiveSugar = p.getSugarPer100g();
+        } else {
+            String src = p.getProteinSource() != null ? p.getProteinSource().toLowerCase() : "";
+            effectiveSugar = SUGAR_MEDIAN_BY_SOURCE.getOrDefault(src, 4.0);
+            sugarImputed = true;
         }
+        if (effectiveSugar > 10)     ingredients -= 3.0;
+        else if (effectiveSugar > 5) ingredients -= 1.5;
+
         if (p.getDescription() != null) {
             String desc = p.getDescription().toLowerCase();
             if (desc.contains("aspartam") || desc.contains("acesulfam"))
@@ -728,12 +748,13 @@ public class ScraperService {
         }
 
         // 6. CONFIDENCE PENALTY
-        int missing = 0;
-        if (p.getSugarPer100g() == null)  missing++;
-        if (p.getFatPer100g() == null)    missing++;
-        if (p.getDescription() == null || p.getDescription().isBlank()) missing++;
-        if (p.getProteinSource() == null) missing++;
-        double confidencePenalty = Math.max(0.84, 1.0 - (missing * 0.04));
+        // Imputed sugar counts as half-missing (we estimated, not measured).
+        double missingWeight = 0;
+        if (sugarImputed)                                               missingWeight += 0.5;
+        if (p.getFatPer100g() == null)                                  missingWeight += 1;
+        if (p.getDescription() == null || p.getDescription().isBlank()) missingWeight += 1;
+        if (p.getProteinSource() == null)                               missingWeight += 1;
+        double confidencePenalty = Math.max(0.84, 1.0 - (missingWeight * 0.04));
 
         // FINAL SCORE
         // Brand weight raised to 15% (from 10%) to prevent unknown cheap brands from
