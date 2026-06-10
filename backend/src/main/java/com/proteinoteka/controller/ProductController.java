@@ -219,18 +219,29 @@ public class ProductController {
         );
 
         // Fetch 5× more than needed so both deduplication passes still fill the limit.
-        // Guardrails: max 1 product per brand, max 2 products per protein_source.
+        // Guardrails: max 1 product per brand; per-source caps:
+        //   whey_isolate=3 (dominant category), hydrolysate=1 (niche), vegan=1 (niche), others=2
+        // Both checks are merged into one filter so that a brand slot is consumed only when
+        // the product actually passes the source cap (prevents brand "ghost-blocking").
         java.util.Set<String> seenBrands    = new java.util.LinkedHashSet<>();
         java.util.Map<String, Integer> sourceCounts = new java.util.HashMap<>();
         return productRepository.findAll(spec, PageRequest.of(0, safeLimit * 5, Sort.by("valueScore").descending()))
                 .stream()
-                .filter(p -> p.getBrand() == null || seenBrands.add(p.getBrand().toLowerCase().trim()))
                 .filter(p -> {
-                    if (p.getProteinSource() == null) return true;
-                    String src = p.getProteinSource().toLowerCase().trim();
-                    int count = sourceCounts.getOrDefault(src, 0);
-                    if (count >= 2) return false;
-                    sourceCounts.put(src, count + 1);
+                    String brand = p.getBrand() != null ? p.getBrand().toLowerCase().trim() : null;
+                    if (brand != null && seenBrands.contains(brand)) return false;
+
+                    if (p.getProteinSource() != null) {
+                        String src = p.getProteinSource().toLowerCase().trim();
+                        int srcLimit = src.equals("whey_isolate") ? 3
+                                     : src.equals("hydrolysate")  ? 1
+                                     : src.equals("vegan")        ? 1
+                                     : 2;
+                        if (sourceCounts.getOrDefault(src, 0) >= srcLimit) return false;
+                        sourceCounts.put(src, sourceCounts.getOrDefault(src, 0) + 1);
+                    }
+
+                    if (brand != null) seenBrands.add(brand);
                     return true;
                 })
                 .limit(safeLimit)
