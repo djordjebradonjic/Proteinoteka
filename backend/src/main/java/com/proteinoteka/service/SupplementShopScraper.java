@@ -1,5 +1,7 @@
 package com.proteinoteka.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.WaitUntilState;
 import com.proteinoteka.model.Product;
@@ -12,6 +14,7 @@ import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
@@ -68,6 +71,7 @@ public class SupplementShopScraper implements StoreScraper {
 
     private final NutritionParserService nutritionParser;
     private final BaseScraperEnricher baseEnricher;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
 
     @Override
@@ -118,7 +122,7 @@ public class SupplementShopScraper implements StoreScraper {
         }
 
         if (page != null && !products.isEmpty()) {
-            enrichWithDetails(page, products, skipUrls);
+            return enrichWithDetails(page, products, skipUrls);
         }
 
         return products;
@@ -188,7 +192,8 @@ public class SupplementShopScraper implements StoreScraper {
 
     // -------------------- Detail page enrichment --------------------
 
-    private void enrichWithDetails(Page page, List<Product> products, java.util.Set<String> skipUrls) {
+    private List<Product> enrichWithDetails(Page page, List<Product> products, java.util.Set<String> skipUrls) {
+        List<Product> result = new ArrayList<>();
         int count = 0;
         for (Product p : products) {
             if (p.getUrl() == null || p.getUrl().isBlank()) continue;
@@ -198,6 +203,7 @@ public class SupplementShopScraper implements StoreScraper {
             }
             if (skipUrls.contains(p.getUrl())) {
                 log.debug("[{}] Skipping detail page for '{}' — nutrition already complete", STORE_NAME, p.getName());
+                result.add(p);
                 continue;
             }
 
@@ -212,23 +218,54 @@ public class SupplementShopScraper implements StoreScraper {
 
                 if (isBlocked(page)) {
                     log.error("[{}] DETECTED BY FIREWALL on {}! Stopping scraper.", STORE_NAME, p.getUrl());
-                    return;
+                    return result;
                 }
 
                 simulateHumanActivity(page);
 
                 Document doc = Jsoup.parse(page.content());
 
-                enrichBrand(doc, p);
-                enrichPackageWeights(doc, p);
-                enrichFlavours(doc, p);
-                enrichDescription(doc, p);
-                enrichNutrition(doc, p);
+                // Variable products (multiple "Pakovanje" sizes) — split into one
+                // Product per package size using the WooCommerce variations JSON,
+                // already present in this same page load (no extra requests/iProyal cost).
+                List<Product> variants = expandVariants(doc, p);
 
-                log.info("[{}] Enriched '{}' -> brand={}, protein={}, fat={}, sugar={}, cal={}",
-                        STORE_NAME, p.getName(), p.getBrand(),
-                        p.getProteinPer100g(), p.getFatPer100g(),
-                        p.getSugarPer100g(), p.getCaloriePer100g());
+                if (variants.size() > 1) {
+                    Product first = variants.get(0);
+                    enrichBrand(doc, first);
+                    enrichDescription(doc, first);
+
+                    boolean anyNeedsNutrition = variants.stream()
+                            .anyMatch(v -> !skipUrls.contains(v.getUrl()));
+                    if (anyNeedsNutrition) {
+                        enrichNutrition(doc, first);
+                    }
+
+                    for (int i = 1; i < variants.size(); i++) {
+                        Product v = variants.get(i);
+                        v.setBrand(first.getBrand());
+                        v.setDescription(first.getDescription());
+                        copyNutritionFields(first, v);
+                    }
+
+                    for (Product v : variants) {
+                        log.info("[{}] Variant '{}' ({}) -> price={}, protein={}",
+                                STORE_NAME, v.getName(), v.getPackage_weight(), v.getPrice(), v.getProteinPer100g());
+                    }
+                    result.addAll(variants);
+                } else {
+                    enrichBrand(doc, p);
+                    enrichPackageWeights(doc, p);
+                    enrichFlavours(doc, p);
+                    enrichDescription(doc, p);
+                    enrichNutrition(doc, p);
+
+                    log.info("[{}] Enriched '{}' -> brand={}, protein={}, fat={}, sugar={}, cal={}",
+                            STORE_NAME, p.getName(), p.getBrand(),
+                            p.getProteinPer100g(), p.getFatPer100g(),
+                            p.getSugarPer100g(), p.getCaloriePer100g());
+                    result.add(p);
+                }
 
                 count++;
 
@@ -243,6 +280,127 @@ public class SupplementShopScraper implements StoreScraper {
                 safeSleep(5000);
             }
         }
+        return result;
+    }
+
+    // -------------------- Multi-package expansion --------------------
+
+    /**
+     * Reads the WooCommerce data-product_variations JSON already embedded in the detail
+     * page HTML. Returns one Product per unique "Pakovanje" (package size) when the
+     * product has more than one — each with its own price, so price comparisons and
+     * value scores are correct per package size instead of only for the cheapest one.
+     * Returns an empty list for single-package products (caller keeps the old flow).
+     */
+    private List<Product> expandVariants(Document doc, Product original) {
+        List<Product> variants = new ArrayList<>();
+        try {
+            Element form = doc.selectFirst("form.variations_form[data-product_variations]");
+            if (form == null) return variants;
+
+            String json = form.attr("data-product_variations");
+            if (json == null || json.isBlank() || json.equals("false")) return variants;
+
+            JsonNode arr = objectMapper.readTree(json);
+            if (!arr.isArray() || arr.isEmpty()) return variants;
+
+            // Slug -> display text, e.g. "2-03kg" -> "2.03kg"
+            Map<String, String> pakSlugToText = new LinkedHashMap<>();
+            for (Element opt : doc.select("select[name=attribute_pa_pakovanje] option")) {
+                String val = opt.attr("value").trim();
+                String text = opt.text().trim();
+                if (!val.isBlank() && !text.isBlank()) pakSlugToText.put(val, text);
+            }
+            if (pakSlugToText.size() <= 1) return variants; // single package size — don't expand
+
+            Map<String, String> ukusSlugToText = new LinkedHashMap<>();
+            for (Element opt : doc.select("select[name=attribute_pa_ukus] option")) {
+                String val = opt.attr("value").trim();
+                String text = opt.text().trim();
+                if (!val.isBlank() && !text.isBlank()) ukusSlugToText.put(val, text);
+            }
+
+            // Per pakovanje slug: lowest listed price + flavours available at that size
+            Map<String, Double> pakToPrice = new LinkedHashMap<>();
+            Map<String, List<String>> pakToFlavours = new LinkedHashMap<>();
+
+            for (JsonNode v : arr) {
+                String pakSlug = v.path("attributes").path("attribute_pa_pakovanje").asText("").trim();
+                if (pakSlug.isBlank()) continue;
+
+                double price = v.path("display_price").asDouble(0);
+                if (price > 0) pakToPrice.merge(pakSlug, price, Math::min);
+
+                String ukusSlug = v.path("attributes").path("attribute_pa_ukus").asText("").trim();
+                pakToFlavours.computeIfAbsent(pakSlug, k -> new ArrayList<>());
+                if (!ukusSlug.isBlank()) {
+                    String display = normalizeFlavour(ukusSlugToText.getOrDefault(ukusSlug, ukusSlug));
+                    if (!pakToFlavours.get(pakSlug).contains(display))
+                        pakToFlavours.get(pakSlug).add(display);
+                }
+            }
+
+            if (pakToPrice.size() <= 1) return variants;
+
+            // Variations with no specific "ukus" attribute apply to every flavour
+            List<String> allFlavours = new ArrayList<>();
+            for (String text : ukusSlugToText.values()) {
+                String display = normalizeFlavour(text);
+                if (!allFlavours.contains(display)) allFlavours.add(display);
+            }
+
+            String baseUrl = original.getUrl();
+
+            for (Map.Entry<String, Double> entry : pakToPrice.entrySet()) {
+                String pakSlug = entry.getKey();
+                String displayWeight = pakSlugToText.get(pakSlug);
+                if (displayWeight == null) continue;
+
+                Product variant = new Product();
+                variant.setName(original.getName());
+                variant.setUrl(baseUrl + (baseUrl.contains("?") ? "&" : "?") + "pakovanje=" + pakSlug);
+                variant.setImageUrl(original.getImageUrl());
+                variant.setPrice(formatPrice(entry.getValue()));
+
+                String weight = displayWeight.replaceAll("\\s+", "");
+                variant.getPackage_weight().add(weight);
+                double weightGrams = parseWeightToGrams(weight);
+                if (weightGrams > 0) variant.setPrimaryWeightGrams(weightGrams);
+
+                List<String> flavours = pakToFlavours.getOrDefault(pakSlug, new ArrayList<>());
+                variant.getFlavours().addAll(!flavours.isEmpty() ? flavours : allFlavours);
+
+                variants.add(variant);
+                log.info("[{}] JSON variant: '{}' pak={} price={}",
+                        STORE_NAME, original.getName(), displayWeight, entry.getValue());
+            }
+
+        } catch (Exception e) {
+            log.warn("[{}] Failed to expand variants for '{}': {}", STORE_NAME, original.getName(), e.getMessage());
+        }
+        return variants;
+    }
+
+    private static double parseWeightToGrams(String text) {
+        if (text == null) return 0;
+        try {
+            String w = text.trim().toLowerCase().replace(",", ".").replaceAll("\\s+", "");
+            if (w.contains("kg")) return Double.parseDouble(w.replace("kg", "")) * 1000;
+            if (w.contains("g"))  return Double.parseDouble(w.replace("g", ""));
+        } catch (Exception ignored) {}
+        return 0;
+    }
+
+    private static String formatPrice(double price) {
+        return String.valueOf(Math.round(price));
+    }
+
+    private static void copyNutritionFields(Product from, Product to) {
+        if (to.getProteinPer100g() == null) to.setProteinPer100g(from.getProteinPer100g());
+        if (to.getFatPer100g() == null)     to.setFatPer100g(from.getFatPer100g());
+        if (to.getSugarPer100g() == null)   to.setSugarPer100g(from.getSugarPer100g());
+        if (to.getCaloriePer100g() == null) to.setCaloriePer100g(from.getCaloriePer100g());
+        if (to.getProteinSource() == null)  to.setProteinSource(from.getProteinSource());
     }
 
     // -------------------- Nutrition extraction --------------------
