@@ -208,6 +208,7 @@ public class ProteinboxScraper implements StoreScraper {
                     } else {
                         log.debug("[{}] Skipping detail enrichment for '{}' — nutrition complete", STORE_NAME, p.getName());
                         enrichPriceIfMissing(doc, p);
+                        enrichBrand(doc, p);
                     }
                     log.info("[{}] Enriched '{}' -> brand={}, protein={}, fat={}, sugar={}, cal={}",
                             STORE_NAME, p.getName(), p.getBrand(),
@@ -586,7 +587,6 @@ public class ProteinboxScraper implements StoreScraper {
 
     private void enrichBrand(Document doc, Product p) {
         Element brandEl = doc.selectFirst("div.product-proizvodjaci a");
-        if (brandEl == null) brandEl = doc.selectFirst("a[href*='/proizvodjaci/']");
         if (brandEl != null) p.setBrand(brandEl.text().trim());
     }
 
@@ -718,6 +718,12 @@ public class ProteinboxScraper implements StoreScraper {
     private void extractBrandFromName(Product p) {
         if (p.getName() == null || p.getName().isBlank()) return;
         String[] parts = p.getName().split("\\s+[-–]\\s+");
-        if (parts.length >= 2) p.setBrand(parts[parts.length - 1].trim());
+        if (parts.length >= 2) {
+            String last = parts[parts.length - 1].trim();
+            // Skip weight expressions like "1000 g", "500g", "2,27kg"
+            if (!last.matches("(?i)\\d+[.,]?\\d*\\s*(g|kg).*")) {
+                p.setBrand(last);
+            }
+        }
     }
 }
