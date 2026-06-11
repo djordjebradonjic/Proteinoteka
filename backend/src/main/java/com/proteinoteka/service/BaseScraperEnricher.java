@@ -145,7 +145,7 @@ public class BaseScraperEnricher {
                 lower.contains("protein food") || lower.contains("protein desert") ||
                 lower.contains("protein dessert") ||
                 lower.contains("waffle") || lower.contains("vafla") ||
-                lower.contains("trail mix") ||
+                lower.contains("trail mix") || lower.contains("nutty mix") || lower.contains("fruity") ||
                 lower.contains("oats & whey") || lower.contains("oats and whey") ||
                 lower.contains("ovsena") ||
                 lower.contains(" paket ") || lower.contains(" paket") && lower.contains("masu") ||
