@@ -269,6 +269,7 @@ public class AdminController {
                 .filter(p -> (p.getSugarPer100g() == null || p.getFatPer100g() == null)
                         && p.getDescription() != null && !p.getDescription().isBlank())
                 .toList();
+        candidates.forEach(p -> p.getPackage_weight().size()); // force eager load while JPA session is open
 
         runAsync("enrich-nutrition", () -> {
             int updated = 0;
