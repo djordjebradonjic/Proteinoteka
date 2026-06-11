@@ -1,6 +1,7 @@
 package com.proteinoteka.service;
 
 import com.microsoft.playwright.Page;
+import com.microsoft.playwright.options.LoadState;
 import com.microsoft.playwright.options.WaitUntilState;
 import com.proteinoteka.model.Product;
 import com.proteinoteka.repository.ProductRepository;
@@ -171,7 +172,7 @@ public class PansportScraper implements StoreScraper {
     // ── Detail page enrichment ──────────────────────────────────────────────────
 
     private void enrichWithDetails(Page page, List<Product> products, Set<String> skipUrls) {
-        // Group variants by base URL so nutrition is fetched once per product
+        // Group variants by base URL — navigate once per product, switch variants via dropdown
         Map<String, List<Product>> byBase = new LinkedHashMap<>();
         for (Product p : products) {
             byBase.computeIfAbsent(stripSku(p.getUrl()), k -> new ArrayList<>()).add(p);
@@ -180,55 +181,76 @@ public class PansportScraper implements StoreScraper {
         int count = 0;
 
         for (Map.Entry<String, List<Product>> entry : byBase.entrySet()) {
+            String baseUrl = entry.getKey();
             List<Product> variants = entry.getValue();
 
-            // Skip entire group if: price unchanged (selected variant) + all URLs have complete nutrition
             if (canSkipGroup(variants, skipUrls)) {
                 log.info("[{}] Skipping '{}' group — price unchanged + nutrition complete in DB",
                         STORE_NAME, variants.get(0).getName());
-                for (Product p : variants) {
-                    restoreFromDb(p);
-                }
+                for (Product p : variants) restoreFromDb(p);
                 continue;
             }
 
-            // First variant that successfully returns protein data is the nutrition source
-            Product nutritionDonor = null;
+            try {
+                long sleep = 4000 + ThreadLocalRandom.current().nextLong(4000);
+                log.info("[{}] Sleeping {}s before '{}' group ({} variants)...",
+                        STORE_NAME, sleep / 1000, variants.get(0).getName(), variants.size());
+                Thread.sleep(sleep);
 
-            for (Product p : variants) {
-                if (p.getUrl() == null || p.getUrl().isBlank()) continue;
-                if (baseEnricher.isNonProteinProduct(p.getName())) {
-                    log.info("[{}] Skipping '{}' — not a protein product", STORE_NAME, p.getName());
+                // Navigate to base URL ONCE per product — Drupal loads default (selected) variant
+                boolean success = navigateWithRetry(page, baseUrl, 3);
+                if (!success) {
+                    log.error("[{}] Failed to load {} — skipping group", STORE_NAME, baseUrl);
                     continue;
                 }
 
-                try {
-                    long sleep = 4000 + ThreadLocalRandom.current().nextLong(4000);
-                    log.info("[{}] Sleeping {}s before '{}' ({}g)...", STORE_NAME, sleep / 1000,
-                            p.getName(), p.getPrimaryWeightGrams() != null ? Math.round(p.getPrimaryWeightGrams()) : "?");
-                    Thread.sleep(sleep);
+                if (isBlockedByFirewall(page)) {
+                    log.error("[{}] FIREWALL DETECTED! Stopping.", STORE_NAME);
+                    return;
+                }
 
-                    boolean success = navigateWithRetry(page, p.getUrl(), 3);
-                    if (!success) {
-                        log.error("[{}] Failed to load {} — skipping", STORE_NAME, p.getUrl());
+                simulateHumanBehavior(page);
+
+                // Process the already-selected (default) variant first; switch dropdown for others.
+                // The selected variant has its listing price pre-filled; non-selected have price=null.
+                List<Product> ordered = new ArrayList<>(variants);
+                ordered.sort((a, b) -> Boolean.compare(
+                        a.getPrice() == null || a.getPrice().isBlank(),
+                        b.getPrice() == null || b.getPrice().isBlank()));
+
+                Product nutritionDonor = null;
+
+                for (int i = 0; i < ordered.size(); i++) {
+                    Product p = ordered.get(i);
+                    if (p.getUrl() == null || p.getUrl().isBlank()) continue;
+                    if (baseEnricher.isNonProteinProduct(p.getName())) {
+                        log.info("[{}] Skipping '{}' — not a protein product", STORE_NAME, p.getName());
                         continue;
                     }
 
-                    if (isBlockedByFirewall(page)) {
-                        log.error("[{}] FIREWALL DETECTED! Stopping.", STORE_NAME);
-                        return;
+                    // For non-first variants, switch the pakovanje dropdown and wait for AJAX
+                    if (i > 0 && variants.size() > 1) {
+                        String termId = extractTermId(p.getUrl());
+                        if (termId != null) {
+                            try {
+                                page.selectOption("select[id^=edit-attributes-field-attr-pakovanje]", termId);
+                                page.waitForLoadState(LoadState.NETWORKIDLE,
+                                        new Page.WaitForLoadStateOptions().setTimeout(10000));
+                                page.waitForTimeout(500 + ThreadLocalRandom.current().nextInt(500));
+                                log.info("[{}] Switched to variant termId={} ({}g)", STORE_NAME, termId,
+                                        p.getPrimaryWeightGrams() != null ? Math.round(p.getPrimaryWeightGrams()) : "?");
+                            } catch (Exception e) {
+                                log.warn("[{}] Failed to switch to variant {} for '{}': {}",
+                                        STORE_NAME, termId, p.getName(), e.getMessage());
+                            }
+                        }
                     }
 
-                    simulateHumanBehavior(page);
                     Document doc = Jsoup.parse(page.content());
 
-                    // Price — always fetch from detail page (each SKU variant has its own price)
                     enrichPriceFromDetail(doc, p);
-
-                    // Image — fetch from detail page (may differ by variant/flavor)
                     enrichImageFromDetail(doc, p);
 
-                    // Brand — same for all variants, set from first
                     if (nutritionDonor == null) {
                         enrichBrand(doc, p);
                         enrichFullDescription(doc, p);
@@ -236,18 +258,12 @@ public class PansportScraper implements StoreScraper {
                         p.setBrand(nutritionDonor.getBrand());
                     }
 
-                    // Nutrition — shared across all variants of the same product
                     if (nutritionDonor != null) {
-                        // Copy from already-enriched sibling — no extra AI call needed
                         copyNutrition(nutritionDonor, p);
                     } else if (!skipUrls.contains(p.getUrl())) {
-                        // First variant and not already complete in DB — enrich fully
                         enrichNutrition(doc, p);
-                        if (p.getProteinPer100g() != null) {
-                            nutritionDonor = p;
-                        }
+                        if (p.getProteinPer100g() != null) nutritionDonor = p;
                     }
-                    // If in skipUrls: price already updated, nutrition restored from DB by saveOrUpdateProduct
 
                     log.info("[{}] Enriched '{}' {}g → price={}, protein={}g/100g",
                             STORE_NAME, p.getName(),
@@ -260,13 +276,20 @@ public class PansportScraper implements StoreScraper {
                         log.info("[{}] Batch pause {}s after {} products...", STORE_NAME, batchSleep / 1000, count);
                         Thread.sleep(batchSleep);
                     }
-
-                } catch (Exception e) {
-                    log.error("[{}] Failed to enrich {}: {}", STORE_NAME, p.getUrl(), e.getMessage());
-                    safeSleep(5000);
                 }
+
+            } catch (Exception e) {
+                log.error("[{}] Failed to enrich group {}: {}", STORE_NAME, baseUrl, e.getMessage());
+                safeSleep(5000);
             }
         }
+    }
+
+    private String extractTermId(String url) {
+        if (url == null) return null;
+        int idx = url.indexOf("?sku=");
+        if (idx < 0) return null;
+        return url.substring(idx + 5);
     }
 
     // ── Skip-if-unchanged optimization ──────────────────────────────────────────
