@@ -535,7 +535,7 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
                           )}
                           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                             {weightLabel && (
-                              <span className="text-[10px] font-bold text-[#1B2B4B] bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-full">{weightLabel}</span>
+                              <span className="text-[10px] text-slate-400 font-medium">{weightLabel}</span>
                             )}
                             {diff != null && (
                               <span className="text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-full">
