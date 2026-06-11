@@ -271,6 +271,10 @@ public class PansportScraper implements StoreScraper {
                     } else if (!skipUrls.contains(p.getUrl())) {
                         enrichNutrition(doc, p);
                         if (p.getProteinPer100g() != null) nutritionDonor = p;
+                    } else {
+                        // Nutrition complete in DB — restore without re-parsing the page
+                        restoreNutritionFromDb(p);
+                        nutritionDonor = p;
                     }
 
                     log.info("[{}] Enriched '{}' {}g → price={}, protein={}g/100g",
@@ -303,6 +307,10 @@ public class PansportScraper implements StoreScraper {
     // ── Skip-if-unchanged optimization ──────────────────────────────────────────
 
     private boolean canSkipGroup(List<Product> variants, Set<String> skipUrls) {
+        // Multi-variant groups: can't determine non-default variant prices from listing page.
+        // Always navigate so dropdown-switching reads current prices for every variant.
+        if (variants.size() > 1) return false;
+
         // All variants must have complete nutrition in DB
         if (variants.stream().anyMatch(v -> !skipUrls.contains(v.getUrl()))) return false;
 
@@ -320,6 +328,17 @@ public class PansportScraper implements StoreScraper {
         if (listingPrice == null) return false;
 
         return Math.abs(listingPrice - dbProduct.getNumericPrice()) < 1.0;
+    }
+
+    private void restoreNutritionFromDb(Product p) {
+        productRepository.findByUrl(p.getUrl()).ifPresent(db -> {
+            if (p.getProteinPer100g() == null) p.setProteinPer100g(db.getProteinPer100g());
+            if (p.getFatPer100g() == null)     p.setFatPer100g(db.getFatPer100g());
+            if (p.getSugarPer100g() == null)   p.setSugarPer100g(db.getSugarPer100g());
+            if (p.getCaloriePer100g() == null) p.setCaloriePer100g(db.getCaloriePer100g());
+            if (p.getProteinSource() == null)  p.setProteinSource(db.getProteinSource());
+            if (p.getBrand() == null)          p.setBrand(db.getBrand());
+        });
     }
 
     private void restoreFromDb(Product p) {
