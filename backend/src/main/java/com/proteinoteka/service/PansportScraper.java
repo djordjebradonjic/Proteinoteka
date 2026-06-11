@@ -255,14 +255,14 @@ public class PansportScraper implements StoreScraper {
     }
 
     private void enrichPriceFromDetail(Document doc, Product p) {
-        if (p.getPrice() != null && !p.getPrice().isBlank()) return; // already from listing (selected variant)
-        Element priceEl = doc.selectFirst("td.price-amount");
+        // Always fetch from detail page — NETWORKIDLE ensures AJAX price update has completed
+        Element priceEl = doc.selectFirst("td.price-amount, span.price-amount, .field--name-price .field__item");
         if (priceEl != null) {
             String price = priceEl.text()
                     .replace(" ", "")
                     .replaceAll("(?i)rsd", "")
                     .trim();
-            p.setPrice(price);
+            if (!price.isBlank()) p.setPrice(price);
         }
     }
 
@@ -395,9 +395,9 @@ public class PansportScraper implements StoreScraper {
         for (int i = 0; i < maxRetries; i++) {
             try {
                 page.navigate(url, new Page.NavigateOptions()
-                        .setWaitUntil(WaitUntilState.DOMCONTENTLOADED)
-                        .setTimeout(25000));
-                page.waitForTimeout(500 + ThreadLocalRandom.current().nextInt(1000));
+                        .setWaitUntil(WaitUntilState.NETWORKIDLE)
+                        .setTimeout(30000));
+                page.waitForTimeout(800 + ThreadLocalRandom.current().nextInt(1200));
                 return true;
             } catch (Exception e) {
                 log.warn("[{}] Navigate retry {}/{} for {}: {}", STORE_NAME, i + 1, maxRetries, url, e.getMessage());
