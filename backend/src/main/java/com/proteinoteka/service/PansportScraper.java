@@ -228,17 +228,23 @@ public class PansportScraper implements StoreScraper {
                         continue;
                     }
 
-                    // For non-first variants, switch the pakovanje dropdown and wait for AJAX response
+                    // For non-first variants, switch the pakovanje dropdown and wait for DOM price update
                     if (i > 0 && variants.size() > 1) {
                         String termId = extractTermId(p.getUrl());
                         if (termId != null) {
                             try {
                                 String sel = "select[id^=edit-attributes-field-attr-pakovanje]";
-                                // waitForResponse wraps selectOption to catch the AJAX request that fires after the change event
-                                page.waitForResponse(
-                                        response -> response.url().contains("/system/ajax") && response.status() == 200,
-                                        () -> page.selectOption(sel, termId));
-                                page.waitForTimeout(500 + ThreadLocalRandom.current().nextInt(500));
+                                String priceSelector = "td.price-amount, span.price-amount, .field--name-price .field__item";
+                                // Snapshot price before switching — used to detect DOM update
+                                String priceBefore = (String) page.evaluate(
+                                        "sel => document.querySelector(sel)?.textContent || ''", priceSelector);
+                                page.selectOption(sel, termId);
+                                // Wait for price element to change in DOM (more reliable than network event)
+                                page.waitForFunction(
+                                        "([sel, before]) => (document.querySelector(sel)?.textContent || '') !== before",
+                                        new Object[]{priceSelector, priceBefore},
+                                        new Page.WaitForFunctionOptions().setTimeout(12000));
+                                page.waitForTimeout(300 + ThreadLocalRandom.current().nextInt(300));
                                 log.info("[{}] Switched to variant termId={} ({}g)", STORE_NAME, termId,
                                         p.getPrimaryWeightGrams() != null ? Math.round(p.getPrimaryWeightGrams()) : "?");
                             } catch (Exception e) {
