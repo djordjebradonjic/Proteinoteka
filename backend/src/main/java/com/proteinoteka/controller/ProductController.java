@@ -384,8 +384,8 @@ public class ProductController {
                 product.getImageUrl(),
                 product.getUrl(),
                 product.getStore() != null ? product.getStore().getName() : "Unknown",
-                product.getPackage_weight(),
-                product.getFlavours(),
+                new java.util.ArrayList<>(product.getPackage_weight()),
+                new java.util.ArrayList<>(product.getFlavours()),
                 product.getPriceHistories().stream()
                         .map(h -> new PriceHistoryDTO(h.getPrice(), h.getNumericPrice(), h.getTimestamp()))
                         .sorted(Comparator.comparing(PriceHistoryDTO::timestamp).reversed())
