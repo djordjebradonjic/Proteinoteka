@@ -243,7 +243,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
         </h3>
 
         {product.primaryWeightGrams && (
-          <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded w-fit">
+          <span className="text-xs font-black text-[#1B2B4B] bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full w-fit">
             {product.primaryWeightGrams >= 1000
               ? `${(product.primaryWeightGrams / 1000 % 1 === 0 ? product.primaryWeightGrams / 1000 : (product.primaryWeightGrams / 1000).toFixed(1))} kg`
               : `${Math.round(product.primaryWeightGrams)} g`}

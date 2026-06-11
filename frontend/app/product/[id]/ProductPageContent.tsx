@@ -416,7 +416,8 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
                 </span>
               )}
               {product.primaryWeightGrams && (
-                <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#1B2B4B] text-white flex items-center gap-1.5">
+                  <Package className="w-3 h-3" />
                   {product.primaryWeightGrams >= 1000
                     ? `${product.primaryWeightGrams % 1000 === 0 ? product.primaryWeightGrams / 1000 : (product.primaryWeightGrams / 1000).toFixed(1)} kg`
                     : `${Math.round(product.primaryWeightGrams)} g`}
