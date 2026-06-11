@@ -31,7 +31,11 @@ public class ProductGroupService {
                     product.getId(),
                     product.getStore() != null ? product.getStore().getName() : "Unknown",
                     product.getPrice(),
-                    product.getNumericPrice()
+                    product.getNumericPrice(),
+                    product.getName(),
+                    product.getPrimaryWeightGrams(),
+                    product.getProteinSource(),
+                    product.getCanonicalSlug()
             ));
         }
 
@@ -42,7 +46,9 @@ public class ProductGroupService {
                 .forEach(p -> {
                     String store = p.getStore() != null ? p.getStore().getName() : "Unknown";
                     cheapestPerStore.putIfAbsent(store, new StorePriceDTO(
-                            p.getId(), store, p.getPrice(), p.getNumericPrice()
+                            p.getId(), store, p.getPrice(), p.getNumericPrice(),
+                            p.getName(), p.getPrimaryWeightGrams(),
+                            p.getProteinSource(), p.getCanonicalSlug()
                     ));
                 });
 

@@ -288,7 +288,11 @@ public class ProductController {
                         p.getId(),
                         p.getStore() != null ? p.getStore().getName() : "Unknown",
                         p.getPrice(),
-                        p.getNumericPrice()
+                        p.getNumericPrice(),
+                        p.getName(),
+                        p.getPrimaryWeightGrams(),
+                        p.getProteinSource(),
+                        p.getCanonicalSlug()
                 ))
                 .sorted(Comparator.comparingDouble(
                         p -> p.numericPrice() != null ? p.numericPrice() : Double.MAX_VALUE))

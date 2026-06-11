@@ -16,7 +16,7 @@ export const revalidate = 86400;
 const API      = process.env.NEXT_PUBLIC_API_URL ?? "";
 const BASE_URL = "https://proteinoteka.rs";
 
-interface StorePrice { id: number; storeName: string; price: string; numericPrice: number | null; }
+interface StorePrice { id: number; storeName: string; price: string; numericPrice: number | null; name: string | null; primaryWeightGrams: number | null; proteinSource: string | null; canonicalSlug: string | null; }
 interface Params { params: Promise<{ category: string; slug: string }> }
 
 // ── Data fetching ──────────────────────────────────────────────────────────────

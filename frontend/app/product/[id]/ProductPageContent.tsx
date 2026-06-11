@@ -265,7 +265,7 @@ function cutRawDescription(html: string): string {
   return cut > 0 ? html.slice(0, cut) : html;
 }
 
-interface StorePrice { id: number; storeName: string; price: string; numericPrice: number | null; }
+interface StorePrice { id: number; storeName: string; price: string; numericPrice: number | null; name: string | null; primaryWeightGrams: number | null; proteinSource: string | null; canonicalSlug: string | null; }
 
 interface Props {
   product: Product;
@@ -511,29 +511,47 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
                   const diff = (!allSamePrice && cheapest != null && sp.numericPrice != null && !isCheapest)
                     ? Math.round(sp.numericPrice - cheapest) : null;
                   const isCurrent = sp.id === product.id;
+                  const spUrl = productUrl({ id: sp.id, name: sp.name ?? "", proteinSource: sp.proteinSource, canonicalSlug: sp.canonicalSlug });
+                  const weightLabel = sp.primaryWeightGrams
+                    ? sp.primaryWeightGrams >= 1000
+                      ? `${sp.primaryWeightGrams % 1000 === 0 ? sp.primaryWeightGrams / 1000 : (sp.primaryWeightGrams / 1000).toFixed(1)} kg`
+                      : `${Math.round(sp.primaryWeightGrams)} g`
+                    : null;
                   return (
-                    <li
-                      key={sp.id}
-                      className={`flex items-center gap-3 px-6 py-4 border-b border-slate-100 last:border-0 ${isCheapest ? "bg-green-50" : "hover:bg-slate-50"} transition-colors`}
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className={`text-sm font-semibold ${isCurrent ? "text-[#FF9900]" : "text-slate-800"}`}>{sp.storeName}</span>
-                          {isCheapest && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-green-100 text-green-700">Najjeftinije</span>}
-                          {isCurrent && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-100">Trenutno gledaš</span>}
-                        </div>
-                        {diff != null && <p className="text-xs text-slate-400 mt-0.5">+{diff.toLocaleString("sr-RS")} RSD skuplje</p>}
-                      </div>
-                      <span className={`text-base font-black shrink-0 ${isCheapest ? "text-green-700" : "text-slate-900"}`}>{sp.price}</span>
-                      <a
-                        href={`${process.env.NEXT_PUBLIC_API_URL}/api/v1/products/${sp.id}/buy`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={() => analytics.clickBuyDetails(sp.id, product.name, sp.storeName)}
-                        className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all ${isCheapest ? "bg-green-600 hover:bg-green-700 text-white" : "bg-slate-900 hover:bg-[#243860] text-white"}`}
+                    <li key={sp.id} className={`border-b border-slate-100 last:border-0 ${isCheapest ? "bg-green-50" : ""}`}>
+                      <Link
+                        href={spUrl}
+                        className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 transition-colors ${isCurrent ? "cursor-default" : "hover:bg-slate-50"}`}
+                        onClick={() => { if (!isCurrent) analytics.clickBuyDetails(sp.id, sp.name ?? product.name, sp.storeName); }}
                       >
-                        <ShoppingCart className="w-3.5 h-3.5" /> Kupi
-                      </a>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className={`text-sm font-semibold ${isCurrent ? "text-[#FF9900]" : "text-slate-800"}`}>{sp.storeName}</span>
+                            {isCheapest && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-green-100 text-green-700">Najjeftinije</span>}
+                            {isCurrent && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-100">Trenutno gledaš</span>}
+                          </div>
+                          {sp.name && (
+                            <p className="text-xs text-slate-500 mt-0.5 truncate">{sp.name}</p>
+                          )}
+                          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                            {weightLabel && (
+                              <span className="text-[10px] font-bold text-[#1B2B4B] bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-full">{weightLabel}</span>
+                            )}
+                            {diff != null && <p className="text-xs text-slate-400">+{diff.toLocaleString("sr-RS")} RSD skuplje</p>}
+                          </div>
+                        </div>
+                        <span className={`text-sm sm:text-base font-black shrink-0 ${isCheapest ? "text-green-700" : "text-slate-900"}`}>{sp.price}</span>
+                        <a
+                          href={`${process.env.NEXT_PUBLIC_API_URL}/api/v1/products/${sp.id}/buy`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => { e.stopPropagation(); analytics.clickBuyDetails(sp.id, sp.name ?? product.name, sp.storeName); }}
+                          className={`shrink-0 flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl text-xs font-bold transition-all ${isCheapest ? "bg-green-600 hover:bg-green-700 text-white" : "bg-slate-900 hover:bg-[#243860] text-white"}`}
+                        >
+                          <ShoppingCart className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">Kupi</span>
+                        </a>
+                      </Link>
                     </li>
                   );
                 })}
