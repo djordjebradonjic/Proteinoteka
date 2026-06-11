@@ -3,6 +3,8 @@ package com.proteinoteka.service;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.WaitUntilState;
 import com.proteinoteka.model.Product;
+import com.proteinoteka.repository.ProductRepository;
+import com.proteinoteka.util.PriceParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -25,6 +27,8 @@ public class PansportScraper implements StoreScraper {
 
     private final NutritionParserService nutritionParser;
     private final BaseScraperEnricher baseEnricher;
+    private final ProductRepository productRepository;
+    private final PriceParser priceParser;
 
     @Override public String getStoreName() { return STORE_NAME; }
     @Override public String getBaseUrl()   { return BASE_URL; }
@@ -177,6 +181,17 @@ public class PansportScraper implements StoreScraper {
 
         for (Map.Entry<String, List<Product>> entry : byBase.entrySet()) {
             List<Product> variants = entry.getValue();
+
+            // Skip entire group if: price unchanged (selected variant) + all URLs have complete nutrition
+            if (canSkipGroup(variants, skipUrls)) {
+                log.info("[{}] Skipping '{}' group — price unchanged + nutrition complete in DB",
+                        STORE_NAME, variants.get(0).getName());
+                for (Product p : variants) {
+                    restoreFromDb(p);
+                }
+                continue;
+            }
+
             // First variant that successfully returns protein data is the nutrition source
             Product nutritionDonor = null;
 
@@ -252,6 +267,42 @@ public class PansportScraper implements StoreScraper {
                 }
             }
         }
+    }
+
+    // ── Skip-if-unchanged optimization ──────────────────────────────────────────
+
+    private boolean canSkipGroup(List<Product> variants, Set<String> skipUrls) {
+        // All variants must have complete nutrition in DB
+        if (variants.stream().anyMatch(v -> !skipUrls.contains(v.getUrl()))) return false;
+
+        // Find the selected variant (has listing price set)
+        Product selected = variants.stream()
+                .filter(v -> v.getPrice() != null && !v.getPrice().isBlank())
+                .findFirst().orElse(null);
+        if (selected == null) return false;
+
+        // Check listing price vs DB price
+        Product dbProduct = productRepository.findByUrl(selected.getUrl()).orElse(null);
+        if (dbProduct == null || dbProduct.getNumericPrice() == null) return false;
+
+        Double listingPrice = priceParser.parse(selected.getPrice());
+        if (listingPrice == null) return false;
+
+        return Math.abs(listingPrice - dbProduct.getNumericPrice()) < 1.0;
+    }
+
+    private void restoreFromDb(Product p) {
+        productRepository.findByUrl(p.getUrl()).ifPresent(db -> {
+            p.setPrice(db.getPrice());
+            p.setProteinPer100g(db.getProteinPer100g());
+            p.setFatPer100g(db.getFatPer100g());
+            p.setSugarPer100g(db.getSugarPer100g());
+            p.setCaloriePer100g(db.getCaloriePer100g());
+            p.setProteinSource(db.getProteinSource());
+            p.setBrand(db.getBrand());
+            p.setImageUrl(db.getImageUrl());
+            if (p.getPrimaryWeightGrams() == null) p.setPrimaryWeightGrams(db.getPrimaryWeightGrams());
+        });
     }
 
     private void enrichPriceFromDetail(Document doc, Product p) {

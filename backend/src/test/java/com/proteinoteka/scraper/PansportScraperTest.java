@@ -33,7 +33,7 @@ public class PansportScraperTest {
 
     @BeforeEach
     void setUp() throws IOException {
-        pansportScraper = new PansportScraper(nutritionParser, baseEnricher);
+        pansportScraper = new PansportScraper(nutritionParser, baseEnricher, null, null);
         File htmlFile = new File("src/test/resources/html/pansport_test.html");
         mockDoc = Jsoup.parse(htmlFile, StandardCharsets.UTF_8.name());
     }

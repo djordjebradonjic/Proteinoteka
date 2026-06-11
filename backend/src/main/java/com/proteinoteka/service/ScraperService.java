@@ -658,6 +658,9 @@ public class ScraperService {
                 existing.setProteinSource(scraped.getProteinSource());
 
             existing.setProteinPerRsd(computeProteinPerRsd(numericPrice, existing));
+            double slugWeight = weightGrams > 0 ? weightGrams
+                    : (existing.getPrimaryWeightGrams() != null ? existing.getPrimaryWeightGrams() : 0);
+            existing.setCanonicalSlug(slugifyWithWeight(existing.getName(), slugWeight > 0 ? slugWeight : null));
             productRepository.save(existing);
             productGroupService.tryAutoAssign(existing);
 
@@ -671,7 +674,7 @@ public class ScraperService {
             scraped.setValueScore(valueScore);
             if (weightGrams > 0) scraped.setPrimaryWeightGrams(weightGrams);
             scraped.setProteinPerRsd(computeProteinPerRsd(numericPrice, scraped));
-            scraped.setCanonicalSlug(slugify(scraped.getName()));
+            scraped.setCanonicalSlug(slugifyWithWeight(scraped.getName(), weightGrams > 0 ? weightGrams : null));
             productRepository.save(scraped);
             productGroupService.tryAutoAssign(scraped);
             log.info("[{}] New product saved: '{}'", store.getName(), scraped.getName());
@@ -843,6 +846,14 @@ public class ScraperService {
                 .replaceAll("[^a-z0-9\\s-]", "")
                 .replaceAll("[\\s-]+", "-")
                 .replaceAll("^-|-$", "");
+    }
+
+    static String slugifyWithWeight(String name, Double weightGrams) {
+        String base = slugify(name);
+        if (weightGrams == null || weightGrams <= 0) return base;
+        long grams = Math.round(weightGrams);
+        if (grams % 1000 == 0) return base + "-" + (grams / 1000) + "kg";
+        return base + "-" + grams + "g";
     }
 
     // ── Price drop detection ──────────────────────────────────────────────────────
