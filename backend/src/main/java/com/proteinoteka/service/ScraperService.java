@@ -574,14 +574,29 @@ public class ScraperService {
             return false;
         }
 
-        // 4. Validacija proteina
-        if (scraped.getProteinPer100g() == null || scraped.getProteinPer100g() < 15) {
-            log.warn("[{}] Skipping '{}' - no valid protein data (protein={})",
-                    store.getName(), scraped.getName(), scraped.getProteinPer100g());
-            return false;
-        }
-
+        // 4. Lookup existing + protein fallback:
+        // Ako je protein null (listing page ne sadrzi nutrition, detail page preskocen),
+        // uzmi protein iz baze — cena se uvek azurira za postojece proizvode.
         Optional<Product> existingOpt = productRepository.findByUrl(scraped.getUrl());
+
+        if (scraped.getProteinPer100g() == null || scraped.getProteinPer100g() < 15) {
+            if (existingOpt.isPresent() && existingOpt.get().getProteinPer100g() != null
+                    && existingOpt.get().getProteinPer100g() >= 15) {
+                Product fb = existingOpt.get();
+                scraped.setProteinPer100g(fb.getProteinPer100g());
+                if (scraped.getFatPer100g() == null)         scraped.setFatPer100g(fb.getFatPer100g());
+                if (scraped.getSugarPer100g() == null)       scraped.setSugarPer100g(fb.getSugarPer100g());
+                if (scraped.getCaloriePer100g() == null)     scraped.setCaloriePer100g(fb.getCaloriePer100g());
+                if (scraped.getProteinSource() == null)      scraped.setProteinSource(fb.getProteinSource());
+                if (scraped.getPrimaryWeightGrams() == null) scraped.setPrimaryWeightGrams(fb.getPrimaryWeightGrams());
+                log.info("[{}] '{}' — protein null from listing, restored from DB ({}g/100g)",
+                        store.getName(), scraped.getName(), scraped.getProteinPer100g());
+            } else {
+                log.warn("[{}] Skipping '{}' - no valid protein data (protein={})",
+                        store.getName(), scraped.getName(), scraped.getProteinPer100g());
+                return false;
+            }
+        }
         Double valueScore = calculateValueScore(numericPrice, scraped);
         double weightGrams = extractPackageGrams(scraped);
 
