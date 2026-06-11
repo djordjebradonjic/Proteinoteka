@@ -62,6 +62,7 @@ public class ScraperService {
     private final ApplicationEventPublisher eventPublisher;
     private final BaseScraperEnricher baseEnricher;
     private final ProductGroupService productGroupService;
+    private final ProxyAwareHttpClient httpClient;
 
     @Autowired
     private NutritionParserService nutritionParser;
@@ -300,12 +301,10 @@ public class ScraperService {
                         log.info("[{}] Scraping page {}: {}", scraper.getStoreName(), currentPage, url);
 
                         if (!scraper.usePlaywrightForListing()) {
-                            // Server-rendered stores (PrestaShop, Drupal) — JSoup is enough for listing.
+                            // Server-rendered stores (PrestaShop, Drupal, Next.js SSR) — JSoup is enough for listing.
                             // Avoids loading images/JS/tracking through proxy on listing pages.
                             try {
-                                setupJsoupProxy();
-                                org.jsoup.Connection jsoupConn = buildJsoupConn(url);
-                                String html = jsoupConn.get().html();
+                                String html = httpClient.connection(url).get().html();
                                 page.setContent(html);
                                 log.info("[{}] JSoup listing fetch succeeded for {}", scraper.getStoreName(), url);
                             } catch (Exception jsoupEx) {
@@ -317,8 +316,7 @@ public class ScraperService {
                             log.warn("[{}] Playwright navigation failed — trying JSoup direct fetch for {}",
                                     scraper.getStoreName(), url);
                             try {
-                                setupJsoupProxy();
-                                String html = buildJsoupConn(url).get().html();
+                                String html = httpClient.connection(url).get().html();
                                 page.setContent(html);
                                 log.info("[{}] JSoup direct fetch succeeded for {}", scraper.getStoreName(), url);
                             } catch (Exception jsoupEx) {
@@ -493,33 +491,6 @@ public class ScraperService {
 
     private String getRandomUserAgent() {
         return USER_AGENTS.get(ThreadLocalRandom.current().nextInt(USER_AGENTS.size()));
-    }
-
-    private void setupJsoupProxy() {
-        if (proxyEnabled && !proxyHost.isBlank() && !proxyUsername.isBlank()) {
-            // Java 8u111+ disables Basic auth for HTTPS proxy tunneling by default — re-enable it
-            System.setProperty("jdk.http.auth.tunneling.disabledSchemes", "");
-            System.setProperty("jdk.http.auth.proxying.disabledSchemes", "");
-            java.net.Authenticator.setDefault(new java.net.Authenticator() {
-                @Override
-                protected java.net.PasswordAuthentication getPasswordAuthentication() {
-                    return new java.net.PasswordAuthentication(proxyUsername, proxyPassword.toCharArray());
-                }
-            });
-        }
-    }
-
-    private org.jsoup.Connection buildJsoupConn(String url) {
-        org.jsoup.Connection conn = Jsoup.connect(url)
-                .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36")
-                .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
-                .header("Accept-Language", "sr-RS,sr;q=0.9,en-US;q=0.8,en;q=0.7")
-                .referrer("https://www.google.com/")
-                .timeout(15000);
-        if (proxyEnabled && !proxyHost.isBlank()) {
-            conn = conn.proxy(proxyHost, proxyPort);
-        }
-        return conn;
     }
 
     // -------------------- Save / Update --------------------

@@ -1,12 +1,10 @@
 package com.proteinoteka.service;
 
 import com.microsoft.playwright.Page;
-import com.microsoft.playwright.options.WaitUntilState;
 import com.proteinoteka.model.Product;
 import com.proteinoteka.util.ProductNameCleaner;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -25,9 +23,13 @@ public class FitLabScraper implements StoreScraper {
 
     private static final String STORE_NAME = "FitLab";
     private static final String BASE_URL = "https://fitlab.rs/sr/suplementi/proteini";
+    private static final int MAX_DETAIL_FETCH_RETRIES = 3;
+    private static final int MAX_CONSECUTIVE_FAILURES = 5;
+    private static final Pattern LD_JSON_BRAND = Pattern.compile("\"brand\"\\s*:\\s*\\{[^}]*\"name\"\\s*:\\s*\"([^\"]+)\"");
 
     private final NutritionParserService nutritionParser;
     private final BaseScraperEnricher baseEnricher;
+    private final ProxyAwareHttpClient httpClient;
 
 
     @Override
@@ -35,6 +37,12 @@ public class FitLabScraper implements StoreScraper {
 
     @Override
     public String getBaseUrl() { return BASE_URL; }
+
+    // FitLab (Next.js) is fully server-rendered for both listing and detail pages —
+    // confirmed via direct fetch, no Cloudflare/JS challenge. Plain JSoup avoids the
+    // Playwright/Chromium + proxy bandwidth cost entirely.
+    @Override
+    public boolean usePlaywrightForListing() { return false; }
 
     @Override
     public String buildPageUrl(int page) {
@@ -70,8 +78,8 @@ public class FitLabScraper implements StoreScraper {
             if (p != null) products.add(p);
         }
 
-        if (page != null && !products.isEmpty()) {
-            enrichWithDetails(page, products, skipUrls);
+        if (!products.isEmpty()) {
+            enrichWithDetails(products, skipUrls);
         }
 
         return products;
@@ -171,8 +179,8 @@ public class FitLabScraper implements StoreScraper {
 
     // -------------------- Detail page enrichment --------------------
 
-    private void enrichWithDetails(Page page, List<Product> products, java.util.Set<String> skipUrls) {
-        int count = 0;
+    private void enrichWithDetails(List<Product> products, java.util.Set<String> skipUrls) {
+        int consecutiveFailures = 0;
 
         for (Product p : products) {
             if (p.getUrl() == null || p.getUrl().isBlank()) continue;
@@ -185,78 +193,45 @@ public class FitLabScraper implements StoreScraper {
                 continue;
             }
 
+            Document doc = fetchDetailPage(p.getUrl());
+            if (doc == null) {
+                consecutiveFailures++;
+                if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+                    log.error("[{}] {} consecutive detail page failures — stopping enrichment",
+                            STORE_NAME, consecutiveFailures);
+                    return;
+                }
+                continue;
+            }
+            consecutiveFailures = 0;
 
+            enrichBrand(doc, p);
+            enrichFlavours(doc, p);
+            enrichPackageWeights(doc, p);
+            enrichDescription(doc, p);
+            enrichNutrition(doc, p);
+
+            log.info("[{}] Enriched '{}' -> protein={}g, fat={}g, sugar={}g, cal={}",
+                    STORE_NAME, p.getName(), p.getProteinPer100g(),
+                    p.getFatPer100g(), p.getSugarPer100g(), p.getCaloriePer100g());
+
+            safeSleep(3000 + ThreadLocalRandom.current().nextLong(3000));
+        }
+    }
+
+    private Document fetchDetailPage(String url) {
+        for (int attempt = 1; attempt <= MAX_DETAIL_FETCH_RETRIES; attempt++) {
             try {
-                long sleep = 10000 + ThreadLocalRandom.current().nextLong(10000);
-                log.info("[{}] Sleeping {}s before enriching '{}'...", STORE_NAME, sleep / 1000, p.getName());
-                Thread.sleep(sleep);
-
-                boolean success = false;
-                for (int retry = 0; retry < 3; retry++) {
-                    try {
-                        page.navigate(p.getUrl(), new Page.NavigateOptions()
-                                .setWaitUntil(WaitUntilState.DOMCONTENTLOADED)
-                                .setTimeout(30000));
-
-                        try {
-                            // Čekaj da se tabela ili description učita
-                            page.waitForSelector("table",
-                                    new Page.WaitForSelectorOptions().setTimeout(8000));
-                        } catch (Exception e) {
-                            log.warn("[{}] Table selector timeout for {}", STORE_NAME, p.getUrl());
-                        }
-
-                        String title = page.title();
-                        if (title.contains("Cloudflare") || title.contains("Attention Required")
-                                || title.contains("Just a moment") || title.contains("Access denied")
-                                || title.contains("Bot detection")) {
-                            log.error("[{}] FIREWALL DETECTED! Stopping.", STORE_NAME);
-                            return;
-                        }
-
-                        page.waitForTimeout(2000 + ThreadLocalRandom.current().nextInt(2000));
-                        simulateReading(page);
-                        success = true;
-                        break;
-
-                    } catch (Exception e) {
-                        log.warn("[{}] Retry {}/3 for {}: {}", STORE_NAME, retry + 1, p.getUrl(), e.getMessage());
-                        if (retry < 2) Thread.sleep(5000 * (retry + 1));
-                    }
-                }
-
-                if (!success) {
-                    log.error("[{}] Failed to load {} after 3 retries, skipping", STORE_NAME, p.getUrl());
-                    continue;
-                }
-
-                Document doc = Jsoup.parse(page.content());
-
-                enrichBrand(doc, p);
-                enrichFlavours(doc, p);
-                enrichPackageWeights(doc, p);
-                enrichDescription(doc, p);
-                enrichNutrition(doc, p);
-
-                log.info("[{}] Enriched '{}' -> protein={}g, fat={}g, sugar={}g, cal={}",
-                        STORE_NAME, p.getName(), p.getProteinPer100g(),
-                        p.getFatPer100g(), p.getSugarPer100g(), p.getCaloriePer100g());
-
-                count++;
-
-                if (count % 5 == 0) {
-                    long batchSleep = 60000 + ThreadLocalRandom.current().nextLong(60000);
-                    log.info("[{}] Batch pause after {} products: {}s...", STORE_NAME, count, batchSleep / 1000);
-                    // Navigate to blank to release Chromium's DOM/JS heap from previous pages.
-                    try { page.navigate("about:blank"); } catch (Exception ignored) {}
-                    Thread.sleep(batchSleep);
-                }
-
+                return httpClient.connection(url).get();
             } catch (Exception e) {
-                log.error("[{}] Failed to enrich {}: {}", STORE_NAME, p.getName(), e.getMessage());
-                safeSleep(15000);
+                log.warn("[{}] Detail fetch attempt {}/{} failed for {}: {}",
+                        STORE_NAME, attempt, MAX_DETAIL_FETCH_RETRIES, url, e.getMessage());
+                safeSleep(2000L * attempt);
             }
         }
+        log.error("[{}] Failed to fetch {} after {} attempts, skipping",
+                STORE_NAME, url, MAX_DETAIL_FETCH_RETRIES);
+        return null;
     }
 
     // -------------------- Nutrition extraction --------------------
@@ -395,6 +370,18 @@ public class FitLabScraper implements StoreScraper {
     // -------------------- Other enrichment --------------------
 
     private void enrichBrand(Document doc, Product p) {
+        // FitLab's markup has no itemprop/meta brand tags — brand lives in the
+        // schema.org Product JSON-LD block instead.
+        for (Element script : doc.select("script[type=application/ld+json]")) {
+            String json = script.html();
+            if (!json.contains("\"@type\":\"Product\"")) continue;
+            Matcher m = LD_JSON_BRAND.matcher(json);
+            if (m.find()) {
+                p.setBrand(cleanBrand(m.group(1).trim()));
+                return;
+            }
+        }
+
         Element brandSchema = doc.selectFirst("[itemprop=brand]");
         if (brandSchema != null && !brandSchema.text().isBlank()) {
             p.setBrand(cleanBrand(brandSchema.text().trim()));
@@ -510,20 +497,6 @@ public class FitLabScraper implements StoreScraper {
         Element metaDesc = doc.selectFirst("meta[name=description]");
         if (metaDesc != null && !metaDesc.attr("content").isBlank())
             p.setDescription(metaDesc.attr("content").trim());
-    }
-
-    private void simulateReading(Page page) {
-        try {
-            int scrolls = 3 + ThreadLocalRandom.current().nextInt(4);
-            for (int i = 0; i < scrolls; i++) {
-                int delta = i == 0
-                        ? 200 + ThreadLocalRandom.current().nextInt(400)
-                        : (ThreadLocalRandom.current().nextBoolean() ? 1 : -1)
-                          * (100 + ThreadLocalRandom.current().nextInt(500));
-                page.mouse().wheel(0, delta);
-                Thread.sleep(400 + ThreadLocalRandom.current().nextLong(800));
-            }
-        } catch (Exception ignored) {}
     }
 
     private void safeSleep(long ms) {
