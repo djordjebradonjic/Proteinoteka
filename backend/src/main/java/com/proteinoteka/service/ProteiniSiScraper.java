@@ -291,6 +291,7 @@ public class ProteiniSiScraper implements StoreScraper {
             // Also enrich description with nutrition tab text
             if (p.getDescription() == null || p.getDescription().isBlank()) {
                 Element descTab = doc.selectFirst("div#tab-description div.ckeditor");
+                if (descTab == null) descTab = doc.selectFirst("div#tab-description");
                 if (descTab != null) {
                     p.setDescription(descTab.text().trim());
                 }
@@ -330,6 +331,26 @@ public class ProteiniSiScraper implements StoreScraper {
                             .replaceAll("\\*", "")     // strip asterisks
                             .trim();
 
+                    // Calories — "1716 kJ/405 kcal" format. Must run BEFORE the generic
+                    // numeric parsing below: stripping non-digits from "1580 kJ/376 kcal"
+                    // concatenates both numbers into "1580376", which fails the <=10000
+                    // sanity check and would otherwise skip this row entirely.
+                    if (label.contains("energetska") || label.contains("kalorij")
+                            || label.contains("energy")) {
+                        String rawCell = cells.get(per100gCol).text();
+                        java.util.regex.Matcher m = java.util.regex.Pattern
+                                .compile("(\\d+[.,]?\\d*)\\s*kcal",
+                                        java.util.regex.Pattern.CASE_INSENSITIVE)
+                                .matcher(rawCell);
+                        if (m.find()) {
+                            try {
+                                p.setCaloriePer100g(Double.parseDouble(
+                                        m.group(1).replace(",", ".")));
+                            } catch (Exception ignored) {}
+                        }
+                        continue;
+                    }
+
                     String rawValue = cells.get(per100gCol).text()
                             .replaceAll("[^0-9,.]", "").replace(",", ".").trim();
 
@@ -357,21 +378,6 @@ public class ProteiniSiScraper implements StoreScraper {
                             || label.contains("sugar"))
                             && !label.contains("bez")) {
                         if (value <= 100) p.setSugarPer100g(value);
-                    }
-                    // Calories — "1716 kJ/405 kcal" format
-                    else if (label.contains("energetska") || label.contains("kalorij")
-                            || label.contains("energy")) {
-                        String rawCell = cells.get(per100gCol).text();
-                        java.util.regex.Matcher m = java.util.regex.Pattern
-                                .compile("(\\d+[.,]?\\d*)\\s*kcal",
-                                        java.util.regex.Pattern.CASE_INSENSITIVE)
-                                .matcher(rawCell);
-                        if (m.find()) {
-                            try {
-                                p.setCaloriePer100g(Double.parseDouble(
-                                        m.group(1).replace(",", ".")));
-                            } catch (Exception ignored) {}
-                        }
                     }
                 }
 
@@ -412,6 +418,7 @@ public class ProteiniSiScraper implements StoreScraper {
     private void enrichDescription(Document doc, Product p) {
         try {
             Element descriptionEl = doc.selectFirst("div#tab-description div.ckeditor");
+            if (descriptionEl == null) descriptionEl = doc.selectFirst("div#tab-description");
             if (descriptionEl != null) {
                 String cleanDescription = HtmlCleaner.cleanDescription(descriptionEl.html());
                 if (!cleanDescription.isBlank()) p.setDescription(cleanDescription);

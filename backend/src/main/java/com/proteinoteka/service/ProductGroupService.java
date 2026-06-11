@@ -216,6 +216,17 @@ public class ProductGroupService {
                     String existingSource = normalizeSource(members.get(0).getProteinSource());
                     return existingSource.equals(sourceNorm);
                 })
+                .filter(g -> {
+                    // A price-comparison group should have at most one listing per store —
+                    // reject groups that already contain a product from this product's store,
+                    // since the brand+weight+source heuristic alone can't tell apart two
+                    // different product lines from the same brand/store (e.g. "Battery Complete
+                    // Whey" vs "Battery Whey Protein" at the same weight).
+                    if (product.getStore() == null) return true;
+                    List<Product> members = productRepository.findByGroupId(g.getId());
+                    return members.stream().noneMatch(m ->
+                            m.getStore() != null && m.getStore().getId().equals(product.getStore().getId()));
+                })
                 .toList();
 
         if (matches.size() == 1) {
