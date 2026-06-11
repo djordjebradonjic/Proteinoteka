@@ -456,9 +456,24 @@ public class ProteinboxScraper implements StoreScraper {
                 if (cells.size() <= per100gCol) continue;
 
                 String label = cells.get(0).text().trim().toLowerCase();
-                String rawValue = cells.get(per100gCol).text()
-                        .replaceAll("[^0-9,.]", "").replace(",", ".").trim();
+                String rawCellText = cells.get(per100gCol).text();
 
+                // Calories must be handled before numeric range check —
+                // combined format "1638 kj / 386 kcal" concatenates to 1638386 which exceeds 10000
+                if (label.contains("energij") || label.contains("energetska")
+                        || label.contains("kalorij") || label.contains("energy")) {
+                    Matcher kcalM = Pattern.compile("(\\d+[.,]?\\d*)\\s*kcal",
+                            Pattern.CASE_INSENSITIVE).matcher(rawCellText);
+                    if (kcalM.find()) {
+                        try {
+                            p.setCaloriePer100g(Double.parseDouble(
+                                    kcalM.group(1).replace(",", ".")));
+                        } catch (Exception ignored) {}
+                    }
+                    continue;
+                }
+
+                String rawValue = rawCellText.replaceAll("[^0-9,.]", "").replace(",", ".").trim();
                 if (rawValue.isBlank()) continue;
 
                 double value;
@@ -480,21 +495,6 @@ public class ProteinboxScraper implements StoreScraper {
                 else if (label.contains("šećeri") || label.contains("seceri")
                         || label.contains("sugar")) {
                     if (value <= 100) p.setSugarPer100g(value);
-                }
-                // Calories — "400 kcal/1695 kJ" or "Energija" format
-                else if (label.contains("energij") || label.contains("energetska")
-                        || label.contains("kalorij") || label.contains("energy")) {
-                    String rawCell = cells.get(per100gCol).text();
-                    java.util.regex.Matcher m = java.util.regex.Pattern
-                            .compile("(\\d+[.,]?\\d*)\\s*kcal",
-                                    java.util.regex.Pattern.CASE_INSENSITIVE)
-                            .matcher(rawCell);
-                    if (m.find()) {
-                        try {
-                            p.setCaloriePer100g(Double.parseDouble(
-                                    m.group(1).replace(",", ".")));
-                        } catch (Exception ignored) {}
-                    }
                 }
             }
 
