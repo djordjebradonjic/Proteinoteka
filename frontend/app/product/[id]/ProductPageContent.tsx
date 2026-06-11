@@ -537,7 +537,11 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
                             {weightLabel && (
                               <span className="text-[10px] font-bold text-[#1B2B4B] bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-full">{weightLabel}</span>
                             )}
-                            {diff != null && <p className="text-xs text-slate-400">+{diff.toLocaleString("sr-RS")} RSD skuplje</p>}
+                            {diff != null && (
+                              <span className="text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-full">
+                                +{diff.toLocaleString("sr-RS")} RSD skuplje
+                              </span>
+                            )}
                           </div>
                         </div>
                         <span className={`text-sm sm:text-base font-black shrink-0 ${isCheapest ? "text-green-700" : "text-slate-900"}`}>{sp.price}</span>
