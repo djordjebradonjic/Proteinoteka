@@ -21,7 +21,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class PansportScraper implements StoreScraper {
 
     private static final String STORE_NAME = "Pansport";
-    private static final String BASE_URL = "https://www.pansport.rs/proteini/koncentrati-koncentrati-izolati-proteina-surutke-whey";
+    private static final String BASE_URL = "https://www.pansport.rs/proteini";
 
     private final NutritionParserService nutritionParser;
     private final BaseScraperEnricher baseEnricher;
@@ -90,6 +90,8 @@ public class PansportScraper implements StoreScraper {
             Element link = element.selectFirst("div.details a");
             if (link != null) {
                 String href = link.attr("href");
+                // Strip query params (?sku=... etc.) — URL must be canonical for DB dedup
+                if (href.contains("?")) href = href.substring(0, href.indexOf("?"));
                 p.setUrl(href.startsWith("http") ? href : "https://www.pansport.rs" + href);
             }
 
