@@ -242,6 +242,14 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           {product.name}
         </h3>
 
+        {product.primaryWeightGrams && (
+          <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded w-fit">
+            {product.primaryWeightGrams >= 1000
+              ? `${(product.primaryWeightGrams / 1000 % 1 === 0 ? product.primaryWeightGrams / 1000 : (product.primaryWeightGrams / 1000).toFixed(1))} kg`
+              : `${Math.round(product.primaryWeightGrams)} g`}
+          </span>
+        )}
+
         <div className="flex flex-col gap-0.5 min-h-[2.5rem] justify-center">
           {product.previousPrice != null &&
            product.previousPrice > 0 &&
