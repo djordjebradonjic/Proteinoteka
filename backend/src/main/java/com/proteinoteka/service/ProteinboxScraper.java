@@ -481,9 +481,9 @@ public class ProteinboxScraper implements StoreScraper {
                         || label.contains("sugar")) {
                     if (value <= 100) p.setSugarPer100g(value);
                 }
-                // Calories — "400 kcal/1695 kJ" format
-                else if (label.contains("energetska") || label.contains("kalorij")
-                        || label.contains("energy")) {
+                // Calories — "400 kcal/1695 kJ" or "Energija" format
+                else if (label.contains("energij") || label.contains("energetska")
+                        || label.contains("kalorij") || label.contains("energy")) {
                     String rawCell = cells.get(per100gCol).text();
                     java.util.regex.Matcher m = java.util.regex.Pattern
                             .compile("(\\d+[.,]?\\d*)\\s*kcal",
