@@ -11,8 +11,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Component
@@ -22,22 +21,14 @@ public class PansportScraper implements StoreScraper {
 
     private static final String STORE_NAME = "Pansport";
     private static final String BASE_URL = "https://www.pansport.rs/proteini";
+    private static final double MIN_WEIGHT_GRAMS = 100.0; // skip sachets
 
     private final NutritionParserService nutritionParser;
     private final BaseScraperEnricher baseEnricher;
 
-    @Override
-    public String getStoreName() {
-        return STORE_NAME;
-    }
-
-    @Override
-    public String getBaseUrl() {
-        return BASE_URL;
-    }
-
-    @Override
-    public boolean usePlaywrightForListing() { return false; }
+    @Override public String getStoreName() { return STORE_NAME; }
+    @Override public String getBaseUrl()   { return BASE_URL; }
+    @Override public boolean usePlaywrightForListing() { return false; }
 
     @Override
     public boolean hasNextPage(Document doc) {
@@ -51,22 +42,22 @@ public class PansportScraper implements StoreScraper {
 
     @Override
     public List<Product> scrape(Page page, Document doc) {
-        return scrape(page, doc, java.util.Collections.emptySet());
+        return scrape(page, doc, Collections.emptySet());
     }
 
     @Override
-    public List<Product> scrape(Page page, Document doc, java.util.Set<String> skipUrls) {
+    public List<Product> scrape(Page page, Document doc, Set<String> skipUrls) {
         List<Product> products = new ArrayList<>();
 
         Elements elements = doc.select("div.product-teaser");
         log.info("[{}] Found {} products on page", STORE_NAME, elements.size());
 
         for (Element el : elements) {
-            Product p = parseProductElement(el);
-            if (p != null) {
-                products.add(p);
-            } else {
-                log.warn("[{}] Failed to parse element, skipping", STORE_NAME);
+            List<Product> variants = parseVariants(el);
+            products.addAll(variants);
+            if (!variants.isEmpty()) {
+                log.info("[{}] '{}' → {} pakovanje varijanti",
+                        STORE_NAME, variants.get(0).getName(), variants.size());
             }
         }
 
@@ -77,250 +68,327 @@ public class PansportScraper implements StoreScraper {
         return products;
     }
 
-    // -------------------- Listing parsing --------------------
+    // ── Listing parsing ─────────────────────────────────────────────────────────
 
-    private Product parseProductElement(Element element) {
-        try {
-            Product p = new Product();
+    private List<Product> parseVariants(Element element) {
+        List<Product> variants = new ArrayList<>();
 
-            Element title = element.selectFirst("h4.node__title a");
-            if (title == null) return null;
-            p.setName(title.text().trim());
+        Element titleEl = element.selectFirst("h4.node__title a");
+        if (titleEl == null) return variants;
+        String name = titleEl.text().trim();
 
-            Element link = element.selectFirst("div.details a");
-            if (link != null) {
-                String href = link.attr("href");
-                // Strip query params (?sku=... etc.) — URL must be canonical for DB dedup
-                if (href.contains("?")) href = href.substring(0, href.indexOf("?"));
-                p.setUrl(href.startsWith("http") ? href : "https://www.pansport.rs" + href);
-            }
+        // Base URL — strip query params (?sku=...) to get canonical base
+        Element linkEl = element.selectFirst("div.details a");
+        if (linkEl == null) return variants;
+        String href = linkEl.attr("href");
+        if (href.contains("?")) href = href.substring(0, href.indexOf("?"));
+        String baseProductUrl = href.startsWith("http") ? href : "https://www.pansport.rs" + href;
 
-            Element img = element.selectFirst("div.teaser-image img");
-            if (img != null) {
-                String imgUrl = img.attr("src");
-                if (imgUrl.isBlank()) imgUrl = img.attr("data-src");
-                if (!imgUrl.startsWith("http") && !imgUrl.isBlank())
-                    imgUrl = "https://www.pansport.rs" + imgUrl;
-                p.setImageUrl(imgUrl);
-            }
+        // Image
+        String imageUrl = extractListingImage(element);
 
-            Element description = element.selectFirst("div.field__item");
-            if (description != null) p.setDescription(description.text().trim());
+        // Short description
+        String description = null;
+        Element descEl = element.selectFirst("div.field__item");
+        if (descEl != null) description = descEl.text().trim();
 
-            Elements weightOptions = element.select("select[id^=edit-attributes-field-attr-pakovanje] option");
-            for (Element opt : weightOptions) {
-                String weight = normalizeWeight(opt.text().trim());
-                if (!weight.isBlank() && !p.getPackage_weight().contains(weight))
-                    p.getPackage_weight().add(weight);
-            }
-
-            Elements flavourOptions = element.select("select[id^=edit-attributes-field-attr-ukus] option");
-            for (Element opt : flavourOptions) {
-                String flavour = opt.text().trim();
-                if (!flavour.isBlank() && !flavour.equals("--") && !p.getFlavours().contains(flavour))
-                    p.getFlavours().add(flavour);
-            }
-
-            Element priceEl = element.selectFirst("td.price-amount");
-            if (priceEl != null) {
-                String price = priceEl.text()
-                        .replace("\u00a0", "")
-                        .replaceAll("(?i)rsd", "")
-                        .trim();
-                p.setPrice(price);
-            }
-
-            return p;
-
-        } catch (Exception e) {
-            log.error("[{}] Error parsing element: {}", STORE_NAME, e.getMessage());
-            return null;
+        // Flavours (same for all variants)
+        List<String> flavours = new ArrayList<>();
+        for (Element opt : element.select("select[id^=edit-attributes-field-attr-ukus] option")) {
+            String f = opt.text().trim();
+            if (!f.isBlank() && !f.equals("--")) flavours.add(f);
         }
-    }
 
-    private String normalizeWeight(String weight) {
-        return weight
-                .replaceAll("\\s*\\(.*?\\)", "")
-                .replaceAll("\\s+", "")
-                .trim();
-    }
+        // Price shown on listing (corresponds to selected/default variant)
+        String selectedPrice = null;
+        Element priceEl = element.selectFirst("td.price-amount");
+        if (priceEl != null) {
+            selectedPrice = priceEl.text()
+                    .replace(" ", "")
+                    .replaceAll("(?i)rsd", "")
+                    .trim();
+        }
 
-    // -------------------- Detail page enrichment --------------------
+        Elements weightOptions = element.select("select[id^=edit-attributes-field-attr-pakovanje] option");
 
-    private void enrichWithDetails(Page page, List<Product> products, java.util.Set<String> skipUrls) {
-        int count = 0;
+        if (weightOptions.isEmpty()) {
+            // Product with no weight variants — single entry
+            Product p = buildProduct(name, baseProductUrl, imageUrl, description, flavours);
+            p.setPrice(selectedPrice);
+            variants.add(p);
+        } else {
+            for (Element opt : weightOptions) {
+                String skuValue = opt.attr("value");
+                String weightText = normalizeWeight(opt.text().trim());
+                Double weightGrams = parseWeightToGrams(weightText);
 
-        for (Product p : products) {
-            if (p.getUrl() == null || p.getUrl().isBlank()) continue;
-            if (baseEnricher.isNonProteinProduct(p.getName())) {
-                log.info("[{}] Skipping '{}' - not a protein product", STORE_NAME, p.getName());
-                continue;
-            }
-            if (skipUrls.contains(p.getUrl())) {
-                log.debug("[{}] Skipping detail page for '{}' — nutrition already complete", STORE_NAME, p.getName());
-                continue;
-            }
-
-
-            try {
-                long sleep = 4000 + ThreadLocalRandom.current().nextLong(4000);
-                log.info("[{}] Sleeping {}s before '{}'...", STORE_NAME, sleep / 1000, p.getName());
-                Thread.sleep(sleep);
-
-                boolean success = navigateWithRetry(page, p.getUrl(), 3);
-                if (!success) {
-                    log.error("[{}] Failed to load {} after retries, skipping", STORE_NAME, p.getUrl());
+                if (weightGrams == null || weightGrams < MIN_WEIGHT_GRAMS) {
+                    log.debug("[{}] Skipping sachet option '{}' for '{}'", STORE_NAME, weightText, name);
                     continue;
                 }
 
-                if (isBlockedByFirewall(page)) {
-                    log.error("[{}] FIREWALL DETECTED! Stopping scraper.", STORE_NAME);
-                    return;
+                String variantUrl = baseProductUrl + "?sku=" + skuValue;
+                Product p = buildProduct(name, variantUrl, imageUrl, description, flavours);
+                p.setPrimaryWeightGrams(weightGrams);
+                p.getPackage_weight().add(weightText);
+
+                // Pre-fill price for the selected variant — others need detail page
+                if (opt.hasAttr("selected")) {
+                    p.setPrice(selectedPrice);
                 }
 
-                simulateHumanBehavior(page);
+                variants.add(p);
+            }
+        }
 
-                Document doc = Jsoup.parse(page.content());
+        return variants;
+    }
 
-                enrichBrand(doc, p);
-                enrichFullDescription(doc, p);
-                enrichNutrition(doc, p);
+    private Product buildProduct(String name, String url, String imageUrl,
+                                  String description, List<String> flavours) {
+        Product p = new Product();
+        p.setName(name);
+        p.setUrl(url);
+        p.setImageUrl(imageUrl);
+        p.setDescription(description);
+        p.getFlavours().addAll(flavours);
+        return p;
+    }
 
-                log.info("[{}] Enriched '{}' -> brand={}, protein={}g/100g, fat={}g, sugar={}g, cal={}",
-                        STORE_NAME, p.getName(), p.getBrand(), p.getProteinPer100g(),
-                        p.getFatPer100g(), p.getSugarPer100g(), p.getCaloriePer100g());
+    private String extractListingImage(Element element) {
+        Element img = element.selectFirst("div.teaser-image img");
+        if (img == null) return null;
+        String src = img.attr("src");
+        if (src.isBlank()) src = img.attr("data-src");
+        if (!src.isBlank() && !src.startsWith("http")) src = "https://www.pansport.rs" + src;
+        return src.isBlank() ? null : src;
+    }
 
-                count++;
+    // ── Detail page enrichment ──────────────────────────────────────────────────
 
-                if (count % 10 == 0) {
-                    long batchSleep = 40000 + ThreadLocalRandom.current().nextLong(20000);
-                    log.info("[{}] Batch pause after {} products: {}s...", STORE_NAME, count, batchSleep / 1000);
-                    Thread.sleep(batchSleep);
+    private void enrichWithDetails(Page page, List<Product> products, Set<String> skipUrls) {
+        // Group variants by base URL so nutrition is fetched once per product
+        Map<String, List<Product>> byBase = new LinkedHashMap<>();
+        for (Product p : products) {
+            byBase.computeIfAbsent(stripSku(p.getUrl()), k -> new ArrayList<>()).add(p);
+        }
+
+        int count = 0;
+
+        for (Map.Entry<String, List<Product>> entry : byBase.entrySet()) {
+            List<Product> variants = entry.getValue();
+            // First variant that successfully returns protein data is the nutrition source
+            Product nutritionDonor = null;
+
+            for (Product p : variants) {
+                if (p.getUrl() == null || p.getUrl().isBlank()) continue;
+                if (baseEnricher.isNonProteinProduct(p.getName())) {
+                    log.info("[{}] Skipping '{}' — not a protein product", STORE_NAME, p.getName());
+                    continue;
                 }
 
-            } catch (Exception e) {
-                log.error("[{}] Failed to enrich {}: {}", STORE_NAME, p.getName(), e.getMessage());
-                safeSleep(5000);
+                try {
+                    long sleep = 4000 + ThreadLocalRandom.current().nextLong(4000);
+                    log.info("[{}] Sleeping {}s before '{}' ({}g)...", STORE_NAME, sleep / 1000,
+                            p.getName(), p.getPrimaryWeightGrams() != null ? Math.round(p.getPrimaryWeightGrams()) : "?");
+                    Thread.sleep(sleep);
+
+                    boolean success = navigateWithRetry(page, p.getUrl(), 3);
+                    if (!success) {
+                        log.error("[{}] Failed to load {} — skipping", STORE_NAME, p.getUrl());
+                        continue;
+                    }
+
+                    if (isBlockedByFirewall(page)) {
+                        log.error("[{}] FIREWALL DETECTED! Stopping.", STORE_NAME);
+                        return;
+                    }
+
+                    simulateHumanBehavior(page);
+                    Document doc = Jsoup.parse(page.content());
+
+                    // Price — always fetch from detail page (each SKU variant has its own price)
+                    enrichPriceFromDetail(doc, p);
+
+                    // Image — fetch from detail page (may differ by variant/flavor)
+                    enrichImageFromDetail(doc, p);
+
+                    // Brand — same for all variants, set from first
+                    if (nutritionDonor == null) {
+                        enrichBrand(doc, p);
+                        enrichFullDescription(doc, p);
+                    } else {
+                        p.setBrand(nutritionDonor.getBrand());
+                    }
+
+                    // Nutrition — shared across all variants of the same product
+                    if (nutritionDonor != null) {
+                        // Copy from already-enriched sibling — no extra AI call needed
+                        copyNutrition(nutritionDonor, p);
+                    } else if (!skipUrls.contains(p.getUrl())) {
+                        // First variant and not already complete in DB — enrich fully
+                        enrichNutrition(doc, p);
+                        if (p.getProteinPer100g() != null) {
+                            nutritionDonor = p;
+                        }
+                    }
+                    // If in skipUrls: price already updated, nutrition restored from DB by saveOrUpdateProduct
+
+                    log.info("[{}] Enriched '{}' {}g → price={}, protein={}g/100g",
+                            STORE_NAME, p.getName(),
+                            p.getPrimaryWeightGrams() != null ? Math.round(p.getPrimaryWeightGrams()) : "?",
+                            p.getPrice(), p.getProteinPer100g());
+
+                    count++;
+                    if (count % 10 == 0) {
+                        long batchSleep = 40000 + ThreadLocalRandom.current().nextLong(20000);
+                        log.info("[{}] Batch pause {}s after {} products...", STORE_NAME, batchSleep / 1000, count);
+                        Thread.sleep(batchSleep);
+                    }
+
+                } catch (Exception e) {
+                    log.error("[{}] Failed to enrich {}: {}", STORE_NAME, p.getUrl(), e.getMessage());
+                    safeSleep(5000);
+                }
             }
         }
     }
 
-    // -------------------- Nutrition extraction --------------------
+    private void enrichPriceFromDetail(Document doc, Product p) {
+        if (p.getPrice() != null && !p.getPrice().isBlank()) return; // already from listing (selected variant)
+        Element priceEl = doc.selectFirst("td.price-amount");
+        if (priceEl != null) {
+            String price = priceEl.text()
+                    .replace(" ", "")
+                    .replaceAll("(?i)rsd", "")
+                    .trim();
+            p.setPrice(price);
+        }
+    }
+
+    private void enrichImageFromDetail(Document doc, Product p) {
+        Element img = doc.selectFirst("div.field--name-field-image img, div.product-image img");
+        if (img != null) {
+            String src = img.attr("src");
+            if (!src.isBlank()) {
+                if (!src.startsWith("http")) src = "https://www.pansport.rs" + src;
+                p.setImageUrl(src);
+            }
+        }
+    }
+
+    private void copyNutrition(Product from, Product to) {
+        if (to.getProteinPer100g() == null) to.setProteinPer100g(from.getProteinPer100g());
+        if (to.getFatPer100g() == null)     to.setFatPer100g(from.getFatPer100g());
+        if (to.getSugarPer100g() == null)   to.setSugarPer100g(from.getSugarPer100g());
+        if (to.getCaloriePer100g() == null) to.setCaloriePer100g(from.getCaloriePer100g());
+        if (to.getProteinSource() == null)  to.setProteinSource(from.getProteinSource());
+    }
+
+    // ── Nutrition extraction ────────────────────────────────────────────────────
 
     private void enrichNutrition(Document doc, Product p) {
         extractNutritionFromTable(doc, p);
-
-        // Fallback for protein if table didn't find it
         if (p.getProteinPer100g() == null && p.getDescription() != null) {
             Double protein = nutritionParser.extractProteinPer100g(p.getDescription());
             if (protein != null) p.setProteinPer100g(protein);
         }
-
         baseEnricher.enrichWithAiIfNeeded(doc, p, STORE_NAME);
-
         log.info("[{}] '{}' -> protein: {}, sugar: {}, fat: {}, cal: {}",
-                STORE_NAME, p.getName(),
-                p.getProteinPer100g(), p.getSugarPer100g(),
-                p.getFatPer100g(), p.getCaloriePer100g());
+                STORE_NAME, p.getName(), p.getProteinPer100g(),
+                p.getSugarPer100g(), p.getFatPer100g(), p.getCaloriePer100g());
     }
 
     private void extractNutritionFromTable(Document doc, Product p) {
         try {
-            Elements tables = doc.select("table");
-
-            for (Element table : tables) {
+            for (Element table : doc.select("table")) {
                 String tableText = table.text().toLowerCase();
                 if (!tableText.contains("proteini") && !tableText.contains("protein")) continue;
 
                 Elements rows = table.select("tr");
                 if (rows.isEmpty()) continue;
 
-                // Detect 100g column index
                 int per100gCol = -1;
                 Elements headerCells = rows.get(0).select("th, td");
                 for (int i = 0; i < headerCells.size(); i++) {
-                    String cellText = headerCells.get(i).text()
-                            .toLowerCase().replaceAll("\\s+", "");
-                    if (cellText.contains("100g") || cellText.contains("na100")
-                            || cellText.contains("per100")) {
+                    String cell = headerCells.get(i).text().toLowerCase().replaceAll("\\s+", "");
+                    if (cell.contains("100g") || cell.contains("na100") || cell.contains("per100")) {
                         per100gCol = i;
                         break;
                     }
                 }
-                if (per100gCol < 0) per100gCol = 2; // Pansport fallback
+                if (per100gCol < 0) per100gCol = 2;
 
-                // Parse each row
                 for (Element row : rows) {
                     Elements cells = row.select("td");
                     if (cells.size() <= per100gCol) continue;
 
                     String label = cells.get(0).text().trim().toLowerCase();
                     String rawValue = cells.get(per100gCol).text()
-                            .replaceAll("[^0-9,.]", "")
-                            .replace(",", ".")
-                            .trim();
-
+                            .replaceAll("[^0-9,.]", "").replace(",", ".").trim();
                     if (rawValue.isBlank()) continue;
 
                     double value;
-                    try {
-                        value = Double.parseDouble(rawValue);
-                    } catch (Exception e) {
-                        continue;
-                    }
-
+                    try { value = Double.parseDouble(rawValue); } catch (Exception e) { continue; }
                     if (value < 0 || value > 1000) continue;
 
-                    // Protein
                     if ((label.contains("proteini") || label.contains("belančevine"))
                             && !label.contains("koncentrat") && !label.contains("izvor")) {
                         if (value > 0 && value <= 95) p.setProteinPer100g(value);
-                    }
-                    // Fat
-                    else if (label.contains("masti") || label.contains("ukupne masti")
-                            || label.equals("fat")) {
+                    } else if ((label.contains("masti") || label.equals("fat"))
+                            && !label.contains("zasićene")) {
                         if (value <= 100) p.setFatPer100g(value);
-                    }
-                    // Sugar
-                    else if (label.contains("šećeri") || label.contains("seceri")
-                            || label.contains("sugar")
+                    } else if (label.contains("šećeri") || label.contains("seceri") || label.contains("sugar")
                             || (label.contains("ugljeni hidrati") && label.contains("šećer"))) {
                         if (value <= 100) p.setSugarPer100g(value);
-                    }
-                    // Calories
-                    else if (label.contains("energetska") || label.contains("kalorij")
+                    } else if (label.contains("energetska") || label.contains("kalorij")
                             || label.contains("kcal") || label.contains("energy")) {
                         p.setCaloriePer100g(value);
                     }
                 }
 
-                // If protein found, we have the right table
                 if (p.getProteinPer100g() != null) break;
             }
-
         } catch (Exception e) {
             log.warn("[{}] Failed to extract nutrition from table: {}", STORE_NAME, e.getMessage());
         }
     }
 
-    // -------------------- Helper methods --------------------
+    // ── Helpers ─────────────────────────────────────────────────────────────────
 
     private void enrichBrand(Document doc, Product p) {
         Element brand = doc.selectFirst("div.field--name-field-manufacturer a");
         if (brand != null) {
-            String brandText = brand.text().trim()
-                    .replaceAll("[\\uFFFD\\u0000-\\u001F]", "")
-                    .trim();
-            if (!brandText.isBlank()) p.setBrand(brandText);
+            String text = brand.text().trim().replaceAll("[\\uFFFD\\u0000-\\u001F]", "").trim();
+            if (!text.isBlank()) p.setBrand(text);
         }
     }
 
     private void enrichFullDescription(Document doc, Product p) {
-        Element fullDescEl = doc.selectFirst("div#node-product-body");
-        if (fullDescEl != null) {
-            String fullDesc = fullDescEl.text().trim();
-            if (!fullDesc.isBlank()) p.setDescription(fullDesc);
+        Element el = doc.selectFirst("div#node-product-body");
+        if (el != null) {
+            String text = el.text().trim();
+            if (!text.isBlank()) p.setDescription(text);
         }
+    }
+
+    private static String stripSku(String url) {
+        if (url == null) return "";
+        int q = url.indexOf("?");
+        return q >= 0 ? url.substring(0, q) : url;
+    }
+
+    private String normalizeWeight(String weight) {
+        return weight.replaceAll("\\s*\\(.*?\\)", "").replaceAll("\\s+", "").trim();
+    }
+
+    private Double parseWeightToGrams(String weight) {
+        try {
+            String w = weight.toLowerCase().replace(",", ".").replaceAll("\\s+", "");
+            if (w.contains("kg")) return Double.parseDouble(w.replace("kg", "")) * 1000;
+            if (w.contains("g"))  return Double.parseDouble(w.replace("g", ""));
+        } catch (Exception ignored) {}
+        return null;
     }
 
     private boolean navigateWithRetry(Page page, String url, int maxRetries) {
@@ -342,13 +410,9 @@ public class PansportScraper implements StoreScraper {
     private boolean isBlockedByFirewall(Page page) {
         try {
             String title = page.title();
-            return title.contains("Cloudflare")
-                    || title.contains("Just a moment")
-                    || title.contains("Attention Required")
-                    || title.contains("Access denied");
-        } catch (Exception e) {
-            return false;
-        }
+            return title.contains("Cloudflare") || title.contains("Just a moment")
+                    || title.contains("Attention Required") || title.contains("Access denied");
+        } catch (Exception e) { return false; }
     }
 
     private void simulateHumanBehavior(Page page) {
@@ -363,10 +427,6 @@ public class PansportScraper implements StoreScraper {
     }
 
     private void safeSleep(long ms) {
-        try {
-            Thread.sleep(ms);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        try { Thread.sleep(ms); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
     }
 }
