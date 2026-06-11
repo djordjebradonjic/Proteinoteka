@@ -228,14 +228,16 @@ public class PansportScraper implements StoreScraper {
                         continue;
                     }
 
-                    // For non-first variants, switch the pakovanje dropdown and wait for AJAX
+                    // For non-first variants, switch the pakovanje dropdown and wait for AJAX response
                     if (i > 0 && variants.size() > 1) {
                         String termId = extractTermId(p.getUrl());
                         if (termId != null) {
                             try {
-                                page.selectOption("select[id^=edit-attributes-field-attr-pakovanje]", termId);
-                                page.waitForLoadState(LoadState.NETWORKIDLE,
-                                        new Page.WaitForLoadStateOptions().setTimeout(10000));
+                                String sel = "select[id^=edit-attributes-field-attr-pakovanje]";
+                                // waitForResponse wraps selectOption to catch the AJAX request that fires after the change event
+                                page.waitForResponse(
+                                        response -> response.url().contains("/system/ajax") && response.status() == 200,
+                                        () -> page.selectOption(sel, termId));
                                 page.waitForTimeout(500 + ThreadLocalRandom.current().nextInt(500));
                                 log.info("[{}] Switched to variant termId={} ({}g)", STORE_NAME, termId,
                                         p.getPrimaryWeightGrams() != null ? Math.round(p.getPrimaryWeightGrams()) : "?");
