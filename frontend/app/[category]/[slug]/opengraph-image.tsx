@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import sharp from "sharp";
 import { extractProductId } from "@/lib/productUrl";
 
 export const size = { width: 1200, height: 630 };
@@ -103,7 +104,13 @@ export default async function Image({
       if (imgRes.ok && mime.startsWith("image/")) {
         const buf = await imgRes.arrayBuffer();
         if (buf.byteLength <= 2 * 1024 * 1024) {
-          imgData = `data:${mime};base64,${Buffer.from(buf).toString("base64")}`;
+          // Satori (next/og) can't decode WebP — convert to PNG first
+          if (mime === "image/webp") {
+            const png = await sharp(Buffer.from(buf)).png().toBuffer();
+            imgData = `data:image/png;base64,${png.toString("base64")}`;
+          } else {
+            imgData = `data:${mime};base64,${Buffer.from(buf).toString("base64")}`;
+          }
         }
       }
     } catch {
