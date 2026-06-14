@@ -90,6 +90,29 @@ export async function fetchStoreProducts(params: {
   }
 }
 
+export async function fetchProductsByQuery(params: {
+  name?: string;
+  brand?: string;
+  limit?: number;
+}): Promise<Product[]> {
+  if (!API) return [];
+  try {
+    const url = new URL(`${API}/api/v1/products`);
+    if (params.name)  url.searchParams.set("name", params.name);
+    if (params.brand) url.searchParams.set("brand", params.brand);
+    url.searchParams.set("size", String(params.limit ?? 50));
+    url.searchParams.set("sort", "id,desc");
+    url.searchParams.set("page", "0");
+
+    const res = await fetch(url.toString(), { next: { revalidate: 300, tags: ["products"] } });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.content ?? [];
+  } catch {
+    return [];
+  }
+}
+
 export async function fetchBrandProducts(params: {
   brand: string;
   limit?: number;

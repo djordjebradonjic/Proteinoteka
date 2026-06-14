@@ -23,6 +23,12 @@ const GUIDE_LINKS = [
   { label: "Whey isolate vs concentrate", href: "/vodici/whey-isolate-vs-concentrate" },
 ];
 
+const SEO_LANDING_LINKS = [
+  { label: "🥇 Najbolji Whey",         href: "/najbolji-whey-protein-srbija" },
+  { label: "💰 Najjeftiniji Whey",     href: "/najjeftiniji-whey-protein"    },
+  { label: "📊 Whey Protein Cena",     href: "/whey-protein-cena"            },
+];
+
 function scoreColor(s: number) {
   if (s >= 8.5) return "#22c55e";
   if (s >= 7)   return "#84cc16";
@@ -252,6 +258,17 @@ function CrossLinks() {
           ))}
         </div>
       </div>
+      <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
+        <h3 className="text-sm font-bold text-slate-700 mb-3">Pogledaj i:</h3>
+        <div className="flex flex-wrap gap-2">
+          {SEO_LANDING_LINKS.map(link => (
+            <Link key={link.href} href={link.href}
+              className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-all">
+              {link.label}
+            </Link>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -278,8 +295,7 @@ export function SEOBrandPage({
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Početna", item: BASE_URL },
-      { "@type": "ListItem", position: 2, name: "Brendovi", item: `${BASE_URL}/brendovi` },
-      { "@type": "ListItem", position: 3, name: brandName, item: `${BASE_URL}/${currentSlug}` },
+      { "@type": "ListItem", position: 2, name: brandName, item: `${BASE_URL}/${currentSlug}` },
     ],
   };
 
@@ -304,8 +320,6 @@ export function SEOBrandPage({
         <div className="max-w-4xl mx-auto px-4 py-10 sm:py-14">
           <nav className="flex items-center gap-1.5 text-xs text-slate-400 mb-5 flex-wrap" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-[#FF9900] transition-colors">Početna</Link>
-            <span>/</span>
-            <span>Brendovi</span>
             <span>/</span>
             <span className="text-slate-300">{brandName}</span>
           </nav>

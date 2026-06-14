@@ -6,9 +6,9 @@ import Link from "next/link";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: { absolute: "Whey Protein Cena u Srbiji 2026 — Poređenje po tipu i prodavnici | Proteinoteka" },
+  title: { absolute: "Whey Protein Cena u Srbiji 2026 — Uporedi 200+ Cena | Proteinoteka" },
   description:
-    "Koliko košta whey protein u Srbiji? Poredimo 200+ proizvoda iz 6 prodavnica — concentrate od 2.500, isolate od 4.000 RSD/kg. Nađi najpovoljniji za tvoj budžet.",
+    "Whey protein cena u Srbiji: concentrate od 2.500, isolate od 4.000 RSD/kg. Uporedi cene iz 6 prodavnica uživo, prati pad cena i nađi najjeftiniju opciju za svoj budžet.",
   alternates: { canonical: "https://proteinoteka.rs/whey-protein-cena" },
   openGraph: {
     title: "Whey Protein Cena u Srbiji 2026 | Proteinoteka",

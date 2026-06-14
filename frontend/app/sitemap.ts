@@ -39,6 +39,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/hidrolizat-protein-srbija`,    changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/baza-podataka`,                changeFrequency: "monthly" as const, priority: 0.5, lastModified: now },
     // Brand pages
+    { url: `${BASE}/gold-standard-whey-cena`,    changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/optimum-nutrition-proteini`, changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/scitec-nutrition-proteini`,  changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/dymatize-proteini`,          changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
