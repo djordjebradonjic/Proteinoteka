@@ -116,6 +116,32 @@ public class MyProteinScraperTest {
     }
 
     @Test
+    void expandByVariants_mergesPriceGroupsThatShareAWeightLabel() throws Exception {
+        File file = new File("src/test/resources/myprotein/duplicate_weight_masterdata.json");
+        JsonNode masterData = objectMapper.readTree(file);
+
+        Product stub = new Product();
+        stub.setUrl("https://www.myprotein.rs/p/sports-nutrition/veganska-proteinska-mesavina/11776868/");
+        stub.setName("Veganska proteinska mešavina");
+
+        List<Product> variants = scraper.expandByVariants(masterData, stub);
+
+        // Three separate 2.5kg price groups (8400/8599/9270, one per flavour) all
+        // round to the same "2500g" weight label and must collapse into a single
+        // variant — otherwise they'd all share the same URL and overwrite each
+        // other's price within the same scrape, spamming price history.
+        assertEquals(2, variants.size());
+
+        Product kg1 = variants.stream().filter(v -> v.getPackage_weight().get(0).equals("1kg")).findFirst().orElseThrow();
+        assertEquals("4200", kg1.getPrice());
+
+        Product kg25 = variants.stream().filter(v -> v.getPackage_weight().get(0).equals("2500g")).findFirst().orElseThrow();
+        assertEquals("8400", kg25.getPrice());
+        assertEquals(List.of("Vanila", "Čokolada", "Bez Arome"), kg25.getFlavours());
+        assertEquals(stub.getUrl() + "?pakovanje=2500g", kg25.getUrl());
+    }
+
+    @Test
     void extractNutritionFromTable_parsesPer100gColumnWithNonHeaderFirstRow() throws Exception {
         File file = new File("src/test/resources/myprotein/impact_whey_masterdata.json");
         JsonNode masterData = objectMapper.readTree(file);

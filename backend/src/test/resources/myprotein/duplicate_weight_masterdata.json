@@ -1,0 +1,55 @@
+{
+  "pageTitle": "Veganska proteinska mešavina",
+  "masterSku": 11776868,
+  "brand": "Myvegan",
+  "variants": [
+    {
+      "title": "Veganska proteinska mešavina - 2.5KG - Vanila",
+      "sku": 27712277,
+      "inStock": true,
+      "choices": [
+        { "optionKey": "Flavour", "key": "Vanilla", "colour": null, "title": "Vanila" },
+        { "optionKey": "Amount", "key": "2.5KG", "colour": null, "title": "2.5KG" }
+      ],
+      "price": { "price": { "currency": "RSD", "amount": "8400.0", "displayValue": "8400din" } },
+      "product": { "images": [ { "original": "https://static.thcdn.com/productimg/original/11776868-main.png", "altText": null } ], "sku": 11776868 },
+      "content": []
+    },
+    {
+      "title": "Veganska proteinska mešavina - 2.5KG - Cokolada",
+      "sku": 27712278,
+      "inStock": true,
+      "choices": [
+        { "optionKey": "Flavour", "key": "Chocolate", "colour": null, "title": "Čokolada" },
+        { "optionKey": "Amount", "key": "2.5KG", "colour": null, "title": "2.5KG" }
+      ],
+      "price": { "price": { "currency": "RSD", "amount": "8599.0", "displayValue": "8599din" } },
+      "product": { "images": [], "sku": 11776868 },
+      "content": []
+    },
+    {
+      "title": "Veganska proteinska mešavina - 2.5KG - Bez Arome",
+      "sku": 27712279,
+      "inStock": true,
+      "choices": [
+        { "optionKey": "Flavour", "key": "Unflavoured", "colour": null, "title": "Bez Arome" },
+        { "optionKey": "Amount", "key": "2.5KG", "colour": null, "title": "2.5KG" }
+      ],
+      "price": { "price": { "currency": "RSD", "amount": "9270.0", "displayValue": "9270din" } },
+      "product": { "images": [], "sku": 11776868 },
+      "content": []
+    },
+    {
+      "title": "Veganska proteinska mešavina - 1KG - Vanila",
+      "sku": 27712280,
+      "inStock": true,
+      "choices": [
+        { "optionKey": "Flavour", "key": "Vanilla", "colour": null, "title": "Vanila" },
+        { "optionKey": "Amount", "key": "1KG", "colour": null, "title": "1KG" }
+      ],
+      "price": { "price": { "currency": "RSD", "amount": "4200.0", "displayValue": "4200din" } },
+      "product": { "images": [], "sku": 11776868 },
+      "content": []
+    }
+  ]
+}

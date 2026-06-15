@@ -330,6 +330,15 @@ public class MyProteinScraper implements StoreScraper {
             gramsByVariant.put(v, grams);
         }
 
+        // Two or more price groups can share the same weight label (e.g. several
+        // flavours of the "2.5kg" tier on individual sale prices, each forming its
+        // own price group). Since the weight label determines the variant's URL,
+        // such collisions would otherwise produce multiple Products with the same
+        // URL in a single scrape, each overwriting the previous one's price and
+        // spamming price history. Merge those into one variant, keeping the lowest
+        // price ("starting from") and the union of flavours.
+        Map<String, Product> variantsByWeightLabel = new LinkedHashMap<>();
+
         for (Map.Entry<Long, List<JsonNode>> entry : groupsByPrice.entrySet()) {
             long priceKey = entry.getKey();
             List<JsonNode> members = entry.getValue();
@@ -351,27 +360,39 @@ public class MyProteinScraper implements StoreScraper {
                 }
             }
 
-            Product variant = new Product();
-            variant.setName(cleanName);
-            variant.setUrl(stub.getUrl() + (stub.getUrl().contains("?") ? "&" : "?") + "pakovanje=" + weightLabel);
-            variant.setPrice(formatPrice(priceKey));
-            variant.setImageUrl(imageUrl != null ? imageUrl : stub.getImageUrl());
-            variant.getPackage_weight().add(weightLabel);
-            variant.setPrimaryWeightGrams(minGrams);
-
+            List<String> flavours = new ArrayList<>();
             for (JsonNode v : members) {
                 for (JsonNode c : v.path("choices")) {
                     if ("Flavour".equals(c.path("optionKey").asText())) {
                         String flavour = c.path("title").asText().trim();
-                        if (!flavour.isBlank() && !variant.getFlavours().contains(flavour))
-                            variant.getFlavours().add(flavour);
+                        if (!flavour.isBlank() && !flavours.contains(flavour))
+                            flavours.add(flavour);
                     }
                 }
             }
 
-            variants.add(variant);
+            Product existing = variantsByWeightLabel.get(weightLabel);
+            if (existing == null || priceKey < Long.parseLong(existing.getPrice())) {
+                Product variant = new Product();
+                variant.setName(cleanName);
+                variant.setUrl(stub.getUrl() + (stub.getUrl().contains("?") ? "&" : "?") + "pakovanje=" + weightLabel);
+                variant.setPrice(formatPrice(priceKey));
+                variant.setImageUrl(imageUrl != null ? imageUrl : stub.getImageUrl());
+                variant.getPackage_weight().add(weightLabel);
+                variant.setPrimaryWeightGrams(minGrams);
+                variant.getFlavours().addAll(flavours);
+                if (existing != null) {
+                    for (String f : existing.getFlavours())
+                        if (!variant.getFlavours().contains(f)) variant.getFlavours().add(f);
+                }
+                variantsByWeightLabel.put(weightLabel, variant);
+            } else {
+                for (String f : flavours)
+                    if (!existing.getFlavours().contains(f)) existing.getFlavours().add(f);
+            }
         }
 
+        variants.addAll(variantsByWeightLabel.values());
         return variants;
     }
 
