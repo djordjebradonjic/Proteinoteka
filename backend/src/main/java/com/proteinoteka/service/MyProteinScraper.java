@@ -460,10 +460,23 @@ public class MyProteinScraper implements StoreScraper {
                     Elements cells = rows.get(r).select("td, th");
                     if (cells.size() <= per100gCol) continue;
 
-                    String label = cells.get(0).text().trim().toLowerCase();
+                    // Sub-rows (e.g. "od kojih šećeri") have an extra leading empty
+                    // cell, which shifts the label and value columns one to the right.
+                    String cell0 = cells.get(0).text().replace(" ", " ").trim();
+                    int colOffset = 0;
+                    String label;
+                    if (cell0.isEmpty() && cells.size() > 1) {
+                        label = cells.get(1).text().trim().toLowerCase();
+                        colOffset = 1;
+                    } else {
+                        label = cell0.toLowerCase();
+                    }
+
+                    int valueCol = per100gCol + colOffset;
+                    if (cells.size() <= valueCol) continue;
 
                     if (label.contains("energ")) {
-                        String rawCell = cells.get(per100gCol).text();
+                        String rawCell = cells.get(valueCol).text();
                         Matcher m = Pattern.compile("(\\d+[.,]?\\d*)\\s*kcal", Pattern.CASE_INSENSITIVE).matcher(rawCell);
                         if (m.find()) {
                             try {
@@ -473,7 +486,7 @@ public class MyProteinScraper implements StoreScraper {
                         continue;
                     }
 
-                    String rawValue = cells.get(per100gCol).text()
+                    String rawValue = cells.get(valueCol).text()
                             .replaceAll("[^0-9,.]", "").replace(",", ".").trim();
                     if (rawValue.isBlank()) continue;
 

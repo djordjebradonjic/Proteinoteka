@@ -107,4 +107,20 @@ public class MyProteinScraperTest {
         assertEquals(5.1, p.getSugarPer100g());
         assertEquals(379.0, p.getCaloriePer100g());
     }
+
+    @Test
+    void extractNutritionFromTable_parsesSugarFromIndentedSubRow() throws Exception {
+        File file = new File("src/test/resources/myprotein/vegan_blend_masterdata.json");
+        JsonNode masterData = objectMapper.readTree(file);
+
+        Product p = new Product();
+        scraper.extractNutritionFromTable(masterData, p);
+
+        // "od kojih šećeri" is in a sub-row with a leading empty cell, shifting
+        // the label and value columns one to the right of the header row.
+        assertEquals(75.0, p.getProteinPer100g());
+        assertEquals(1.1, p.getFatPer100g());
+        assertEquals(1.5, p.getSugarPer100g());
+        assertEquals(353.0, p.getCaloriePer100g());
+    }
 }

@@ -1,0 +1,23 @@
+{
+  "pageTitle": "Veganska proteinska mešavina",
+  "masterSku": 11776868,
+  "brand": "Myvegan",
+  "defaultVariant": {
+    "content": [
+      {
+        "key": "nutritionalInfo",
+        "value": {
+          "__typename": "ProductContentRichContentValue",
+          "richContentValue": {
+            "content": [
+              {
+                "type": "HTML",
+                "content": "<p><u><strong>VANILA</strong></u></p>\n<p><strong>Veličina porcije</strong> - 30g</p>\n<p><strong>Količina porcija u pakovanju</strong> - 33 porcije (1kg)</p>\n<div>\n <h2>Nutritivne informacije</h2>\n <table border=\"\">\n  <thead>\n  </thead>\n  <thead>\n   <tr>\n    <td colspan=\"\">&nbsp;</td>\n    <td><strong>U 100g</strong></td>\n    <td><strong>Per 30g</strong></td>\n   </tr>\n  </thead>\n  <tbody>\n   <tr>\n    <td colspan=\"\"><strong>Energetska vrednost</strong></td>\n    <td>1492kJ/353kcal</td>\n    <td>448kJ/106kcal</td>\n   </tr>\n   <tr>\n    <td colspan=\"\"><strong>Masti</strong></td>\n    <td>1.1g</td>\n    <td>&lt;0.5g</td>\n   </tr>\n   <tr>\n    <td>&nbsp;</td>\n    <td>od kojih zasićene masne kiseline</td>\n    <td>0g</td>\n    <td>0g</td>\n   </tr>\n   <tr>\n    <td colspan=\"\"><strong>Ugljeni hidrati</strong></td>\n    <td>6.2g</td>\n    <td>1.8g</td>\n   </tr>\n   <tr>\n    <td>&nbsp;</td>\n    <td>od kojih šećeri</td>\n    <td>1.5g</td>\n    <td>&lt;0.5g</td>\n   </tr>\n   <tr>\n    <td colspan=\"\"><strong>Vlakna</strong></td>\n    <td>9.3g</td>\n    <td>2.8g</td>\n   </tr>\n   <tr>\n    <td colspan=\"\"><strong>Proteini</strong></td>\n    <td>75g</td>\n    <td>22g</td>\n   </tr>\n   <tr>\n    <td colspan=\"\"><strong>So</strong></td>\n    <td>1.90g</td>\n    <td>0.57g</td>\n   </tr>\n   <tr>\n    <td colspan=\"\"><strong></strong></td>\n   </tr>\n   <tr>\n   </tr>\n  </tbody>\n </table>\n</div>"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}
