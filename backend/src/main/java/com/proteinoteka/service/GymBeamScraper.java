@@ -347,23 +347,58 @@ public class GymBeamScraper implements StoreScraper {
             }
         } else {
             double grams = parsePrimaryWeightFromName(cleanName);
+            if (grams == 0) grams = parseWeightFromUrl(stub.getUrl());
             if (grams > 0 && grams < MIN_PACKAGE_GRAMS) {
                 log.debug("[{}] '{}' -> skipping (< 500g)", STORE_NAME, cleanName);
                 return variants;
             }
 
+            // Configurable products with no mass_grams_g option (e.g. flavor-only)
+            // have a null productData.price_range — fall back to the first
+            // in-stock variant's price.
+            List<JsonNode> inStock = new ArrayList<>();
+            for (JsonNode v : configVariants) {
+                if ("IN_STOCK".equals(v.path("product").path("stock_status").asText())) {
+                    inStock.add(v.path("product"));
+                }
+            }
+            if (configVariants.isArray() && !configVariants.isEmpty() && inStock.isEmpty()) {
+                log.debug("[{}] '{}' -> skipping (out of stock)", STORE_NAME, cleanName);
+                return variants;
+            }
+
+            double price = productData.path("price_range").path("minimum_price")
+                    .path("final_price").path("value").asDouble(0);
+            if (price == 0 && !inStock.isEmpty()) {
+                price = inStock.get(0).path("price_range").path("minimum_price")
+                        .path("final_price").path("value").asDouble(0);
+            }
+
             Product variant = new Product();
             variant.setName(cleanName);
             variant.setUrl(stub.getUrl());
-            variant.setPrice(formatPrice(productData.path("price_range").path("minimum_price")
-                    .path("final_price").path("value").asDouble(0)));
+            variant.setPrice(formatPrice(price));
 
             String imageUrl = productData.path("image").path("url").path("full").asText(null);
+            if ((imageUrl == null || imageUrl.isBlank()) && !inStock.isEmpty()) {
+                imageUrl = inStock.get(0).path("image").path("url").path("full").asText(null);
+            }
             variant.setImageUrl(imageUrl != null && !imageUrl.isBlank() ? imageUrl : stub.getImageUrl());
 
             if (grams > 0) {
                 variant.setPrimaryWeightGrams(grams);
                 variant.getPackage_weight().add(formatWeightLabel(grams));
+            }
+
+            for (JsonNode v : configVariants) {
+                if (!"IN_STOCK".equals(v.path("product").path("stock_status").asText())) continue;
+                for (JsonNode attr : v.path("attributes")) {
+                    if ("flavor".equals(attr.path("code").asText())) {
+                        String flavour = attr.path("label").asText().trim();
+                        if (!flavour.isBlank() && !variant.getFlavours().contains(flavour))
+                            variant.getFlavours().add(flavour);
+                    }
+                }
             }
 
             variants.add(variant);
@@ -396,6 +431,23 @@ public class GymBeamScraper implements StoreScraper {
         if (m.find()) {
             try {
                 double val = Double.parseDouble(m.group(1).replace(",", "."));
+                return m.group(2).equalsIgnoreCase("kg") ? val * 1000 : val;
+            } catch (Exception ignored) {}
+        }
+        return 0;
+    }
+
+    /**
+     * Some single-flavour-option products (no {@code mass_grams_g} configurable
+     * option) encode the package weight only in the URL slug, e.g.
+     * {@code .../protein-platinum-hydrowhey-1600-g-optimum-nutrition.html}.
+     */
+    private static double parseWeightFromUrl(String url) {
+        if (url == null) return 0;
+        Matcher m = Pattern.compile("-(\\d{3,5})-(kg|g)-", Pattern.CASE_INSENSITIVE).matcher(url);
+        if (m.find()) {
+            try {
+                double val = Double.parseDouble(m.group(1));
                 return m.group(2).equalsIgnoreCase("kg") ? val * 1000 : val;
             } catch (Exception ignored) {}
         }
