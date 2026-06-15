@@ -37,6 +37,13 @@ public class MyProteinScraper implements StoreScraper {
     private static final double MIN_PACKAGE_GRAMS = 500;
     private static final String MASTER_DATA_MARKER = "const masterData = ";
 
+    // Matches flavour titles tagging a sibling product format (e.g. "Chocolate (Milkshake)",
+    // "Vanilla (+Collagen)", "Cocoa (naturally derived sweeteners)", "Unflavoured (Grass-Fed)")
+    // that MyProtein lists as extra SKUs under the same master product.
+    private static final Pattern SIBLING_FORMAT_PATTERN = Pattern.compile(
+            "\\((?:\\+?Collagen|Milkshake|Grass[- ]?Fed[^)]*|[^)]*naturally derived sweeteners)\\)",
+            Pattern.CASE_INSENSITIVE);
+
     private final NutritionParserService nutritionParser;
     private final BaseScraperEnricher baseEnricher;
     private final ProxyAwareHttpClient httpClient;
@@ -289,13 +296,25 @@ public class MyProteinScraper implements StoreScraper {
             if (!v.path("inStock").asBoolean(false)) continue;
 
             String amountTitle = null;
+            String flavourTitle = null;
             for (JsonNode c : v.path("choices")) {
-                if ("Amount".equals(c.path("optionKey").asText())) {
+                String optionKey = c.path("optionKey").asText();
+                if ("Amount".equals(optionKey)) {
                     amountTitle = c.path("title").asText();
-                    break;
+                } else if ("Flavour".equals(optionKey)) {
+                    flavourTitle = c.path("title").asText();
                 }
             }
             if (amountTitle == null) continue;
+
+            // MyProtein bundles sibling product formats (Milkshake, +Collagen, Grass-Fed,
+            // naturally-sweetened) as extra flavour SKUs on the same master product page.
+            // Their nutrition differs from the page's main product, so including them
+            // would both pollute the flavour list and skew price/weight grouping.
+            if (flavourTitle != null && SIBLING_FORMAT_PATTERN.matcher(flavourTitle).find()) {
+                log.debug("[{}] '{}' -> skipping sibling-format flavour '{}'", STORE_NAME, cleanName, flavourTitle);
+                continue;
+            }
 
             double grams = parseAmountToGrams(amountTitle);
             if (grams < MIN_PACKAGE_GRAMS) {

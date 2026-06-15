@@ -1,0 +1,55 @@
+{
+  "pageTitle": "Impact Whey Protein",
+  "masterSku": 10530943,
+  "brand": "Myprotein",
+  "variants": [
+    {
+      "title": "Impact Whey Protein - 900G - 30servings - Vanila",
+      "sku": 17712277,
+      "inStock": true,
+      "choices": [
+        { "optionKey": "Flavour", "key": "Vanilla", "colour": null, "title": "Vanila" },
+        { "optionKey": "Amount", "key": "900G - 30servings", "colour": null, "title": "900G - 30servings" }
+      ],
+      "price": { "price": { "currency": "RSD", "amount": "6299.0", "displayValue": "6299din" } },
+      "product": { "images": [ { "original": "https://static.thcdn.com/productimg/original/10530943-main.png", "altText": null } ], "sku": 10530943 },
+      "content": []
+    },
+    {
+      "title": "Impact Whey Protein - 900G - 30servings - Cookie Crumble (Milkshake)",
+      "sku": 17712278,
+      "inStock": true,
+      "choices": [
+        { "optionKey": "Flavour", "key": "Cookie Crumble Milkshake", "colour": null, "title": "Cookie Crumble (Milkshake)" },
+        { "optionKey": "Amount", "key": "900G - 30servings", "colour": null, "title": "900G - 30servings" }
+      ],
+      "price": { "price": { "currency": "RSD", "amount": "6299.0", "displayValue": "6299din" } },
+      "product": { "images": [], "sku": 10530943 },
+      "content": []
+    },
+    {
+      "title": "Impact Whey Protein - 750G - 30servings - Chocolate (+Collagen)",
+      "sku": 17712279,
+      "inStock": true,
+      "choices": [
+        { "optionKey": "Flavour", "key": "Chocolate Collagen", "colour": null, "title": "Chocolate (+Collagen)" },
+        { "optionKey": "Amount", "key": "750G - 30servings", "colour": null, "title": "750G - 30servings" }
+      ],
+      "price": { "price": { "currency": "RSD", "amount": "6299.0", "displayValue": "6299din" } },
+      "product": { "images": [], "sku": 10530943 },
+      "content": []
+    },
+    {
+      "title": "Impact Whey Protein - 1KG - 33servings - Bez Arome",
+      "sku": 17712280,
+      "inStock": true,
+      "choices": [
+        { "optionKey": "Flavour", "key": "Unflavoured", "colour": null, "title": "Bez Arome" },
+        { "optionKey": "Amount", "key": "1KG - 33servings", "colour": null, "title": "1KG - 33servings" }
+      ],
+      "price": { "price": { "currency": "RSD", "amount": "6299.0", "displayValue": "6299din" } },
+      "product": { "images": [], "sku": 10530943 },
+      "content": []
+    }
+  ]
+}

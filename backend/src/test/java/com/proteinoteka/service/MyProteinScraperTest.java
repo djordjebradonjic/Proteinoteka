@@ -94,6 +94,28 @@ public class MyProteinScraperTest {
     }
 
     @Test
+    void expandByVariants_excludesSiblingFormatFlavours() throws Exception {
+        File file = new File("src/test/resources/myprotein/sibling_format_masterdata.json");
+        JsonNode masterData = objectMapper.readTree(file);
+
+        Product stub = new Product();
+        stub.setUrl("https://www.myprotein.rs/p/sports-nutrition/impact-whey-protein/10530943/");
+        stub.setName("Impact Whey Protein");
+
+        List<Product> variants = scraper.expandByVariants(masterData, stub);
+
+        // "Cookie Crumble (Milkshake)" and "Chocolate (+Collagen)" belong to sibling
+        // product formats bundled on the same page and must be excluded entirely —
+        // both from the flavour list and from price/weight grouping.
+        assertEquals(1, variants.size());
+
+        Product v0 = variants.get(0);
+        assertEquals("900g", v0.getPackage_weight().get(0));
+        assertEquals(900.0, v0.getPrimaryWeightGrams());
+        assertEquals(List.of("Vanila", "Bez Arome"), v0.getFlavours());
+    }
+
+    @Test
     void extractNutritionFromTable_parsesPer100gColumnWithNonHeaderFirstRow() throws Exception {
         File file = new File("src/test/resources/myprotein/impact_whey_masterdata.json");
         JsonNode masterData = objectMapper.readTree(file);

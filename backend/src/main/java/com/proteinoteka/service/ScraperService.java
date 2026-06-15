@@ -777,6 +777,7 @@ public class ScraperService {
         if (src.contains("vegan"))       return 7.0;
         if (src.contains("blend"))       return 5.8;
         if (src.contains("concentrat"))  return 5.5;
+        if (src.contains("egg"))         return 6.5;
         return 6.5;
     }
 

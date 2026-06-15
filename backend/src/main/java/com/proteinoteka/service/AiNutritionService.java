@@ -87,7 +87,7 @@ public class AiNutritionService {
       "sugarPer100g": <number or null>,
       "fatPer100g": <number or null>,
       "caloriePer100g": <number or null>,
-      "proteinSource": <"whey_concentrate"|"whey_isolate"|"hydrolysate"|"vegan"|"casein"|"blend"|null>,
+      "proteinSource": <"whey_concentrate"|"whey_isolate"|"hydrolysate"|"vegan"|"casein"|"blend"|"egg"|null>,
       "primaryWeightGrams": <total package weight in grams as number or null>
     }
                 
@@ -100,7 +100,7 @@ public class AiNutritionService {
     - If serving size is NOT mentioned and value looks like per-serving (e.g. 20-30g protein) → convert assuming 30g serving
     - NEVER return values like 22, 24, 25 for proteinPer100g — these are per-serving values
     - primaryWeightGrams: total package weight in grams (e.g. 2kg = 2000, 908g = 908)
-    - proteinSource: best match from allowed values only
+    - proteinSource: best match from allowed values only ("egg" for egg white / egg albumin protein)
     - All values must be numbers, not strings
     - If no nutrition data exists at all, return null for all numeric fields
                 
