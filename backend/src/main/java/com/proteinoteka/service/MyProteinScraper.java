@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -275,8 +276,14 @@ public class MyProteinScraper implements StoreScraper {
         List<Product> variants = new ArrayList<>();
         String cleanName = ProductNameCleaner.clean(masterData.path("pageTitle").asText(stub.getName()));
 
-        Map<Double, List<JsonNode>> groups = new LinkedHashMap<>();
-        Map<Double, String> labels = new LinkedHashMap<>();
+        // MyProtein assigns each flavour SKU its own slightly different "Amount" title
+        // for what is physically the same package tier (e.g. 870g/900g/930g/1000g all
+        // sell for the same price). Grouping by exact grams therefore produces dozens
+        // of near-duplicate listings with identical prices. Grouping by price instead
+        // collapses those into the real, distinct package tiers; the smallest reported
+        // weight within a price group is used as a conservative weight label.
+        Map<Long, List<JsonNode>> groupsByPrice = new LinkedHashMap<>();
+        Map<JsonNode, Double> gramsByVariant = new IdentityHashMap<>();
 
         for (JsonNode v : masterData.path("variants")) {
             if (!v.path("inStock").asBoolean(false)) continue;
@@ -296,22 +303,26 @@ public class MyProteinScraper implements StoreScraper {
                 continue;
             }
 
-            groups.computeIfAbsent(grams, k -> new ArrayList<>()).add(v);
-            labels.putIfAbsent(grams, formatWeightLabel(grams));
+            double price = v.path("price").path("price").path("amount").asDouble(0);
+            if (price <= 0) continue;
+
+            long priceKey = Math.round(price);
+            groupsByPrice.computeIfAbsent(priceKey, k -> new ArrayList<>()).add(v);
+            gramsByVariant.put(v, grams);
         }
 
-        for (Map.Entry<Double, List<JsonNode>> entry : groups.entrySet()) {
-            double grams = entry.getKey();
-            List<JsonNode> inStock = entry.getValue();
-            String weightLabel = labels.get(grams);
+        for (Map.Entry<Long, List<JsonNode>> entry : groupsByPrice.entrySet()) {
+            long priceKey = entry.getKey();
+            List<JsonNode> members = entry.getValue();
 
-            double price = 0;
+            double minGrams = members.stream()
+                    .mapToDouble(gramsByVariant::get)
+                    .min().orElse(0);
+            if (minGrams <= 0) continue;
+            String weightLabel = formatWeightLabel(minGrams);
+
             String imageUrl = null;
-
-            for (JsonNode v : inStock) {
-                double p = v.path("price").path("price").path("amount").asDouble(0);
-                if (p > 0 && (price == 0 || p < price)) price = p;
-
+            for (JsonNode v : members) {
                 if (imageUrl == null) {
                     JsonNode images = v.path("product").path("images");
                     if (images.isArray() && !images.isEmpty()) {
@@ -320,20 +331,16 @@ public class MyProteinScraper implements StoreScraper {
                     }
                 }
             }
-            if (price == 0) {
-                log.debug("[{}] '{}' -> skipping {} (no valid price)", STORE_NAME, cleanName, weightLabel);
-                continue;
-            }
 
             Product variant = new Product();
             variant.setName(cleanName);
             variant.setUrl(stub.getUrl() + (stub.getUrl().contains("?") ? "&" : "?") + "pakovanje=" + weightLabel);
-            variant.setPrice(formatPrice(price));
+            variant.setPrice(formatPrice(priceKey));
             variant.setImageUrl(imageUrl != null ? imageUrl : stub.getImageUrl());
             variant.getPackage_weight().add(weightLabel);
-            variant.setPrimaryWeightGrams(grams);
+            variant.setPrimaryWeightGrams(minGrams);
 
-            for (JsonNode v : inStock) {
+            for (JsonNode v : members) {
                 for (JsonNode c : v.path("choices")) {
                     if ("Flavour".equals(c.path("optionKey").asText())) {
                         String flavour = c.path("title").asText().trim();
