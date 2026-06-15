@@ -43,7 +43,7 @@ public class ScrapingSchedulerService {
         4, List.of(new ScrapeWindow(List.of("Pansport", "FitLab"),        9, 12)),
         // 5 = REST
         6, List.of(new ScrapeWindow(List.of("Proteinbox", "Proteini.si"), 14, 17)),
-        // 7 = REST
+        7, List.of(new ScrapeWindow(List.of("MyProtein"),                 9, 12)),
         8, List.of(new ScrapeWindow(List.of("GymBeam"),                  10, 13))
     );
 

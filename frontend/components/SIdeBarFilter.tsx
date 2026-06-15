@@ -312,6 +312,7 @@ const STORES = [
   "FitLab",
   "Ogistrashop",
   "GymBeam",
+  "MyProtein",
 ];
 
 function FilterContent({

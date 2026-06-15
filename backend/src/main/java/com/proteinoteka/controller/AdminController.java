@@ -129,6 +129,13 @@ public class AdminController {
         return ResponseEntity.accepted().body("GymBeam scraping started in background" + (testMode ? " [TEST MODE]" : ""));
     }
 
+    @PostMapping("/scrape/myprotein")
+    public ResponseEntity<String> scrapeMyProtein(
+            @RequestParam(defaultValue = "false") boolean testMode) {
+        runAsync("scraper-myprotein", () -> scraperService.scrapeStore(findScraper("MyProtein"), testMode));
+        return ResponseEntity.accepted().body("MyProtein scraping started in background" + (testMode ? " [TEST MODE]" : ""));
+    }
+
     private void runAsync(String threadName, Runnable task) {
         Thread t = Executors.defaultThreadFactory().newThread(task);
         t.setName(threadName);
