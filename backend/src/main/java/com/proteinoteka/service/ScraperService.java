@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -147,9 +148,16 @@ public class ScraperService {
             log.info("[{}] Stale detection: {} existing products tracked", scraper.getStoreName(), existingUrlSet.size());
         }
 
-        // URLs whose nutrition (protein + fat) is already complete — skip detail page visit
-        Set<String> completeNutritionUrls = new HashSet<>(
-                productRepository.findCompleteNutritionUrlsByStoreName(store.getName()));
+        // URLs whose nutrition is already complete (nothing left to enrich) — skip detail page visit.
+        // Protein products need protein+fat+sugar+calorie+proteinSource all filled; non-protein
+        // products (gainers, vitamins, bars...) never get a proteinSource from AI, so protein+fat
+        // filled is as complete as they'll ever get.
+        Set<String> completeNutritionUrls = productRepository.findNutritionStatusByStoreName(store.getName())
+                .stream()
+                .filter(p -> baseEnricher.isNonProteinProduct(p.getName())
+                        || (p.getSugarPer100g() != null && p.getCaloriePer100g() != null && p.getProteinSource() != null))
+                .map(Product::getUrl)
+                .collect(Collectors.toSet());
         log.info("[{}] {} products already have complete nutrition — detail page will be skipped",
                 scraper.getStoreName(), completeNutritionUrls.size());
 
