@@ -74,6 +74,18 @@ public class ProductController {
             }
         }
 
+        // "random" isn't a real entity property — strip it from the Sort (or JPA's
+        // property-path resolution throws) and order via the DB's RANDOM() function instead.
+        if (pageable.getSort().stream().anyMatch(o -> "random".equalsIgnoreCase(o.getProperty()))) {
+            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+            spec = spec.and((root, query, cb) -> {
+                if (query.getResultType() != Long.class) {
+                    query.orderBy(cb.asc(cb.function("random", Double.class)));
+                }
+                return cb.conjunction();
+            });
+        }
+
         return productRepository.findAll(spec, pageable).map(this::convertToDTO);
     }
 

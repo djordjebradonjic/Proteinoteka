@@ -41,7 +41,7 @@ function hasAnyUrlFilter(live: URLSearchParams): boolean {
     (live.get("page") && live.get("page") !== "0") ||
     live.get("category") ||
     live.get("pakovanje") ||
-    (sort && sort !== "id,desc")
+    (sort && sort !== "random")
   );
 }
 
@@ -68,7 +68,7 @@ export default function ProductSection({
   const minPrice            = lp.get("minPrice")  || "";
   const maxPrice            = lp.get("maxPrice")  || "";
   const page                = Number(lp.get("page")) || 0;
-  const sort                = lp.get("sort") || "id,desc";
+  const sort                = lp.get("sort") || "random";
 
   const selectedCategories =
     initialCategory && !urlCategories.includes(initialCategory)
@@ -143,7 +143,7 @@ export default function ProductSection({
     if (tick === 0 && !hasAnyUrlFilter(live) && !initialCategory) return;
 
     const pageVal  = live.get("page")     || "0";
-    const sortVal  = live.get("sort")     || "id,desc";
+    const sortVal  = live.get("sort")     || "random";
     const nameVal  = live.get("query")    || "";
     const storeVal  = live.get("store")     || "";
     const brandVal  = live.get("brand")     || "";
