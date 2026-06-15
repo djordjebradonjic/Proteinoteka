@@ -7,7 +7,7 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: { absolute: "Najjeftiniji Whey Protein u Srbiji 2026 | Proteinoteka" },
   description:
-    "Automatski poredimo cene whey proteina iz 6 srpskih prodavnica. Vidi koji košta najmanje po gramu proteina — ažurirano nedeljno, bez ručnog pretraživanja.",
+    "Automatski poredimo cene whey proteina iz 8 srpskih prodavnica. Vidi koji košta najmanje po gramu proteina — ažurirano nedeljno, bez ručnog pretraživanja.",
   alternates: { canonical: "https://proteinoteka.rs/najjeftiniji-whey-protein" },
   openGraph: {
     title: "Najjeftiniji Whey Protein u Srbiji | Proteinoteka",

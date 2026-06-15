@@ -362,7 +362,7 @@ export default async function Page() {
                 <strong className="text-slate-800">Vegani i biljojedi:</strong> Kombinacija grašak + pirinač proteina pokriva profil aminokiselina. Na srpskom tržištu dostupne su opcije od 3.5–6 RSD po gramu proteina.
               </p>
               <p className="text-[14px] text-slate-500">
-                Aktuelne cene i rangove po Value Score-u za svaku kategoriju naći ćeš na Proteinoteka.rs — podaci se ažuriraju svake nedelje iz 6 prodavnica.
+                Aktuelne cene i rangove po Value Score-u za svaku kategoriju naći ćeš na Proteinoteka.rs — podaci se ažuriraju svake nedelje iz 8 prodavnica.
               </p>
             </div>
           </section>
@@ -410,7 +410,7 @@ export default async function Page() {
 
           <div className="bg-[#1B2B4B] rounded-2xl p-6 text-white text-center">
             <p className="text-base leading-relaxed mb-4">
-              Uporedi sve isolate i concentrate proteine iz 6 prodavnica u Srbiji — sortirano po Value Score-u.
+              Uporedi sve isolate i concentrate proteine iz 8 prodavnica u Srbiji — sortirano po Value Score-u.
             </p>
             <Link href="/kategorija/whey-isolate?sort=valueScore,desc"
               className="inline-block px-6 py-3 bg-[#FF9900] hover:bg-[#e68a00] text-[#131921] font-bold rounded-xl text-sm transition-colors">

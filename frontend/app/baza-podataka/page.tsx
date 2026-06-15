@@ -35,7 +35,7 @@ const FEATURES = [
   {
     icon: "🛒",
     title: "Katalog proizvoda",
-    desc: "Više od 1.000 suplemenata iz srpskih i regionalnih prodavnica, sa imenima, brendovima i slikama.",
+    desc: "Više od 400 suplemenata iz srpskih i regionalnih prodavnica, sa imenima, brendovima i slikama.",
   },
   {
     icon: "💰",
@@ -60,7 +60,7 @@ const FEATURES = [
   {
     icon: "🏪",
     title: "Više prodavnica",
-    desc: "Pansport, Supplementshop, Proteini.si, Proteinbox, Ogistrashop, FitLab i još.",
+    desc: "Pansport, Supplementshop, Proteini.si, Proteinbox, Ogistrashop, FitLab, GymBeam, MyProtein i još.",
   },
 ];
 
@@ -134,7 +134,7 @@ export default function Page() {
               </h1>
               <p className="text-lg text-slate-300 leading-relaxed mb-8 max-w-2xl">
                 Gradite fitnes aplikaciju ili otvarate online prodavnicu? Pristupite
-                čistoj, ažurnoj bazi sa više od 1.000 suplemenata — cenama, nutritivnim
+                čistoj, ažurnoj bazi sa više od 400 suplemenata — cenama, nutritivnim
                 vrednostima i istorijom promena — putem REST API-ja ili jednokratnog CSV/SQL
                 dumpa.
               </p>
@@ -142,8 +142,8 @@ export default function Page() {
               {/* Stats */}
               <div className="flex flex-wrap gap-6">
                 {[
-                  { value: "1.000+", label: "proizvoda" },
-                  { value: "6+", label: "prodavnica" },
+                  { value: "400+", label: "proizvoda" },
+                  { value: "8", label: "prodavnica" },
                   { value: "Sedmično", label: "ažuriranje" },
                   { value: "REST API", label: "ili CSV/SQL dump" },
                 ].map(({ value, label }) => (

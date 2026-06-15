@@ -77,8 +77,8 @@ export default function Page() {
           <section className="mb-10">
             <div className="space-y-4 text-[15px] leading-relaxed text-slate-700">
               <p>
-                Svaki put kad sam hteo da kupim whey protein, završavao sam sa pet otvorenih tabova.
-                Pansport, Supplementshop, Proteini.si, Proteinbox, Ogistrashop — i svaki ima drugačiju
+                Svaki put kad sam hteo da kupim whey protein, završavao sam sa osam otvorenih tabova.
+                Pansport, Supplementshop, Proteini.si, Proteinbox, Ogistrashop, FitLab, GymBeam, MyProtein — i svaki ima drugačiju
                 cenu, drugačiju veličinu pakovanja, drugačije akcije koje možda nisu ni prave akcije.
                 Neka prodavnica prikaže "–20%" ali od cene koja je već bila napumpana. Drugde nema popusta
                 ali je puna cena jeftinija od svuda.

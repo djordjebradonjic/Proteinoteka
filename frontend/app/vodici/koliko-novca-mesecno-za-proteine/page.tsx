@@ -13,12 +13,12 @@ export const revalidate = 3600;
 export const metadata: Metadata = {
   title: { absolute: "Koliko novca mesečno treba za proteine u Srbiji 2026: 3.900–6.200 din za 70 kg | Proteinoteka" },
   description:
-    "Konkretna računica za 2026: mesec dana whey concentrate za 70 kg = 3.900–4.500 din, isolate = 5.700–6.200 din, biljni = 4.200–5.500 din. Cene iz 6 prodavnica, ažurirane sedmično.",
+    "Konkretna računica za 2026: mesec dana whey concentrate za 70 kg = 3.900–4.500 din, isolate = 5.700–6.200 din, biljni = 4.200–5.500 din. Cene iz 8 prodavnica, ažurirane sedmično.",
   alternates: { canonical: "https://proteinoteka.rs/vodici/koliko-novca-mesecno-za-proteine" },
   openGraph: {
     title: "Koliko novca mesečno treba za proteine u Srbiji 2026: 3.900–6.200 din za 70 kg | Proteinoteka",
     description:
-      "Konkretna računica za 2026: mesec dana whey concentrate za 70 kg = 3.900–4.500 din, isolate = 5.700–6.200 din, biljni = 4.200–5.500 din. Cene iz 6 prodavnica, ažurirane sedmično.",
+      "Konkretna računica za 2026: mesec dana whey concentrate za 70 kg = 3.900–4.500 din, isolate = 5.700–6.200 din, biljni = 4.200–5.500 din. Cene iz 8 prodavnica, ažurirane sedmično.",
     url: "https://proteinoteka.rs/vodici/koliko-novca-mesecno-za-proteine",
     siteName: "Proteinoteka",
     locale: "sr_RS",
@@ -71,7 +71,7 @@ const faqItems = [
   },
   {
     q: "Koji tip proteina je najisplativiji u Srbiji?",
-    a: "Whey concentrate (WPC) redovno nudi najviše proteina po dinaru — i to potvrđuju naši live podaci iz 6 prodavnica. Isolate košta 20–40% više, a za većinu vežbača ta razlika u čistoći nije opravdana. Detaljno poređenje naći ćeš u vodiču Isolate vs Concentrate.",
+    a: "Whey concentrate (WPC) redovno nudi najviše proteina po dinaru — i to potvrđuju naši live podaci iz 8 prodavnica. Isolate košta 20–40% više, a za većinu vežbača ta razlika u čistoći nije opravdana. Detaljno poređenje naći ćeš u vodiču Isolate vs Concentrate.",
   },
   {
     q: "Menjaju li se cene proteina često?",
@@ -183,7 +183,7 @@ export default async function Page() {
               whey concentrate košta <strong className="text-slate-900">3.900–4.500 din/mes</strong>,
               biljni protein <strong className="text-slate-900">4.200–5.500 din/mes</strong>,
               whey isolate <strong className="text-slate-900">5.700–6.200 din/mes</strong>.
-              Računato iz aktuelnih cena u 6 srpskih prodavnica.
+              Računato iz aktuelnih cena u 8 srpskih prodavnica.
             </p>
           </div>
 
@@ -240,7 +240,7 @@ export default async function Page() {
               </div>
             </div>
             <p className="text-[12px] text-slate-400">
-              Podaci iz baze Proteinoteke — {concentrates.length + isolates.length + vegans.length} proizvoda iz 6 prodavnica. Ažurira se automatski svake nedelje.
+              Podaci iz baze Proteinoteke — {concentrates.length + isolates.length + vegans.length} proizvoda iz 8 prodavnica. Ažurira se automatski svake nedelje.
             </p>
           </section>
 
@@ -422,7 +422,7 @@ export default async function Page() {
           {/* CTA */}
           <div className="bg-[#1B2B4B] rounded-2xl p-6 text-white text-center mb-10">
             <p className="text-base leading-relaxed mb-4">
-              Pronađi koji protein trenutno daje najviše grama proteina za dinar — iz svih 6 prodavnica.
+              Pronađi koji protein trenutno daje najviše grama proteina za dinar — iz svih 8 prodavnica.
             </p>
             <Link
               href="/?sort=valueScore,desc"

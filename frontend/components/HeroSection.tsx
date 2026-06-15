@@ -33,8 +33,8 @@ const DOTS = [
 ];
 
 const BADGES = [
-  { icon: Store,        value: "6",           label: "prodavnica",  delay: 0.35 },
-  { icon: Package,      value: "250+",        label: "proizvoda",   delay: 0.45 },
+  { icon: Store,        value: "8",           label: "prodavnica",  delay: 0.35 },
+  { icon: Package,      value: "400+",        label: "proteina",    delay: 0.45 },
   { icon: TrendingDown, value: "Mi pratimo.", label: "Ti štediš.",  delay: 0.55 },
 ] as const;
 
@@ -180,7 +180,7 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
               : { opacity: 0 }
           }
         >
-          Upoređujemo cene iz 6 vodećih prodavnica i pronalazimo najbolju ponudu.
+          Upoređujemo cene iz 8 vodećih prodavnica i pronalazimo najbolju ponudu.
         </p>
 
         {/* Trust badges */}
