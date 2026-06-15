@@ -1,0 +1,615 @@
+{
+  "name": "100% Whey Gold Standard - Optimum Nutrition",
+  "type_id": "configurable",
+  "configurable_options": [
+    {
+      "attribute_code": "flavor",
+      "label": "Ukus",
+      "position": 1
+    },
+    {
+      "attribute_code": "mass_grams_g",
+      "label": "Pakovanje",
+      "position": 0
+    }
+  ],
+  "configurable_variants": [
+    {
+      "attributes": [
+        {
+          "code": "flavor",
+          "label": "banana krem",
+          "value_index": 3196
+        },
+        {
+          "code": "mass_grams_g",
+          "label": "2250 g",
+          "value_index": 2479
+        }
+      ],
+      "product": {
+        "stock_status": "OUT_OF_STOCK",
+        "price_range": {
+          "l30d_minimum": 10090,
+          "maximum_price": {
+            "final_price": {
+              "currency": "RSD",
+              "value": 10090,
+              "value_excl_tax": 10090
+            },
+            "regular_price": {
+              "currency": "RSD",
+              "value": 10090,
+              "value_excl_tax": 10090
+            }
+          },
+          "minimum_price": {
+            "final_price": {
+              "currency": "RSD",
+              "value": 10090,
+              "value_excl_tax": 10090
+            },
+            "regular_price": {
+              "currency": "RSD",
+              "value": 10090,
+              "value_excl_tax": 10090
+            }
+          }
+        },
+        "image": {
+          "url": {
+            "full": "https://gymbeam.rs/media/catalog/product/cache/70f742f66feec18cb83790f14444a3d1/e/u/eu_gsw_5lb_banana_6063177_fr.png"
+          }
+        }
+      }
+    },
+    {
+      "attributes": [
+        {
+          "code": "mass_grams_g",
+          "label": "2250 g",
+          "value_index": 2479
+        }
+      ],
+      "product": {
+        "stock_status": "OUT_OF_STOCK",
+        "price_range": {
+          "l30d_minimum": 10090,
+          "maximum_price": {
+            "final_price": {
+              "currency": "RSD",
+              "value": 10090,
+              "value_excl_tax": 10090
+            },
+            "regular_price": {
+              "currency": "RSD",
+              "value": 10090,
+              "value_excl_tax": 10090
+            }
+          },
+          "minimum_price": {
+            "final_price": {
+              "currency": "RSD",
+              "value": 10090,
+              "value_excl_tax": 10090
+            },
+            "regular_price": {
+              "currency": "RSD",
+              "value": 10090,
+              "value_excl_tax": 10090
+            }
+          }
+        },
+        "image": {
+          "url": {
+            "full": "https://gymbeam.rs/media/catalog/product/cache/70f742f66feec18cb83790f14444a3d1/e/u/eu_gsw_5lb_carmtoff_6063179_fr.png"
+          }
+        }
+      }
+    },
+    {
+      "attributes": [
+        {
+          "code": "flavor",
+          "label": "dvostruko bogata čokolada",
+          "value_index": 3520
+        },
+        {
+          "code": "mass_grams_g",
+          "label": "450 g",
+          "value_index": 2734
+        }
+      ],
+      "product": {
+        "stock_status": "IN_STOCK",
+        "price_range": {
+          "l30d_minimum": 2350,
+          "maximum_price": {
+            "final_price": {
+              "currency": "RSD",
+              "value": 3090,
+              "value_excl_tax": 3090
+            },
+            "regular_price": {
+              "currency": "RSD",
+              "value": 3090,
+              "value_excl_tax": 3090
+            }
+          },
+          "minimum_price": {
+            "final_price": {
+              "currency": "RSD",
+              "value": 3090,
+              "value_excl_tax": 3090
+            },
+            "regular_price": {
+              "currency": "RSD",
+              "value": 3090,
+              "value_excl_tax": 3090
+            }
+          }
+        },
+        "image": {
+          "url": {
+            "full": "https://gymbeam.rs/media/catalog/product/cache/70f742f66feec18cb83790f14444a3d1/e/u/eu_gsw_1lb_drc_6063137.png"
+          }
+        }
+      }
+    },
+    {
+      "attributes": [
+        {
+          "code": "flavor",
+          "label": "jagoda",
+          "value_index": 3886
+        },
+        {
+          "code": "mass_grams_g",
+          "label": "450 g",
+          "value_index": 2734
+        }
+      ],
+      "product": {
+        "stock_status": "IN_STOCK",
+        "price_range": {
+          "l30d_minimum": 2350,
+          "maximum_price": {
+            "final_price": {
+              "currency": "RSD",
+              "value": 3090,
+              "value_excl_tax": 3090
+            },
+            "regular_price": {
+              "currency": "RSD",
+              "value": 3090,
+              "value_excl_tax": 3090
+            }
+          },
+          "minimum_price": {
+            "final_price": {
+              "currency": "RSD",
+              "value": 3090,
+              "value_excl_tax": 3090
+            },
+            "regular_price": {
+              "currency": "RSD",
+              "value": 3090,
+              "value_excl_tax": 3090
+            }
+          }
+        },
+        "image": {
+          "url": {
+            "full": "https://gymbeam.rs/media/catalog/product/cache/70f742f66feec18cb83790f14444a3d1/e/u/eu_gsw_1lb_straw_6063157.png"
+          }
+        }
+      }
+    },
+    {
+      "attributes": [
+        {
+          "code": "flavor",
+          "label": "dvostruko bogata čokolada",
+          "value_index": 3520
+        },
+        {
+          "code": "mass_grams_g",
+          "label": "4540 g",
+          "value_index": 2743
+        }
+      ],
+      "product": {
+        "stock_status": "IN_STOCK",
+        "price_range": {
+          "l30d_minimum": 19990,
+          "maximum_price": {
+            "final_price": {
+              "currency": "RSD",
+              "value": 22390,
+              "value_excl_tax": 22390
+            },
+            "regular_price": {
+              "currency": "RSD",
+              "value": 22390,
+              "value_excl_tax": 22390
+            }
+          },
+          "minimum_price": {
+            "final_price": {
+              "currency": "RSD",
+              "value": 22390,
+              "value_excl_tax": 22390
+            },
+            "regular_price": {
+              "currency": "RSD",
+              "value": 22390,
+              "value_excl_tax": 22390
+            }
+          }
+        },
+        "image": {
+          "url": {
+            "full": "https://gymbeam.rs/media/catalog/product/cache/70f742f66feec18cb83790f14444a3d1/e/u/eu_gsw_10lb_drc_6063134_fr.png"
+          }
+        }
+      }
+    },
+    {
+      "attributes": [
+        {
+          "code": "flavor",
+          "label": "ukusna jagoda",
+          "value_index": 3493
+        },
+        {
+          "code": "mass_grams_g",
+          "label": "4540 g",
+          "value_index": 2743
+        }
+      ],
+      "product": {
+        "stock_status": "IN_STOCK",
+        "price_range": {
+          "l30d_minimum": 19990,
+          "maximum_price": {
+            "final_price": {
+              "currency": "RSD",
+              "value": 22390,
+              "value_excl_tax": 22390
+            },
+            "regular_price": {
+              "currency": "RSD",
+              "value": 22390,
+              "value_excl_tax": 22390
+            }
+          },
+          "minimum_price": {
+            "final_price": {
+              "currency": "RSD",
+              "value": 22390,
+              "value_excl_tax": 22390
+            },
+            "regular_price": {
+              "currency": "RSD",
+              "value": 22390,
+              "value_excl_tax": 22390
+            }
+          }
+        },
+        "image": {
+          "url": {
+            "full": "https://gymbeam.rs/media/catalog/product/cache/70f742f66feec18cb83790f14444a3d1/e/u/eu_gsw_10lb_straw_6063154_fr.png"
+          }
+        }
+      }
+    },
+    {
+      "attributes": [
+        {
+          "code": "flavor",
+          "label": "banana krem",
+          "value_index": 3196
+        },
+        {
+          "code": "mass_grams_g",
+          "label": "896 g",
+          "value_index": 167803
+        }
+      ],
+      "product": {
+        "stock_status": "OUT_OF_STOCK",
+        "price_range": {
+          "l30d_minimum": 4490,
+          "maximum_price": {
+            "final_price": {
+              "currency": "RSD",
+              "value": 4490,
+              "value_excl_tax": 4490
+            },
+            "regular_price": {
+              "currency": "RSD",
+              "value": 4490,
+              "value_excl_tax": 4490
+            }
+          },
+          "minimum_price": {
+            "final_price": {
+              "currency": "RSD",
+              "value": 4490,
+              "value_excl_tax": 4490
+            },
+            "regular_price": {
+              "currency": "RSD",
+              "value": 4490,
+              "value_excl_tax": 4490
+            }
+          }
+        },
+        "image": {
+          "url": {
+            "full": "https://gymbeam.rs/media/catalog/product/cache/70f742f66feec18cb83790f14444a3d1/e/u/eu_gsw_2lb_banana_6063190_fr.png"
+          }
+        }
+      }
+    },
+    {
+      "attributes": [
+        {
+          "code": "mass_grams_g",
+          "label": "896 g",
+          "value_index": 167803
+        }
+      ],
+      "product": {
+        "stock_status": "OUT_OF_STOCK",
+        "price_range": {
+          "l30d_minimum": 4490,
+          "maximum_price": {
+            "final_price": {
+              "currency": "RSD",
+              "value": 4490,
+              "value_excl_tax": 4490
+            },
+            "regular_price": {
+              "currency": "RSD",
+              "value": 4490,
+              "value_excl_tax": 4490
+            }
+          },
+          "minimum_price": {
+            "final_price": {
+              "currency": "RSD",
+              "value": 4490,
+              "value_excl_tax": 4490
+            },
+            "regular_price": {
+              "currency": "RSD",
+              "value": 4490,
+              "value_excl_tax": 4490
+            }
+          }
+        },
+        "image": {
+          "url": {
+            "full": "https://gymbeam.rs/media/catalog/product/cache/70f742f66feec18cb83790f14444a3d1/e/u/eu_gsw_2lb_chochaz_6063208_fr.png"
+          }
+        }
+      }
+    },
+    {
+      "attributes": [
+        {
+          "code": "flavor",
+          "label": "banana krem",
+          "value_index": 3196
+        },
+        {
+          "code": "mass_grams_g",
+          "label": "768 g",
+          "value_index": 173497
+        }
+      ],
+      "product": {
+        "stock_status": "IN_STOCK",
+        "price_range": {
+          "l30d_minimum": 4490,
+          "maximum_price": {
+            "final_price": {
+              "currency": "RSD",
+              "value": 5190,
+              "value_excl_tax": 5190
+            },
+            "regular_price": {
+              "currency": "RSD",
+              "value": 5190,
+              "value_excl_tax": 5190
+            }
+          },
+          "minimum_price": {
+            "final_price": {
+              "currency": "RSD",
+              "value": 5190,
+              "value_excl_tax": 5190
+            },
+            "regular_price": {
+              "currency": "RSD",
+              "value": 5190,
+              "value_excl_tax": 5190
+            }
+          }
+        },
+        "image": {
+          "url": {
+            "full": "https://gymbeam.rs/media/catalog/product/cache/70f742f66feec18cb83790f14444a3d1/e/u/eu_on_gsw_2lb_tub_780g_bananacream_6078664_angle01.png"
+          }
+        }
+      }
+    },
+    {
+      "attributes": [
+        {
+          "code": "flavor",
+          "label": "čokolada-puter od kikirikija",
+          "value_index": 3508
+        },
+        {
+          "code": "mass_grams_g",
+          "label": "768 g",
+          "value_index": 173497
+        }
+      ],
+      "product": {
+        "stock_status": "IN_STOCK",
+        "price_range": {
+          "l30d_minimum": 4490,
+          "maximum_price": {
+            "final_price": {
+              "currency": "RSD",
+              "value": 5190,
+              "value_excl_tax": 5190
+            },
+            "regular_price": {
+              "currency": "RSD",
+              "value": 5190,
+              "value_excl_tax": 5190
+            }
+          },
+          "minimum_price": {
+            "final_price": {
+              "currency": "RSD",
+              "value": 5190,
+              "value_excl_tax": 5190
+            },
+            "regular_price": {
+              "currency": "RSD",
+              "value": 5190,
+              "value_excl_tax": 5190
+            }
+          }
+        },
+        "image": {
+          "url": {
+            "full": "https://gymbeam.rs/media/catalog/product/cache/70f742f66feec18cb83790f14444a3d1/e/u/eu_on_gsw_2lb_tub_768g_chocpb_6078662_angle01.png"
+          }
+        }
+      }
+    },
+    {
+      "attributes": [
+        {
+          "code": "flavor",
+          "label": "banana krem",
+          "value_index": 3196
+        },
+        {
+          "code": "mass_grams_g",
+          "label": "2015 g",
+          "value_index": 173509
+        }
+      ],
+      "product": {
+        "stock_status": "OUT_OF_STOCK",
+        "price_range": {
+          "l30d_minimum": 9890,
+          "maximum_price": {
+            "final_price": {
+              "currency": "RSD",
+              "value": 10590,
+              "value_excl_tax": 10590
+            },
+            "regular_price": {
+              "currency": "RSD",
+              "value": 10590,
+              "value_excl_tax": 10590
+            }
+          },
+          "minimum_price": {
+            "final_price": {
+              "currency": "RSD",
+              "value": 10590,
+              "value_excl_tax": 10590
+            },
+            "regular_price": {
+              "currency": "RSD",
+              "value": 10590,
+              "value_excl_tax": 10590
+            }
+          }
+        },
+        "image": {
+          "url": {
+            "full": "https://gymbeam.rs/media/catalog/product/cache/70f742f66feec18cb83790f14444a3d1/e/u/eu_on_gsw_5lb_tub_2kg_2ply_bananacream_6078668_angle01.png"
+          }
+        }
+      }
+    },
+    {
+      "attributes": [
+        {
+          "code": "flavor",
+          "label": "keks i krem",
+          "value_index": 3646
+        },
+        {
+          "code": "mass_grams_g",
+          "label": "2015 g",
+          "value_index": 173509
+        }
+      ],
+      "product": {
+        "stock_status": "OUT_OF_STOCK",
+        "price_range": {
+          "l30d_minimum": 9890,
+          "maximum_price": {
+            "final_price": {
+              "currency": "RSD",
+              "value": 10590,
+              "value_excl_tax": 10590
+            },
+            "regular_price": {
+              "currency": "RSD",
+              "value": 10590,
+              "value_excl_tax": 10590
+            }
+          },
+          "minimum_price": {
+            "final_price": {
+              "currency": "RSD",
+              "value": 10590,
+              "value_excl_tax": 10590
+            },
+            "regular_price": {
+              "currency": "RSD",
+              "value": 10590,
+              "value_excl_tax": 10590
+            }
+          }
+        },
+        "image": {
+          "url": {
+            "full": "https://gymbeam.rs/media/catalog/product/cache/70f742f66feec18cb83790f14444a3d1/e/u/eu_on_gsw_5lb_tub_2kg_2ply_cookies_cream_6078667_angle01.png"
+          }
+        }
+      }
+    }
+  ],
+  "visible_attributes": [
+    {
+      "code": "manufacturer",
+      "label": "Proizvođač :",
+      "values": [
+        {
+          "value": "Optimum Nutrition",
+          "url": null,
+          "title": null
+        }
+      ]
+    }
+  ],
+  "image": {
+    "url": {
+      "full": "https://gymbeam.rs/media/catalog/product/cache/70f742f66feec18cb83790f14444a3d1/e/u/eu_on_gsw_5lb_tub_2kg_2ply_drc_6078372_angle01_1.png"
+    }
+  },
+  "price_range": null
+}

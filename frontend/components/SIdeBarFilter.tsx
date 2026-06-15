@@ -311,6 +311,7 @@ const STORES = [
   "Supplementshop",
   "FitLab",
   "Ogistrashop",
+  "GymBeam",
 ];
 
 function FilterContent({
