@@ -426,9 +426,25 @@ export default function SidebarFilter(props: SidebarFilterProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
-    document.body.style.overflow = drawerOpen ? "hidden" : "";
+    if (!drawerOpen) return;
+
+    // Lock the background in place (overflow:hidden alone doesn't stop touch
+    // scrolling on iOS/Android), while leaving the drawer's own scroll free.
+    const scrollY = window.scrollY;
+    const { style } = document.body;
+    style.position = "fixed";
+    style.top = `-${scrollY}px`;
+    style.left = "0";
+    style.right = "0";
+    style.width = "100%";
+
     return () => {
-      document.body.style.overflow = "";
+      style.position = "";
+      style.top = "";
+      style.left = "";
+      style.right = "";
+      style.width = "";
+      window.scrollTo(0, scrollY);
     };
   }, [drawerOpen]);
 
@@ -461,10 +477,7 @@ export default function SidebarFilter(props: SidebarFilterProps) {
 
       {/* Mobile drawer */}
       {drawerOpen && (
-        <div
-          className="fixed inset-0 z-50 md:hidden"
-          style={{ touchAction: "none" }}
-        >
+        <div className="fixed inset-0 z-50 md:hidden">
           <div
             className="absolute inset-0 bg-black/40"
             onClick={() => setDrawerOpen(false)}
