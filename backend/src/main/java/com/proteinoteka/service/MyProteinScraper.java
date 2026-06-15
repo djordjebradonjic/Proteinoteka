@@ -144,6 +144,18 @@ public class MyProteinScraper implements StoreScraper {
             }
             consecutiveFailures = 0;
 
+            // MyProtein sometimes 301-redirects a discontinued SKU's detail page to a
+            // different, still-active product (e.g. "Organski Whey Protein" -> "Impact
+            // Whey Protein"). If we keep building variant URLs from the original listing
+            // URL, we'd create permanent duplicate rows for the discontinued SKU. Rebase
+            // onto the redirected URL so variants match the canonical product and the
+            // old SKU's rows become stale and get cleaned up.
+            String finalUrl = doc.location();
+            if (finalUrl != null && !finalUrl.isBlank() && !finalUrl.equals(stub.getUrl())) {
+                log.info("[{}] '{}' redirected: {} -> {}", STORE_NAME, stub.getName(), stub.getUrl(), finalUrl);
+                stub.setUrl(finalUrl);
+            }
+
             try {
                 JsonNode masterData = extractMasterData(doc);
                 if (masterData == null) {

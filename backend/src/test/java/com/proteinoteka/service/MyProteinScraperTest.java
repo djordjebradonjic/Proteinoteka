@@ -3,6 +3,7 @@ package com.proteinoteka.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.proteinoteka.model.Product;
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +16,9 @@ import java.io.File;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class MyProteinScraperTest {
@@ -139,6 +143,40 @@ public class MyProteinScraperTest {
         assertEquals("8400", kg25.getPrice());
         assertEquals(List.of("Vanila", "Čokolada", "Bez Arome"), kg25.getFlavours());
         assertEquals(stub.getUrl() + "?pakovanje=2500g", kg25.getUrl());
+    }
+
+    @Test
+    void scrape_rebasesVariantUrlsWhenDetailPageRedirectsToAnotherProduct() throws Exception {
+        String listingHtml = "<html><body>" +
+                "<product-card-wrapper data-sku=\"11272855\">" +
+                "<a data-name=\"image-anchor\" href=\"/p/sports-nutrition/organski-whey-protein/11272855/\" data-primary-src=\"img.png\">" +
+                "<div class=\"product-item-title\">Organski Whey Protein</div>" +
+                "</a>" +
+                "</product-card-wrapper>" +
+                "</body></html>";
+        Document listingDoc = Jsoup.parse(listingHtml);
+
+        File file = new File("src/test/resources/myprotein/impact_whey_masterdata.json");
+        JsonNode masterData = objectMapper.readTree(file);
+        String detailHtml = "<html><body><script>const masterData = " + masterData.toString() + ";</script></body></html>";
+
+        // MyProtein discontinued the "Organski Whey Protein" SKU and now 301-redirects
+        // its detail page to "Impact Whey Protein" — Jsoup.Document.location() reflects
+        // the final, post-redirect URL.
+        String redirectedUrl = "https://www.myprotein.rs/p/sports-nutrition/impact-whey-protein/10530943/";
+        Document detailDoc = Jsoup.parse(detailHtml, redirectedUrl);
+
+        Connection conn = mock(Connection.class);
+        when(httpClient.connection(anyString())).thenReturn(conn);
+        when(conn.get()).thenReturn(detailDoc);
+
+        List<Product> result = scraper.scrape(null, listingDoc);
+
+        assertFalse(result.isEmpty());
+        for (Product p : result) {
+            assertTrue(p.getUrl().startsWith(redirectedUrl),
+                    "Expected variant URL rebased onto redirected canonical URL but was: " + p.getUrl());
+        }
     }
 
     @Test
