@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import Script from "next/script";
 import "./globals.css";
 import Providers from "@/components/Providers";
@@ -89,6 +90,7 @@ export default function RootLayout({
           {children} <Footer />
         </Providers>
         <Analytics />
+        <SpeedInsights />
         <CookieBanner />
         <script
           type="application/ld+json"
