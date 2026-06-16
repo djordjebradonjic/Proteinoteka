@@ -150,6 +150,7 @@ public class LamaScraper implements StoreScraper {
                 enrichBrand(doc, p);
                 enrichPriceFromDetail(doc, p);
                 enrichImageFromDetail(doc, p);
+                enrichDescription(doc, p);
 
                 if (!skipUrls.contains(p.getUrl())) {
                     extractNutritionFromDivTable(doc, p);
@@ -201,6 +202,14 @@ public class LamaScraper implements StoreScraper {
         if (ps.isEmpty()) return;
         String parsed = parsePriceString(ps.last().text().trim());
         if (parsed != null && !parsed.isBlank()) p.setPrice(parsed);
+    }
+
+    private void enrichDescription(Document doc, Product p) {
+        Element el = doc.selectFirst("div.productDescript2");
+        if (el != null) {
+            String text = el.text().trim();
+            if (!text.isBlank()) p.setDescription(text);
+        }
     }
 
     private void enrichImageFromDetail(Document doc, Product p) {
