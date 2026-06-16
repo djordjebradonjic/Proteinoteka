@@ -140,6 +140,12 @@ public class ProductController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    private static final java.util.regex.Pattern BOT_UA = java.util.regex.Pattern.compile(
+        "(?i)bot|crawler|spider|slurp|bingpreview|facebookexternalhit|twitterbot|" +
+        "linkedinbot|whatsapp|telegrambot|googlebot|baiduspider|yandex|semrush|ahrefs|" +
+        "mj12bot|dotbot|rogerbot|screaming frog|wget|curl|python-requests|java/"
+    );
+
     @GetMapping("/{id}/buy")
     public ResponseEntity<Void> buyProduct(
             @PathVariable Long id,
@@ -152,14 +158,22 @@ public class ProductController {
 
         Product product = productOpt.get();
         String storeName = product.getStore() != null ? product.getStore().getName() : null;
+        String ua = request.getHeader("User-Agent");
+        String ip = getClientIp(request);
 
-        ClickEvent event = new ClickEvent();
-        event.setProductId(id);
-        event.setStoreName(storeName);
-        event.setIpAddress(getClientIp(request));
-        event.setUserAgent(request.getHeader("User-Agent"));
-        event.setReferrer(request.getHeader("Referer"));
-        clickEventRepository.save(event);
+        boolean isBot = ua == null || BOT_UA.matcher(ua).find();
+        boolean isDuplicate = !isBot && clickEventRepository
+            .countRecentByProductAndIp(id, ip, LocalDateTime.now().minusSeconds(30)) > 0;
+
+        if (!isBot && !isDuplicate) {
+            ClickEvent event = new ClickEvent();
+            event.setProductId(id);
+            event.setStoreName(storeName);
+            event.setIpAddress(ip);
+            event.setUserAgent(ua);
+            event.setReferrer(request.getHeader("Referer"));
+            clickEventRepository.save(event);
+        }
 
         String redirectUrl = product.getUrl();
         if (storeName != null) {

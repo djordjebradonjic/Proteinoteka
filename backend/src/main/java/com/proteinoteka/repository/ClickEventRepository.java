@@ -4,9 +4,19 @@ import com.proteinoteka.model.ClickEvent;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ClickEventRepository extends JpaRepository<ClickEvent, Long> {
+
+    @Query(value = """
+            SELECT COUNT(*) FROM click_events
+            WHERE product_id = :productId
+              AND ip_address = :ipAddress
+              AND created_at >= :since
+            """, nativeQuery = true)
+    long countRecentByProductAndIp(Long productId, String ipAddress, LocalDateTime since);
+
 
     @Query(value = """
             SELECT store_name, COUNT(*) AS count

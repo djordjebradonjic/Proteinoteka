@@ -519,10 +519,12 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
                     : null;
                   return (
                     <li key={sp.id} className={`border-b border-slate-100 last:border-0 ${isCheapest ? "bg-green-50" : ""}`}>
-                      <Link
-                        href={spUrl}
-                        className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 transition-colors ${isCurrent ? "cursor-default" : "hover:bg-slate-50"}`}
-                        onClick={() => { if (!isCurrent) analytics.clickBuyDetails(sp.id, sp.name ?? product.name, sp.storeName); }}
+                      <div
+                        role="button"
+                        tabIndex={isCurrent ? -1 : 0}
+                        className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 transition-colors ${isCurrent ? "cursor-default" : "hover:bg-slate-50 cursor-pointer"}`}
+                        onClick={() => { if (!isCurrent) router.push(spUrl); }}
+                        onKeyDown={(e) => { if (!isCurrent && (e.key === "Enter" || e.key === " ")) router.push(spUrl); }}
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
@@ -549,13 +551,13 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
                           href={`${process.env.NEXT_PUBLIC_API_URL}/api/v1/products/${sp.id}/buy`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          onClick={(e) => { e.stopPropagation(); analytics.clickBuyDetails(sp.id, sp.name ?? product.name, sp.storeName); }}
+                          onClick={(e) => { e.stopPropagation(); analytics.clickBuyDetails(sp.id, sp.name ?? product.name, sp.storeName ?? ""); }}
                           className={`shrink-0 flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl text-xs font-bold transition-all ${isCheapest ? "bg-green-600 hover:bg-green-700 text-white" : "bg-slate-900 hover:bg-[#243860] text-white"}`}
                         >
                           <ShoppingCart className="w-3.5 h-3.5" />
                           <span className="hidden sm:inline">Kupi</span>
                         </a>
-                      </Link>
+                      </div>
                     </li>
                   );
                 })}
