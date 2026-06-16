@@ -163,6 +163,39 @@ export default async function ProductSlugPage({ params }: Params) {
     .toISOString()
     .split("T")[0];
 
+  const validStorePrices = storePrices.filter(
+    (sp) => sp.numericPrice != null && sp.numericPrice > 0,
+  );
+
+  const offersSchema =
+    validStorePrices.length > 1
+      ? {
+          "@type": "AggregateOffer",
+          priceCurrency: "RSD",
+          lowPrice: Math.min(...validStorePrices.map((sp) => sp.numericPrice!)),
+          highPrice: Math.max(...validStorePrices.map((sp) => sp.numericPrice!)),
+          offerCount: validStorePrices.length,
+          offers: validStorePrices.map((sp) => ({
+            "@type": "Offer",
+            price: sp.numericPrice,
+            priceCurrency: "RSD",
+            availability: "https://schema.org/InStock",
+            itemCondition: "https://schema.org/NewCondition",
+            priceValidUntil,
+            seller: { "@type": "Organization", name: sp.storeName },
+          })),
+        }
+      : {
+          "@type": "Offer",
+          price: product.numericPrice,
+          priceCurrency: "RSD",
+          availability: "https://schema.org/InStock",
+          itemCondition: "https://schema.org/NewCondition",
+          priceValidUntil,
+          url: canonicalUrl,
+          seller: { "@type": "Organization", name: product.storeName },
+        };
+
   const jsonLd = [
     {
       "@context": "https://schema.org",
@@ -173,16 +206,7 @@ export default async function ProductSlugPage({ params }: Params) {
       ...(product.brand && { brand: { "@type": "Brand", name: product.brand } }),
       ...(plainDescription && { description: plainDescription }),
       ...(catLabel && { category: catLabel }),
-      offers: {
-        "@type": "Offer",
-        price: product.numericPrice,
-        priceCurrency: "RSD",
-        availability: "https://schema.org/InStock",
-        itemCondition: "https://schema.org/NewCondition",
-        priceValidUntil,
-        url: canonicalUrl,
-        seller: { "@type": "Organization", name: product.storeName },
-      },
+      offers: offersSchema,
     },
     {
       "@context": "https://schema.org",

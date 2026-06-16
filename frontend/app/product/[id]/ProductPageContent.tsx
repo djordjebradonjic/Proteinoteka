@@ -451,6 +451,26 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
                 primaryWeightGrams={product.primaryWeightGrams}
                 size="md"
               />
+              {(() => {
+                const cheapest = storePrices.find(sp => sp.numericPrice != null && sp.numericPrice > 0);
+                if (!cheapest || cheapest.id === product.id || cheapest.numericPrice == null || product.numericPrice == null) return null;
+                const saving = Math.round(product.numericPrice - cheapest.numericPrice);
+                if (saving <= 0) return null;
+                return (
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById("store-prices")?.scrollIntoView({ behavior: "smooth" })}
+                    className="w-full text-left mt-3 flex items-center gap-2.5 p-3 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 active:bg-emerald-100 transition-colors"
+                  >
+                    <span className="text-base shrink-0">💡</span>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-xs font-bold text-emerald-800">{cheapest.storeName}: {cheapest.price}</span>
+                      <span className="text-xs text-emerald-700"> — uštedi {saving.toLocaleString("sr-RS")} RSD</span>
+                    </div>
+                    <span className="text-xs font-semibold text-emerald-500 shrink-0">vidi sve ↓</span>
+                  </button>
+                );
+              })()}
               <p className="text-[11px] text-slate-400 mt-2 leading-snug">
                 Cene se ažuriraju nedeljno. Finalna cena na sajtu prodavca može se razlikovati.
               </p>
@@ -489,9 +509,6 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
           </div>
         </div>
 
-        {/* ── Price alert ───────────────────────────────────────────── */}
-        <PriceAlertSection product={product} />
-
         {/* ── Cross-store prices ────────────────────────────────────── */}
         {storePrices.length > 1 && (() => {
           const cheapest = storePrices[0]?.numericPrice;
@@ -500,7 +517,7 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
             ? [...storePrices].sort((a, b) => (b.id === product.id ? 1 : 0) - (a.id === product.id ? 1 : 0))
             : storePrices;
           return (
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm mb-6 overflow-hidden">
+            <div id="store-prices" className="bg-white rounded-2xl border border-slate-200 shadow-sm mb-6 overflow-hidden">
               <div className="flex items-center gap-2 px-6 py-4 border-b border-slate-100">
                 <Store className="w-4 h-4 text-[#FF9900]" />
                 <h2 className="text-base font-bold text-slate-900">Cena po prodavnicama</h2>
@@ -565,6 +582,9 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
             </div>
           );
         })()}
+
+        {/* ── Price alert ───────────────────────────────────────────── */}
+        <PriceAlertSection product={product} />
 
         {/* ── Score breakdown ────────────────────────────────────────── */}
         {score != null && (
