@@ -265,15 +265,192 @@ function cutRawDescription(html: string): string {
   return cut > 0 ? html.slice(0, cut) : html;
 }
 
+// ── Star helpers ──────────────────────────────────────────────────────────────
+
+function Stars({ rating, size = "sm" }: { rating: number; size?: "sm" | "lg" }) {
+  const px = size === "lg" ? "w-5 h-5" : "w-3.5 h-3.5";
+  return (
+    <span className="inline-flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((s) => (
+        <svg key={s} className={`${px} shrink-0`} viewBox="0 0 20 20" fill={s <= rating ? "#FF9900" : "#e2e8f0"}>
+          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+        </svg>
+      ))}
+    </span>
+  );
+}
+
+function InteractiveStars({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const [hovered, setHovered] = useState(0);
+  return (
+    <span className="inline-flex items-center gap-1">
+      {[1, 2, 3, 4, 5].map((s) => (
+        <button
+          key={s}
+          type="button"
+          onMouseEnter={() => setHovered(s)}
+          onMouseLeave={() => setHovered(0)}
+          onClick={() => onChange(s)}
+          className="p-0.5"
+          aria-label={`${s} zvezda`}
+        >
+          <svg className="w-7 h-7 transition-colors" viewBox="0 0 20 20" fill={(hovered || value) >= s ? "#FF9900" : "#e2e8f0"}>
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+          </svg>
+        </button>
+      ))}
+    </span>
+  );
+}
+
+// ── Review section ────────────────────────────────────────────────────────────
+
+function ReviewSection({ productId, reviews, aggregateRating }: {
+  productId: number;
+  reviews: ReviewDTO[];
+  aggregateRating: AggregateRatingDTO | null;
+}) {
+  const [formOpen, setFormOpen]     = useState(false);
+  const [name, setName]             = useState("");
+  const [rating, setRating]         = useState(0);
+  const [comment, setComment]       = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted]   = useState(false);
+  const [error, setError]           = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (rating === 0) { setError("Izaberi ocenu."); return; }
+    setSubmitting(true);
+    setError("");
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/products/${productId}/reviews`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ displayName: name.trim() || null, rating, comment: comment.trim() || null }),
+        }
+      );
+      if (!res.ok) throw new Error();
+      setSubmitted(true);
+      setFormOpen(false);
+    } catch {
+      setError("Greška. Pokušaj ponovo.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm mb-6 overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+        <div className="flex items-center gap-3">
+          <h2 className="text-base font-bold text-slate-900">Recenzije</h2>
+          {aggregateRating && aggregateRating.reviewCount > 0 && (
+            <div className="flex items-center gap-1.5">
+              <Stars rating={Math.round(aggregateRating.averageRating)} />
+              <span className="text-sm font-bold text-slate-700">{aggregateRating.averageRating.toFixed(1)}</span>
+              <span className="text-xs text-slate-400">({aggregateRating.reviewCount})</span>
+            </div>
+          )}
+        </div>
+        {!submitted && (
+          <button
+            onClick={() => setFormOpen(v => !v)}
+            className="text-xs font-bold px-3 py-2 rounded-xl bg-[#1B2B4B] text-white hover:bg-[#243860] transition-colors"
+          >
+            {formOpen ? "Otkaži" : "+ Ostavi recenziju"}
+          </button>
+        )}
+      </div>
+
+      {/* Submission confirmation */}
+      {submitted && (
+        <div className="px-6 py-4 bg-emerald-50 border-b border-emerald-100 text-sm text-emerald-700 font-semibold">
+          Hvala! Recenzija je primljena i biće objavljena nakon pregleda.
+        </div>
+      )}
+
+      {/* Form */}
+      {formOpen && !submitted && (
+        <form onSubmit={handleSubmit} className="px-6 py-5 border-b border-slate-100 space-y-4 bg-slate-50">
+          <div>
+            <p className="text-sm font-semibold text-slate-700 mb-2">Ocena *</p>
+            <InteractiveStars value={rating} onChange={setRating} />
+          </div>
+          <div>
+            <label className="text-sm font-semibold text-slate-700 block mb-1">Ime (opciono)</label>
+            <input
+              type="text"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              maxLength={100}
+              placeholder="Npr. Marko"
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#FF9900]/30 focus:border-[#FF9900]"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-semibold text-slate-700 block mb-1">Komentar (opciono)</label>
+            <textarea
+              value={comment}
+              onChange={e => setComment(e.target.value)}
+              maxLength={2000}
+              rows={3}
+              placeholder="Ukratko napiši iskustvo..."
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#FF9900]/30 focus:border-[#FF9900] resize-none"
+            />
+          </div>
+          {error && <p className="text-xs text-red-500">{error}</p>}
+          <button
+            type="submit"
+            disabled={submitting}
+            className="px-5 py-2.5 bg-[#FF9900] hover:bg-[#e68a00] disabled:opacity-50 text-[#131921] font-bold text-sm rounded-xl transition-colors"
+          >
+            {submitting ? "Slanje..." : "Pošalji recenziju"}
+          </button>
+        </form>
+      )}
+
+      {/* Review list */}
+      {reviews.length > 0 ? (
+        <ul className="divide-y divide-slate-100">
+          {reviews.map(r => (
+            <li key={r.id} className="px-6 py-4">
+              <div className="flex items-center gap-2 mb-1">
+                <Stars rating={r.rating} />
+                <span className="text-xs font-semibold text-slate-700">{r.displayName ?? "Anonimno"}</span>
+                <span className="text-[10px] text-slate-400 ml-auto">
+                  {new Date(r.createdAt).toLocaleDateString("sr-Latn", { day: "2-digit", month: "2-digit", year: "numeric" })}
+                </span>
+              </div>
+              {r.comment && <p className="text-sm text-slate-600 leading-relaxed">{r.comment}</p>}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div className="px-6 py-8 text-center">
+          <p className="text-sm text-slate-400">Još nema recenzija. Budi prvi!</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface StorePrice { id: number; storeName: string; price: string; numericPrice: number | null; name: string | null; primaryWeightGrams: number | null; proteinSource: string | null; canonicalSlug: string | null; }
+interface ReviewDTO { id: number; displayName: string | null; rating: number; comment: string | null; createdAt: string; }
+interface AggregateRatingDTO { averageRating: number; reviewCount: number; }
 
 interface Props {
   product: Product;
   similar: Product[];
   storePrices: StorePrice[];
+  reviews: ReviewDTO[];
+  aggregateRating: AggregateRatingDTO | null;
 }
 
-export default function ProductPageContent({ product, similar, storePrices }: Props) {
+export default function ProductPageContent({ product, similar, storePrices, reviews, aggregateRating }: Props) {
   const router = useRouter();
   const [descExpanded, setDescExpanded] = useState(false);
   const [descOverflows, setDescOverflows] = useState(false);
@@ -662,6 +839,9 @@ export default function ProductPageContent({ product, similar, storePrices }: Pr
             </div>
           </div>
         )}
+
+        {/* ── Reviews ───────────────────────────────────────────────── */}
+        <ReviewSection productId={product.id} reviews={reviews} aggregateRating={aggregateRating} />
 
         {/* ── Description ───────────────────────────────────────────── */}
         {(product.aiDescription || product.description) && (

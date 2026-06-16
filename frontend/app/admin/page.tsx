@@ -5,7 +5,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, Legend,
 } from "recharts";
-import { Trash2, RefreshCw, ChevronDown, ChevronRight, Zap, Users } from "lucide-react";
+import { Trash2, RefreshCw, ChevronDown, ChevronRight, Zap, Users, Star, Check } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -71,7 +71,7 @@ function mergeByDate(views: DayClick[], compares: DayClick[], clickouts: DayClic
 }
 
 type ClearMode = "all" | "keepClickOut" | "clicks";
-type Tab = "analytics" | "grupe";
+type Tab = "analytics" | "grupe" | "recenzije";
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
@@ -86,8 +86,9 @@ export default function AdminPage() {
           <h1 className="text-2xl font-black text-[#1B2B4B] mb-4">Admin Panel</h1>
           <div className="flex gap-1">
             {([
-              { id: "analytics", label: "Analytics", icon: <Users className="w-4 h-4" /> },
-              { id: "grupe",     label: "Grupe",     icon: <Zap  className="w-4 h-4" /> },
+              { id: "analytics",  label: "Analytics",  icon: <Users className="w-4 h-4" /> },
+              { id: "grupe",      label: "Grupe",      icon: <Zap  className="w-4 h-4" /> },
+              { id: "recenzije",  label: "Recenzije",  icon: <Star className="w-4 h-4" /> },
             ] as { id: Tab; label: string; icon: React.ReactNode }[]).map(t => (
               <button
                 key={t.id}
@@ -106,8 +107,9 @@ export default function AdminPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {tab === "analytics" && <AnalyticsTab />}
-        {tab === "grupe"     && <GrupeTab />}
+        {tab === "analytics"  && <AnalyticsTab />}
+        {tab === "grupe"      && <GrupeTab />}
+        {tab === "recenzije"  && <RecenzijeTab />}
       </div>
     </main>
   );
@@ -355,6 +357,103 @@ function StatBox({ label, value, color }: { label: string; value: number; color:
     <div className="text-center p-4 bg-slate-50 rounded-xl border border-slate-100">
       <p className="text-2xl font-black" style={{ color }}>{value}</p>
       <p className="text-xs text-slate-400 mt-0.5">{label}</p>
+    </div>
+  );
+}
+
+// ── Recenzije tab ─────────────────────────────────────────────────────────────
+
+interface PendingReview { id: number; productId: number; displayName: string; email: string; rating: number; comment: string; createdAt: string; }
+
+function RecenzijeTab() {
+  const [reviews, setReviews]   = useState<PendingReview[]>([]);
+  const [loading, setLoading]   = useState(true);
+  const [acting, setActing]     = useState<number | null>(null);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/reviews");
+      if (res.ok) setReviews(await res.json());
+    } finally { setLoading(false); }
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const approve = async (id: number) => {
+    setActing(id);
+    await fetch(`/api/admin/reviews/${id}`, { method: "PUT" });
+    setReviews(r => r.filter(x => x.id !== id));
+    setActing(null);
+  };
+
+  const reject = async (id: number) => {
+    setActing(id);
+    await fetch(`/api/admin/reviews/${id}`, { method: "DELETE" });
+    setReviews(r => r.filter(x => x.id !== id));
+    setActing(null);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-base font-bold text-slate-900">Recenzije na čekanju</h2>
+            <p className="text-sm text-slate-400 mt-0.5">Odobri ili odbij pre objavljivanja</p>
+          </div>
+          <span className="text-2xl font-black text-[#FF9900]">{reviews.length}</span>
+        </div>
+      </div>
+
+      {loading && <div className="text-center py-12 text-slate-400 text-sm">Učitavanje...</div>}
+
+      {!loading && reviews.length === 0 && (
+        <div className="text-center py-12 text-slate-400 text-sm">Nema recenzija na čekanju.</div>
+      )}
+
+      {reviews.map(r => (
+        <div key={r.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 flex items-start gap-4">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap mb-1">
+                <span className="text-sm font-bold text-slate-800">{r.displayName || "Anonimno"}</span>
+                {r.email && <span className="text-xs text-slate-400">{r.email}</span>}
+                <span className="text-[10px] text-slate-400 ml-auto">
+                  {new Date(r.createdAt).toLocaleDateString("sr-Latn", { day: "2-digit", month: "2-digit", year: "numeric" })}
+                </span>
+              </div>
+              <div className="flex items-center gap-1 mb-2">
+                {[1,2,3,4,5].map(s => (
+                  <svg key={s} className="w-4 h-4" viewBox="0 0 20 20" fill={s <= r.rating ? "#FF9900" : "#e2e8f0"}>
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                ))}
+              </div>
+              {r.comment && <p className="text-sm text-slate-600 leading-relaxed">{r.comment}</p>}
+              <p className="text-[10px] text-slate-400 mt-2">Product ID: #{r.productId}</p>
+            </div>
+            <div className="flex flex-col gap-2 shrink-0">
+              <button
+                onClick={() => approve(r.id)}
+                disabled={acting === r.id}
+                className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-colors"
+              >
+                <Check className="w-3.5 h-3.5" />
+                Odobri
+              </button>
+              <button
+                onClick={() => reject(r.id)}
+                disabled={acting === r.id}
+                className="flex items-center gap-1.5 px-3 py-2 bg-red-50 hover:bg-red-100 disabled:opacity-50 text-red-600 text-xs font-bold rounded-xl border border-red-200 transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Odbij
+              </button>
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

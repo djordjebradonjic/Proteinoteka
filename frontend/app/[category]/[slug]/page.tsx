@@ -17,6 +17,8 @@ const API      = process.env.NEXT_PUBLIC_API_URL ?? "";
 const BASE_URL = "https://proteinoteka.rs";
 
 interface StorePrice { id: number; storeName: string; price: string; numericPrice: number | null; name: string | null; primaryWeightGrams: number | null; proteinSource: string | null; canonicalSlug: string | null; }
+interface ReviewDTO { id: number; displayName: string | null; rating: number; comment: string | null; createdAt: string; }
+interface AggregateRatingDTO { averageRating: number; reviewCount: number; }
 interface Params { params: Promise<{ category: string; slug: string }> }
 
 // ── Data fetching ──────────────────────────────────────────────────────────────
@@ -44,6 +46,23 @@ async function fetchStorePrices(productId: number): Promise<StorePrice[]> {
     if (!res.ok) return [];
     return res.json();
   } catch { return []; }
+}
+
+async function fetchReviews(productId: number): Promise<ReviewDTO[]> {
+  try {
+    const res = await fetch(`${API}/api/v1/products/${productId}/reviews`, { next: { revalidate: 3600, tags: ["reviews"] } });
+    if (!res.ok) return [];
+    return res.json();
+  } catch { return []; }
+}
+
+async function fetchAggregateRating(productId: number): Promise<AggregateRatingDTO | null> {
+  try {
+    const res = await fetch(`${API}/api/v1/products/${productId}/reviews/aggregate`, { next: { revalidate: 3600, tags: ["reviews"] } });
+    if (!res.ok) return null;
+    const data: AggregateRatingDTO = await res.json();
+    return data.reviewCount > 0 ? data : null;
+  } catch { return null; }
 }
 
 // ── Metadata ───────────────────────────────────────────────────────────────────
@@ -127,9 +146,11 @@ export default async function ProductSlugPage({ params }: Params) {
     permanentRedirect(canonical);
   }
 
-  const [similar, storePrices] = await Promise.all([
+  const [similar, storePrices, reviews, aggregateRating] = await Promise.all([
     product.proteinSource ? fetchSimilar(product.proteinSource, product.id) : [],
     fetchStorePrices(product.id),
+    fetchReviews(product.id),
+    fetchAggregateRating(product.id),
   ]);
 
   // ── Schema.org ─────────────────────────────────────────────────────────────
@@ -207,6 +228,15 @@ export default async function ProductSlugPage({ params }: Params) {
       ...(plainDescription && { description: plainDescription }),
       ...(catLabel && { category: catLabel }),
       offers: offersSchema,
+      ...(aggregateRating && {
+        aggregateRating: {
+          "@type": "AggregateRating",
+          ratingValue: aggregateRating.averageRating,
+          reviewCount: aggregateRating.reviewCount,
+          bestRating: 5,
+          worstRating: 1,
+        },
+      }),
     },
     {
       "@context": "https://schema.org",
@@ -221,7 +251,7 @@ export default async function ProductSlugPage({ params }: Params) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <ProductPageContent product={product} similar={similar} storePrices={storePrices} />
+      <ProductPageContent product={product} similar={similar} storePrices={storePrices} reviews={reviews} aggregateRating={aggregateRating} />
     </>
   );
 }
