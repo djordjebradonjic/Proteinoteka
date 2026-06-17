@@ -143,6 +143,13 @@ public class AdminController {
         return ResponseEntity.accepted().body("Lama scraping started in background" + (testMode ? " [TEST MODE]" : ""));
     }
 
+    @PostMapping("/scrape/supplementstore")
+    public ResponseEntity<String> scrapeSupplementStore(
+            @RequestParam(defaultValue = "false") boolean testMode) {
+        runAsync("scraper-supplementstore", () -> scraperService.scrapeStore(findScraper("SupplementStore"), testMode));
+        return ResponseEntity.accepted().body("SupplementStore scraping started in background" + (testMode ? " [TEST MODE]" : ""));
+    }
+
     private void runAsync(String threadName, Runnable task) {
         Thread t = Executors.defaultThreadFactory().newThread(task);
         t.setName(threadName);
