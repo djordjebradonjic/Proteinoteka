@@ -15,6 +15,7 @@ import com.proteinoteka.dto.NutritionDataDTO;
 import com.proteinoteka.service.AiNutritionService;
 import com.proteinoteka.service.ScraperService;
 import com.proteinoteka.service.StoreScraper;
+import com.proteinoteka.service.SupplementStoreScraper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.CacheManager;
 import org.springframework.http.ResponseEntity;
@@ -148,6 +149,25 @@ public class AdminController {
             @RequestParam(defaultValue = "false") boolean testMode) {
         runAsync("scraper-supplementstore", () -> scraperService.scrapeStore(findScraper("SupplementStore"), testMode));
         return ResponseEntity.accepted().body("SupplementStore scraping started in background" + (testMode ? " [TEST MODE]" : ""));
+    }
+
+    @PostMapping("/scrape/supplementstore/test")
+    public ResponseEntity<String> scrapeSupplementStoreTest(
+            @RequestParam(defaultValue = "10") int limit) {
+        SupplementStoreScraper scraper = scrapers.stream()
+                .filter(s -> s instanceof SupplementStoreScraper)
+                .map(s -> (SupplementStoreScraper) s)
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("SupplementStore scraper not found"));
+        scraper.setProductLimit(limit);
+        runAsync("scraper-supplementstore-test", () -> {
+            try {
+                scraperService.scrapeStore(scraper, true);
+            } finally {
+                scraper.resetProductLimit();
+            }
+        });
+        return ResponseEntity.accepted().body("SupplementStore TEST scrape started — limit: " + limit + " products");
     }
 
     private void runAsync(String threadName, Runnable task) {

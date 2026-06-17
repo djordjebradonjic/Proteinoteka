@@ -7,11 +7,11 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: { absolute: "Supplement Store proteini — cene i poređenje | Proteinoteka" },
   description:
-    "Sve cene proteina iz Supplement Store asortimana na jednom mestu. Poredi Supplement Store sa ostalim srpskim prodavnicama po ceni, sadržaju proteina i value score — bez lutanja po sajtovima.",
+    "Supplement Store cene proteina u Srbiji — Optimum Nutrition, BSN, Dymatize, Ultimate Nutrition. Poredi sa svim srpskim prodavnicama. Value score za svaki protein.",
   alternates: { canonical: "https://proteinoteka.rs/supplement-store-proteini" },
   openGraph: {
     title: "Supplement Store proteini — cene i poređenje | Proteinoteka",
-    description: "Aktuelne cene Supplement Store proteina. Nutritivne vrednosti, value score i direktno poređenje sa konkurencijom.",
+    description: "Aktuelne Supplement Store cene proteina u Srbiji. Value score, nutritivne vrednosti i direktno poređenje sa svim prodavnicama.",
     url: "https://proteinoteka.rs/supplement-store-proteini",
     siteName: "Proteinoteka",
     locale: "sr_RS",
@@ -26,21 +26,21 @@ export default async function Page() {
     <SEOStorePage
       h1="Supplement Store proteini — sve cene"
       storeName="SupplementStore"
-      intro="Supplement Store je srpska online prodavnica suplemenata koja nudi širok izbor proteinskih praškova poznatih svetskih brendova — Ultimate Nutrition, Optimum Nutrition, BSN, Dymatize i drugi. Na Proteinoteci pratimo aktuelne Supplement Store cene i poredimo ih sa GymBeam-om, MyProtein-om i svim ostalim prodavnicama u Srbiji. Pregled ispod prikazuje sve dostupne proteine iz Supplement Store ponude, sortirane po value score — objektivnoj meri koja uzima u obzir cenu, sadržaj proteina i nutritivni profil svakog proizvoda."
+      intro="Supplement Store je srpska online prodavnica suplemenata koja nudi širok izbor proteinskih praškova poznatih svetskih brendova — Optimum Nutrition, BSN, Dymatize, Ultimate Nutrition i drugi. Na Proteinoteci pratimo aktuelne Supplement Store cene i automatski ih poredimo sa GymBeam-om, MyProtein-om, Pansport-om i svim ostalim prodavnicama u Srbiji. Pregled ispod prikazuje sve dostupne proteine iz Supplement Store ponude, sortirane po value score — objektivnoj meri koja uzima u obzir cenu, sadržaj proteina i nutritivni profil svakog proizvoda."
       products={products}
       currentSlug="supplement-store-proteini"
       faqs={[
         {
-          q: "Koji proteini se mogu naći u Supplement Store asortimanu?",
-          a: "Supplement Store nudi proteine iz kategorija whey koncentrata, izolata, kazein proteina i biljnih proteina. U ponudi su brendovi poput Ultimate Nutrition, Optimum Nutrition, BSN i Dymatize. Sve aktuelne cene i nutritivne vrednosti su prikazane u tabeli iznad.",
+          q: "Koje brendove proteina nosi Supplement Store?",
+          a: "Supplement Store nudi proteine internacionalnih brendova kao što su Optimum Nutrition (Gold Standard), BSN, Dymatize (ISO100), Ultimate Nutrition i drugi. Kompletna ponuda sa aktuelnim cenama i nutritivnim vrednostima prikazana je u tabeli iznad.",
         },
         {
           q: "Koji Supplement Store proteini imaju najviše proteina na 100g?",
-          a: "Whey izolati i hidrolizati generalno imaju najviše proteina na 100g — tipično između 80g i 90g. Whey koncentrati se kreću od 70g do 80g na 100g. Na ovoj stranici su svi proteini sortirani po value score koji uzima u obzir i sadržaj proteina i cenu.",
+          a: "Whey izolati i hidrolizati generalno imaju najviše proteina na 100g — tipično između 80g i 93g. Dymatize ISO100 i slični hidrolizati su na vrhu. Whey koncentrati se kreću od 70g do 82g. Na ovoj stranici su svi proteini sortirani po value score koji uzima u obzir i sadržaj proteina i cenu.",
         },
         {
           q: "Kako se Supplement Store cene porede sa GymBeam-om i MyProtein-om?",
-          a: "Proteinoteka automatski prikuplja cene iz svih prodavnica i računa value score — meru koliko grama proteina dobijaš po jednom dinaru. Na glavnoj stranici možeš filtrirati po prodavnici i odmah videti koja nudi najpovoljniju cenu za isti ili sličan proizvod.",
+          a: "Proteinoteka automatski prikuplja cene iz Supplement Store-a i svih ostalih prodavnica i računa value score — meru koliko grama proteina dobijaš po jednom dinaru. Na glavnoj stranici možeš filtrirati po brendu ili kategoriji i odmah videti koja prodavnica ima povoljniju cenu za isti ili sličan proizvod.",
         },
         {
           q: "Da li Supplement Store dostavlja na celoj teritoriji Srbije?",
@@ -48,7 +48,11 @@ export default async function Page() {
         },
         {
           q: "Da li Supplement Store ima veganske i biljne proteine?",
-          a: "Da, Supplement Store u asortimanu ima biljne proteine na bazi graška, pirinča i soje. Sve kategorije proteina — uključujući veganske opcije — možeš pronaći sortirane po value score u tabeli na ovoj stranici.",
+          a: "Da, Supplement Store u asortimanu ima biljne proteine na bazi graška, pirinča i soje. Sve kategorije proteina — uključujući veganske opcije — možeš pronaći sortirane po value score u tabeli na ovoj stranici. Za pun pregled biljnih proteina u svim prodavnicama poseti stranicu biljnih proteina na Proteinoteci.",
+        },
+        {
+          q: "Kako da aktiviram obaveštenje o padu cene za Supplement Store proteine?",
+          a: "Na Proteinoteci možeš aktivirati price alert za bilo koji Supplement Store protein — bez registracije. Otvori stranicu željenog proizvoda, unesi email i ciljnu cenu i dobiješ automatsko obaveštenje čim cena padne. Posebno korisno za premium brendove kao Dymatize ISO100 i Optimum Nutrition koji mogu imati česte akcije.",
         },
       ]}
     />

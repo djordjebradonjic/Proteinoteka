@@ -32,6 +32,11 @@ public class SupplementStoreScraper implements StoreScraper {
     private final ProductRepository      productRepository;
     private final PriceParser            priceParser;
 
+    private volatile int productLimit = Integer.MAX_VALUE;
+
+    public void setProductLimit(int limit)  { this.productLimit = limit; }
+    public void resetProductLimit()         { this.productLimit = Integer.MAX_VALUE; }
+
     @Override public String  getStoreName()            { return STORE_NAME; }
     @Override public String  getBaseUrl()              { return LISTING_URL; }
     @Override public boolean usePlaywrightForListing() { return false; }
@@ -58,7 +63,7 @@ public class SupplementStoreScraper implements StoreScraper {
         log.info("[{}] Parsed {} products from listing page", STORE_NAME, products.size());
 
         if (page != null && !products.isEmpty()) {
-            enrichWithDetails(page, products, skipUrls);
+            enrichWithDetails(page, products, skipUrls, productLimit);
         }
 
         return products;
@@ -124,9 +129,17 @@ public class SupplementStoreScraper implements StoreScraper {
     // ── Detail page enrichment ───────────────────────────────────────────────────
 
     private void enrichWithDetails(Page page, List<Product> products, Set<String> skipUrls) {
+        enrichWithDetails(page, products, skipUrls, Integer.MAX_VALUE);
+    }
+
+    private void enrichWithDetails(Page page, List<Product> products, Set<String> skipUrls, int productLimit) {
         int count = 0;
 
         for (Product p : products) {
+            if (count >= productLimit) {
+                log.info("[{}] Reached product limit ({}) — stopping detail enrichment", STORE_NAME, productLimit);
+                break;
+            }
             if (p.getUrl() == null || p.getUrl().isBlank()) continue;
             if (baseEnricher.isNonProteinProduct(p.getName())) {
                 log.info("[{}] Skipping '{}' — not a protein product", STORE_NAME, p.getName());
@@ -156,6 +169,17 @@ public class SupplementStoreScraper implements StoreScraper {
                 }
 
                 page.waitForTimeout(500 + ThreadLocalRandom.current().nextInt(800));
+
+                // Click the "Nutritivne vrednosti" tab so #tabcustom0 content loads
+                try {
+                    var tabLink = page.querySelector("a[href='#tabcustom0'], ul.nav-tabs a[href*='tabcustom']");
+                    if (tabLink != null) {
+                        tabLink.click();
+                        page.waitForTimeout(600);
+                        log.debug("[{}] Clicked nutrition tab for '{}'", STORE_NAME, p.getName());
+                    }
+                } catch (Exception ignored) {}
+
                 Document doc = Jsoup.parse(page.content());
 
                 enrichBrand(doc, p);

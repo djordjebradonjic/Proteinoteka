@@ -7,7 +7,7 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: { absolute: "Lama proteini — cene i poređenje | Proteinoteka" },
   description:
-    "Sve cene proteina iz Lama asortimana na jednom mestu. Poredi Lama sa ostalim srpskim prodavnicama po ceni, sadržaju proteina i value score — bez lutanja po sajtovima.",
+    "Lama proteini u Srbiji — Nutriversum, Kevin Levrone, OstroVit, 5 Stars. Poredi Lama cene sa GymBeam-om i MyProtein-om po value score. Sve na jednom mestu.",
   alternates: { canonical: "https://proteinoteka.rs/lama-proteini" },
   openGraph: {
     title: "Lama proteini — cene i poređenje | Proteinoteka",
@@ -53,6 +53,10 @@ export default async function Page() {
         {
           q: "Da li Lama ima veganske proteine?",
           a: "Da, Lama nosi Nutriversum Vegan Pro (protein pirinča i graška, 73g proteina/100g) i OstroVit Pea Protein Isolate (protein graška, 25.5g/100g). Za pun pregled biljnih proteina u svim prodavnicama poseti stranicu biljnog proteina na Proteinoteci.",
+        },
+        {
+          q: "Kako aktivirati price alert za Lama proteine?",
+          a: "Na Proteinoteci možeš aktivirati obaveštenje o padu cene za bilo koji Lama protein — bez registracije. Otvori stranicu željenog proizvoda, unesi email i ciljnu cenu i dobiješ automatski email čim Lama snizi cenu. Praktično za pratiti Nutriversum i Kevin Levrone akcije.",
         },
       ]}
     />
