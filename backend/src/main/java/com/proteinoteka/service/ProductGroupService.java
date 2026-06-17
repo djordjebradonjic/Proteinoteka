@@ -67,7 +67,7 @@ public class ProductGroupService {
         Map<String, List<Product>> byBrandSource = new HashMap<>();
         for (Product p : all) {
             if (p.getBrand() == null || p.getPrimaryWeightGrams() == null) continue;
-            if (p.getGroupId() != null) continue; // skip already grouped
+            if (p.getGroupId() != null) continue;
             String key = p.getBrand().toLowerCase().trim() + "|" + normalizeSource(p.getProteinSource());
             byBrandSource.computeIfAbsent(key, k -> new ArrayList<>()).add(p);
         }
@@ -76,47 +76,114 @@ public class ProductGroupService {
         int skipped = 0;
 
         for (List<Product> brandSourceGroup : byBrandSource.values()) {
-            // Cluster by weight (within ±10%)
             List<List<Product>> weightClusters = clusterByWeight(brandSourceGroup);
 
-            for (List<Product> cluster : weightClusters) {
-                Set<Long> storeIds = cluster.stream()
-                        .filter(p -> p.getStore() != null)
-                        .map(p -> p.getStore().getId())
-                        .collect(Collectors.toSet());
+            for (List<Product> weightCluster : weightClusters) {
+                // Further split by product line name (prevents Iso Cool + Iso Sensation merging)
+                List<List<Product>> lineGroups = splitByProductLine(weightCluster);
 
-                // Only create group if products span at least 2 stores
-                if (storeIds.size() < 2) {
-                    skipped++;
-                    continue;
+                for (List<Product> cluster : lineGroups) {
+                    // Deduplicate: keep at most one product per store (best value score wins)
+                    Map<Long, Product> bestPerStore = new LinkedHashMap<>();
+                    for (Product p : cluster) {
+                        if (p.getStore() == null) continue;
+                        Long storeId = p.getStore().getId();
+                        Product existing = bestPerStore.get(storeId);
+                        if (existing == null
+                                || (p.getValueScore() != null && (existing.getValueScore() == null
+                                        || p.getValueScore() > existing.getValueScore()))) {
+                            bestPerStore.put(storeId, p);
+                        }
+                    }
+
+                    List<Product> deduped = new ArrayList<>(bestPerStore.values());
+
+                    if (bestPerStore.size() < 2) {
+                        skipped++;
+                        continue;
+                    }
+
+                    String canonicalName = deduped.stream()
+                            .max(Comparator.comparingInt(p -> p.getName().length()))
+                            .map(Product::getName).orElse("Unknown");
+                    String brand = deduped.get(0).getBrand();
+                    double avgWeight = deduped.stream()
+                            .mapToDouble(Product::getPrimaryWeightGrams).average().orElse(0);
+
+                    ProductGroup group = new ProductGroup();
+                    group.setCanonicalName(canonicalName);
+                    group.setBrand(brand);
+                    group.setWeightGrams(avgWeight);
+                    group = productGroupRepository.save(group);
+
+                    for (Product p : deduped) {
+                        p.setGroupId(group.getId());
+                    }
+                    productRepository.saveAll(deduped);
+                    created++;
                 }
-
-                // Use the longest name as canonical name
-                String canonicalName = cluster.stream()
-                        .max(Comparator.comparingInt(p -> p.getName().length()))
-                        .map(Product::getName)
-                        .orElse("Unknown");
-
-                String brand = cluster.get(0).getBrand();
-                double avgWeight = cluster.stream()
-                        .mapToDouble(Product::getPrimaryWeightGrams)
-                        .average().orElse(0);
-
-                ProductGroup group = new ProductGroup();
-                group.setCanonicalName(canonicalName);
-                group.setBrand(brand);
-                group.setWeightGrams(avgWeight);
-                group = productGroupRepository.save(group);
-
-                for (Product p : cluster) {
-                    p.setGroupId(group.getId());
-                }
-                productRepository.saveAll(cluster);
-                created++;
             }
         }
 
         return Map.of("groupsCreated", created, "clustersTooSmall", skipped);
+    }
+
+    /**
+     * Splits a weight-clustered list into sub-lists by product line name similarity.
+     * Prevents merging of distinct product lines that share brand+weight+source
+     * (e.g. "Iso Cool" vs "Iso Sensation 93" from Ultimate Nutrition).
+     */
+    private List<List<Product>> splitByProductLine(List<Product> cluster) {
+        List<List<Product>> lines = new ArrayList<>();
+
+        for (Product p : cluster) {
+            Set<String> pWords = productLineWords(p.getName(), p.getBrand());
+            boolean placed = false;
+
+            for (List<Product> line : lines) {
+                Set<String> lineWords = productLineWords(line.get(0).getName(), line.get(0).getBrand());
+                if (hasWordOverlap(pWords, lineWords)) {
+                    line.add(p);
+                    placed = true;
+                    break;
+                }
+            }
+            if (!placed) {
+                List<Product> newLine = new ArrayList<>();
+                newLine.add(p);
+                lines.add(newLine);
+            }
+        }
+        return lines;
+    }
+
+    private static final Set<String> NAME_STOPWORDS = Set.of(
+            "whey", "protein", "proteini", "isolate", "izolat", "kazein", "casein",
+            "concentrate", "koncentrat", "hydrolysate", "hidrolizat", "vegan", "plant",
+            "100", "pure", "natural", "ukus", "flavor", "flavour", "vanilla", "vanila",
+            "chocolate", "cokolada", "sport", "nutrition", "the", "and", "with", "pro",
+            "ultra", "gold", "lean", "diet", "basic", "complete", "premium", "iso",
+            "zero", "raw", "blend", "fusion", "powder", "instant", "formula"
+    );
+
+    private Set<String> productLineWords(String name, String brand) {
+        if (name == null) return Collections.emptySet();
+        String lower = name.toLowerCase();
+        if (brand != null) lower = lower.replace(brand.toLowerCase().trim(), "");
+        lower = lower.replaceAll("\\d+[.,]?\\d*\\s*(kg|g|gr\\b|lb\\b)", "");
+        lower = lower.replaceAll("[^a-zčćšđž\\s]", " ");
+        Set<String> words = new HashSet<>();
+        for (String w : lower.split("\\s+")) {
+            if (w.length() > 2 && !NAME_STOPWORDS.contains(w)) words.add(w);
+        }
+        return words;
+    }
+
+    private boolean hasWordOverlap(Set<String> a, Set<String> b) {
+        if (a.isEmpty() || b.isEmpty()) return true; // can't distinguish → assume same line
+        Set<String> intersection = new HashSet<>(a);
+        intersection.retainAll(b);
+        return !intersection.isEmpty();
     }
 
     // ── Admin: list all groups with their products ────────────────────────────
