@@ -18,6 +18,7 @@ const STORE_PAGES = [
   { label: "FitLab",         href: "/fitlab-proteini"         },
   { label: "Proteinbox",     href: "/proteinbox-proteini"     },
   { label: "Proteini.si",    href: "/proteini-si-srbija"      },
+  { label: "Lama",           href: "/lama-proteini"           },
 ];
 
 const GUIDES = [

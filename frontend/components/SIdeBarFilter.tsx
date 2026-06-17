@@ -313,6 +313,7 @@ const STORES = [
   "Ogistrashop",
   "GymBeam",
   "MyProtein",
+  "Lama",
 ];
 
 function FilterContent({

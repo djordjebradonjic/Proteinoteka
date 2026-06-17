@@ -7,7 +7,7 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 export default async function Image() {
-  const stores = ["Pansport", "Proteini.si", "FitLab", "Proteinbox", "Ogistrashop", "Supplementshop", "GymBeam", "MyProtein"];
+  const stores = ["Pansport", "Proteini.si", "FitLab", "Proteinbox", "Ogistrashop", "Supplementshop", "GymBeam", "MyProtein", "Lama"];
 
   const logoData = await readFile(join(process.cwd(), "public/logo.png"));
   const logoSrc = `data:image/png;base64,${logoData.toString("base64")}`;

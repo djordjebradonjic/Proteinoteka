@@ -237,6 +237,20 @@ export function SEOStorePage({
     })),
   };
 
+  const itemListJsonLd = sorted.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: `${storeName} proteini`,
+    url: `${BASE_URL}/${currentSlug}`,
+    numberOfItems: sorted.length,
+    itemListElement: sorted.slice(0, 10).map((p, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      url: `${BASE_URL}/protein/${p.canonicalSlug ?? p.id}`,
+      name: p.name,
+    })),
+  } : null;
+
   return (
     <div className="min-h-screen bg-slate-50">
       <script
@@ -247,6 +261,12 @@ export function SEOStorePage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
+      {itemListJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
+        />
+      )}
       <Header />
 
       {/* Hero */}
