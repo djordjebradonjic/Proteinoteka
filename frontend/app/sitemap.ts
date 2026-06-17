@@ -50,7 +50,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/pansport-proteini`,       changeFrequency: "weekly" as const, priority: 0.8, lastModified: now },
     { url: `${BASE}/fitlab-proteini`,         changeFrequency: "weekly" as const, priority: 0.8, lastModified: now },
     { url: `${BASE}/proteinbox-proteini`,     changeFrequency: "weekly" as const, priority: 0.8, lastModified: now },
-    { url: `${BASE}/proteini-si-srbija`,      changeFrequency: "weekly" as const, priority: 0.8, lastModified: now },
+    { url: `${BASE}/proteini-si-srbija`,          changeFrequency: "weekly" as const, priority: 0.8, lastModified: now },
+    { url: `${BASE}/lama-proteini`,               changeFrequency: "weekly" as const, priority: 0.8, lastModified: now },
+    { url: `${BASE}/supplement-store-proteini`,   changeFrequency: "weekly" as const, priority: 0.8, lastModified: now },
     ...CATEGORIES.map((c) => ({
       url: `${BASE}/kategorija/${c.slug}`,
       changeFrequency: "weekly" as const,
