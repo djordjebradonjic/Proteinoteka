@@ -93,8 +93,13 @@ public class SupplementStoreScraper implements StoreScraper {
                 p.getPackage_weight().add(formatWeight(weightGrams));
             }
 
-            Element priceEl = card.selectFirst("span.price-new");
-            if (priceEl != null) p.setPrice(parsePriceString(priceEl.text()));
+            // Regular: <p class="price">X RSD</p>; Sale: <p class="price"><span class="price-new">X</span></p>
+            Element pricePara = card.selectFirst("p.price");
+            if (pricePara != null) {
+                Element saleEl = pricePara.selectFirst("span.price-new");
+                String rawPrice = saleEl != null ? saleEl.text() : pricePara.ownText();
+                p.setPrice(parsePriceString(rawPrice));
+            }
 
             // Listing image — upgrade to 600x600 by replacing thumbnail suffix
             Element img = card.selectFirst("img.img-responsive");
@@ -159,7 +164,7 @@ public class SupplementStoreScraper implements StoreScraper {
                 enrichDescription(doc, p);
 
                 if (!skipUrls.contains(p.getUrl())) {
-                    extractNutritionFromTable(doc, p);
+                    extractNutritionFromBrText(doc, p);
 
                     if (p.getProteinPer100g() == null && p.getDescription() != null) {
                         Double protein = nutritionParser.extractProteinPer100g(p.getDescription());
@@ -211,7 +216,9 @@ public class SupplementStoreScraper implements StoreScraper {
     }
 
     private void enrichPriceFromDetail(Document doc, Product p) {
-        Element el = doc.selectFirst("div.price-new, span.price-new");
+        // Prefer the "Add to Cart Plus" widget price which reflects the active variant;
+        // fall back to the main <p class="price"> element.
+        Element el = doc.selectFirst("span.atcp-price, p.price");
         if (el != null) {
             String price = parsePriceString(el.text());
             if (price != null && !price.isBlank()) p.setPrice(price);
@@ -249,60 +256,69 @@ public class SupplementStoreScraper implements StoreScraper {
 
     // ── Nutrition extraction ─────────────────────────────────────────────────────
 
-    private void extractNutritionFromTable(Document doc, Product p) {
-        for (Element table : doc.select("table")) {
-            String tableText = table.text().toLowerCase();
-            if (!tableText.contains("proteini") && !tableText.contains("protein")) continue;
+    /**
+     * supplementstore.rs embeds nutrition data as <br>-separated text inside #tab-description,
+     * not in an HTML table. Format per line:
+     *   "Proteini    25g    83,3"
+     *   "Masti       1g     3,3g"
+     *   "Energija    545kJ/129kcal    1664kJ/398kcal"
+     * The LAST numeric value on each line is always the per-100g value.
+     */
+    private void extractNutritionFromBrText(Document doc, Product p) {
+        // Nutrition is in the custom tab (#tabcustom0), not in #tab-description
+        Element descEl = doc.selectFirst("#tabcustom0");
+        if (descEl == null) descEl = doc.selectFirst("#tab-description");
+        if (descEl == null) return;
 
-            Elements rows = table.select("tr");
-            if (rows.isEmpty()) continue;
+        // Split raw HTML on <br> to preserve line breaks that .text() collapses
+        String[] lines = descEl.html().split("(?i)<br\\s*/?>", -1);
 
-            // Detect which column holds per-100g values
-            int per100gCol = detectPer100gColumn(rows.get(0));
+        boolean inNutritionSection = false;
+        for (String rawLine : lines) {
+            // Strip remaining HTML tags and decode entities
+            String line = Jsoup.parse(rawLine).text().replaceAll("[\\u00A0\\s]+", " ").trim();
+            if (line.isBlank()) continue;
 
-            for (Element row : rows) {
-                Elements cells = row.select("td");
-                if (cells.size() <= per100gCol) continue;
+            String lower = line.toLowerCase();
 
-                String label    = cells.get(0).text().trim().toLowerCase();
-                String rawValue = cells.get(per100gCol).text().trim();
-
-                if ((label.contains("proteini") || label.equals("protein") || label.contains("belančevine"))
-                        && !label.contains("koncentrat") && !label.contains("izvor") && !label.contains("od čega")) {
-                    Double val = extractNumericGrams(rawValue);
-                    if (val != null && val > 0 && val <= 95) p.setProteinPer100g(val);
-
-                } else if ((label.contains("masti") || label.equals("fat") || label.equals("lipidi"))
-                        && !label.contains("zasić") && !label.contains("trans") && !label.contains("od čega")) {
-                    Double val = extractNumericGrams(rawValue);
-                    if (val != null && val >= 0 && val <= 100) p.setFatPer100g(val);
-
-                } else if (label.contains("šećeri") || label.contains("seceri")
-                        || label.equals("sugar") || label.equals("sugars")
-                        || (label.contains("ugljeni hidrati") && label.contains("šećer"))) {
-                    Double val = extractNumericGrams(rawValue);
-                    if (val != null && val >= 0 && val <= 100) p.setSugarPer100g(val);
-
-                } else if (label.contains("energi") || label.contains("kalorij") || label.contains("energy")) {
-                    Double kcal = extractKcal(rawValue);
-                    if (kcal != null && kcal > 0 && kcal <= 900) p.setCaloriePer100g(kcal);
-                }
+            // Detect the header row that marks start of the nutrition block
+            if (lower.contains("nutritivne vrednosti") || lower.contains("na 100g")) {
+                inNutritionSection = true;
+                continue;
             }
+            if (!inNutritionSection) continue;
 
-            if (p.getProteinPer100g() != null) break;
+            if ((lower.startsWith("proteini") || lower.startsWith("protein") || lower.startsWith("belančevine"))
+                    && !lower.contains("koncentrat") && !lower.contains("izvor") && !lower.contains("od čega")) {
+                Double val = extractLastNumber(line);
+                if (val != null && val > 0 && val <= 95) p.setProteinPer100g(val);
+
+            } else if ((lower.startsWith("masti") || lower.startsWith("fat") || lower.startsWith("lipidi"))
+                    && !lower.contains("zasić") && !lower.contains("trans") && !lower.contains("od čega")) {
+                Double val = extractLastNumber(line);
+                if (val != null && val >= 0 && val <= 100) p.setFatPer100g(val);
+
+            } else if (lower.startsWith("šećeri") || lower.startsWith("seceri")
+                    || lower.startsWith("sugar") || lower.startsWith("sugars")) {
+                Double val = extractLastNumber(line);
+                if (val != null && val >= 0 && val <= 100) p.setSugarPer100g(val);
+
+            } else if (lower.startsWith("energij") || lower.startsWith("energy") || lower.startsWith("kalorij")) {
+                // "545kJ/129kcal    1664kJ/398kcal" — last kcal occurrence is per-100g
+                Double kcal = extractLastKcal(line);
+                if (kcal != null && kcal > 0 && kcal <= 900) p.setCaloriePer100g(kcal);
+            }
         }
     }
 
-    private int detectPer100gColumn(Element headerRow) {
-        Elements cells = headerRow.select("th, td");
-        for (int i = 0; i < cells.size(); i++) {
-            String text = cells.get(i).text().toLowerCase().replaceAll("\\s+", "");
-            if (text.contains("100g") || text.contains("na100") || text.contains("per100")) {
-                return i;
-            }
-        }
-        // Default: second data column (index 2 in a 3-column table)
-        return cells.size() >= 3 ? 2 : 1;
+    /** Returns the last standalone number on a line (handles "83,3", "3.3g", "398kcal"). */
+    private Double extractLastNumber(String text) {
+        Matcher m = Pattern.compile("(\\d+[.,]\\d+|\\d+)").matcher(text);
+        String last = null;
+        while (m.find()) last = m.group(1);
+        if (last == null) return null;
+        try { return Double.parseDouble(last.replace(",", ".")); }
+        catch (Exception ignored) { return null; }
     }
 
     // ── DB restoration helpers ───────────────────────────────────────────────────
@@ -345,32 +361,15 @@ public class SupplementStoreScraper implements StoreScraper {
         return s.isBlank() ? null : s;
     }
 
-    /** Extract grams from "83,3g", "25 g", "1.5g" */
-    private Double extractNumericGrams(String text) {
-        if (text == null) return null;
-        Matcher m = Pattern.compile("(\\d+[.,]?\\d*)\\s*g(?!\\w)", Pattern.CASE_INSENSITIVE).matcher(text);
-        if (m.find()) {
-            try { return Double.parseDouble(m.group(1).replace(",", ".")); }
-            catch (Exception ignored) {}
-        }
-        // Plain number without unit (some tables omit "g" in data cells)
-        Matcher m2 = Pattern.compile("^(\\d+[.,]?\\d*)$").matcher(text.trim());
-        if (m2.find()) {
-            try { return Double.parseDouble(m2.group(1).replace(",", ".")); }
-            catch (Exception ignored) {}
-        }
-        return null;
-    }
-
-    /** Extract kcal from "1664kJ/398kcal", "398 kcal", "1664kJ" */
-    private Double extractKcal(String text) {
+    /** Returns the LAST kcal value from a line like "545kJ/129kcal    1664kJ/398kcal". */
+    private Double extractLastKcal(String text) {
         if (text == null) return null;
         Matcher m = Pattern.compile("(\\d+[.,]?\\d*)\\s*kcal", Pattern.CASE_INSENSITIVE).matcher(text);
-        if (m.find()) {
-            try { return Double.parseDouble(m.group(1).replace(",", ".")); }
-            catch (Exception ignored) {}
-        }
-        return null;
+        String last = null;
+        while (m.find()) last = m.group(1);
+        if (last == null) return null;
+        try { return Double.parseDouble(last.replace(",", ".")); }
+        catch (Exception ignored) { return null; }
     }
 
     /**
