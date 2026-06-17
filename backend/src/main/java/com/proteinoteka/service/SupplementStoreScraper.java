@@ -154,8 +154,8 @@ public class SupplementStoreScraper implements StoreScraper {
             }
 
             try {
-                long sleep = 5000 + ThreadLocalRandom.current().nextLong(5000);
-                log.info("[{}] Sleeping {}s before '{}'...", STORE_NAME, sleep / 1000, p.getName());
+                long sleep = 2000 + ThreadLocalRandom.current().nextLong(2000);
+                log.info("[{}] Sleeping {}ms before '{}'...", STORE_NAME, sleep, p.getName());
                 Thread.sleep(sleep);
 
                 if (!navigateWithRetry(page, p.getUrl(), 3)) {
@@ -206,9 +206,9 @@ public class SupplementStoreScraper implements StoreScraper {
                         p.getPrice(), p.getBrand(), p.getProteinPer100g());
 
                 count++;
-                if (count % 10 == 0) {
-                    long batchSleep = 40000 + ThreadLocalRandom.current().nextLong(20000);
-                    log.info("[{}] Batch pause {}s after {} products", STORE_NAME, batchSleep / 1000, count);
+                if (count % 15 == 0) {
+                    long batchSleep = 12000 + ThreadLocalRandom.current().nextLong(8000);
+                    log.info("[{}] Batch pause {}ms after {} products", STORE_NAME, batchSleep, count);
                     Thread.sleep(batchSleep);
                 }
 
@@ -289,48 +289,87 @@ public class SupplementStoreScraper implements StoreScraper {
      * The LAST numeric value on each line is always the per-100g value.
      */
     private void extractNutritionFromBrText(Document doc, Product p) {
-        // Nutrition is in the custom tab (#tabcustom0), not in #tab-description
-        Element descEl = doc.selectFirst("#tabcustom0");
-        if (descEl == null) descEl = doc.selectFirst("#tab-description");
-        if (descEl == null) return;
+        Element tabEl = doc.selectFirst("#tabcustom0");
+        if (tabEl == null) tabEl = doc.selectFirst("#tab-description");
+        if (tabEl == null) return;
 
-        // Split raw HTML on <br> to preserve line breaks that .text() collapses
-        String[] lines = descEl.html().split("(?i)<br\\s*/?>", -1);
+        // Try HTML table first (some brands use <table> inside the tab)
+        extractNutritionFromTable(tabEl, p);
+
+        // If table parse found protein, we're done
+        if (p.getProteinPer100g() != null) return;
+
+        // Fallback: split raw HTML on <br> — format per line:
+        //   "Proteini    25g    83,3"   (last number = per-100g)
+        String[] lines = tabEl.html().split("(?i)<br\\s*/?>", -1);
 
         boolean inNutritionSection = false;
         for (String rawLine : lines) {
-            // Strip remaining HTML tags and decode entities
             String line = Jsoup.parse(rawLine).text().replaceAll("[\\u00A0\\s]+", " ").trim();
             if (line.isBlank()) continue;
-
             String lower = line.toLowerCase();
 
-            // Detect the header row that marks start of the nutrition block
-            if (lower.contains("nutritivne vrednosti") || lower.contains("na 100g")) {
-                inNutritionSection = true;
+            if (!inNutritionSection) {
+                if (lower.contains("nutritivne vrednosti") || lower.contains("nutritional values")
+                        || lower.contains("na 100g") || lower.contains("per 100g")
+                        || lower.contains("tabela hranljivih") || lower.contains("nutritiona")) {
+                    inNutritionSection = true;
+                }
                 continue;
             }
-            if (!inNutritionSection) continue;
 
             if ((lower.startsWith("proteini") || lower.startsWith("protein") || lower.startsWith("belančevine"))
                     && !lower.contains("koncentrat") && !lower.contains("izvor") && !lower.contains("od čega")) {
                 Double val = extractLastNumber(line);
-                if (val != null && val > 0 && val <= 95) p.setProteinPer100g(val);
+                // Sanity check: per-100g protein must be ≥20g for a protein product
+                if (val != null && val >= 20 && val <= 95) p.setProteinPer100g(val);
 
-            } else if ((lower.startsWith("masti") || lower.startsWith("fat") || lower.startsWith("lipidi"))
+            } else if ((lower.startsWith("masti") || lower.startsWith("fat") || lower.startsWith("lipidi")
+                    || lower.startsWith("ukupne masti"))
                     && !lower.contains("zasić") && !lower.contains("trans") && !lower.contains("od čega")) {
                 Double val = extractLastNumber(line);
                 if (val != null && val >= 0 && val <= 100) p.setFatPer100g(val);
 
             } else if (lower.startsWith("šećeri") || lower.startsWith("seceri")
-                    || lower.startsWith("sugar") || lower.startsWith("sugars")) {
+                    || lower.startsWith("sugar") || lower.startsWith("od čega šećeri")
+                    || lower.startsWith("od toga šećeri")) {
                 Double val = extractLastNumber(line);
                 if (val != null && val >= 0 && val <= 100) p.setSugarPer100g(val);
 
             } else if (lower.startsWith("energij") || lower.startsWith("energy") || lower.startsWith("kalorij")) {
-                // "545kJ/129kcal    1664kJ/398kcal" — last kcal occurrence is per-100g
                 Double kcal = extractLastKcal(line);
                 if (kcal != null && kcal > 0 && kcal <= 900) p.setCaloriePer100g(kcal);
+            }
+        }
+    }
+
+    private void extractNutritionFromTable(Element tabEl, Product p) {
+        for (Element row : tabEl.select("tr")) {
+            Elements cells = row.select("td, th");
+            if (cells.size() < 2) continue;
+            String label = cells.first().text().replaceAll("[\\u00A0\\s]+", " ").trim().toLowerCase();
+            // Last cell is per-100g value (table may have: label | per-serving | per-100g)
+            String valueText = cells.last().text().replaceAll("[\\u00A0\\s]+", " ").trim();
+
+            if ((label.startsWith("proteini") || label.startsWith("protein") || label.startsWith("belančevine"))
+                    && !label.contains("od čega") && !label.contains("izvor")) {
+                Double val = extractLastNumber(valueText);
+                if (val != null && val >= 20 && val <= 95) p.setProteinPer100g(val);
+
+            } else if ((label.startsWith("masti") || label.startsWith("fat") || label.startsWith("lipidi"))
+                    && !label.contains("zasić") && !label.contains("trans") && !label.contains("od čega")) {
+                Double val = extractLastNumber(valueText);
+                if (val != null && val >= 0 && val <= 100) p.setFatPer100g(val);
+
+            } else if (label.startsWith("šećeri") || label.startsWith("seceri")
+                    || label.startsWith("sugar") || label.startsWith("od čega šećeri")) {
+                Double val = extractLastNumber(valueText);
+                if (val != null && val >= 0 && val <= 100) p.setSugarPer100g(val);
+
+            } else if (label.startsWith("energij") || label.startsWith("energy") || label.startsWith("kalorij")) {
+                Double kcal = extractLastKcal(valueText);
+                if (kcal == null) kcal = extractLastNumber(valueText);
+                if (kcal != null && kcal > 50 && kcal <= 900) p.setCaloriePer100g(kcal);
             }
         }
     }
