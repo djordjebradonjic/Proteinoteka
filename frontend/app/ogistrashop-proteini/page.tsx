@@ -20,13 +20,13 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
-  const products = await fetchStoreProducts({ storeName: "Ogistrashop", limit: 30 });
+  const products = await fetchStoreProducts({ storeName: "Ogistrashop", limit: 200 });
 
   return (
     <SEOStorePage
       h1="Ogistrashop proteini — sve cene"
       storeName="Ogistrashop"
-      intro="Ogistrashop je srpska online prodavnica suplemenata sa stalnom ponudom whey proteina, aminokiselina i ostalih preparata za sportiste. Na Proteinoteci automatski pratimo i poredimo sve Ogistrashop cene sa Pansport-om, Supplementshop-om, Proteinbox-om i ostatkom srpskog tržišta — bez manuelnog pretražavanja. Ispod su svi proteini iz Ogistrashop asortimana, sortirani prema value score — pokazatelju koji meri koliko grama proteina dobijaš za svaki potrošeni dinar."
+      intro="Ogistrashop je online prodavnica suplemenata dostupna na srpskom tržištu sa stalnom ponudom whey proteina, aminokiselina i ostalih preparata za sportiste. Na Proteinoteci automatski pratimo i poredimo sve Ogistrashop cene sa Pansport-om, Supplementshop-om, Proteinbox-om i ostatkom srpskog tržišta — bez manuelnog pretražavanja. Ispod su svi proteini iz Ogistrashop asortimana, sortirani prema value score — pokazatelju koji meri koliko grama proteina dobijaš za svaki potrošeni dinar."
       products={products}
       currentSlug="ogistrashop-proteini"
       faqs={[

@@ -197,6 +197,19 @@ function CrossLinks() {
   );
 }
 
+function StoreDisclaimer({ storeName }: { storeName: string }) {
+  return (
+    <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 flex items-start gap-3">
+      <span className="text-amber-500 text-lg shrink-0 mt-0.5">ℹ️</span>
+      <p className="text-xs text-amber-800 leading-relaxed">
+        <strong>Napomena:</strong> Proteinoteka je nezavisan servis za poređenje cena i nije povezana sa prodavnicom {storeName} niti je njihov ovlašćeni zastupnik ili distributer.
+        Cene su prikupljene automatski i mogu se razlikovati od aktuelnih cena na sajtu prodavca.
+        Klikom na &quot;Pogledaj&quot; bićeš preusmeren na sajt prodavca gde se vrši kupovina.
+      </p>
+    </div>
+  );
+}
+
 // ── Main template ─────────────────────────────────────────────────────────────
 
 export interface SEOStorePageProps {
@@ -246,8 +259,20 @@ export function SEOStorePage({
     itemListElement: sorted.slice(0, 10).map((p, i) => ({
       "@type": "ListItem",
       position: i + 1,
-      url: `${BASE_URL}/protein/${p.canonicalSlug ?? p.id}`,
-      name: p.name,
+      item: {
+        "@type": "Product",
+        name: p.name,
+        url: `${BASE_URL}${productUrl(p)}`,
+        ...(p.brand ? { brand: { "@type": "Brand", name: p.brand } } : {}),
+        ...(p.numericPrice ? {
+          offers: {
+            "@type": "Offer",
+            price: p.numericPrice,
+            priceCurrency: "RSD",
+            url: p.productUrl,
+          },
+        } : {}),
+      },
     })),
   } : null;
 
@@ -285,6 +310,9 @@ export function SEOStorePage({
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+
+        {/* Legal disclaimer */}
+        <StoreDisclaimer storeName={storeName} />
 
         {/* Decision summary */}
         {products.length > 0 && <DecisionSummary products={sorted} />}
@@ -334,9 +362,8 @@ export function SEOStorePage({
           </div>
         </div>
 
-        {/* Disclaimer */}
         <p className="text-xs text-slate-400 text-center leading-relaxed pb-4">
-          Cene su informativnog karaktera. Proteinoteka nije odgovorna za promene cena na sajtovima prodavnica.
+          Cene su informativnog karaktera i mogu se razlikovati od aktuelnih cena na sajtovima prodavnica.
         </p>
 
       </div>

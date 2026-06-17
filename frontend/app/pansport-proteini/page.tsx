@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
-  const products = await fetchStoreProducts({ storeName: "Pansport", limit: 30 });
+  const products = await fetchStoreProducts({ storeName: "Pansport", limit: 200 });
 
   return (
     <SEOStorePage

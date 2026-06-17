@@ -20,13 +20,13 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
-  const products = await fetchStoreProducts({ storeName: "FitLab", limit: 30 });
+  const products = await fetchStoreProducts({ storeName: "FitLab", limit: 200 });
 
   return (
     <SEOStorePage
       h1="FitLab proteini — sve cene"
       storeName="FitLab"
-      intro="FitLab je prodavnica suplemenata dostupna na srpskom tržištu sa asortimanom proteinskih preparata za sportiste i rekreativce. Na Proteinoteci pratimo aktuelne FitLab cene i automatski ih poredimo sa Pansport-om, Supplementshop-om, Ogistrashop-om i svim ostalim prodavnicama u Srbiji. Pregled ispod prikazuje sve FitLab proteine sortirane po value score — objektivnoj meri koja uzima u obzir cenu, sadržaj proteina i nutritivni profil svakog preparata."
+      intro="FitLab je online prodavnica suplemenata dostupna na srpskom tržištu sa asortimanom proteinskih preparata za sportiste i rekreativce. Na Proteinoteci pratimo aktuelne FitLab cene i automatski ih poredimo sa Pansport-om, Supplementshop-om, Ogistrashop-om i svim ostalim prodavnicama u Srbiji. Pregled ispod prikazuje sve FitLab proteine sortirane po value score — objektivnoj meri koja uzima u obzir cenu, sadržaj proteina i nutritivni profil svakog preparata."
       products={products}
       currentSlug="fitlab-proteini"
       faqs={[

@@ -20,13 +20,13 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
-  const products = await fetchStoreProducts({ storeName: "Supplementshop", limit: 30 });
+  const products = await fetchStoreProducts({ storeName: "Supplementshop", limit: 200 });
 
   return (
     <SEOStorePage
       h1="Supplementshop proteini — sve cene"
       storeName="Supplementshop"
-      intro="Supplementshop je srpska online prodavnica sportske ishrane sa stalnom ponudom whey proteina, izolata, kazeina i biljnih proteina. Na Proteinoteci pratimo Supplementshop cene i automatski ih poredimo sa Pansport-om, Ogistrashop-om, Proteinbox-om i svim ostalim prodavnicama u Srbiji — sve na jednom mestu, bez ručnog pretražavanja. Ispod su svi dostupni proteini iz Supplementshop asortimana, sortirani po value score — objektivnoj meri koja uzima u obzir cenu, sadržaj proteina i nutritivni profil."
+      intro="Supplementshop je online prodavnica sportske ishrane dostupna na srpskom tržištu sa stalnom ponudom whey proteina, izolata, kazeina i biljnih proteina. Na Proteinoteci pratimo Supplementshop cene i automatski ih poredimo sa Pansport-om, Ogistrashop-om, Proteinbox-om i svim ostalim prodavnicama u Srbiji — sve na jednom mestu, bez ručnog pretražavanja. Ispod su svi dostupni proteini iz Supplementshop asortimana, sortirani po value score — objektivnoj meri koja uzima u obzir cenu, sadržaj proteina i nutritivni profil."
       products={products}
       currentSlug="supplementshop-proteini"
       faqs={[

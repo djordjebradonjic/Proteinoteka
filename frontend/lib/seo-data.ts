@@ -77,11 +77,12 @@ export async function fetchStoreProducts(params: {
   try {
     const url = new URL(`${API}/api/v1/products`);
     url.searchParams.set("storeName", params.storeName);
-    url.searchParams.set("size", String(params.limit ?? 30));
-    url.searchParams.set("sort", "id,desc");
+    // Fetch the full catalog so the component can rank by valueScore across all store products
+    url.searchParams.set("size", String(params.limit ?? 100));
+    url.searchParams.set("sort", "valueScore,desc");
     url.searchParams.set("page", "0");
 
-    const res = await fetch(url.toString(), { next: { revalidate: 300, tags: ["products"] } });
+    const res = await fetch(url.toString(), { next: { revalidate: 86400, tags: ["products"] } });
     if (!res.ok) return [];
     const data = await res.json();
     return data.content ?? [];
@@ -100,11 +101,11 @@ export async function fetchProductsByQuery(params: {
     const url = new URL(`${API}/api/v1/products`);
     if (params.name)  url.searchParams.set("name", params.name);
     if (params.brand) url.searchParams.set("brand", params.brand);
-    url.searchParams.set("size", String(params.limit ?? 50));
-    url.searchParams.set("sort", "id,desc");
+    url.searchParams.set("size", String(params.limit ?? 100));
+    url.searchParams.set("sort", "valueScore,desc");
     url.searchParams.set("page", "0");
 
-    const res = await fetch(url.toString(), { next: { revalidate: 300, tags: ["products"] } });
+    const res = await fetch(url.toString(), { next: { revalidate: 86400, tags: ["products"] } });
     if (!res.ok) return [];
     const data = await res.json();
     return data.content ?? [];
@@ -121,11 +122,11 @@ export async function fetchBrandProducts(params: {
   try {
     const url = new URL(`${API}/api/v1/products`);
     url.searchParams.set("brand", params.brand);
-    url.searchParams.set("size", String(params.limit ?? 50));
-    url.searchParams.set("sort", "id,desc");
+    url.searchParams.set("size", String(params.limit ?? 100));
+    url.searchParams.set("sort", "valueScore,desc");
     url.searchParams.set("page", "0");
 
-    const res = await fetch(url.toString(), { next: { revalidate: 300, tags: ["products"] } });
+    const res = await fetch(url.toString(), { next: { revalidate: 86400, tags: ["products"] } });
     if (!res.ok) return [];
     const data = await res.json();
     return data.content ?? [];

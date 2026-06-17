@@ -309,10 +309,39 @@ export function SEOBrandPage({
     })),
   };
 
+  const itemListJsonLd = sorted.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: `${brandName} proteini u Srbiji`,
+    url: `${BASE_URL}/${currentSlug}`,
+    numberOfItems: sorted.length,
+    itemListElement: sorted.slice(0, 10).map((p, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      item: {
+        "@type": "Product",
+        name: p.name,
+        url: `${BASE_URL}${productUrl(p)}`,
+        brand: { "@type": "Brand", name: brandName },
+        ...(p.numericPrice ? {
+          offers: {
+            "@type": "Offer",
+            price: p.numericPrice,
+            priceCurrency: "RSD",
+            url: p.productUrl,
+          },
+        } : {}),
+      },
+    })),
+  } : null;
+
   return (
     <div className="min-h-screen bg-slate-50">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+      {itemListJsonLd && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }} />
+      )}
       <Header />
 
       {/* Hero */}

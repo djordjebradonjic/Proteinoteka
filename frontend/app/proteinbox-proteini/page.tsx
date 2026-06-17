@@ -20,13 +20,13 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
-  const products = await fetchStoreProducts({ storeName: "Proteinbox", limit: 30 });
+  const products = await fetchStoreProducts({ storeName: "Proteinbox", limit: 200 });
 
   return (
     <SEOStorePage
       h1="Proteinbox proteini — sve cene"
       storeName="Proteinbox"
-      intro="Proteinbox je srpska online prodavnica suplemenata fokusirana na proteine i preparate za sportiste. Pratimo sve Proteinbox cene i automatski ih poredimo sa Pansport-om, Supplementshop-om, Ogistrashop-om i svim ostalim prodavnicama u Srbiji. Ispod je kompletan pregled proteina iz Proteinbox asortimana sortiranih po value score — meri koji uzima u obzir cenu, sadržaj proteina i nutritivni profil svakog preparata."
+      intro="Proteinbox je online prodavnica suplemenata dostupna na srpskom tržištu, fokusirana na proteine i preparate za sportiste. Pratimo sve Proteinbox cene i automatski ih poredimo sa Pansport-om, Supplementshop-om, Ogistrashop-om i svim ostalim prodavnicama u Srbiji. Ispod je kompletan pregled proteina iz Proteinbox asortimana sortiranih po value score — meri koji uzima u obzir cenu, sadržaj proteina i nutritivni profil svakog preparata."
       products={products}
       currentSlug="proteinbox-proteini"
       faqs={[

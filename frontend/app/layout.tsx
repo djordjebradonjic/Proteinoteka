@@ -107,6 +107,27 @@ export default function RootLayout({
             }),
           }}
         />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "Proteinoteka",
+              url: "https://proteinoteka.rs",
+              description: "Poređenje cena proteina i suplemenata u Srbiji",
+              inLanguage: "sr-RS",
+              potentialAction: {
+                "@type": "SearchAction",
+                target: {
+                  "@type": "EntryPoint",
+                  urlTemplate: "https://proteinoteka.rs/?query={search_term_string}",
+                },
+                "query-input": "required name=search_term_string",
+              },
+            }),
+          }}
+        />
         {/*
           GA Consent Mode — fires afterInteractive so localStorage is available.
           Sets analytics_storage=denied by default; upgrades to granted if user
