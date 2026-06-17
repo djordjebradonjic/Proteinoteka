@@ -170,32 +170,44 @@ public class SupplementStoreScraper implements StoreScraper {
 
                 page.waitForTimeout(500 + ThreadLocalRandom.current().nextInt(800));
 
-                // Click the "Nutritivne vrednosti" tab so #tabcustom0 content loads
-                try {
-                    var tabLink = page.querySelector("a[href='#tabcustom0'], ul.nav-tabs a[href*='tabcustom']");
-                    if (tabLink != null) {
-                        tabLink.click();
-                        page.waitForTimeout(600);
-                        log.debug("[{}] Clicked nutrition tab for '{}'", STORE_NAME, p.getName());
-                    }
-                } catch (Exception ignored) {}
-
-                Document doc = Jsoup.parse(page.content());
-
-                enrichBrand(doc, p);
-                enrichPriceFromDetail(doc, p);
-                enrichImageFromDetail(doc, p);
-                enrichDescription(doc, p);
+                // Parse price/brand/image BEFORE clicking any tab — tab click can navigate away
+                Document docMain = Jsoup.parse(page.content());
+                enrichBrand(docMain, p);
+                enrichPriceFromDetail(docMain, p);
+                enrichImageFromDetail(docMain, p);
+                enrichDescription(docMain, p);
 
                 if (!skipUrls.contains(p.getUrl())) {
-                    extractNutritionFromBrText(doc, p);
+                    // Click nutrition tab only if href is a pure anchor (won't navigate away)
+                    Document docNutrition = docMain;
+                    try {
+                        var tabLink = page.querySelector("a[href='#tabcustom0'], ul.nav-tabs a[href*='tabcustom']");
+                        if (tabLink != null) {
+                            String tabHref = (String) page.evaluate("el => el.getAttribute('href')", tabLink);
+                            if (tabHref != null && tabHref.startsWith("#")) {
+                                String urlBefore = page.url();
+                                tabLink.click();
+                                page.waitForTimeout(600);
+                                if (page.url().equals(urlBefore)) {
+                                    docNutrition = Jsoup.parse(page.content());
+                                    log.debug("[{}] Clicked nutrition tab for '{}'", STORE_NAME, p.getName());
+                                } else {
+                                    log.warn("[{}] Tab click navigated away from '{}' — skipping re-parse", STORE_NAME, p.getName());
+                                    page.navigate(p.getUrl(), new com.microsoft.playwright.Page.NavigateOptions()
+                                            .setWaitUntil(WaitUntilState.DOMCONTENTLOADED).setTimeout(20000));
+                                }
+                            }
+                        }
+                    } catch (Exception ignored) {}
+
+                    extractNutritionFromBrText(docNutrition, p);
 
                     if (p.getProteinPer100g() == null && p.getDescription() != null) {
                         Double protein = nutritionParser.extractProteinPer100g(p.getDescription());
                         if (protein != null) p.setProteinPer100g(protein);
                     }
 
-                    baseEnricher.enrichWithAiIfNeeded(doc, p, STORE_NAME);
+                    baseEnricher.enrichWithAiIfNeeded(docNutrition, p, STORE_NAME);
                 } else {
                     restoreNutritionFromDb(p);
                 }
