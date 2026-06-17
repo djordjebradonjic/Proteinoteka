@@ -5,13 +5,14 @@ import { SEOStorePage } from "@/components/seo/SEOStorePage";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: { absolute: "Proteini.si — dostava u Srbiju i cene | Proteinoteka" },
+  title: { absolute: "Proteini.si | Proteinoteka" },
   description:
-    "Proteini.si cene za Srbiju — da li se isplati uvoz? Poredi sa domaćim prodavnicama po value score i ceni po gramu proteina. Aktuelne cene na jednom mestu.",
+    "Proteini.si cene za Srbiju — Poredi sa domaćim prodavnicama po value score i ceni po gramu proteina. Aktuelne cene na jednom mestu.",
   alternates: { canonical: "https://proteinoteka.rs/proteini-si-srbija" },
   openGraph: {
-    title: "Proteini.si — dostava u Srbiju i cene | Proteinoteka",
-    description: "Proteini.si cene za Srbiju — value score, nutritivne vrednosti i poređenje sa domaćim prodavnicama. Isplati li se uvoz?",
+    title: "Proteini.si | Proteinoteka",
+    description:
+      "Proteini.si cene za Srbiju — value score, nutritivne vrednosti i poređenje sa domaćim prodavnicama. Isplati li se uvoz?",
     url: "https://proteinoteka.rs/proteini-si-srbija",
     siteName: "Proteinoteka",
     locale: "sr_RS",
@@ -20,11 +21,14 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
-  const products = await fetchStoreProducts({ storeName: "Proteini.si", limit: 200 });
+  const products = await fetchStoreProducts({
+    storeName: "Proteini.si",
+    limit: 200,
+  });
 
   return (
     <SEOStorePage
-      h1="Proteini.si — cene i dostava u Srbiju"
+      h1="Proteini.si — Aktuelne cene i poređenje"
       storeName="Proteini.si"
       intro="Proteini.si je slovenački online shop sa širokim asortimanom internacionalnih brendova koji dostavljaju i u Srbiju. Na Proteinoteci pratimo cene sa Proteini.si i automatski ih poredimo sa domaćim prodavnicama — jer nekad uvozna ponuda bude konkurentnija, posebno za brendove koji nisu zastupljeni lokalno ili kad je kurs povoljan. Pregled ispod prikazuje sve dostupne proteine sortirane po value score, sa aktuelnim cenama i nutritivnim vrednostima, tako da odmah možeš proceniti isplati li se narudžbina iz Slovenije."
       products={products}
