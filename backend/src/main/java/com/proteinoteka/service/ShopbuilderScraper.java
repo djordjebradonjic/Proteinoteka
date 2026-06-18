@@ -85,14 +85,38 @@ public class ShopbuilderScraper implements StoreScraper {
             return;
         }
 
+        // Give Vue.js a moment to render the load-more button after items appear
+        try {
+            page.waitForSelector("div.others-text span.cursor-pointer",
+                    new Page.WaitForSelectorOptions().setTimeout(8000));
+            log.info("[{}] Load-more button found in DOM", STORE_NAME);
+        } catch (Exception e) {
+            log.warn("[{}] Load-more button not found after waiting — site may have changed or all products visible", STORE_NAME);
+            // Log page snippet to diagnose selector changes
+            try {
+                String content = page.content();
+                int idx = content.indexOf("others-text");
+                if (idx >= 0) {
+                    log.info("[{}] 'others-text' HTML snippet: {}", STORE_NAME,
+                            content.substring(Math.max(0, idx - 50), Math.min(content.length(), idx + 200)).replaceAll("\\s+", " "));
+                } else {
+                    log.warn("[{}] 'others-text' class not found in page HTML at all", STORE_NAME);
+                }
+            } catch (Exception ignored) {}
+        }
+
         int clicks = 0;
         while (clicks < MAX_LOAD_MORE_CLICKS) {
             try {
                 ElementHandle btn = page.querySelector("div.others-text span.cursor-pointer");
-                if (btn == null) break;
+                if (btn == null) {
+                    log.debug("[{}] Load-more button not in DOM on click attempt #{}", STORE_NAME, clicks + 1);
+                    break;
+                }
 
                 String text = btn.innerText().trim();
-                if (!text.contains("Učitaj više") && !text.contains("Ucitaj vise")) break;
+                log.debug("[{}] Load-more button text: '{}'", STORE_NAME, text);
+                if (!text.contains("Učitaj više") && !text.contains("Ucitaj vise") && !text.contains("više") && !text.contains("vise")) break;
 
                 int countBefore = page.querySelectorAll("div.item-row").size();
                 btn.click();
