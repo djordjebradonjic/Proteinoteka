@@ -238,7 +238,15 @@ public class ShopbuilderScraper implements StoreScraper {
                 page.navigate(stub.getUrl(), new Page.NavigateOptions()
                         .setWaitUntil(WaitUntilState.DOMCONTENTLOADED)
                         .setTimeout(30000));
-                page.waitForTimeout(800 + ThreadLocalRandom.current().nextInt(1200));
+
+                // Wait for Vue.js API calls to finish — composition-block may appear before
+                // the flavour select is populated (two separate async renders).
+                try {
+                    page.waitForLoadState(LoadState.NETWORKIDLE,
+                            new Page.WaitForLoadStateOptions().setTimeout(15000));
+                } catch (Exception e) {
+                    log.warn("[{}] NETWORKIDLE timeout on detail '{}' — proceeding", STORE_NAME, stub.getName());
+                }
 
                 try {
                     page.waitForSelector(".add-to-cart-block, .composition-block",
