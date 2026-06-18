@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 };
 
 const TOC: TocSection[] = [
-  { id: "zenski-protein", title: "„Ženski protein" — marketing, ne nauka" },
+  { id: "zenski-protein", title: "Takozvani ženski protein — marketing, ne nauka" },
   { id: "misicava", title: "Hoću li postati mišićava?" },
   { id: "testosteron", title: "Zašto žene ne mogu da budu mišićave kao muškarci", level: 3 },
   { id: "koliko-dnevno", title: "Koliko proteina dnevno za žene?" },
@@ -139,7 +139,7 @@ export default async function Page() {
             <p className="text-[13px] font-bold text-slate-400 uppercase tracking-wider mb-3">Ukratko</p>
             <div className="space-y-2">
               {[
-                "„Ženski protein" ne postoji — isti whey u drugoj ambalaži, viša cena, manje proteina po porciji.",
+                "Takozvani ženski protein ne postoji — isti whey u drugoj ambalaži, viša cena, manje proteina po porciji.",
                 "Nećeš postati mišićava: žene imaju 10–15× manje hormona rasta mišića od muškaraca.",
                 "Preporuka proteina za žene: 1.6–2.2g/kg — identično kao za muškarce.",
                 "Najisplativiji izbor: standardni whey koncentrat (WPC) — isti protein, znatno niža cena.",
@@ -269,7 +269,7 @@ export default async function Page() {
                   good: true,
                 },
                 {
-                  title: "„Ženski" protein — izbegavati",
+                  title: "Takozvani ženski protein — izbegavati",
                   desc: "Isti ili lošiji sastav od standardnog whey koncentrata, viša cena. Ne postoji naučna osnova za ovu kategoriju — kupuješ marketing.",
                   good: false,
                 },
