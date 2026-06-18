@@ -53,15 +53,8 @@ public class ShopbuilderScraper implements StoreScraper {
     @Override public String  getBaseUrl()              { return LISTING_URL; }
     @Override public boolean usePlaywrightForListing() { return true; }
 
-    /**
-     * Clicks "Učitaj više" repeatedly until all products are loaded or the button disappears.
-     * shopbuilder.rs uses a load-more button, not true infinite scroll or pagination.
-     */
     @Override
     public void waitForListing(Page page) {
-        // Wait for Vue.js to finish its API calls before looking for rendered items.
-        // ScraperService navigates with DOMCONTENTLOADED (just the HTML shell for SPAs),
-        // so NETWORKIDLE ensures product fetch requests have completed.
         try {
             page.waitForLoadState(LoadState.NETWORKIDLE,
                     new Page.WaitForLoadStateOptions().setTimeout(20000));
@@ -85,9 +78,10 @@ public class ShopbuilderScraper implements StoreScraper {
             return;
         }
 
-        // shopbuilder.rs uses infinite scroll triggered by IntersectionObserver on the last item.
-        // Headless Playwright sees the full page at once so window.scrollTo does nothing useful —
-        // instead scroll the last item into view to fire the observer, then wait for new items.
+        // shopbuilder.rs uses IntersectionObserver on the last item to load more products.
+        // scrollIntoViewIfNeeded() is a CDP command that doesn't go through the page's JS event
+        // loop, so the observer never fires. Using page.evaluate() to call scrollIntoView() from
+        // within the page's own JS context is the only reliable way to trigger the observer.
         int scrolls = 0;
         int consecutiveNoGrowth = 0;
         while (scrolls < MAX_LOAD_MORE_CLICKS) {
@@ -97,21 +91,22 @@ public class ShopbuilderScraper implements StoreScraper {
 
                 if (!rows.isEmpty()) {
                     ElementHandle lastRow = rows.get(rows.size() - 1);
-                    lastRow.scrollIntoViewIfNeeded();
+                    // Run inside the page's JS context so IntersectionObserver fires
+                    page.evaluate("el => el.scrollIntoView({block: 'end', behavior: 'smooth'})", lastRow);
                 }
 
-                page.waitForTimeout(2500 + ThreadLocalRandom.current().nextInt(1500));
+                page.waitForTimeout(3000 + ThreadLocalRandom.current().nextInt(2000));
 
                 try {
                     page.waitForLoadState(LoadState.NETWORKIDLE,
-                            new Page.WaitForLoadStateOptions().setTimeout(6000));
+                            new Page.WaitForLoadStateOptions().setTimeout(8000));
                 } catch (Exception ignored) {}
 
                 int countAfter = page.querySelectorAll("div.item-row").size();
 
                 if (countAfter <= countBefore) {
                     consecutiveNoGrowth++;
-                    if (consecutiveNoGrowth >= 2) {
+                    if (consecutiveNoGrowth >= 3) {
                         log.info("[{}] No new products after {} scrolls — all loaded ({})", STORE_NAME, scrolls + 1, countAfter);
                         break;
                     }
