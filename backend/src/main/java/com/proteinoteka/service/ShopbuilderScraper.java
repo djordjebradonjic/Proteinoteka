@@ -85,20 +85,26 @@ public class ShopbuilderScraper implements StoreScraper {
             return;
         }
 
-        // shopbuilder.rs uses infinite scroll — scroll to bottom repeatedly until no new products appear
+        // shopbuilder.rs uses infinite scroll triggered by IntersectionObserver on the last item.
+        // Headless Playwright sees the full page at once so window.scrollTo does nothing useful —
+        // instead scroll the last item into view to fire the observer, then wait for new items.
         int scrolls = 0;
         int consecutiveNoGrowth = 0;
         while (scrolls < MAX_LOAD_MORE_CLICKS) {
             try {
-                int countBefore = page.querySelectorAll("div.item-row").size();
+                java.util.List<ElementHandle> rows = page.querySelectorAll("div.item-row");
+                int countBefore = rows.size();
 
-                page.evaluate("window.scrollTo(0, document.body.scrollHeight)");
-                page.waitForTimeout(2000 + ThreadLocalRandom.current().nextInt(1500));
+                if (!rows.isEmpty()) {
+                    ElementHandle lastRow = rows.get(rows.size() - 1);
+                    lastRow.scrollIntoViewIfNeeded();
+                }
 
-                // Wait for any new network requests triggered by scroll to settle
+                page.waitForTimeout(2500 + ThreadLocalRandom.current().nextInt(1500));
+
                 try {
                     page.waitForLoadState(LoadState.NETWORKIDLE,
-                            new Page.WaitForLoadStateOptions().setTimeout(5000));
+                            new Page.WaitForLoadStateOptions().setTimeout(6000));
                 } catch (Exception ignored) {}
 
                 int countAfter = page.querySelectorAll("div.item-row").size();
@@ -106,7 +112,7 @@ public class ShopbuilderScraper implements StoreScraper {
                 if (countAfter <= countBefore) {
                     consecutiveNoGrowth++;
                     if (consecutiveNoGrowth >= 2) {
-                        log.info("[{}] No new products after {} scrolls — all loaded", STORE_NAME, scrolls + 1);
+                        log.info("[{}] No new products after {} scrolls — all loaded ({})", STORE_NAME, scrolls + 1, countAfter);
                         break;
                     }
                 } else {
