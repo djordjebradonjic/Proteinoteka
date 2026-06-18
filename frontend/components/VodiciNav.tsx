@@ -26,6 +26,11 @@ const GUIDES = [
     readMin: 4,
   },
   {
+    slug: "protein-za-zene",
+    title: "Protein za žene — mitovi i istine",
+    readMin: 7,
+  },
+  {
     slug: "da-li-protein-goji",
     title: "Da li protein goji?",
     readMin: 4,

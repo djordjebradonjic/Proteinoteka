@@ -26,6 +26,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/vodici/protein-za-mrsavljenje`,                  changeFrequency: "monthly" as const, priority: 0.7, lastModified: now },
     { url: `${BASE}/vodici/whey-protein-za-pocetnike`,               changeFrequency: "monthly" as const, priority: 0.7, lastModified: now },
     { url: `${BASE}/vodici/koliko-novca-mesecno-za-proteine`,        changeFrequency: "weekly"  as const, priority: 0.8, lastModified: now },
+    { url: `${BASE}/vodici/protein-za-zene`,                        changeFrequency: "monthly" as const, priority: 0.7, lastModified: now },
     // SEO landing pages
     { url: `${BASE}/najbolji-whey-protein-srbija`, changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/najjeftiniji-whey-protein`,    changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },

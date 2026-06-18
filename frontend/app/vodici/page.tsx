@@ -50,6 +50,12 @@ const ARTICLES = [
     readMin: 4,
   },
   {
+    href: "/vodici/protein-za-zene",
+    title: "Protein za žene — mitovi i istine",
+    excerpt: "„Ženski protein" je marketing. Nećeš postati mišićava. Koji tip proteina zaista birati i koliko košta mesec dana — bez uvijanja.",
+    readMin: 7,
+  },
+  {
     href: "/vodici/da-li-protein-goji",
     title: "Da li protein goji?",
     excerpt: "Direktan odgovor: ne goji protein, goji kalorijski suficit. Saznaj kako protein zapravo utiče na telesnu masu.",
