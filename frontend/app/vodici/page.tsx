@@ -50,6 +50,12 @@ const ARTICLES = [
     readMin: 4,
   },
   {
+    href: "/vodici/scitec-nutrition-whey",
+    title: "Scitec Nutrition 100% Whey Protein — sastav, pakovanja i cene u Srbiji",
+    excerpt: "Concentrate/isolate blend sa ~74–77g proteina/100g i Digezyme® probavnim enzimima. Aktuelne cene svih pakovanja (500g–5kg) iz srpskih prodavnica.",
+    readMin: 6,
+  },
+  {
     href: "/vodici/biotechusa-100-pure-whey",
     title: "BioTech USA 100% Pure Whey i ISO Whey Zero — recenzija i cene",
     excerpt: "Razlika između 100% Pure Whey (WPC blend, ~79g/100g) i ISO Whey Zero (čisti WPI, ~86g/100g, bez laktoze). Aktuelne cene iz svih srpskih prodavnica.",

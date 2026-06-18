@@ -29,6 +29,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/vodici/protein-za-mrsavljenje`,                  changeFrequency: "monthly" as const, priority: 0.7, lastModified: d("2025-05-01") },
     { url: `${BASE}/vodici/whey-protein-za-pocetnike`,               changeFrequency: "monthly" as const, priority: 0.7, lastModified: d("2025-05-01") },
     { url: `${BASE}/vodici/koliko-novca-mesecno-za-proteine`,        changeFrequency: "weekly"  as const, priority: 0.8, lastModified: now },
+    { url: `${BASE}/vodici/scitec-nutrition-whey`,                changeFrequency: "monthly" as const, priority: 0.7, lastModified: d("2026-06-19") },
     { url: `${BASE}/vodici/biotechusa-100-pure-whey`,             changeFrequency: "monthly" as const, priority: 0.7, lastModified: d("2026-06-01") },
     { url: `${BASE}/vodici/gold-standard-whey-recenzija`,        changeFrequency: "monthly" as const, priority: 0.7, lastModified: d("2025-06-01") },
     { url: `${BASE}/vodici/protein-za-zene`,                        changeFrequency: "monthly" as const, priority: 0.7, lastModified: d("2026-05-01") },
@@ -43,7 +44,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/kazein-protein-srbija`,        changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/biljni-protein-srbija`,        changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/hidrolizat-protein-srbija`,    changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
-    { url: `${BASE}/baza-podataka`,                changeFrequency: "monthly" as const, priority: 0.5, lastModified: now },
     // Brand pages
     { url: `${BASE}/gold-standard-whey-cena`,    changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/optimum-nutrition-proteini`, changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
