@@ -13,12 +13,12 @@ export const revalidate = 3600;
 export const metadata: Metadata = {
   title: { absolute: "Protein za žene u Srbiji — mitovi i istine (bez marketinga) | Proteinoteka" },
   description:
-    “Da li protein pravi mišiće kao muškarcima? Šta je takozvani ženski protein i da li vredi? Konkretni odgovori bez marketinga — sa aktuelnim cenama iz srpskih prodavnica.”,
-  alternates: { canonical: “https://proteinoteka.rs/vodici/protein-za-zene” },
+    "Da li protein pravi mišiće kao muškarcima? Šta je takozvani ženski protein i da li vredi? Konkretni odgovori bez marketinga — sa aktuelnim cenama iz srpskih prodavnica.",
+  alternates: { canonical: "https://proteinoteka.rs/vodici/protein-za-zene" },
   openGraph: {
-    title: “Protein za žene u Srbiji — mitovi i istine (bez marketinga) | Proteinoteka”,
+    title: "Protein za žene u Srbiji — mitovi i istine (bez marketinga) | Proteinoteka",
     description:
-      “Da li protein pravi mišiće kao muškarcima? Šta je takozvani ženski protein i da li vredi? Konkretni odgovori bez marketinga — sa aktuelnim cenama iz srpskih prodavnica.”,
+      "Da li protein pravi mišiće kao muškarcima? Šta je takozvani ženski protein i da li vredi? Konkretni odgovori bez marketinga — sa aktuelnim cenama iz srpskih prodavnica.",
     url: "https://proteinoteka.rs/vodici/protein-za-zene",
     siteName: "Proteinoteka",
     locale: "sr_RS",
