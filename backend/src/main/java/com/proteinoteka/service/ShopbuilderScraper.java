@@ -85,61 +85,43 @@ public class ShopbuilderScraper implements StoreScraper {
             return;
         }
 
-        // Give Vue.js a moment to render the load-more button after items appear
-        try {
-            page.waitForSelector("div.others-text span.cursor-pointer",
-                    new Page.WaitForSelectorOptions().setTimeout(8000));
-            log.info("[{}] Load-more button found in DOM", STORE_NAME);
-        } catch (Exception e) {
-            log.warn("[{}] Load-more button not found after waiting — site may have changed or all products visible", STORE_NAME);
-            // Log page snippet to diagnose selector changes
+        // shopbuilder.rs uses infinite scroll — scroll to bottom repeatedly until no new products appear
+        int scrolls = 0;
+        int consecutiveNoGrowth = 0;
+        while (scrolls < MAX_LOAD_MORE_CLICKS) {
             try {
-                String content = page.content();
-                int idx = content.indexOf("others-text");
-                if (idx >= 0) {
-                    log.info("[{}] 'others-text' HTML snippet: {}", STORE_NAME,
-                            content.substring(Math.max(0, idx - 50), Math.min(content.length(), idx + 200)).replaceAll("\\s+", " "));
-                } else {
-                    log.warn("[{}] 'others-text' class not found in page HTML at all", STORE_NAME);
-                }
-            } catch (Exception ignored) {}
-        }
-
-        int clicks = 0;
-        while (clicks < MAX_LOAD_MORE_CLICKS) {
-            try {
-                ElementHandle btn = page.querySelector("div.others-text span.cursor-pointer");
-                if (btn == null) {
-                    log.debug("[{}] Load-more button not in DOM on click attempt #{}", STORE_NAME, clicks + 1);
-                    break;
-                }
-
-                String text = btn.innerText().trim();
-                log.debug("[{}] Load-more button text: '{}'", STORE_NAME, text);
-                if (!text.contains("Učitaj više") && !text.contains("Ucitaj vise") && !text.contains("više") && !text.contains("vise")) break;
-
                 int countBefore = page.querySelectorAll("div.item-row").size();
-                btn.click();
 
-                // Wait for new items to render
-                page.waitForTimeout(1500 + ThreadLocalRandom.current().nextInt(1000));
+                page.evaluate("window.scrollTo(0, document.body.scrollHeight)");
+                page.waitForTimeout(2000 + ThreadLocalRandom.current().nextInt(1500));
+
+                // Wait for any new network requests triggered by scroll to settle
+                try {
+                    page.waitForLoadState(LoadState.NETWORKIDLE,
+                            new Page.WaitForLoadStateOptions().setTimeout(5000));
+                } catch (Exception ignored) {}
 
                 int countAfter = page.querySelectorAll("div.item-row").size();
+
                 if (countAfter <= countBefore) {
-                    log.debug("[{}] No new products after click #{} — stopping load-more", STORE_NAME, clicks + 1);
-                    break;
+                    consecutiveNoGrowth++;
+                    if (consecutiveNoGrowth >= 2) {
+                        log.info("[{}] No new products after {} scrolls — all loaded", STORE_NAME, scrolls + 1);
+                        break;
+                    }
+                } else {
+                    consecutiveNoGrowth = 0;
+                    log.info("[{}] Scroll #{}: {} → {} products", STORE_NAME, scrolls + 1, countBefore, countAfter);
                 }
 
-                clicks++;
-                log.info("[{}] 'Učitaj više' click #{}: {} → {} products", STORE_NAME, clicks, countBefore, countAfter);
-
+                scrolls++;
             } catch (Exception e) {
-                log.warn("[{}] Error during 'Učitaj više' click: {}", STORE_NAME, e.getMessage());
+                log.warn("[{}] Error during scroll: {}", STORE_NAME, e.getMessage());
                 break;
             }
         }
 
-        log.info("[{}] Load-more finished after {} clicks", STORE_NAME, clicks);
+        log.info("[{}] Infinite scroll finished after {} scrolls", STORE_NAME, scrolls);
     }
 
     // Single-page site — all products load via "Učitaj više" button, no URL-based pagination.
