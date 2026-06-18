@@ -50,6 +50,12 @@ const ARTICLES = [
     readMin: 4,
   },
   {
+    href: "/vodici/biotechusa-100-pure-whey",
+    title: "BioTech USA 100% Pure Whey i ISO Whey Zero — recenzija i cene",
+    excerpt: "Razlika između 100% Pure Whey (WPC blend, ~79g/100g) i ISO Whey Zero (čisti WPI, ~86g/100g, bez laktoze). Aktuelne cene iz svih srpskih prodavnica.",
+    readMin: 6,
+  },
+  {
     href: "/vodici/gold-standard-whey-recenzija",
     title: "Gold Standard 100% Whey — sastav, pakovanja i cene u Srbiji",
     excerpt: "Šta je Gold Standard zapravo: blend isolate + concentrate + peptide, ~80g proteina/100g. Aktuelne cene iz svih srpskih prodavnica i poređenje po value score.",

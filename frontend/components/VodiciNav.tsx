@@ -26,6 +26,11 @@ const GUIDES = [
     readMin: 4,
   },
   {
+    slug: "biotechusa-100-pure-whey",
+    title: "BioTech USA 100% Pure Whey i ISO Whey Zero — recenzija",
+    readMin: 6,
+  },
+  {
     slug: "gold-standard-whey-recenzija",
     title: "Gold Standard 100% Whey — sastav, pakovanja i cene",
     readMin: 6,
