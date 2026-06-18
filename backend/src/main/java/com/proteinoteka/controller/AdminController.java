@@ -14,6 +14,7 @@ import com.proteinoteka.scheduler.ScrapingSchedulerService;
 import com.proteinoteka.dto.NutritionDataDTO;
 import com.proteinoteka.service.AiNutritionService;
 import com.proteinoteka.service.ScraperService;
+import com.proteinoteka.service.ShopbuilderScraper;
 import com.proteinoteka.service.StoreScraper;
 import com.proteinoteka.service.SupplementStoreScraper;
 import lombok.RequiredArgsConstructor;
@@ -142,6 +143,32 @@ public class AdminController {
             @RequestParam(defaultValue = "false") boolean testMode) {
         runAsync("scraper-lama", () -> scraperService.scrapeStore(findScraper("Lama"), testMode));
         return ResponseEntity.accepted().body("Lama scraping started in background" + (testMode ? " [TEST MODE]" : ""));
+    }
+
+    @PostMapping("/scrape/shopbuilder")
+    public ResponseEntity<String> scrapeShopbuilder(
+            @RequestParam(defaultValue = "false") boolean testMode) {
+        runAsync("scraper-shopbuilder", () -> scraperService.scrapeStore(findScraper("Shopbuilder"), testMode));
+        return ResponseEntity.accepted().body("Shopbuilder scraping started in background" + (testMode ? " [TEST MODE]" : ""));
+    }
+
+    @PostMapping("/scrape/shopbuilder/test")
+    public ResponseEntity<String> scrapeShopbuilderTest(
+            @RequestParam(defaultValue = "10") int limit) {
+        ShopbuilderScraper scraper = scrapers.stream()
+                .filter(s -> s instanceof ShopbuilderScraper)
+                .map(s -> (ShopbuilderScraper) s)
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Shopbuilder scraper not found"));
+        scraper.setProductLimit(limit);
+        runAsync("scraper-shopbuilder-test", () -> {
+            try {
+                scraperService.scrapeStore(scraper, true);
+            } finally {
+                scraper.resetProductLimit();
+            }
+        });
+        return ResponseEntity.accepted().body("Shopbuilder TEST scrape started — limit: " + limit + " products");
     }
 
     @PostMapping("/scrape/supplementstore")
