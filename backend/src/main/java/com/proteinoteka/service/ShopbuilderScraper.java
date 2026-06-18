@@ -2,6 +2,7 @@ package com.proteinoteka.service;
 
 import com.microsoft.playwright.ElementHandle;
 import com.microsoft.playwright.Page;
+import com.microsoft.playwright.options.LoadState;
 import com.microsoft.playwright.options.WaitUntilState;
 import com.proteinoteka.model.Product;
 import com.proteinoteka.util.ProductNameCleaner;
@@ -58,11 +59,29 @@ public class ShopbuilderScraper implements StoreScraper {
      */
     @Override
     public void waitForListing(Page page) {
+        // Wait for Vue.js to finish its API calls before looking for rendered items.
+        // ScraperService navigates with DOMCONTENTLOADED (just the HTML shell for SPAs),
+        // so NETWORKIDLE ensures product fetch requests have completed.
+        try {
+            page.waitForLoadState(LoadState.NETWORKIDLE,
+                    new Page.WaitForLoadStateOptions().setTimeout(20000));
+        } catch (Exception e) {
+            log.warn("[{}] NETWORKIDLE timeout — proceeding anyway", STORE_NAME);
+        }
+
         try {
             page.waitForSelector("div.item-row",
-                    new Page.WaitForSelectorOptions().setTimeout(15000));
+                    new Page.WaitForSelectorOptions().setTimeout(25000));
         } catch (Exception e) {
-            log.warn("[{}] Timeout waiting for div.item-row — page may be empty or blocked", STORE_NAME);
+            String title = "";
+            String snippet = "";
+            try {
+                title = page.title();
+                String content = page.content();
+                snippet = content.length() > 300 ? content.substring(0, 300) : content;
+            } catch (Exception ignored) {}
+            log.warn("[{}] Timeout waiting for div.item-row — title='{}' html_start='{}'",
+                    STORE_NAME, title, snippet.replaceAll("\\s+", " "));
             return;
         }
 
