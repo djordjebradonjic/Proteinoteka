@@ -70,7 +70,7 @@ const ARTICLES = [
   {
     href: "/vodici/protein-za-zene",
     title: "Protein za žene — mitovi i istine",
-    excerpt: "„Ženski protein" je marketing. Nećeš postati mišićava. Koji tip proteina zaista birati i koliko košta mesec dana — bez uvijanja.",
+    excerpt: "Takozvani ženski protein je marketing. Nećeš postati mišićava. Koji tip proteina zaista birati i koliko košta mesec dana — bez uvijanja.",
     readMin: 7,
   },
   {
