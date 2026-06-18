@@ -15,7 +15,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: [
           '/api/',
           '/admin/',
-          '/_next/static/',
           '/_next/image',
           '/korpa',
           '/wishlist',
