@@ -357,7 +357,7 @@ export default async function Page() {
                         )}
                         <div className="min-w-0 flex-1">
                           <p className="text-[14px] font-semibold text-slate-900 truncate">{p.name}</p>
-                          <p className="text-[12px] text-slate-500">{p.brand} · {p.store?.name}</p>
+                          <p className="text-[12px] text-slate-500">{p.brand} · {p.storeName}</p>
                         </div>
                         <div className="text-right shrink-0">
                           <p className="text-[15px] font-bold text-slate-900">{p.price}</p>
@@ -393,7 +393,7 @@ export default async function Page() {
                         )}
                         <div className="min-w-0 flex-1">
                           <p className="text-[14px] font-semibold text-slate-900 truncate">{p.name}</p>
-                          <p className="text-[12px] text-slate-500">{p.brand} · {p.store?.name}</p>
+                          <p className="text-[12px] text-slate-500">{p.brand} · {p.storeName}</p>
                         </div>
                         <div className="text-right shrink-0">
                           <p className="text-[15px] font-bold text-slate-900">{p.price}</p>
