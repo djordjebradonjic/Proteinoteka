@@ -26,6 +26,11 @@ const GUIDES = [
     readMin: 4,
   },
   {
+    slug: "gold-standard-whey-recenzija",
+    title: "Gold Standard 100% Whey — sastav, pakovanja i cene",
+    readMin: 6,
+  },
+  {
     slug: "protein-za-zene",
     title: "Protein za žene — mitovi i istine",
     readMin: 7,

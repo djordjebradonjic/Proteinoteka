@@ -50,6 +50,12 @@ const ARTICLES = [
     readMin: 4,
   },
   {
+    href: "/vodici/gold-standard-whey-recenzija",
+    title: "Gold Standard 100% Whey — sastav, pakovanja i cene u Srbiji",
+    excerpt: "Šta je Gold Standard zapravo: blend isolate + concentrate + peptide, ~80g proteina/100g. Aktuelne cene iz svih srpskih prodavnica i poređenje po value score.",
+    readMin: 6,
+  },
+  {
     href: "/vodici/protein-za-zene",
     title: "Protein za žene — mitovi i istine",
     excerpt: "„Ženski protein" je marketing. Nećeš postati mišićava. Koji tip proteina zaista birati i koliko košta mesec dana — bez uvijanja.",

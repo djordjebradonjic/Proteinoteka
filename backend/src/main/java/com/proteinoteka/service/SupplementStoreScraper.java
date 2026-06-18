@@ -252,11 +252,18 @@ public class SupplementStoreScraper implements StoreScraper {
     }
 
     private void enrichPriceFromDetail(Document doc, Product p) {
-        // Prefer the "Add to Cart Plus" widget price which reflects the active variant;
-        // fall back to the main <p class="price"> element.
-        Element el = doc.selectFirst("span.atcp-price, p.price");
-        if (el != null) {
-            String price = parsePriceString(el.text());
+        // supplementstore.rs (OpenCart): main product price is in ul.list-unstyled > li > h2.
+        // Do NOT use p.price — those elements appear in related-product cards and return the
+        // wrong (related) product's price, causing swapped prices between variants.
+        Element h2 = doc.selectFirst("ul.list-unstyled h2");
+        if (h2 != null) {
+            String price = parsePriceString(h2.text());
+            if (price != null && !price.isBlank()) { p.setPrice(price); return; }
+        }
+        // Fallback for sale prices: <h2><span class="price-new">...</span></h2>
+        Element saleEl = doc.selectFirst("ul.list-unstyled .price-new");
+        if (saleEl != null) {
+            String price = parsePriceString(saleEl.text());
             if (price != null && !price.isBlank()) p.setPrice(price);
         }
     }
