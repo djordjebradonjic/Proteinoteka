@@ -236,7 +236,7 @@ export default function Header({ hasHero = false }: { hasHero?: boolean }) {
 
   return (
     <header
-      className="sticky top-0 z-50 shadow-lg"
+      className="sticky top-0 z-[60] shadow-lg"
       style={{ backgroundColor: "#131921" }}
     >
       <div className="relative z-[60] max-w-7xl mx-auto px-4 h-16 flex items-center gap-3">
