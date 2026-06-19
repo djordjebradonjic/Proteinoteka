@@ -474,7 +474,7 @@ export default function SidebarFilter(props: SidebarFilterProps) {
           }`}
         >
           <SlidersHorizontal className="w-4 h-4 shrink-0" />
-          Filteri i sortiranje
+          Filteri
           {props.activeCount > 0 && (
             <span className="ml-1 bg-[#1B2B4B] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
               {props.activeCount}

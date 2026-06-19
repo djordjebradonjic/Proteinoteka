@@ -97,37 +97,31 @@ export default function ProductSection({
   const [drawerOpen, setDrawerOpen]   = useState(false);
   const [sortSheetOpen, setSortSheetOpen] = useState(false);
 
-  // Bar logic: visible when inline trigger has scrolled out of view AND product grid is still in viewport.
-  // Two independent observers are combined into one state.
+  // Bar logic:
+  //   triggerGone = inline filter button scrolled ABOVE viewport (not just below it yet)
+  //   pastGrid    = bottom sentinel of product grid scrolled ABOVE viewport
+  //   barVisible  = triggerGone && !pastGrid
+  // Using boundingClientRect.top distinguishes "below viewport" from "above viewport".
   const [triggerGone, setTriggerGone] = useState(false);
-  const [inGrid, setInGrid]           = useState(false);
-  const barVisible = triggerGone && inGrid;
+  const [pastGrid, setPastGrid]       = useState(false);
+  const barVisible = triggerGone && !pastGrid;
 
-  // Observe inline mobile trigger button (restored in SidebarFilter with id="mobile-filter-trigger")
   useEffect(() => {
-    // Element is rendered by SidebarFilter after mount — wait one tick
-    const attach = () => {
-      const el = document.getElementById("mobile-filter-trigger");
-      if (!el) return;
-      const obs = new IntersectionObserver(
-        ([entry]) => setTriggerGone(!entry.isIntersecting),
-        { threshold: 0 },
-      );
-      obs.observe(el);
-      return () => obs.disconnect();
-    };
-    const cleanup = attach();
-    return cleanup ?? undefined;
+    const el = document.getElementById("mobile-filter-trigger");
+    if (!el) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      setTriggerGone(!entry.isIntersecting && entry.boundingClientRect.top < 0);
+    }, { threshold: 0 });
+    obs.observe(el);
+    return () => obs.disconnect();
   }, []);
 
-  // Observe whether the product grid section itself is still in viewport
   useEffect(() => {
-    const el = document.getElementById("product-grid");
+    const el = document.getElementById("product-grid-end");
     if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => setInGrid(entry.isIntersecting),
-      { threshold: 0 },
-    );
+    const obs = new IntersectionObserver(([entry]) => {
+      setPastGrid(!entry.isIntersecting && entry.boundingClientRect.top < 0);
+    }, { threshold: 0 });
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
@@ -324,8 +318,6 @@ export default function ProductSection({
   // Show guides when exactly one category is active (dedicated page or single filter)
   const guideCategory = initialCategory || (urlCategories.length === 1 ? urlCategories[0] : "");
 
-  const currentSortLabel = SORT_OPTIONS.find((o) => o.value === sort)?.label ?? "Sortiraj";
-
   return (
     <>
     <div id="product-grid" className="max-w-7xl mx-auto px-4 pt-8 pb-8 md:pb-8">
@@ -368,15 +360,7 @@ export default function ProductSection({
           </div>
 
           <div id="product-list-start" className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 gap-2">
-            {/* Sort select — hidden on mobile (accessible via fixed bar) */}
-            <div className="hidden md:flex items-center gap-3">
-              <SortSelect value={sort} onSortChange={(val) => updateFilters("sort", val)} />
-            </div>
-            {/* On mobile: show active sort as a small badge */}
-            <div className="flex md:hidden items-center gap-2">
-              <span className="text-xs text-slate-500 font-medium">Sortirano:</span>
-              <span className="text-xs font-semibold text-[#1B2B4B] bg-slate-100 px-2 py-1 rounded-full">{currentSortLabel}</span>
-            </div>
+            <SortSelect value={sort} onSortChange={(val) => updateFilters("sort", val)} />
             {!loading && totalItems > 0 && (
               <p className="text-sm text-slate-500">
                 <span className="font-semibold text-slate-700">{totalItems}</span>{" "}
@@ -428,6 +412,8 @@ export default function ProductSection({
           />
         </div>
       </div>
+      {/* Sentinel: when this scrolls above viewport the fixed bottom bar disappears */}
+      <div id="product-grid-end" />
     </div>
 
     {guideCategory && <RelatedGuides categoryValue={guideCategory} />}
