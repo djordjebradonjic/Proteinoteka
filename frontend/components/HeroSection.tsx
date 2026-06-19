@@ -231,7 +231,7 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
         </div>
 
         {/* Sentinel — desktop only; header watches this to show/hide itself */}
-        <div id="hero-search-sentinel" className="hidden sm:block h-0 w-full" aria-hidden="true" />
+        <div id="hero-search-sentinel" className="hidden sm:block h-px w-full" aria-hidden="true" />
 
         {/* Feature badges — bigger cards */}
         <div
