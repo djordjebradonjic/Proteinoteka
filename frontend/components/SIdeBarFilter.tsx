@@ -302,6 +302,9 @@ export interface SidebarFilterProps {
   onReset: () => void;
   hasActiveFilters: boolean;
   activeCount: number;
+  /** Controlled from parent so the fixed bottom bar can trigger the drawer */
+  drawerOpen: boolean;
+  onCloseDrawer: () => void;
 }
 
 const STORES = [
@@ -425,7 +428,7 @@ function FilterContent({
 }
 
 export default function SidebarFilter(props: SidebarFilterProps) {
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const { drawerOpen, onCloseDrawer } = props;
 
   useEffect(() => {
     if (!drawerOpen) return;
@@ -457,39 +460,19 @@ export default function SidebarFilter(props: SidebarFilterProps) {
         <FilterContent {...props} />
       </aside>
 
-      {/* Mobile trigger */}
-      <div className="md:hidden w-full mb-2">
-        <button
-          onClick={() => setDrawerOpen(true)}
-          className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-bold w-full justify-center shadow-md transition-all active:scale-[0.98] ${
-            props.activeCount > 0
-              ? "bg-[#FF9900] text-[#1B2B4B]"
-              : "bg-[#1B2B4B] text-white"
-          }`}
-        >
-          <SlidersHorizontal className="w-4 h-4 shrink-0" />
-          Filteri
-          {props.activeCount > 0 && (
-            <span className="ml-1 bg-[#1B2B4B] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
-              {props.activeCount}
-            </span>
-          )}
-        </button>
-      </div>
-
-      {/* Mobile drawer */}
+      {/* Mobile drawer — triggered by the fixed bottom bar in ProductSection */}
       {drawerOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           <div
             className="absolute inset-0 bg-black/40"
-            onClick={() => setDrawerOpen(false)}
+            onClick={onCloseDrawer}
           />
           <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[85vh] flex flex-col">
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 shrink-0">
               <span className="text-base font-bold text-slate-800">
                 Filteri
               </span>
-              <button onClick={() => setDrawerOpen(false)}>
+              <button onClick={onCloseDrawer}>
                 <X className="w-5 h-5 text-slate-500" />
               </button>
             </div>
@@ -498,7 +481,7 @@ export default function SidebarFilter(props: SidebarFilterProps) {
             </div>
             <div className="shrink-0 px-4 py-3 border-t border-slate-100 bg-white">
               <button
-                onClick={() => setDrawerOpen(false)}
+                onClick={onCloseDrawer}
                 className="w-full bg-[#1B2B4B] text-white font-bold py-3 rounded-md text-sm uppercase tracking-wide"
               >
                 Prikaži rezultate
