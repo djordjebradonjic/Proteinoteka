@@ -124,7 +124,7 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
 
   return (
     <section
-      className="relative overflow-hidden sm:-mt-16"
+      className="relative overflow-hidden"
       aria-label="Hero sekcija"
       style={{ background: "#131921" }}
     >
@@ -229,9 +229,6 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
         >
           <SearchAutocomplete value={localSearch} onChange={handleSearch} />
         </div>
-
-        {/* Sentinel — desktop only; header watches this to show/hide itself */}
-        <div id="hero-search-sentinel" className="hidden sm:block h-px w-full" aria-hidden="true" />
 
         {/* Feature badges — bigger cards */}
         <div

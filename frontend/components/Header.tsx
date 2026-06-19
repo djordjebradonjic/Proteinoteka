@@ -193,21 +193,8 @@ export default function Header() {
   ) as number;
   const [localSearch, setLocalSearch] = useState("");
   const [mounted, setMounted] = useState(false);
-  // Hide desktop search while the hero search bar is visible in viewport
-  const [heroSearchVisible, setHeroSearchVisible] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
-
-  useEffect(() => {
-    const sentinel = document.getElementById("hero-search-sentinel");
-    if (!sentinel) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => setHeroSearchVisible(entry.isIntersecting),
-      { threshold: 0 },
-    );
-    obs.observe(sentinel);
-    return () => obs.disconnect();
-  }, []);
 
   // Sync search input from URL on mount and on any URL change
   useEffect(() => {
@@ -237,11 +224,8 @@ export default function Header() {
 
   return (
     <header
-      className="sticky top-0 z-50 shadow-lg transition-transform duration-300 ease-in-out"
-      style={{
-        backgroundColor: "#131921",
-        transform: heroSearchVisible ? "translateY(-110%)" : "translateY(0)",
-      }}
+      className="sticky top-0 z-50 shadow-lg"
+      style={{ backgroundColor: "#131921" }}
     >
       <div className="relative z-[60] max-w-7xl mx-auto px-4 h-16 flex items-center gap-3">
         <Logo />
