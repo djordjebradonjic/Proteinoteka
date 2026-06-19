@@ -95,18 +95,12 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
 
   const vs  = product.valueScore;
   const pct = product.percentileRank;
-  const vsBg =
+  const vsConfig =
     vs == null || vs <= 0 ? null
-    : vs >= 8.0 ? "#86efac"
-    : vs >= 6.5 ? "#22c55e"
-    : vs >= 5.0 ? "#f59e0b"
-    : "#ea580c";
-  const vsLabel =
-    vs == null || vs <= 0 ? null
-    : vs >= 8.0 ? "Izuzetna"
-    : vs >= 6.5 ? "Dobra"
-    : vs >= 5.0 ? "Prosečna"
-    : "Slaba";
+    : vs >= 8.0 ? { bg: "#f0fdf4", border: "#bbf7d0", text: "#15803d", label: "Izuzetna vrednost" }
+    : vs >= 6.5 ? { bg: "#f0fdf4", border: "#86efac", text: "#16a34a", label: "Dobra vrednost" }
+    : vs >= 5.0 ? { bg: "#fffbeb", border: "#fde68a", text: "#b45309", label: "Prosečna vrednost" }
+    : { bg: "#fff7ed", border: "#fed7aa", text: "#c2410c", label: "Slaba vrednost" };
   const vsPercentile =
     pct != null && pct >= 10
       ? `Bolje od ${pct}% proteina`
@@ -205,26 +199,6 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           />
         </button>
 
-        {/* Value Score badge */}
-        {vsBg && vs != null && (
-          <div className="absolute bottom-2 inset-x-2 z-10 flex flex-col items-center gap-1 pointer-events-none">
-            <div
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white shadow-lg"
-              style={{ backgroundColor: vsBg }}
-            >
-              <span className="text-xs leading-none">⚡</span>
-              <span className="text-sm font-black tabular-nums leading-none">{vs.toFixed(1)}</span>
-              <span className="text-[10px] font-semibold tracking-wide opacity-90 leading-none">
-                {vsLabel}
-              </span>
-            </div>
-            {vsPercentile && (
-              <span className="text-[9px] font-semibold text-white bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-full leading-none">
-                {vsPercentile}
-              </span>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Sadržaj */}
@@ -248,6 +222,34 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
               ? `${(product.primaryWeightGrams / 1000 % 1 === 0 ? product.primaryWeightGrams / 1000 : (product.primaryWeightGrams / 1000).toFixed(1))} kg`
               : `${Math.round(product.primaryWeightGrams)} g`}
           </span>
+        )}
+
+        {/* Value Score — prominent, in content area */}
+        {vsConfig && vs != null && (
+          <div
+            className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border"
+            style={{ background: vsConfig.bg, borderColor: vsConfig.border }}
+          >
+            <span
+              className="text-base font-black tabular-nums leading-none shrink-0"
+              style={{ color: vsConfig.text }}
+            >
+              ⚡ {vs.toFixed(1)}
+            </span>
+            <div className="flex flex-col min-w-0">
+              <span
+                className="text-[11px] font-bold leading-none"
+                style={{ color: vsConfig.text }}
+              >
+                {vsConfig.label}
+              </span>
+              {vsPercentile && (
+                <span className="text-[9px] text-slate-500 leading-none mt-0.5 truncate">
+                  {vsPercentile}
+                </span>
+              )}
+            </div>
+          </div>
         )}
 
         <div className="flex flex-col gap-0.5 min-h-[2.5rem] justify-center">

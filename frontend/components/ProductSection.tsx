@@ -12,12 +12,12 @@ import RelatedGuides from "@/components/RelatedGuides";
 import ValueScoreBanner from "@/components/ValueScoreBanner";
 
 const SORT_OPTIONS = [
-  { value: "random",              label: "Svi proteini" },
-  { value: "id,desc",             label: "Najnovije dodato" },
   { value: "valueScore,desc",     label: "🏆 Najbolja vrednost" },
   { value: "proteinPerRsd,desc",  label: "⚡ Najviše proteina za novac" },
   { value: "numericPrice,asc",    label: "Cena: Niža ka višoj" },
   { value: "numericPrice,desc",   label: "Cena: Viša ka nižoj" },
+  { value: "id,desc",             label: "Najnovije dodato" },
+  { value: "random",              label: "Nasumično" },
   { value: "name,asc",            label: "Naziv: A-Z" },
 ];
 
@@ -51,7 +51,7 @@ function hasAnyUrlFilter(live: URLSearchParams): boolean {
     (live.get("page") && live.get("page") !== "0") ||
     live.get("category") ||
     live.get("pakovanje") ||
-    (sort && sort !== "random")
+    (sort && sort !== "valueScore,desc")
   );
 }
 
@@ -78,7 +78,7 @@ export default function ProductSection({
   const minPrice            = lp.get("minPrice")  || "";
   const maxPrice            = lp.get("maxPrice")  || "";
   const page                = Number(lp.get("page")) || 0;
-  const sort                = lp.get("sort") || "random";
+  const sort                = lp.get("sort") || "valueScore,desc";
 
   const selectedCategories =
     initialCategory && !urlCategories.includes(initialCategory)
@@ -211,7 +211,7 @@ export default function ProductSection({
     if (tick === 0 && !hasAnyUrlFilter(live) && !initialCategory) return;
 
     const pageVal  = live.get("page")     || "0";
-    const sortVal  = live.get("sort")     || "random";
+    const sortVal  = live.get("sort")     || "valueScore,desc";
     const nameVal  = live.get("query")    || "";
     const storeVal  = live.get("store")     || "";
     const brandVal  = live.get("brand")     || "";

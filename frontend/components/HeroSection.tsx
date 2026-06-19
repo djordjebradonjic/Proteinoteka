@@ -1,16 +1,16 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
-import { Store, Package, TrendingDown, ArrowDown, GitCompare } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Store, Zap, BarChart2 } from "lucide-react";
 import { CATEGORIES } from "@/lib/categories";
 import { navigateTo } from "@/lib/navigation";
+import SearchAutocomplete from "@/components/SearchAutocomplete";
 
 interface HeroProps {
   selectedCategories?: string[];
   onCategoryToggle?: (val: string) => void;
 }
 
-// Deterministic positions — no Math.random() to avoid hydration mismatch
 const DOTS = [
   { x: 7,  y: 15, s: 2, dur: 8,  del: 0.0 },
   { x: 18, y: 60, s: 3, dur: 10, del: 1.3 },
@@ -33,14 +33,25 @@ const DOTS = [
 ];
 
 const BADGES = [
-  { icon: Store,        value: "9",           label: "prodavnica",  delay: 0.35 },
-  { icon: Package,      value: "500+",        label: "proteina",    delay: 0.45 },
-  { icon: TrendingDown, value: "Mi pratimo.", label: "Ti štediš.",  delay: 0.55 },
+  {
+    icon: Zap,
+    value: "Value Score",
+    label: "objektivna ocena 0–10",
+    delay: 0.35,
+  },
+  {
+    icon: BarChart2,
+    value: "RSD/g proteina",
+    label: "prava mera isplativosti",
+    delay: 0.45,
+  },
+  {
+    icon: Store,
+    value: "9 prodavnica",
+    label: "jedan pregled, sve cene",
+    delay: 0.55,
+  },
 ] as const;
-
-function scrollToGrid() {
-  document.getElementById("product-grid")?.scrollIntoView({ behavior: "smooth" });
-}
 
 function readUrlCategories(): string[] {
   if (typeof window === "undefined") return [];
@@ -50,10 +61,10 @@ function readUrlCategories(): string[] {
 }
 
 export default function HeroSection({ selectedCategories: propCategories, onCategoryToggle }: HeroProps) {
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible]       = useState(false);
   const [urlCategories, setUrlCategories] = useState<string[]>([]);
+  const [localSearch, setLocalSearch]     = useState("");
 
-  // Props take precedence (category pages pass them); otherwise use URL-synced state
   const selectedCategories = propCategories ?? urlCategories;
 
   useEffect(() => {
@@ -61,10 +72,9 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
     return () => clearTimeout(t);
   }, []);
 
-  // Sync categories from URL on mount and whenever any component updates the URL
   useEffect(() => {
     const sync = () => setUrlCategories(readUrlCategories());
-    sync(); // read on mount
+    sync();
     window.addEventListener("app:urlchange", sync);
     window.addEventListener("popstate",      sync);
     return () => {
@@ -72,6 +82,28 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
       window.removeEventListener("popstate",      sync);
     };
   }, []);
+
+  useEffect(() => {
+    const syncSearch = () => {
+      const q = new URLSearchParams(window.location.search).get("query") ?? "";
+      setLocalSearch(q);
+    };
+    syncSearch();
+    window.addEventListener("app:urlchange", syncSearch);
+    window.addEventListener("popstate",      syncSearch);
+    return () => {
+      window.removeEventListener("app:urlchange", syncSearch);
+      window.removeEventListener("popstate",      syncSearch);
+    };
+  }, []);
+
+  const handleSearch = (v: string) => {
+    setLocalSearch(v);
+    const params = new URLSearchParams(window.location.search);
+    if (v) params.set("query", v); else params.delete("query");
+    params.delete("page");
+    navigateTo(`${window.location.pathname}?${params.toString()}`);
+  };
 
   const handleCategoryClick = (value: string) => {
     if (onCategoryToggle) {
@@ -87,7 +119,7 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
       params.delete("page");
       navigateTo(`${window.location.pathname}?${params.toString()}`);
     }
-    scrollToGrid();
+    document.getElementById("product-grid")?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
@@ -117,9 +149,13 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
           from { opacity: 0; transform: translateY(8px) scale(0.96); }
           to   { opacity: 1; transform: translateY(0)   scale(1);    }
         }
+        @keyframes heroSearch {
+          from { opacity: 0; transform: translateY(10px) scale(0.98); }
+          to   { opacity: 1; transform: translateY(0)    scale(1);    }
+        }
       `}</style>
 
-      {/* Background */}
+      {/* Animated background */}
       <div className="absolute inset-0 pointer-events-none select-none" aria-hidden="true">
         {DOTS.map((d, i) => (
           <span
@@ -143,7 +179,7 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
             left: "50%",
             transform: "translateX(-50%)",
             width: "min(800px, 100%)",
-            height: "480px",
+            height: "520px",
             background:
               "radial-gradient(ellipse at 50% 30%, rgba(255,153,0,0.09) 0%, transparent 65%)",
             animation: "heroPulse 6s ease-in-out infinite",
@@ -154,37 +190,51 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
       {/* Content */}
       <div className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-10 sm:pt-14 pb-0 text-center">
 
-        {/* H1 */}
+        {/* H1 — unique value proposition */}
         <h1
-          className="text-[2rem] xs:text-[2.4rem] sm:text-5xl md:text-6xl font-extrabold text-white leading-[1.1] tracking-tight mb-4 sm:mb-5"
+          className="text-[1.9rem] xs:text-[2.2rem] sm:text-5xl md:text-6xl font-extrabold text-white leading-[1.1] tracking-tight mb-3 sm:mb-4"
           style={visible ? { animation: "heroIn 0.5s cubic-bezier(0.16,1,0.3,1) both" } : { opacity: 0 }}
         >
-          Pronađi{" "}
+          Da li je tvoj protein{" "}
           <span
             style={{
               color: "#FF9900",
               textShadow: "0 0 32px rgba(255,153,0,0.45), 0 0 8px rgba(255,153,0,0.2)",
             }}
           >
-            najjeftiniji
-          </span>{" "}
-          protein u Srbiji.
+            vredan novca?
+          </span>
         </h1>
 
         {/* Subheadline */}
         <p
-          className="text-sm sm:text-base md:text-lg text-slate-300 font-normal max-w-lg mx-auto leading-relaxed mb-8 sm:mb-10"
+          className="text-sm sm:text-base md:text-lg text-slate-300 font-normal max-w-xl mx-auto leading-relaxed mb-6 sm:mb-8"
           style={
             visible
-              ? { animation: "heroInSub 0.5s cubic-bezier(0.16,1,0.3,1) 0.2s both" }
+              ? { animation: "heroInSub 0.5s cubic-bezier(0.16,1,0.3,1) 0.15s both" }
               : { opacity: 0 }
           }
         >
-          Upoređujemo cene iz 9 vodećih prodavnica i pronalazimo najbolju ponudu.
+          Jedina platforma u Srbiji sa{" "}
+          <span className="text-white font-semibold">objektivnom ocenom vrednosti</span>,{" "}
+          <span className="text-white font-semibold">cenom po gramu proteina</span> i{" "}
+          <span className="text-white font-semibold">poređenjem cena u 9 prodavnica</span>.
         </p>
 
-        {/* Trust badges */}
-        <div className="flex items-stretch justify-center gap-0 mb-8 sm:mb-10 w-full max-w-xs sm:max-w-sm mx-auto">
+        {/* Search bar — primary CTA (desktop only; mobile header already has it) */}
+        <div
+          className="hidden sm:flex mb-6 sm:mb-8"
+          style={
+            visible
+              ? { animation: "heroSearch 0.5s cubic-bezier(0.16,1,0.3,1) 0.25s both" }
+              : { opacity: 0 }
+          }
+        >
+          <SearchAutocomplete value={localSearch} onChange={handleSearch} />
+        </div>
+
+        {/* Trust / feature badges */}
+        <div className="flex items-stretch justify-center gap-0 mb-6 sm:mb-8 w-full max-w-sm mx-auto">
           {BADGES.map(({ icon: Icon, value, label, delay }, i) => (
             <div
               key={label}
@@ -197,57 +247,14 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
               }}
             >
               <Icon className="w-3.5 h-3.5 text-[#FF9900] mb-1.5 shrink-0" strokeWidth={2.2} />
-              <span className="text-sm sm:text-lg font-extrabold text-white tabular-nums leading-none text-center">
+              <span className="text-xs sm:text-sm font-extrabold text-white tabular-nums leading-none text-center">
                 {value}
               </span>
-              <span className="text-[9px] sm:text-[10px] text-slate-300 mt-1 uppercase tracking-wide sm:tracking-widest font-medium text-center leading-tight">
+              <span className="text-[9px] sm:text-[10px] text-slate-400 mt-1 font-medium text-center leading-tight px-1">
                 {label}
               </span>
             </div>
           ))}
-        </div>
-
-        {/* CTA buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-8 sm:mb-10">
-          <button
-            onClick={scrollToGrid}
-            aria-label="Pronađi najjeftinije proteine"
-            className="group inline-flex items-center gap-2.5 w-full sm:w-auto justify-center px-7 sm:px-8 py-3 sm:py-3.5 rounded-full font-bold text-[#131921] text-sm transition-all duration-150 active:scale-[0.97]"
-            style={{
-              background: "linear-gradient(135deg, #FF9900 0%, #e68a00 100%)",
-              boxShadow: "0 4px 28px rgba(255,153,0,0.35)",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.boxShadow = "0 6px 36px rgba(255,153,0,0.55)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 28px rgba(255,153,0,0.35)";
-            }}
-          >
-            Pronađi najjeftinije
-            <ArrowDown className="w-4 h-4 transition-transform duration-200 group-hover:translate-y-0.5" />
-          </button>
-
-          <button
-            onClick={scrollToGrid}
-            aria-label="Uporedi proizvode"
-            className="group inline-flex items-center gap-2 w-full sm:w-auto justify-center px-6 py-3 rounded-full text-sm font-semibold text-slate-300 transition-all duration-150 hover:text-white active:scale-[0.97]"
-            style={{
-              border: "1px solid rgba(255,255,255,0.15)",
-              background: "rgba(255,255,255,0.05)",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.10)";
-              (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.25)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)";
-              (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.15)";
-            }}
-          >
-            <GitCompare className="w-3.5 h-3.5" />
-            Uporedi proizvode
-          </button>
         </div>
 
         {/* Category pills */}
@@ -299,13 +306,13 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
         </nav>
       </div>
 
-      {/* Gradient fade into product grid */}
+      {/* Gradient fade into content below */}
       <div
         className="h-16 sm:h-24 mt-8 sm:mt-10"
         aria-hidden="true"
         style={{
           background:
-            "linear-gradient(180deg, #131921 0%, rgba(19,25,33,0.55) 55%, #ffffff 100%)",
+            "linear-gradient(180deg, #131921 0%, rgba(19,25,33,0.55) 55%, #f8fafc 100%)",
         }}
       />
     </section>

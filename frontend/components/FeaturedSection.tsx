@@ -19,7 +19,7 @@ export default function FeaturedSection({ topValueProducts, priceDropProducts }:
   if (!topValueProducts.length && !priceDropProducts.length) return null;
 
   const tabs: { id: Tab; label: string }[] = [
-    { id: "value", label: "⚡ Najbolja vrednost" },
+    { id: "value", label: "⚡ Najbolji Value Score" },
     { id: "drops", label: "🔥 Najveći pad cene" },
   ];
 
@@ -44,10 +44,10 @@ export default function FeaturedSection({ topValueProducts, priceDropProducts }:
         {/* Header */}
         <div className="mb-4 sm:mb-5">
           <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 leading-tight">
-            Izdvojeno
+            Pametna kupovina danas
           </h2>
           <p className="text-sm text-slate-500 mt-0.5 hidden sm:block">
-            Najpametnije kupovine trenutno na tržištu
+            Proteini sa najboljim Value Score-om i najvećim padom cene
           </p>
         </div>
 

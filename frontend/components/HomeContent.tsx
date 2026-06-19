@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import ProductSection from "@/components/ProductSection";
 import FeaturedSection from "@/components/FeaturedSection";
+import HowItWorks from "@/components/HowItWorks";
 
 
 const CompareBar = dynamic(() => import("./CompareBar"), { ssr: false });
@@ -39,6 +40,9 @@ export default function HomeContent({
     <main className="min-h-screen bg-white overflow-x-hidden">
       <Header />
       {!initialCategory && <HeroSection />}
+
+      {/* How it works strip — homepage only, explains the 3 unique features */}
+      {!initialCategory && <HowItWorks />}
 
       {/* Featured tabbed section — homepage only, above the main grid */}
       {!initialCategory && (
