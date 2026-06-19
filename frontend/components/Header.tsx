@@ -186,14 +186,14 @@ function NavLink({
 }
 
 
-export default function Header() {
+export default function Header({ hasHero = false }: { hasHero?: boolean }) {
   const dispatch = useAppDispatch();
   const wishlistCount = useAppSelector(
     (state) => (state as any).wishlist.count,
   ) as number;
   const [localSearch, setLocalSearch] = useState("");
   const [mounted, setMounted] = useState(false);
-  const [heroVisible, setHeroVisible] = useState(false);
+  const [heroVisible, setHeroVisible] = useState(hasHero);
 
   useEffect(() => { setMounted(true); }, []);
 

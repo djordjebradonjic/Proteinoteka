@@ -37,8 +37,8 @@ export default function HomeContent({
   categoryFaq,
 }: Props) {
   return (
-    <main className="min-h-screen bg-white overflow-x-hidden">
-      <Header />
+    <main className="min-h-screen bg-white">
+      <Header hasHero />
       {!initialCategory && <HeroSection />}
 
       {/* How it works strip — homepage only, explains the 3 unique features */}
