@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 
 export default function CookieBanner() {
   const [visible, setVisible] = useState(false);
+  const bannerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!localStorage.getItem("cookie_consent")) {
@@ -50,10 +51,27 @@ export default function CookieBanner() {
     setVisible(false);
   };
 
+  useEffect(() => {
+    const root = document.documentElement;
+    if (visible && bannerRef.current) {
+      const update = () => {
+        const h = bannerRef.current?.offsetHeight ?? 0;
+        root.style.setProperty("--cookie-h", `${h}px`);
+      };
+      update();
+      const ro = new ResizeObserver(update);
+      ro.observe(bannerRef.current);
+      return () => ro.disconnect();
+    } else {
+      root.style.removeProperty("--cookie-h");
+    }
+  }, [visible]);
+
   if (!visible) return null;
 
   return (
     <div
+      ref={bannerRef}
       role="dialog"
       aria-modal="true"
       aria-label="Saglasnost za kolačiće"

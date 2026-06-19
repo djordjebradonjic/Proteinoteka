@@ -420,9 +420,10 @@ export default function ProductSection({
 
     {/* ── Mobile fixed bottom bar ── */}
     <div
-      className={`fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white border-t border-slate-200 px-4 py-3 flex gap-3 transition-transform duration-300 ${
+      className={`fixed left-0 right-0 z-40 md:hidden bg-white border-t border-slate-200 px-4 py-3 flex gap-3 transition-transform duration-300 ${
         barVisible ? "translate-y-0" : "translate-y-full"
       }`}
+      style={{ bottom: "var(--cookie-h, 0px)" }}
     >
       <button
         onClick={() => setDrawerOpen(true)}
