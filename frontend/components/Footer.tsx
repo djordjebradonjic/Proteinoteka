@@ -19,6 +19,7 @@ const STORE_PAGES = [
   { label: "Proteinbox",     href: "/proteinbox-proteini"     },
   { label: "Proteini.si",    href: "/proteini-si-srbija"      },
   { label: "Lama",           href: "/lama-proteini"           },
+  { label: "Shopbuilder",    href: "/shopbuilder-proteini"    },
 ];
 
 const GUIDES = [

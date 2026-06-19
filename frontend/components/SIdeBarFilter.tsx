@@ -314,6 +314,7 @@ const STORES = [
   "GymBeam",
   "MyProtein",
   "Lama",
+  "Shopbuilder",
 ];
 
 function FilterContent({
