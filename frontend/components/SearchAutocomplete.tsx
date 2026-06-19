@@ -198,7 +198,7 @@ export default function SearchAutocomplete({
             if (results.length > 0) setOpen(true);
           }}
           onKeyDown={handleKeyDown}
-          placeholder="Pretraži proteine, suplementi, brendovi..."
+          placeholder="Pretraži proteine, brendove..."
           className="flex-1 px-4 py-2.5 text-sm text-slate-800 bg-white outline-none placeholder:text-slate-400"
           autoComplete="off"
         />

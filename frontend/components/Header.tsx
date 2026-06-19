@@ -186,7 +186,7 @@ function NavLink({
 }
 
 
-export default function Header() {
+export default function Header({ hideSearch = false }: { hideSearch?: boolean }) {
   const dispatch = useAppDispatch();
   const wishlistCount = useAppSelector(
     (state) => (state as any).wishlist.count,
@@ -230,9 +230,11 @@ export default function Header() {
       <div className="relative z-[60] max-w-7xl mx-auto px-4 h-16 flex items-center gap-3">
         <Logo />
 
-        <div className="hidden md:flex flex-1">
-          <SearchAutocomplete value={localSearch} onChange={handleSearch} />
-        </div>
+        {!hideSearch && (
+          <div className="hidden md:flex flex-1">
+            <SearchAutocomplete value={localSearch} onChange={handleSearch} />
+          </div>
+        )}
 
         <nav className="hidden md:flex items-center gap-5">
           <GuidesDropdown />
@@ -276,12 +278,14 @@ export default function Header() {
         </div>
       </div>
 
-      <div
-        className="md:hidden px-4 pb-3"
-        style={{ backgroundColor: "#131921" }}
-      >
-        <SearchAutocomplete value={localSearch} onChange={handleSearch} />
-      </div>
+      {!hideSearch && (
+        <div
+          className="md:hidden px-4 pb-3"
+          style={{ backgroundColor: "#131921" }}
+        >
+          <SearchAutocomplete value={localSearch} onChange={handleSearch} />
+        </div>
+      )}
     </header>
   );
 }
