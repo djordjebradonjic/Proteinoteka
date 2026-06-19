@@ -8,7 +8,7 @@ import { fetchBrandProducts, fetchTopProducts } from "@/lib/seo-data";
 import { Product } from "@/types/product";
 import { productUrl } from "@/lib/productUrl";
 
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: { absolute: "BioTech USA 100% Pure Whey i ISO Whey Zero — recenzija i cene u Srbiji 2026 | Proteinoteka" },

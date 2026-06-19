@@ -8,7 +8,7 @@ import { fetchProductsByQuery, fetchTopProducts } from "@/lib/seo-data";
 import { Product } from "@/types/product";
 import { productUrl } from "@/lib/productUrl";
 
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: { absolute: "Gold Standard 100% Whey — recenzija i cena u Srbiji 2026 | Proteinoteka" },

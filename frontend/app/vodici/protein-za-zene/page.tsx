@@ -8,7 +8,7 @@ import { fetchTopProducts } from "@/lib/seo-data";
 import { Product } from "@/types/product";
 import { productUrl } from "@/lib/productUrl";
 
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: { absolute: "Protein za žene u Srbiji — mitovi i istine (bez marketinga) | Proteinoteka" },

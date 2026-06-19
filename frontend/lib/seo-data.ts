@@ -14,7 +14,7 @@ export async function fetchTopProducts(params: {
     if (params.sortBy)   url.searchParams.set("sortBy",   params.sortBy);
     if (params.limit)    url.searchParams.set("limit",    String(params.limit));
 
-    const res = await fetch(url.toString(), { next: { revalidate: 300, tags: ["products"] } });
+    const res = await fetch(url.toString(), { next: { revalidate: 21600, tags: ["products"] } });
     if (!res.ok) return [];
     return res.json();
   } catch {
@@ -34,7 +34,7 @@ export async function fetchPriceRangeProducts(params: {
     url.searchParams.set("sort", "valueScore,desc");
     url.searchParams.set("page", "0");
 
-    const res = await fetch(url.toString(), { next: { revalidate: 300, tags: ["products"] } });
+    const res = await fetch(url.toString(), { next: { revalidate: 86400, tags: ["products"] } });
     if (!res.ok) return [];
     const data = await res.json();
     return data.content ?? [];

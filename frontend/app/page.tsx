@@ -81,7 +81,7 @@ async function getInitialProducts() {
   try {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/api/v1/products?page=0&size=12&sort=valueScore,desc`,
-      { next: { revalidate: 60 } },
+      { next: { revalidate: 21600 } },
     );
     const data = await res.json();
     return {

@@ -8,7 +8,7 @@ import { fetchTopProducts } from "@/lib/seo-data";
 import { Product } from "@/types/product";
 import { productUrl } from "@/lib/productUrl";
 
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: { absolute: "Whey Isolate vs Concentrate: šta da odabereš? | Proteinoteka" },

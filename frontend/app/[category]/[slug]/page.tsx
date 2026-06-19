@@ -33,7 +33,7 @@ async function fetchProduct(id: number): Promise<Product | null> {
 
 async function fetchSimilar(category: string, excludeId: number): Promise<Product[]> {
   try {
-    const res = await fetch(`${API}/api/v1/products?category=${category}&size=7`, { next: { revalidate: 3600, tags: ["products"] } });
+    const res = await fetch(`${API}/api/v1/products?category=${category}&size=7`, { next: { revalidate: 86400, tags: ["products"] } });
     if (!res.ok) return [];
     const data = await res.json();
     return (data.content as Product[]).filter((p) => p.id !== excludeId).slice(0, 6);
@@ -42,7 +42,7 @@ async function fetchSimilar(category: string, excludeId: number): Promise<Produc
 
 async function fetchStorePrices(productId: number): Promise<StorePrice[]> {
   try {
-    const res = await fetch(`${API}/api/v1/products/${productId}/store-prices`, { next: { revalidate: 3600, tags: ["products"] } });
+    const res = await fetch(`${API}/api/v1/products/${productId}/store-prices`, { next: { revalidate: 86400, tags: ["products"] } });
     if (!res.ok) return [];
     return res.json();
   } catch { return []; }
