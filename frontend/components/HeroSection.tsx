@@ -222,11 +222,11 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
 
         {/* Search bar — visible on all screen sizes */}
         <div
-          className="flex mb-2"
+          className="flex mb-2 relative"
           style={
             visible
-              ? { animation: "heroSearch 0.5s cubic-bezier(0.16,1,0.3,1) 0.18s both" }
-              : { opacity: 0 }
+              ? { animation: "heroSearch 0.5s cubic-bezier(0.16,1,0.3,1) 0.18s both", zIndex: 50 }
+              : { opacity: 0, zIndex: 50 }
           }
         >
           <SearchAutocomplete value={localSearch} onChange={handleSearch} />
