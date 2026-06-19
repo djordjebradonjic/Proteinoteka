@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import sharp from "sharp";
 import { extractProductId } from "@/lib/productUrl";
+import { getScoreColor, getScoreLabel } from "@/lib/scoreColor";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
@@ -31,20 +32,6 @@ async function fetchProduct(id: number): Promise<Product | null> {
   }
 }
 
-function scoreColor(score: number): string {
-  if (score >= 8.5) return "#22c55e";
-  if (score >= 7) return "#84cc16";
-  if (score >= 5.5) return "#FF9900";
-  return "#ef4444";
-}
-
-function scoreLabel(score: number): string {
-  if (score >= 9) return "Izvanredan";
-  if (score >= 8) return "Odličan";
-  if (score >= 7) return "Dobar";
-  if (score >= 5.5) return "Prosečan";
-  return "Slab";
-}
 
 function truncate(text: string, max: number): string {
   if (text.length <= max) return text;
@@ -92,8 +79,8 @@ export default async function Image({
   const displayName = truncate(name, 80);
 
   const score = product.valueScore;
-  const sColor = score != null ? scoreColor(score) : null;
-  const sLabel = score != null ? scoreLabel(score) : null;
+  const sColor = score != null ? getScoreColor(score) : null;
+  const sLabel = score != null ? getScoreLabel(score) : null;
 
   // Try to fetch product image as base64
   let imgData: string | null = null;

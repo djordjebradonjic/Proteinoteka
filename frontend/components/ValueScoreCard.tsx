@@ -119,18 +119,23 @@ function buildConclusion(
   if (score >= 8.0) {
     const reason = strengths.length ? strengths.join(", ") : "ukupno dobar profil";
     const caveat = weaknesses.length ? ` Jedina zamerka: ${weaknesses.join(", ")}.` : "";
-    return `Visoka ocena zahvaljujući: ${reason}.${caveat}`;
+    return `Jedan od najboljih na tržištu. ${reason}.${caveat}`;
   }
-  if (score >= 6.5) {
+  if (score >= 7.0) {
     const parts: string[] = [];
     if (strengths.length)  parts.push(`prednosti — ${strengths.join(", ")}`);
     if (weaknesses.length) parts.push(`slabosti — ${weaknesses.join(", ")}`);
-    return `Solidna ocena. ${parts.join("; ")}.`;
+    return `Odličan proizvod. ${parts.join("; ")}.`;
+  }
+  if (score >= 6.0) {
+    const w = weaknesses.length ? ` Slabosti: ${weaknesses.join(", ")}.` : "";
+    const s = strengths.length  ? ` Prednosti: ${strengths.join(", ")}.` : "";
+    return `Dobar izbor za svakodnevnu upotrebu.${s}${w}`;
   }
   if (score >= 5.0) {
     const w = weaknesses.length ? ` zbog: ${weaknesses.join(", ")}` : "";
     const s = strengths.length  ? ` Pozitivno: ${strengths.join(", ")}.` : "";
-    return `Prosečna ocena${w}.${s}`;
+    return `Prosečan proizvod${w}.${s}`;
   }
   const w = weaknesses.length ? weaknesses.join(", ") : "nepovoljnog odnosa cene i kvaliteta";
   return `Niska ocena zbog: ${w}.`;

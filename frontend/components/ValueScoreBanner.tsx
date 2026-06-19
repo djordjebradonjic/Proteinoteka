@@ -43,11 +43,11 @@ export default function ValueScoreBanner() {
       <div className="flex items-center gap-2.5 mb-2">
         <div
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white shadow-sm shrink-0"
-          style={{ backgroundColor: "#4ade80" }}
+          style={{ backgroundColor: "#22c55e" }}
         >
           <span className="text-sm leading-none">⚡</span>
           <span className="text-base font-black tabular-nums leading-none">8.4</span>
-          <span className="text-xs font-semibold opacity-95 leading-none">Izuzetna</span>
+          <span className="text-xs font-semibold opacity-95 leading-none">Odličan</span>
         </div>
         <p className="text-sm font-semibold text-slate-700 leading-snug">
           Šta predstavlja ova ocena?

@@ -28,6 +28,7 @@ import PriceAlertModal from "@/components/PriceAlertModal";
 import PriceTag from "@/components/PriceTag";
 import ValueScoreCard from "@/components/ValueScoreCard";
 import { formatPrice } from "@/lib/formatPrice";
+import { getScoreColor, getScoreLabel } from "@/lib/scoreColor";
 
 const PriceHistoryChart = dynamic(() => import("@/components/PriceHistoryChart"), { ssr: false });
 
@@ -211,19 +212,6 @@ const CATEGORY_SLUGS: Record<string, string> = {
   blend:            "blend",
 };
 
-function scoreColor(score: number) {
-  if (score >= 8.0) return "#86efac";
-  if (score >= 6.5) return "#22c55e";
-  if (score >= 5.0) return "#f59e0b";
-  return "#ea580c";
-}
-
-function scoreLabel(score: number) {
-  if (score >= 8.0) return "Izuzetna";
-  if (score >= 6.5) return "Dobra";
-  if (score >= 5.0) return "Prosečna";
-  return "Slaba";
-}
 
 function NutritionRow({ label, value, unit, icon }: {
   label: string; value: number | null | undefined; unit: string; icon: React.ReactNode;
@@ -472,7 +460,7 @@ export default function ProductPageContent({ product, similar, storePrices, revi
   }, [product.aiDescription, product.description]);
 
   const score    = product.valueScore;
-  const color    = score ? scoreColor(score) : "#94a3b8";
+  const color    = score ? getScoreColor(score) : "#94a3b8";
   const catLabel = product.proteinSource ? CATEGORY_LABELS[product.proteinSource] ?? product.proteinSource : null;
   const catSlug  = product.proteinSource ? CATEGORY_SLUGS[product.proteinSource] : null;
 
@@ -667,7 +655,7 @@ export default function ProductPageContent({ product, similar, storePrices, revi
                 </div>
                 <div>
                   <p className="text-xs uppercase tracking-wider text-slate-400 font-bold">Value Score</p>
-                  <p className="text-base font-bold" style={{ color }}>{scoreLabel(score)}</p>
+                  <p className="text-base font-bold" style={{ color }}>{getScoreLabel(score)}</p>
                   {product.percentileRank != null && product.percentileRank >= 10
                     ? <p className="text-xs text-slate-400">Bolje od {product.percentileRank}% proteina</p>
                     : <p className="text-xs text-slate-400">na skali 1–10</p>

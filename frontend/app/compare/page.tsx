@@ -9,6 +9,7 @@ import { useAppDispatch } from "@/store/hooks";
 import { clearCompare } from "@/store/compareSlice";
 import { ArrowLeft, Package, ShoppingCart, X } from "lucide-react";
 import { productUrl } from "@/lib/productUrl";
+import { getScoreColor } from "@/lib/scoreColor";
 import Image from "next/image";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -68,12 +69,6 @@ function short(name: string, max = 28): string {
   return name.length > max ? name.slice(0, max - 1) + "…" : name;
 }
 
-function scoreColor(s: number): string {
-  if (s >= 8.5) return "#22c55e";
-  if (s >= 7) return "#84cc16";
-  if (s >= 5.5) return "#FF9900";
-  return "#ef4444";
-}
 
 function cellCls(i: number, best: number, worst: number): string {
   if (best === worst) return "";
@@ -172,9 +167,9 @@ function TableRow({ row, n }: { row: RowDef; n: number }) {
           <div key={i} className={`flex-1 ${COL_W} px-3 py-3 flex items-center justify-center ${cls}`}>
             {row.isScore && val != null ? (
               <div className="flex items-center gap-1.5">
-                <span className="font-bold text-sm" style={{ color: scoreColor(val) }}>{val.toFixed(1)}</span>
+                <span className="font-bold text-sm" style={{ color: getScoreColor(val) }}>{val.toFixed(1)}</span>
                 <div className="w-14 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full rounded-full" style={{ width: `${val * 10}%`, background: scoreColor(val) }} />
+                  <div className="h-full rounded-full" style={{ width: `${val * 10}%`, background: getScoreColor(val) }} />
                 </div>
               </div>
             ) : (

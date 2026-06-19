@@ -126,7 +126,7 @@ function GuidesDropdown({ mobile = false }: { mobile?: boolean }) {
   }, []);
 
   return (
-    <div ref={ref} className="relative z-50">
+    <div ref={ref} className="relative z-[300]">
       <button
         onClick={() => setOpen(o => !o)}
         className="flex items-center gap-0.5 text-sm font-medium text-slate-200 hover:text-[#FF9900] transition-colors whitespace-nowrap px-1 cursor-pointer"
@@ -135,7 +135,7 @@ function GuidesDropdown({ mobile = false }: { mobile?: boolean }) {
         Vodiči <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-150 ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div className={`absolute ${mobile ? "right-0" : "left-0"} top-full w-56 pt-2 z-50`}>
+        <div className={`absolute ${mobile ? "right-0" : "left-0"} top-full w-56 pt-2 z-[300]`}>
           <div className="bg-white rounded-xl shadow-xl border border-slate-100 flex flex-col max-h-[320px]">
             {/* Scrollable guide links */}
             <div className="overflow-y-auto flex-1 py-1">
