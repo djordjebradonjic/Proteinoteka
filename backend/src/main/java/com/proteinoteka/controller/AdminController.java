@@ -171,6 +171,13 @@ public class AdminController {
         return ResponseEntity.accepted().body("Shopbuilder TEST scrape started — limit: " + limit + " products");
     }
 
+    @PostMapping("/scrape/xsport")
+    public ResponseEntity<String> scrapeXSport(
+            @RequestParam(defaultValue = "false") boolean testMode) {
+        runAsync("scraper-xsport", () -> scraperService.scrapeStore(findScraper("XSport"), testMode));
+        return ResponseEntity.accepted().body("XSport scraping started in background" + (testMode ? " [TEST MODE]" : ""));
+    }
+
     @PostMapping("/scrape/supplementstore")
     public ResponseEntity<String> scrapeSupplementStore(
             @RequestParam(defaultValue = "false") boolean testMode) {

@@ -5,15 +5,7 @@ import { productUrl } from "@/lib/productUrl";
 import PriceTag from "@/components/PriceTag";
 import Header from "@/components/Header";
 import { SEOProductCard } from "./SEOProductCard";
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-function scoreColor(s: number) {
-  if (s >= 8.5) return "#22c55e";
-  if (s >= 7)   return "#84cc16";
-  if (s >= 5.5) return "#FF9900";
-  return "#ef4444";
-}
+import { getScoreColor } from "@/lib/scoreColor";
 
 const SEO_PAGES = [
   { slug: "najbolji-whey-protein-srbija",   label: "🥇 Najbolji Whey"        },
@@ -117,7 +109,7 @@ function ProductTable({ products, caption }: { products: Product[]; caption: str
                 </td>
                 <td className="py-3 pr-4 text-right hidden sm:table-cell">
                   {p.valueScore != null ? (
-                    <span className="font-bold text-xs" style={{ color: scoreColor(p.valueScore) }}>
+                    <span className="font-bold text-xs" style={{ color: getScoreColor(p.valueScore) }}>
                       {p.valueScore.toFixed(1)}
                     </span>
                   ) : "—"}

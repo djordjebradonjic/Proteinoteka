@@ -20,6 +20,7 @@ import { analytics } from "@/lib/analytics";
 import { productUrl } from "@/lib/productUrl";
 import { hasAlert, loadAlerts } from "@/lib/alerts";
 import PriceAlertModal from "@/components/PriceAlertModal";
+import { getScoreColor, getScoreBg, getScoreLabel } from "@/lib/scoreColor";
 
 interface ProductCardProps {
   product: Product;
@@ -97,10 +98,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
   const pct = product.percentileRank;
   const vsConfig =
     vs == null || vs <= 0 ? null
-    : vs >= 8.0 ? { bg: "#4ade80", label: "Izuzetna" }
-    : vs >= 6.5 ? { bg: "#22c55e", label: "Dobra" }
-    : vs >= 5.0 ? { bg: "#d97706", label: "Prosečna" }
-    : { bg: "#ea580c", label: "Slaba" };
+    : { bg: getScoreColor(vs), label: getScoreLabel(vs) };
   const vsPercentile =
     pct != null && pct >= 10
       ? `Bolje od ${pct}% proteina`

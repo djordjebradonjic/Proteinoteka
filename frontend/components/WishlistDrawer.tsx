@@ -33,22 +33,15 @@ import {
 } from "@/lib/alerts";
 import PriceAlertModal from "@/components/PriceAlertModal";
 import PriceTag from "@/components/PriceTag";
+import { getScoreColor, getScoreBg, getScoreLabel } from "@/lib/scoreColor";
 
 function ValueBadge({ score }: { score: number }) {
-  const color =
-    score >= 8.0 ? "#86efac"
-      : score >= 6.5 ? "#22c55e"
-      : score >= 5.0 ? "#f59e0b"
-      : "#ea580c";
-  const label =
-    score >= 8.0 ? "Izuzetna"
-      : score >= 6.5 ? "Dobra"
-      : score >= 5.0 ? "Prosečna"
-      : "Slaba";
+  const color = getScoreColor(score);
+  const label = getScoreLabel(score);
   return (
     <span
       className="text-[10px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap"
-      style={{ backgroundColor: color + "22", color }}
+      style={{ backgroundColor: getScoreBg(score), color }}
     >
       {score.toFixed(1)} · {label}
     </span>

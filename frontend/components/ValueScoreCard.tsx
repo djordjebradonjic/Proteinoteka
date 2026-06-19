@@ -2,29 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Product } from "@/types/product";
-
-// ── Color scale ───────────────────────────────────────────────────────────────
-
-function scoreColor(s: number) {
-  if (s >= 8.0) return "#16a34a";   // tamno zelena
-  if (s >= 6.5) return "#22c55e";   // svetlo zelena
-  if (s >= 5.0) return "#f59e0b";   // žuta
-  return "#ef4444";                  // crvena
-}
-
-function scoreBg(s: number) {
-  if (s >= 8.0) return "#f0fdf4";
-  if (s >= 6.5) return "#f0fdf4";
-  if (s >= 5.0) return "#fffbeb";
-  return "#fef2f2";
-}
-
-function scoreLabel(s: number) {
-  if (s >= 8.0) return "Izuzetna vrednost";
-  if (s >= 6.5) return "Dobra vrednost";
-  if (s >= 5.0) return "Prosečna vrednost";
-  return "Slaba vrednost";
-}
+import { getScoreColor, getScoreBg, getScoreLabel } from "@/lib/scoreColor";
 
 // ── Donut chart ───────────────────────────────────────────────────────────────
 
@@ -35,7 +13,7 @@ function DonutChart({ score }: { score: number }) {
   const [animated, setAnimated] = useState(false);
   useEffect(() => { const t = setTimeout(() => setAnimated(true), 80); return () => clearTimeout(t); }, []);
 
-  const color  = scoreColor(score);
+  const color  = getScoreColor(score);
   const offset = CIRC * (1 - (animated ? score / 10 : 0));
 
   return (
@@ -66,7 +44,7 @@ function DimBar({ icon, label, score }: { icon: string; label: string; score: nu
   const [animated, setAnimated] = useState(false);
   useEffect(() => { const t = setTimeout(() => setAnimated(true), 200); return () => clearTimeout(t); }, []);
 
-  const color = scoreColor(score);
+  const color = getScoreColor(score);
   const pct   = animated ? score * 10 : 0;
 
   return (
@@ -175,9 +153,9 @@ export default function ValueScoreCard({
   digestScore,
   ingredientsScore,
 }: Props) {
-  const color      = scoreColor(score);
-  const bg         = scoreBg(score);
-  const label      = scoreLabel(score);
+  const color      = getScoreColor(score);
+  const bg         = getScoreBg(score);
+  const label      = getScoreLabel(score);
   const conclusion = buildConclusion(score, product, proteinPurityScore, digestScore, ingredientsScore);
 
   return (

@@ -5,6 +5,7 @@ import PriceTag from "@/components/PriceTag";
 import Header from "@/components/Header";
 import { SEOProductCard } from "./SEOProductCard";
 import { formatPrice } from "@/lib/formatPrice";
+import { getScoreColor } from "@/lib/scoreColor";
 
 const BASE_URL = "https://proteinoteka.rs";
 
@@ -28,13 +29,6 @@ const SEO_LANDING_LINKS = [
   { label: "💰 Najjeftiniji Whey",     href: "/najjeftiniji-whey-protein"    },
   { label: "📊 Whey Protein Cena",     href: "/whey-protein-cena"            },
 ];
-
-function scoreColor(s: number) {
-  if (s >= 8.5) return "#22c55e";
-  if (s >= 7)   return "#84cc16";
-  if (s >= 5.5) return "#FF9900";
-  return "#ef4444";
-}
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -198,7 +192,7 @@ function ProductTable({ products, brandName }: { products: Product[]; brandName:
                 </td>
                 <td className="py-3 pr-4 text-right hidden sm:table-cell">
                   {p.valueScore != null ? (
-                    <span className="font-bold text-xs" style={{ color: scoreColor(p.valueScore) }}>
+                    <span className="font-bold text-xs" style={{ color: getScoreColor(p.valueScore) }}>
                       {p.valueScore.toFixed(1)}
                     </span>
                   ) : "—"}

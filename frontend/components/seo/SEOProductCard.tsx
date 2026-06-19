@@ -3,13 +3,7 @@ import Image from "next/image";
 import { Product } from "@/types/product";
 import { productUrl } from "@/lib/productUrl";
 import PriceTag from "@/components/PriceTag";
-
-function scoreColor(s: number) {
-  if (s >= 8.0) return "#86efac";
-  if (s >= 6.5) return "#22c55e";
-  if (s >= 5.0) return "#f59e0b";
-  return "#ea580c";
-}
+import { getScoreColor, getScoreBg } from "@/lib/scoreColor";
 
 export function SEOProductCard({ product, rank }: { product: Product; rank: number }) {
   const score = product.valueScore;
@@ -60,7 +54,7 @@ export function SEOProductCard({ product, rank }: { product: Product; rank: numb
           {score != null && (
             <span
               className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-              style={{ background: scoreColor(score) + "22", color: scoreColor(score) }}
+              style={{ background: getScoreBg(score), color: getScoreColor(score) }}
             >
               ⚡ {score.toFixed(1)}/10
             </span>

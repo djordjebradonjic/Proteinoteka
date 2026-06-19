@@ -4,19 +4,13 @@ import { Package } from "lucide-react";
 import { Product } from "@/types/product";
 import { productUrl } from "@/lib/productUrl";
 import PriceTag from "@/components/PriceTag";
+import { getScoreConfig } from "@/lib/scoreColor";
 
 interface Props { product: Product }
 
-function vsConfig(vs: number) {
-  if (vs >= 8.0) return { bg: "bg-green-50",  border: "border-green-200",  text: "text-green-500",  dot: "🏆", label: "Izuzetna", color: "#86efac" };
-  if (vs >= 6.5) return { bg: "bg-green-50",  border: "border-green-100",  text: "text-green-600",  dot: "✅", label: "Dobra",     color: "#22c55e" };
-  if (vs >= 5.0) return { bg: "bg-amber-50",  border: "border-amber-100",  text: "text-amber-500",  dot: "➡️", label: "Prosečna", color: "#f59e0b" };
-  return          { bg: "bg-orange-50", border: "border-orange-100", text: "text-orange-600", dot: "⚠️", label: "Slaba",     color: "#ea580c" };
-}
-
 export default function FeaturedValueCard({ product }: Props) {
   const vs  = product.valueScore;
-  const cfg = vs != null ? vsConfig(vs) : null;
+  const cfg = vs != null ? getScoreConfig(vs) : null;
 
   const ppg =
     product.numericPrice && product.proteinPer100g && product.primaryWeightGrams
