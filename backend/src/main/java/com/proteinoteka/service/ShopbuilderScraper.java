@@ -1,6 +1,5 @@
 package com.proteinoteka.service;
 
-import com.microsoft.playwright.ElementHandle;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.LoadState;
 import com.microsoft.playwright.options.WaitUntilState;
@@ -78,31 +77,42 @@ public class ShopbuilderScraper implements StoreScraper {
             return;
         }
 
-        // shopbuilder.rs uses IntersectionObserver on the last item to load more products.
-        // scrollIntoViewIfNeeded() is a CDP command that doesn't go through the page's JS event
-        // loop, so the observer never fires. Using page.evaluate() to call scrollIntoView() from
-        // within the page's own JS context is the only reliable way to trigger the observer.
+        // behavior:'smooth' is silently ignored by headless Chromium — the IntersectionObserver
+        // never fires because the browser skips animation frames. Using behavior:'auto' and
+        // querying the DOM entirely inside JS (no ElementHandle transfer) avoids both issues.
         int scrolls = 0;
         int consecutiveNoGrowth = 0;
         while (scrolls < MAX_LOAD_MORE_CLICKS) {
             try {
-                java.util.List<ElementHandle> rows = page.querySelectorAll("div.item-row");
-                int countBefore = rows.size();
+                int countBefore = ((Number) page.evaluate(
+                        "() => document.querySelectorAll('div.item-row').length")).intValue();
 
-                if (!rows.isEmpty()) {
-                    ElementHandle lastRow = rows.get(rows.size() - 1);
-                    // Run inside the page's JS context so IntersectionObserver fires
-                    page.evaluate("el => el.scrollIntoView({block: 'end', behavior: 'smooth'})", lastRow);
-                }
+                // Scroll last item into view using pure in-page JS — no stale ElementHandle risk
+                page.evaluate("() => {" +
+                        "  const rows = document.querySelectorAll('div.item-row');" +
+                        "  if (rows.length > 0) rows[rows.length - 1].scrollIntoView({block: 'center', behavior: 'auto'});" +
+                        "  window.scrollTo(0, document.body.scrollHeight);" +
+                        "}");
+
+                // Click "Učitaj više" button if visible (hybrid sites show button after first batch)
+                try {
+                    com.microsoft.playwright.Locator loadMoreBtn = page.locator(
+                            "button:has-text('Učitaj više'), a:has-text('Učitaj više'), span:has-text('Učitaj više')");
+                    if (loadMoreBtn.count() > 0 && loadMoreBtn.first().isVisible()) {
+                        loadMoreBtn.first().click();
+                        log.info("[{}] Clicked 'Učitaj više' button", STORE_NAME);
+                    }
+                } catch (Exception ignored) {}
 
                 page.waitForTimeout(3000 + ThreadLocalRandom.current().nextInt(2000));
 
                 try {
                     page.waitForLoadState(LoadState.NETWORKIDLE,
-                            new Page.WaitForLoadStateOptions().setTimeout(8000));
+                            new Page.WaitForLoadStateOptions().setTimeout(6000));
                 } catch (Exception ignored) {}
 
-                int countAfter = page.querySelectorAll("div.item-row").size();
+                int countAfter = ((Number) page.evaluate(
+                        "() => document.querySelectorAll('div.item-row').length")).intValue();
 
                 if (countAfter <= countBefore) {
                     consecutiveNoGrowth++;
@@ -117,8 +127,11 @@ public class ShopbuilderScraper implements StoreScraper {
 
                 scrolls++;
             } catch (Exception e) {
-                log.warn("[{}] Error during scroll: {}", STORE_NAME, e.getMessage());
-                break;
+                // Don't break immediately — a transient DOM glitch shouldn't kill the loop
+                log.warn("[{}] Error during scroll iteration #{}: {} — retrying", STORE_NAME, scrolls + 1, e.getMessage());
+                consecutiveNoGrowth++;
+                if (consecutiveNoGrowth >= 3) break;
+                safeSleep(2000);
             }
         }
 
