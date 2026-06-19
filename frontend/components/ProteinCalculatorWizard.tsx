@@ -692,6 +692,7 @@ function WizardContent({ onClose }: { onClose: () => void }) {
 export default function ProteinCalculatorWizard() {
   const [open, setOpen] = useState(false);
   const [footerVisible, setFooterVisible] = useState(false);
+  const [filterBarActive, setFilterBarActive] = useState(false);
   const compareCount = (useAppSelector((state: any) => state.compare?.ids?.length) as number) || 0;
 
   useEffect(() => {
@@ -711,6 +712,14 @@ export default function ProteinCalculatorWizard() {
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    const handler = (e: Event) => {
+      setFilterBarActive((e as CustomEvent<{ visible: boolean }>).detail.visible);
+    };
+    window.addEventListener("filterbar", handler);
+    return () => window.removeEventListener("filterbar", handler);
+  }, []);
+
   return (
     <>
       <style>{`
@@ -728,21 +737,27 @@ export default function ProteinCalculatorWizard() {
         }
       `}</style>
 
-      {/* Floating button */}
+      {/* Floating button — compact (icon only) when the mobile filter bar is active */}
       <button
         onClick={() => setOpen(true)}
-        className={`fixed left-5 z-40 flex items-center gap-2 px-4 py-3 bg-[#1B2B4B] text-white text-sm font-bold rounded-2xl shadow-lg hover:bg-[#243860] hover:shadow-xl transition-all duration-200 cursor-pointer ${
+        className={`fixed left-3 z-40 flex items-center justify-center bg-[#1B2B4B] text-white font-bold rounded-2xl shadow-lg hover:bg-[#243860] hover:shadow-xl transition-all duration-200 cursor-pointer ${
           footerVisible ? "opacity-0 pointer-events-none" : "opacity-100"
+        } ${
+          filterBarActive
+            ? "w-11 h-11 sm:px-4 sm:py-3 sm:w-auto sm:h-auto sm:gap-2"
+            : "gap-2 px-4 py-3 text-sm"
         }`}
         style={{
-          bottom: compareCount > 0
-            ? "calc(3.5rem + env(safe-area-inset-bottom, 0px))"
-            : "calc(1.5rem + env(safe-area-inset-bottom, 0px))",
+          bottom: filterBarActive
+            ? "calc(4.5rem + env(safe-area-inset-bottom, 0px))"
+            : compareCount > 0
+              ? "calc(3.5rem + env(safe-area-inset-bottom, 0px))"
+              : "calc(1.5rem + env(safe-area-inset-bottom, 0px))",
         }}
         aria-label="Otvori protein kalkulator"
       >
-        <Calculator className="w-4 h-4 text-[#FF9900]" />
-        Protein kalkulator
+        <Calculator className={`text-[#FF9900] shrink-0 ${filterBarActive ? "w-5 h-5" : "w-4 h-4"}`} />
+        <span className={filterBarActive ? "hidden sm:inline text-sm" : "text-sm"}>Protein kalkulator</span>
       </button>
 
       {/* Backdrop */}

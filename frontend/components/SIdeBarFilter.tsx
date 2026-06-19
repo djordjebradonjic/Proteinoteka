@@ -302,8 +302,9 @@ export interface SidebarFilterProps {
   onReset: () => void;
   hasActiveFilters: boolean;
   activeCount: number;
-  /** Controlled from parent so the fixed bottom bar can trigger the drawer */
+  /** Controlled from parent so both the inline button and the fixed bottom bar can trigger the drawer */
   drawerOpen: boolean;
+  onOpenDrawer: () => void;
   onCloseDrawer: () => void;
 }
 
@@ -428,7 +429,7 @@ function FilterContent({
 }
 
 export default function SidebarFilter(props: SidebarFilterProps) {
-  const { drawerOpen, onCloseDrawer } = props;
+  const { drawerOpen, onOpenDrawer, onCloseDrawer } = props;
 
   useEffect(() => {
     if (!drawerOpen) return;
@@ -460,7 +461,29 @@ export default function SidebarFilter(props: SidebarFilterProps) {
         <FilterContent {...props} />
       </aside>
 
-      {/* Mobile drawer — triggered by the fixed bottom bar in ProductSection */}
+      {/* Mobile inline trigger — always visible above the grid; observed by ProductSection
+          to know when to show the fixed bottom bar */}
+      <div className="md:hidden w-full mb-2">
+        <button
+          id="mobile-filter-trigger"
+          onClick={onOpenDrawer}
+          className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-bold w-full justify-center shadow-md transition-all active:scale-[0.98] ${
+            props.activeCount > 0
+              ? "bg-[#FF9900] text-[#1B2B4B]"
+              : "bg-[#1B2B4B] text-white"
+          }`}
+        >
+          <SlidersHorizontal className="w-4 h-4 shrink-0" />
+          Filteri i sortiranje
+          {props.activeCount > 0 && (
+            <span className="ml-1 bg-[#1B2B4B] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+              {props.activeCount}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Mobile drawer — triggered by both the inline button and the fixed bottom bar */}
       {drawerOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           <div

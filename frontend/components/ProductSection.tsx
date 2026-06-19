@@ -97,20 +97,45 @@ export default function ProductSection({
   const [drawerOpen, setDrawerOpen]   = useState(false);
   const [sortSheetOpen, setSortSheetOpen] = useState(false);
 
-  // Shows the fixed bottom bar once user has scrolled past the top of this section
-  const [barVisible, setBarVisible]   = useState(false);
-  const topSentinelRef = useRef<HTMLDivElement>(null);
+  // Bar logic: visible when inline trigger has scrolled out of view AND product grid is still in viewport.
+  // Two independent observers are combined into one state.
+  const [triggerGone, setTriggerGone] = useState(false);
+  const [inGrid, setInGrid]           = useState(false);
+  const barVisible = triggerGone && inGrid;
 
+  // Observe inline mobile trigger button (restored in SidebarFilter with id="mobile-filter-trigger")
   useEffect(() => {
-    const el = topSentinelRef.current;
+    // Element is rendered by SidebarFilter after mount — wait one tick
+    const attach = () => {
+      const el = document.getElementById("mobile-filter-trigger");
+      if (!el) return;
+      const obs = new IntersectionObserver(
+        ([entry]) => setTriggerGone(!entry.isIntersecting),
+        { threshold: 0 },
+      );
+      obs.observe(el);
+      return () => obs.disconnect();
+    };
+    const cleanup = attach();
+    return cleanup ?? undefined;
+  }, []);
+
+  // Observe whether the product grid section itself is still in viewport
+  useEffect(() => {
+    const el = document.getElementById("product-grid");
     if (!el) return;
     const obs = new IntersectionObserver(
-      ([entry]) => setBarVisible(!entry.isIntersecting),
+      ([entry]) => setInGrid(entry.isIntersecting),
       { threshold: 0 },
     );
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
+
+  // Tell ProteinCalculatorWizard (and anything else) when the bar changes visibility
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("filterbar", { detail: { visible: barVisible } }));
+  }, [barVisible]);
 
   // Lock scroll when sort sheet is open
   useEffect(() => {
@@ -304,9 +329,6 @@ export default function ProductSection({
   return (
     <>
     <div id="product-grid" className="max-w-7xl mx-auto px-4 pt-8 pb-8 md:pb-8">
-      {/* Sentinel: when this scrolls out of view the fixed bottom bar appears */}
-      <div ref={topSentinelRef} className="h-0" />
-
       {/* ValueScoreBanner — on mobile shown here (above filters), on desktop inside the column */}
       <div className="md:hidden mb-4">
         <ValueScoreBanner />
@@ -335,6 +357,7 @@ export default function ProductSection({
           hasActiveFilters={hasActiveFilters}
           activeCount={activeCount}
           drawerOpen={drawerOpen}
+          onOpenDrawer={() => setDrawerOpen(true)}
           onCloseDrawer={() => setDrawerOpen(false)}
         />
 
