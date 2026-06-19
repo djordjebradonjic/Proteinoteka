@@ -271,6 +271,7 @@ export default function ProductSection({
 
   useEffect(() => {
     if (loading) return;
+    if (drawerOpen) return;
 
     if (pendingGridScroll.current) {
       pendingGridScroll.current = false;
@@ -290,7 +291,7 @@ export default function ProductSection({
     requestAnimationFrame(() => {
       window.scrollTo({ top: parseInt(saved, 10), behavior: "instant" });
     });
-  }, [loading]);
+  }, [loading, drawerOpen]);
 
   const handleReset = () => updateUrl(getPathname());
 
