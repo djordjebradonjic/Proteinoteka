@@ -57,10 +57,10 @@ export default function CookieBanner() {
       role="dialog"
       aria-modal="true"
       aria-label="Saglasnost za kolačiće"
-      className="fixed top-16 left-0 right-0 z-40"
+      className="fixed bottom-0 left-0 right-0 z-50"
     >
-      {/* Card floating below the sticky header */}
-      <div className="mx-3 mt-2 sm:mx-6 md:mx-auto md:max-w-3xl bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.08)] px-5 py-4">
+      {/* Card floating above bottom edge */}
+      <div className="mx-3 mb-3 sm:mx-6 sm:mb-4 md:mx-auto md:max-w-3xl bg-white rounded-2xl shadow-[0_-2px_24px_rgba(0,0,0,0.12),0_4px_24px_rgba(0,0,0,0.12)] px-5 py-4">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           {/* Text */}
           <div className="flex items-start sm:items-center gap-2.5 flex-1 min-w-0">
