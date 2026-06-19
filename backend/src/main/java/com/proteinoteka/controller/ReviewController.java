@@ -5,6 +5,7 @@ import com.proteinoteka.dto.ReviewDTO;
 import com.proteinoteka.dto.ReviewSubmitRequest;
 import com.proteinoteka.service.ReviewService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +16,9 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 public class ReviewController {
+
+    @Value("${admin.token:}")
+    private String adminToken;
 
     private final ReviewService reviewService;
 
@@ -72,8 +76,7 @@ public class ReviewController {
     // ── Helper ─────────────────────────────────────────────────────────────────
 
     private void validateAdmin(String token) {
-        String expected = System.getenv("ADMIN_TOKEN");
-        if (expected != null && !expected.isBlank() && !expected.equals(token)) {
+        if (adminToken.isBlank() || !adminToken.equals(token)) {
             throw new org.springframework.web.server.ResponseStatusException(HttpStatus.UNAUTHORIZED);
         }
     }

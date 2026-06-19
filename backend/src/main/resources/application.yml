@@ -4,7 +4,7 @@ spring:
   datasource:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/proteinoteka}
     username: ${DATABASE_USERNAME:proteinoteka_2026}
-    password: ${DATABASE_PASSWORD:proteinoteka_19032026}
+    password: ${DATABASE_PASSWORD:proteinoteka_dev_local}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 15
@@ -19,11 +19,13 @@ spring:
 
 springdoc:
   swagger-ui:
+    enabled: ${SWAGGER_ENABLED:false}
     path: /swagger-ui.html
     operations-sorter: method
   api-docs:
+    enabled: ${SWAGGER_ENABLED:false}
     path: /api-docs
-  show-actuator: true
+  show-actuator: false
 
 task:
   scheduling:

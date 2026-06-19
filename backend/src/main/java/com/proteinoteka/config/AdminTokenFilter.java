@@ -27,14 +27,18 @@ public class AdminTokenFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
 
         if (path.startsWith("/api/admin/") || path.startsWith("/api/v1/admin/")) {
-            if (!adminToken.isBlank()) {
-                String header = request.getHeader("X-Admin-Token");
-                if (!adminToken.equals(header)) {
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.setContentType("application/json");
-                    response.getWriter().write("{\"error\":\"Unauthorized\"}");
-                    return;
-                }
+            if (adminToken.isBlank()) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"error\":\"Admin token not configured\"}");
+                return;
+            }
+            String header = request.getHeader("X-Admin-Token");
+            if (!adminToken.equals(header)) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"error\":\"Unauthorized\"}");
+                return;
             }
         }
 

@@ -262,7 +262,11 @@ const STRIP_MARKERS = /PODACI O NUTRITIVNOJ VREDNOSTI|PAKOVANJE:|UPOTREBA:/i;
 
 function cutRawDescription(html: string): string {
   const cut = html.search(STRIP_MARKERS);
-  return cut > 0 ? html.slice(0, cut) : html;
+  const trimmed = cut > 0 ? html.slice(0, cut) : html;
+  if (typeof window === "undefined") return trimmed;
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const DOMPurify = require("dompurify");
+  return DOMPurify.sanitize(trimmed, { USE_PROFILES: { html: true } });
 }
 
 // ── Star helpers ──────────────────────────────────────────────────────────────
