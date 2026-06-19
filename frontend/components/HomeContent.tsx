@@ -38,7 +38,7 @@ export default function HomeContent({
 }: Props) {
   return (
     <main className="min-h-screen bg-white overflow-x-hidden">
-      <Header hideSearch />
+      <Header />
       {!initialCategory && <HeroSection />}
 
       {/* How it works strip — homepage only, explains the 3 unique features */}

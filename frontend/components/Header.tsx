@@ -186,15 +186,27 @@ function NavLink({
 }
 
 
-export default function Header({ hideSearch = false }: { hideSearch?: boolean }) {
+export default function Header() {
   const dispatch = useAppDispatch();
   const wishlistCount = useAppSelector(
     (state) => (state as any).wishlist.count,
   ) as number;
   const [localSearch, setLocalSearch] = useState("");
   const [mounted, setMounted] = useState(false);
+  const [heroVisible, setHeroVisible] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
+
+  useEffect(() => {
+    const hero = document.getElementById("hero-section");
+    if (!hero) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => setHeroVisible(entry.isIntersecting),
+      { threshold: 0 },
+    );
+    obs.observe(hero);
+    return () => obs.disconnect();
+  }, []);
 
   // Sync search input from URL on mount and on any URL change
   useEffect(() => {
@@ -230,11 +242,9 @@ export default function Header({ hideSearch = false }: { hideSearch?: boolean })
       <div className="relative z-[60] max-w-7xl mx-auto px-4 h-16 flex items-center gap-3">
         <Logo />
 
-        {!hideSearch && (
-          <div className="hidden md:flex flex-1">
-            <SearchAutocomplete value={localSearch} onChange={handleSearch} />
-          </div>
-        )}
+        <div className={`hidden md:flex flex-1 transition-opacity duration-200 ${heroVisible ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
+          <SearchAutocomplete value={localSearch} onChange={handleSearch} />
+        </div>
 
         <nav className="hidden md:flex items-center gap-5">
           <GuidesDropdown />
@@ -278,14 +288,12 @@ export default function Header({ hideSearch = false }: { hideSearch?: boolean })
         </div>
       </div>
 
-      {!hideSearch && (
-        <div
-          className="md:hidden px-4 pb-3"
-          style={{ backgroundColor: "#131921" }}
-        >
-          <SearchAutocomplete value={localSearch} onChange={handleSearch} />
-        </div>
-      )}
+      <div
+        className={`md:hidden px-4 pb-3 transition-opacity duration-200 ${heroVisible ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+        style={{ backgroundColor: "#131921" }}
+      >
+        <SearchAutocomplete value={localSearch} onChange={handleSearch} />
+      </div>
     </header>
   );
 }

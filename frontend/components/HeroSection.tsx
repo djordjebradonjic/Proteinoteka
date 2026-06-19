@@ -124,6 +124,7 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
 
   return (
     <section
+      id="hero-section"
       className="relative overflow-hidden"
       aria-label="Hero sekcija"
       style={{ background: "#131921" }}
@@ -207,20 +208,20 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
           className="text-[1.6rem] sm:text-3xl md:text-4xl font-extrabold text-white leading-[1.15] tracking-tight mb-5 sm:mb-6"
           style={visible ? { animation: "heroIn 0.5s cubic-bezier(0.16,1,0.3,1) 0.07s both" } : { opacity: 0 }}
         >
-          Prestani da{" "}
+          Pronađi{" "}
           <span
             style={{
               color: "#FF9900",
               textShadow: "0 0 28px rgba(255,153,0,0.4), 0 0 8px rgba(255,153,0,0.2)",
             }}
           >
-            preplaćuješ protein.
+            najbolji protein u Srbiji.
           </span>
         </h1>
 
-        {/* Search bar — hero primary element on desktop */}
+        {/* Search bar — visible on all screen sizes */}
         <div
-          className="hidden sm:flex mb-2"
+          className="flex mb-2"
           style={
             visible
               ? { animation: "heroSearch 0.5s cubic-bezier(0.16,1,0.3,1) 0.18s both" }
