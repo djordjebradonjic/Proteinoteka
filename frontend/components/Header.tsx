@@ -288,12 +288,11 @@ export default function Header({ hasHero = false }: { hasHero?: boolean }) {
         </div>
       </div>
 
-      <div
-        className={`md:hidden px-4 pb-3 transition-opacity duration-200 ${heroVisible ? "opacity-0 pointer-events-none" : "opacity-100"}`}
-        style={{ backgroundColor: "#131921" }}
-      >
-        <SearchAutocomplete value={localSearch} onChange={handleSearch} />
-      </div>
+      {!heroVisible && (
+        <div className="md:hidden px-4 pb-3" style={{ backgroundColor: "#131921" }}>
+          <SearchAutocomplete value={localSearch} onChange={handleSearch} />
+        </div>
+      )}
     </header>
   );
 }

@@ -85,7 +85,7 @@ export default function RootLayout({
       lang="sr"
       className={`${dmSans.variable} h-full antialiased font-[family-name:var(--font-dm-sans)]`}
     >
-      <body className="min-h-full flex flex-col overflow-x-hidden">
+      <body className="min-h-full flex flex-col [overflow-x:clip]">
         <Providers>
           {children} <Footer />
         </Providers>

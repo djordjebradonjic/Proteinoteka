@@ -125,7 +125,7 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
   return (
     <section
       id="hero-section"
-      className="relative overflow-hidden"
+      className="relative"
       aria-label="Hero sekcija"
       style={{ background: "#131921" }}
     >
@@ -157,7 +157,7 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
       `}</style>
 
       {/* Animated background */}
-      <div className="absolute inset-0 pointer-events-none select-none" aria-hidden="true">
+      <div className="absolute inset-0 pointer-events-none select-none overflow-hidden" aria-hidden="true">
         {DOTS.map((d, i) => (
           <span
             key={i}
