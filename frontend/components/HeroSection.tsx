@@ -36,19 +36,19 @@ const BADGES = [
   {
     icon: Zap,
     value: "Value Score",
-    label: "objektivna ocena 0–10",
+    label: "Objektivna ocena 0–10 za svaki protein",
     delay: 0.35,
   },
   {
     icon: BarChart2,
     value: "RSD/g proteina",
-    label: "prava mera isplativosti",
+    label: "Prava mera isplativosti, ne cena kutije",
     delay: 0.45,
   },
   {
     icon: Store,
     value: "9 prodavnica",
-    label: "jedan pregled, sve cene",
+    label: "Isti protein, sve cene, jedan pregled",
     delay: 0.55,
   },
 ] as const;
@@ -61,9 +61,9 @@ function readUrlCategories(): string[] {
 }
 
 export default function HeroSection({ selectedCategories: propCategories, onCategoryToggle }: HeroProps) {
-  const [visible, setVisible]       = useState(false);
-  const [urlCategories, setUrlCategories] = useState<string[]>([]);
-  const [localSearch, setLocalSearch]     = useState("");
+  const [visible, setVisible]               = useState(false);
+  const [urlCategories, setUrlCategories]   = useState<string[]>([]);
+  const [localSearch, setLocalSearch]       = useState("");
 
   const selectedCategories = propCategories ?? urlCategories;
 
@@ -146,8 +146,8 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
           to   { opacity: 1; transform: translateY(0);    }
         }
         @keyframes heroBadge {
-          from { opacity: 0; transform: translateY(8px) scale(0.96); }
-          to   { opacity: 1; transform: translateY(0)   scale(1);    }
+          from { opacity: 0; transform: translateY(10px) scale(0.95); }
+          to   { opacity: 1; transform: translateY(0)    scale(1);    }
         }
         @keyframes heroSearch {
           from { opacity: 0; transform: translateY(10px) scale(0.98); }
@@ -190,67 +190,75 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
       {/* Content */}
       <div className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-10 sm:pt-14 pb-0 text-center">
 
-        {/* H1 — unique value proposition */}
-        <h1
-          className="text-[1.9rem] xs:text-[2.2rem] sm:text-5xl md:text-6xl font-extrabold text-white leading-[1.1] tracking-tight mb-3 sm:mb-4"
-          style={visible ? { animation: "heroIn 0.5s cubic-bezier(0.16,1,0.3,1) both" } : { opacity: 0 }}
+        {/* Tagline — small, above search */}
+        <p
+          className="text-xs sm:text-sm font-semibold uppercase tracking-widest mb-3 sm:mb-4"
+          style={
+            visible
+              ? { color: "#FF9900", animation: "heroIn 0.4s cubic-bezier(0.16,1,0.3,1) both" }
+              : { opacity: 0, color: "#FF9900" }
+          }
         >
-          Da li je tvoj protein{" "}
+          Pametna suplementacija u Srbiji
+        </p>
+
+        {/* H1 — reduced size, below tagline, above search */}
+        <h1
+          className="text-[1.6rem] sm:text-3xl md:text-4xl font-extrabold text-white leading-[1.15] tracking-tight mb-5 sm:mb-6"
+          style={visible ? { animation: "heroIn 0.5s cubic-bezier(0.16,1,0.3,1) 0.07s both" } : { opacity: 0 }}
+        >
+          Koji protein u Srbiji{" "}
           <span
             style={{
               color: "#FF9900",
-              textShadow: "0 0 32px rgba(255,153,0,0.45), 0 0 8px rgba(255,153,0,0.2)",
+              textShadow: "0 0 28px rgba(255,153,0,0.4), 0 0 8px rgba(255,153,0,0.2)",
             }}
           >
-            vredan novca?
+            daje najviše za tvoj novac?
           </span>
         </h1>
 
-        {/* Subheadline */}
-        <p
-          className="text-sm sm:text-base md:text-lg text-slate-300 font-normal max-w-xl mx-auto leading-relaxed mb-6 sm:mb-8"
-          style={
-            visible
-              ? { animation: "heroInSub 0.5s cubic-bezier(0.16,1,0.3,1) 0.15s both" }
-              : { opacity: 0 }
-          }
-        >
-          Jedina platforma u Srbiji sa{" "}
-          <span className="text-white font-semibold">objektivnom ocenom vrednosti</span>,{" "}
-          <span className="text-white font-semibold">cenom po gramu proteina</span> i{" "}
-          <span className="text-white font-semibold">poređenjem cena u 9 prodavnica</span>.
-        </p>
-
-        {/* Search bar — primary CTA (desktop only; mobile header already has it) */}
+        {/* Search bar — hero primary element on desktop */}
         <div
-          className="hidden sm:flex mb-6 sm:mb-8"
+          className="hidden sm:flex mb-2"
           style={
             visible
-              ? { animation: "heroSearch 0.5s cubic-bezier(0.16,1,0.3,1) 0.25s both" }
+              ? { animation: "heroSearch 0.5s cubic-bezier(0.16,1,0.3,1) 0.18s both" }
               : { opacity: 0 }
           }
         >
           <SearchAutocomplete value={localSearch} onChange={handleSearch} />
         </div>
 
-        {/* Trust / feature badges */}
-        <div className="flex items-stretch justify-center gap-0 mb-6 sm:mb-8 w-full max-w-sm mx-auto">
+        {/* Sentinel — header watches this to know when hero search leaves viewport */}
+        <div id="hero-search-sentinel" className="h-0 w-full" aria-hidden="true" />
+
+        {/* Feature badges — bigger cards */}
+        <div
+          className="grid grid-cols-3 gap-2 sm:gap-3 mb-6 sm:mb-8 w-full max-w-xl mx-auto mt-6 sm:mt-7"
+        >
           {BADGES.map(({ icon: Icon, value, label, delay }, i) => (
             <div
-              key={label}
-              className="flex-1 flex flex-col items-center py-3 px-1 sm:px-2 min-w-0"
+              key={value}
+              className="flex flex-col items-center gap-2 py-4 sm:py-5 px-2 sm:px-3 rounded-xl"
               style={{
-                borderLeft: i > 0 ? "1px solid rgba(255,255,255,0.07)" : "none",
+                background: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(255,255,255,0.09)",
                 ...(visible
                   ? { animation: `heroBadge 0.45s cubic-bezier(0.16,1,0.3,1) ${delay}s both` }
                   : { opacity: 0 }),
               }}
             >
-              <Icon className="w-3.5 h-3.5 text-[#FF9900] mb-1.5 shrink-0" strokeWidth={2.2} />
-              <span className="text-xs sm:text-sm font-extrabold text-white tabular-nums leading-none text-center">
+              <div
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: "rgba(255,153,0,0.15)" }}
+              >
+                <Icon className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-[#FF9900]" strokeWidth={2} />
+              </div>
+              <span className="text-xs sm:text-sm font-extrabold text-white text-center leading-snug">
                 {value}
               </span>
-              <span className="text-[9px] sm:text-[10px] text-slate-400 mt-1 font-medium text-center leading-tight px-1">
+              <span className="text-[9px] sm:text-[11px] text-slate-400 text-center leading-snug hidden sm:block">
                 {label}
               </span>
             </div>

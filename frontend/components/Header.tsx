@@ -193,8 +193,21 @@ export default function Header() {
   ) as number;
   const [localSearch, setLocalSearch] = useState("");
   const [mounted, setMounted] = useState(false);
+  // Hide desktop search while the hero search bar is visible in viewport
+  const [heroSearchVisible, setHeroSearchVisible] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
+
+  useEffect(() => {
+    const sentinel = document.getElementById("hero-search-sentinel");
+    if (!sentinel) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => setHeroSearchVisible(entry.isIntersecting),
+      { threshold: 0 },
+    );
+    obs.observe(sentinel);
+    return () => obs.disconnect();
+  }, []);
 
   // Sync search input from URL on mount and on any URL change
   useEffect(() => {
@@ -230,7 +243,10 @@ export default function Header() {
       <div className="relative z-[60] max-w-7xl mx-auto px-4 h-16 flex items-center gap-3">
         <Logo />
 
-        <div className="hidden md:flex flex-1">
+        <div
+          className="hidden md:flex flex-1 transition-opacity duration-200"
+          style={{ opacity: heroSearchVisible ? 0 : 1, pointerEvents: heroSearchVisible ? "none" : "auto" }}
+        >
           <SearchAutocomplete value={localSearch} onChange={handleSearch} />
         </div>
 
