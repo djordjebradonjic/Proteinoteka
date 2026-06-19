@@ -162,6 +162,7 @@ export default function ProductSection({
 
   const toggleFilter = useCallback(
     (name: string, value: string) => {
+      pendingGridScroll.current = true;
       const params = new URLSearchParams(getLiveParams().toString());
       const current = parseList(params.get(name));
       const next = current.includes(value)
@@ -343,8 +344,8 @@ export default function ProductSection({
           onFlavourChange={(val) => toggleFilter("flavour",  val)}
           onCategoryChange={(val) => toggleFilter("category", val)}
           onWeightRangeChange={(val) => toggleFilter("pakovanje", val)}
-          onMinChange={(val) => updateFilters("minPrice",  val)}
-          onMaxChange={(val) => updateFilters("maxPrice",  val)}
+          onMinChange={(val) => { pendingGridScroll.current = true; updateFilters("minPrice",  val); }}
+          onMaxChange={(val) => { pendingGridScroll.current = true; updateFilters("maxPrice",  val); }}
           onReset={handleReset}
           hasActiveFilters={hasActiveFilters}
           activeCount={activeCount}
@@ -360,7 +361,7 @@ export default function ProductSection({
           </div>
 
           <div id="product-list-start" className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 gap-2">
-            <SortSelect value={sort} onSortChange={(val) => updateFilters("sort", val)} />
+            <SortSelect value={sort} onSortChange={(val) => { pendingGridScroll.current = true; updateFilters("sort", val); }} />
             {!loading && totalItems > 0 && (
               <p className="text-sm text-slate-500">
                 <span className="font-semibold text-slate-700">{totalItems}</span>{" "}
