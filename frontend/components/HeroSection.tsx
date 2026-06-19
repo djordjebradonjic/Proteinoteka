@@ -208,15 +208,16 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
           className="text-[1.6rem] sm:text-3xl md:text-4xl font-extrabold text-white leading-[1.15] tracking-tight mb-5 sm:mb-6"
           style={visible ? { animation: "heroIn 0.5s cubic-bezier(0.16,1,0.3,1) 0.07s both" } : { opacity: 0 }}
         >
-          Pronađi{" "}
+          Pronađi najbolji{" "}
           <span
             style={{
               color: "#FF9900",
               textShadow: "0 0 28px rgba(255,153,0,0.4), 0 0 8px rgba(255,153,0,0.2)",
             }}
           >
-            najbolji protein u Srbiji.
+            protein
           </span>
+          {" "}u Srbiji.
         </h1>
 
         {/* Search bar — visible on all screen sizes */}
