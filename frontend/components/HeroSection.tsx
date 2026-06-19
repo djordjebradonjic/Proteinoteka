@@ -124,7 +124,7 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
 
   return (
     <section
-      className="relative overflow-hidden"
+      className="relative overflow-hidden sm:-mt-16"
       aria-label="Hero sekcija"
       style={{ background: "#131921" }}
     >
@@ -188,7 +188,7 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
       </div>
 
       {/* Content */}
-      <div className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-10 sm:pt-14 pb-0 text-center">
+      <div className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-10 sm:pt-20 pb-0 text-center">
 
         {/* Tagline — small, above search */}
         <p
@@ -199,7 +199,7 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
               : { opacity: 0, color: "#FF9900" }
           }
         >
-          Pametna suplementacija u Srbiji
+          Cene. Ocene. Jedna stranica.
         </p>
 
         {/* H1 — reduced size, below tagline, above search */}
@@ -207,14 +207,14 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
           className="text-[1.6rem] sm:text-3xl md:text-4xl font-extrabold text-white leading-[1.15] tracking-tight mb-5 sm:mb-6"
           style={visible ? { animation: "heroIn 0.5s cubic-bezier(0.16,1,0.3,1) 0.07s both" } : { opacity: 0 }}
         >
-          Koji protein u Srbiji{" "}
+          Prestani da{" "}
           <span
             style={{
               color: "#FF9900",
               textShadow: "0 0 28px rgba(255,153,0,0.4), 0 0 8px rgba(255,153,0,0.2)",
             }}
           >
-            daje najviše za tvoj novac?
+            preplaćuješ protein.
           </span>
         </h1>
 
@@ -230,8 +230,8 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
           <SearchAutocomplete value={localSearch} onChange={handleSearch} />
         </div>
 
-        {/* Sentinel — header watches this to know when hero search leaves viewport */}
-        <div id="hero-search-sentinel" className="h-0 w-full" aria-hidden="true" />
+        {/* Sentinel — desktop only; header watches this to show/hide itself */}
+        <div id="hero-search-sentinel" className="hidden sm:block h-0 w-full" aria-hidden="true" />
 
         {/* Feature badges — bigger cards */}
         <div

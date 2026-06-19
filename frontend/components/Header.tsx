@@ -237,16 +237,16 @@ export default function Header() {
 
   return (
     <header
-      className="sticky top-0 z-50 shadow-lg"
-      style={{ backgroundColor: "#131921" }}
+      className="sticky top-0 z-50 shadow-lg transition-transform duration-300 ease-in-out"
+      style={{
+        backgroundColor: "#131921",
+        transform: heroSearchVisible ? "translateY(-110%)" : "translateY(0)",
+      }}
     >
       <div className="relative z-[60] max-w-7xl mx-auto px-4 h-16 flex items-center gap-3">
         <Logo />
 
-        <div
-          className="hidden md:flex flex-1 transition-opacity duration-200"
-          style={{ opacity: heroSearchVisible ? 0 : 1, pointerEvents: heroSearchVisible ? "none" : "auto" }}
-        >
+        <div className="hidden md:flex flex-1">
           <SearchAutocomplete value={localSearch} onChange={handleSearch} />
         </div>
 
