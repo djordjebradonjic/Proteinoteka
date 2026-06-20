@@ -19,7 +19,7 @@ export default function FeaturedSection({ topValueProducts, priceDropProducts }:
   if (!topValueProducts.length && !priceDropProducts.length) return null;
 
   const tabs: { id: Tab; label: string }[] = [
-    { id: "value", label: "⚡ Najbolji Value Score" },
+    { id: "value", label: "⚡ Top vrednost" },
     { id: "drops", label: "🔥 Najveći pad cene" },
   ];
 

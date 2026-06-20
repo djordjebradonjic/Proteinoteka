@@ -13,7 +13,7 @@ export interface ScoreConfig {
 // Pragovi kalibrisani na osnovu stvarne distribucije 507 proizvoda:
 // ≥8.0 = top 12% | ≥7.0 = sledeći 43% | ≥6.0 = 31% | ≥5.0 = 11% | <5.0 = 4%
 const TIERS: Array<{ min: number } & ScoreConfig> = [
-  { min: 8.0, color: "#10b981", bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-600", dot: "🏆", label: "Najbolji" },
+  { min: 8.0, color: "#10b981", bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-600", dot: "🏆", label: "Top vrednost" },
   { min: 7.0, color: "#22c55e", bg: "bg-green-50",   border: "border-green-200",   text: "text-green-600",   dot: "✅", label: "Odličan"  },
   { min: 6.0, color: "#84cc16", bg: "bg-lime-50",    border: "border-lime-200",    text: "text-lime-600",    dot: "👍", label: "Dobar"    },
   { min: 5.0, color: "#f59e0b", bg: "bg-amber-50",   border: "border-amber-100",   text: "text-amber-500",   dot: "➡️", label: "Prosek"  },
