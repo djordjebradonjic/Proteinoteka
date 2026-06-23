@@ -602,16 +602,18 @@ public class ScraperService {
             }
 
             // --- GUARD 2: suspicious price jump ---
-            // A price change >40% in a single scrape cycle is almost always a variant
-            // confusion (listing showed cheapest SKU, DB has heavier SKU). Legitimate
-            // promotions rarely exceed this threshold. Log and keep the old price.
+            // A price change >65% in a single scrape cycle is almost always a variant
+            // confusion (listing showed cheapest SKU, DB has heavier SKU). Threshold is
+            // set at 65% rather than 40% to allow legitimate large price swings caused
+            // by EUR/RSD exchange rate moves while still catching variant mismatches
+            // (which typically produce 100–300% differences).
             if (oldNumericPrice != null && oldNumericPrice > 0) {
                 double changePct = Math.abs(numericPrice - oldNumericPrice) / oldNumericPrice;
-                if (changePct > 0.40) {
-                    log.warn("[{}] Suspicious price change for '{}': {} → {} RSD ({:.0f}%) — keeping old price",
+                if (changePct > 0.65) {
+                    log.warn("[{}] Suspicious price change for '{}': {} → {} RSD ({}%) — keeping old price",
                             store.getName(), existing.getName(),
                             Math.round(oldNumericPrice), Math.round(numericPrice),
-                            changePct * 100);
+                            Math.round(changePct * 100));
                     return true;
                 }
             }
