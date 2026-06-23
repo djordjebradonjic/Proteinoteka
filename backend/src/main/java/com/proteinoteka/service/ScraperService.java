@@ -585,6 +585,37 @@ public class ScraperService {
             // Capture old numeric price before overwriting — used for drop detection below
             Double oldNumericPrice = existing.getNumericPrice();
 
+            // --- GUARD 1: weight mismatch (variant confusion) ---
+            // For stores that encode weight in the URL (?pakovanje=Xg), verify that the
+            // weight parsed from the scraped product matches the weight embedded in the URL.
+            // A mismatch means the scraper picked up a different variant's price from the
+            // listing page — skip the price update to avoid corrupting existing data.
+            if (scraped.getUrl() != null && scraped.getUrl().contains("pakovanje=")) {
+                double urlWeightGrams = weightFromUrlParam(scraped.getUrl());
+                if (urlWeightGrams > 0 && weightGrams > 0
+                        && Math.abs(urlWeightGrams - weightGrams) / urlWeightGrams > 0.15) {
+                    log.warn("[{}] Weight mismatch for '{}': URL says {}g but scraped {}g — skipping price update",
+                            store.getName(), existing.getName(),
+                            Math.round(urlWeightGrams), Math.round(weightGrams));
+                    return true;
+                }
+            }
+
+            // --- GUARD 2: suspicious price jump ---
+            // A price change >40% in a single scrape cycle is almost always a variant
+            // confusion (listing showed cheapest SKU, DB has heavier SKU). Legitimate
+            // promotions rarely exceed this threshold. Log and keep the old price.
+            if (oldNumericPrice != null && oldNumericPrice > 0) {
+                double changePct = Math.abs(numericPrice - oldNumericPrice) / oldNumericPrice;
+                if (changePct > 0.40) {
+                    log.warn("[{}] Suspicious price change for '{}': {} → {} RSD ({:.0f}%) — keeping old price",
+                            store.getName(), existing.getName(),
+                            Math.round(oldNumericPrice), Math.round(numericPrice),
+                            changePct * 100);
+                    return true;
+                }
+            }
+
             String oldPrice = existing.getPrice();
             if (oldNumericPrice != null && numericPrice != null
                     && Math.abs(oldNumericPrice - numericPrice) > 0.01) {
@@ -787,6 +818,29 @@ public class ScraperService {
         if (src.contains("concentrat"))  return 5.5;
         if (src.contains("egg"))         return 6.5;
         return 6.5;
+    }
+
+    /**
+     * Parses weight from a URL query parameter of the form {@code ?pakovanje=2015g} or
+     * {@code ?pakovanje=2.27kg}. Returns 0 if the parameter is absent or unparseable.
+     * Used by GUARD 1 to detect variant-confusion price errors.
+     */
+    private double weightFromUrlParam(String url) {
+        try {
+            int idx = url.indexOf("pakovanje=");
+            if (idx < 0) return 0;
+            String raw = url.substring(idx + "pakovanje=".length());
+            int end = raw.indexOf('&');
+            if (end > 0) raw = raw.substring(0, end);
+            raw = java.net.URLDecoder.decode(raw, java.nio.charset.StandardCharsets.UTF_8)
+                    .toLowerCase().replaceAll("\\s+", "");
+            if (raw.endsWith("kg")) {
+                return Double.parseDouble(raw.replace("kg", "").replace(",", ".")) * 1000;
+            } else if (raw.endsWith("g")) {
+                return Double.parseDouble(raw.replace("g", "").replace(",", "."));
+            }
+        } catch (Exception ignored) {}
+        return 0;
     }
 
     private double extractPackageGrams(Product p) {
