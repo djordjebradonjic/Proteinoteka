@@ -322,6 +322,12 @@ export default function Page() {
               <Link href="/vodici/koliko-novca-mesecno-za-proteine" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
                 Koliko košta mesec proteina?
               </Link>
+              <Link href="/whey-protein-cena" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
+                Whey protein cena u Srbiji
+              </Link>
+              <Link href="/najjeftiniji-whey-protein" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
+                Najjeftiniji whey protein
+              </Link>
             </div>
           </section>
 

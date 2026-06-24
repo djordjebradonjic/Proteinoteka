@@ -257,6 +257,21 @@ export function SEOLandingPage({
     })),
   } : null;
 
+  const itemListJsonLd = products.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: h1,
+    url: `${BASE_URL}/${currentSlug}`,
+    numberOfItems: products.length,
+    itemListElement: products.slice(0, 10).map((p, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: p.name,
+      url: `${BASE_URL}${productUrl(p)}`,
+      ...(p.imageUrl && { image: p.imageUrl }),
+    })),
+  } : null;
+
   return (
     <div className="min-h-screen bg-slate-50">
       <script
@@ -267,6 +282,12 @@ export function SEOLandingPage({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      )}
+      {itemListJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
         />
       )}
       <Header />
@@ -301,7 +322,7 @@ export function SEOLandingPage({
             <h2 className="text-xl font-extrabold text-slate-900 mb-4">{listHeading}</h2>
             <div className="space-y-3">
               {products.slice(0, 8).map((p, i) => (
-                <SEOProductCard key={p.id} product={p} rank={i + 1} />
+                <SEOProductCard key={p.id} product={p} rank={i + 1} priority={i === 0} />
               ))}
             </div>
           </section>

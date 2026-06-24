@@ -5,7 +5,7 @@ import { productUrl } from "@/lib/productUrl";
 import PriceTag from "@/components/PriceTag";
 import { getScoreColor, getScoreBg } from "@/lib/scoreColor";
 
-export function SEOProductCard({ product, rank }: { product: Product; rank: number }) {
+export function SEOProductCard({ product, rank, priority = false }: { product: Product; rank: number; priority?: boolean }) {
   const score = product.valueScore;
   const pricePerProtein =
     product.numericPrice && product.proteinPer100g && product.primaryWeightGrams
@@ -28,7 +28,8 @@ export function SEOProductCard({ product, rank }: { product: Product; rank: numb
             width={56}
             height={56}
             className="w-full h-full object-contain p-1"
-            unoptimized
+            sizes="56px"
+            priority={priority}
           />
         </div>
       )}

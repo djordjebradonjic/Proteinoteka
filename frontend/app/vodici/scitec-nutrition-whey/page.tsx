@@ -441,6 +441,24 @@ export default async function Page() {
             </div>
           </section>
 
+          <section className="mb-10">
+            <h2 className="text-xl font-bold text-slate-900 mb-4">Korisni vodiči</h2>
+            <div className="flex flex-wrap gap-3">
+              <Link href="/whey-protein-cena" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
+                Whey protein cena u Srbiji
+              </Link>
+              <Link href="/najjeftiniji-whey-protein" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
+                Najjeftiniji whey protein
+              </Link>
+              <Link href="/najbolji-whey-protein-srbija" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
+                Najbolji whey protein 2026
+              </Link>
+              <Link href="/scitec-nutrition-proteini" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
+                Scitec Nutrition cene u Srbiji
+              </Link>
+            </div>
+          </section>
+
           <GuideDisclaimer />
         </main>
         <VodiciNav currentSlug="scitec-nutrition-whey" />

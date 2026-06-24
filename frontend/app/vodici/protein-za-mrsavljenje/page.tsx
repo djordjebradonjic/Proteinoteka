@@ -466,6 +466,12 @@ export default async function Page() {
               <Link href="/kako-racunamo-value-score" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
                 Kako računamo Value Score
               </Link>
+              <Link href="/whey-protein-cena" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
+                Whey protein cena u Srbiji
+              </Link>
+              <Link href="/najbolji-whey-protein-srbija" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
+                Najbolji whey protein 2026
+              </Link>
             </div>
           </section>
 
