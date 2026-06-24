@@ -44,7 +44,7 @@ export default function FeaturedSection({ topValueProducts, priceDropProducts }:
         {/* Header */}
         <div className="mb-4 sm:mb-5">
           <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 leading-tight">
-            Pametna kupovina danas
+            Izdvojeno
           </h2>
           <p className="text-sm text-slate-500 mt-0.5 hidden sm:block">
             Proteini sa najboljim Value Score-om i najvećim padom cene

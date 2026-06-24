@@ -46,10 +46,12 @@ export default function HomeContent({
 
       {/* Featured tabbed section — homepage only, above the main grid */}
       {!initialCategory && (
-        <FeaturedSection
-          topValueProducts={topValueProducts}
-          priceDropProducts={priceDropProducts}
-        />
+        <div id="najbolja-kupovina" style={{ scrollMarginTop: "80px" }}>
+          <FeaturedSection
+            topValueProducts={topValueProducts}
+            priceDropProducts={priceDropProducts}
+          />
+        </div>
       )}
 
       {categoryHero}
