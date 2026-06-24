@@ -140,8 +140,8 @@ function WinnerCard({ emoji, title, name, detail, accent }: {
 
 // ─── Table ────────────────────────────────────────────────────────────────────
 
-const LABEL_W = "w-32 min-w-[128px]";
-const COL_W   = "min-w-[172px]";
+const LABEL_W = "w-24 min-w-[96px] sm:w-32 sm:min-w-[128px]";
+const COL_W   = "min-w-[120px] sm:min-w-[172px]";
 
 interface RowDef {
   label: string;
@@ -346,7 +346,7 @@ function ComparePage() {
         {/* Comparison table */}
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm mb-6 overflow-hidden">
           <div className="overflow-x-auto">
-            <div style={{ minWidth: `${n * 172 + 128}px` }}>
+            <div style={{ minWidth: `${n * 120 + 96}px` }}>
 
               {/* Product header */}
               <div className="flex border-b border-slate-200 bg-slate-50">
