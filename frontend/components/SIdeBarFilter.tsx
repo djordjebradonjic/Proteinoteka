@@ -11,6 +11,7 @@ function FilterGroup({
   onChange,
   defaultOpen = false,
   searchable = false,
+  noScroll = false,
 }: {
   label: string;
   options: string[];
@@ -18,6 +19,7 @@ function FilterGroup({
   onChange: (val: string) => void;
   defaultOpen?: boolean;
   searchable?: boolean;
+  noScroll?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const [search, setSearch] = useState("");
@@ -78,7 +80,7 @@ function FilterGroup({
               )}
             </div>
           )}
-          <div className="flex flex-col gap-0.5 max-h-[260px] overflow-y-auto pr-1">
+          <div className={`flex flex-col gap-0.5 pr-1 ${noScroll ? "" : "max-h-[260px] overflow-y-auto"}`}>
             {options.length === 0 && (
               <p className="text-xs text-slate-400 py-1">Učitavanje...</p>
             )}
@@ -342,7 +344,8 @@ function FilterContent({
   onReset,
   hasActiveFilters,
   activeCount,
-}: SidebarFilterProps) {
+  isMobile = false,
+}: SidebarFilterProps & { isMobile?: boolean }) {
   return (
     <div>
       {/* Header */}
@@ -398,7 +401,8 @@ function FilterContent({
         options={STORES}
         selected={selectedStore}
         onChange={onStoreChange}
-        defaultOpen
+        defaultOpen={!isMobile}
+        noScroll
       />
       <FilterGroup
         label="Brend"
@@ -500,7 +504,7 @@ export default function SidebarFilter(props: SidebarFilterProps) {
               </button>
             </div>
             <div className="flex-1 overflow-y-auto px-4 py-2">
-              <FilterContent {...props} />
+              <FilterContent {...props} isMobile />
             </div>
             <div className="shrink-0 px-4 py-3 border-t border-slate-100 bg-white">
               <button
