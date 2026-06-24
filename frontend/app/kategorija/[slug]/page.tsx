@@ -45,6 +45,11 @@ const META: Record<string, { title: string; description: string }> = {
     description:
       "Pronađi najisplativiji protein blend u Srbiji. Mešavina whey i kazeina za dugotrajan efekat – po najboljoj ceni.",
   },
+  egg: {
+    title: "Egg protein – Uporedi cene u Srbiji 2026",
+    description:
+      "Pronađi najisplativiji egg protein (albumin) u Srbiji. Visok sadržaj proteina bez laktoze – poredimo cene iz svih prodavnica.",
+  },
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
