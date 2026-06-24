@@ -174,9 +174,29 @@ function GuideCard({ href, title, excerpt, readMin }: { href: string; title: str
   );
 }
 
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "Vodiči o proteinima i suplementaciji",
+    description: "Praktični vodiči o proteinima na srpskom jeziku — koliko proteina dnevno, razlika između whey isolate i concentrate, da li protein goji, i kada piti protein.",
+    url: "https://proteinoteka.rs/vodici",
+    publisher: { "@type": "Organization", name: "Proteinoteka", url: "https://proteinoteka.rs" },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Početna", item: "https://proteinoteka.rs" },
+      { "@type": "ListItem", position: 2, name: "Vodiči", item: "https://proteinoteka.rs/vodici" },
+    ],
+  },
+];
+
 export default function VodiciPage() {
   return (
     <div className="min-h-screen bg-slate-50">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <Header />
       <main className="max-w-3xl mx-auto px-4 py-10">
 

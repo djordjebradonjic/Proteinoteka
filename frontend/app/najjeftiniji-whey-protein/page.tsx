@@ -16,6 +16,7 @@ export const metadata: Metadata = {
     siteName: "Proteinoteka",
     locale: "sr_RS",
     type: "website",
+    images: [{ url: "https://proteinoteka.rs/opengraph-image", width: 1200, height: 630, alt: "Proteinoteka" }],
   },
   twitter: {
     title: "Najjeftiniji Whey Protein u Srbiji 2026 | Proteinoteka",

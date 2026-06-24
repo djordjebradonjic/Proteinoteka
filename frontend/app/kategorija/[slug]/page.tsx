@@ -72,6 +72,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: "Proteinoteka",
       locale: "sr_RS",
       type: "website",
+      images: [{ url: "https://proteinoteka.rs/opengraph-image", width: 1200, height: 630, alt: m.title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: m.title,
+      description: m.description,
+      images: ["https://proteinoteka.rs/opengraph-image"],
     },
   };
 }

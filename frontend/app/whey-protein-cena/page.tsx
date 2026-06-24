@@ -18,6 +18,11 @@ export const metadata: Metadata = {
     siteName: "Proteinoteka",
     locale: "sr_RS",
     type: "website",
+    images: [{ url: "https://proteinoteka.rs/opengraph-image", width: 1200, height: 630, alt: "Proteinoteka" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: ["https://proteinoteka.rs/opengraph-image"],
   },
 };
 
