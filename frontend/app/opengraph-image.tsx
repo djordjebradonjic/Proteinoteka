@@ -6,9 +6,20 @@ export const alt = "Proteinoteka — Uporedi cene proteina u Srbiji";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-export default async function Image() {
-  const stores = ["Pansport", "Proteini.si", "FitLab", "Proteinbox", "Ogistrashop", "Supplementshop", "GymBeam", "MyProtein", "Lama", "Shopbuilder", "XSport"];
+const rows = [
+  { name: "Gold Standard Whey 2.27kg", store: "Proteini.si", price: "11.990", score: 9.1, pct: 80 },
+  { name: "Scitec 100% Whey Pro 2.35kg", store: "Pansport", price: "8.120", score: 8.4, pct: 73 },
+  { name: "Prostar 100% Whey 2.39kg", store: "FitLab", price: "8.950", score: 7.9, pct: 83 },
+  { name: "BioTech 100% Pure Whey 2.27kg", store: "Ogistrashop", price: "7.990", score: 7.2, pct: 79 },
+];
 
+function scoreColor(s: number) {
+  if (s >= 8.5) return "#22c55e";
+  if (s >= 7.0) return "#f59e0b";
+  return "#ef4444";
+}
+
+export default async function Image() {
   const logoData = await readFile(join(process.cwd(), "public/logo.png"));
   const logoSrc = `data:image/png;base64,${logoData.toString("base64")}`;
 
@@ -19,164 +30,185 @@ export default async function Image() {
           width: "100%",
           height: "100%",
           display: "flex",
-          flexDirection: "column",
-          background: "#1B2B4B",
-          padding: "64px 80px",
+          background: "#0f1e35",
           fontFamily: "system-ui, -apple-system, sans-serif",
           position: "relative",
           overflow: "hidden",
         }}
       >
-        {/* Decorative circles */}
-        <div
-          style={{
-            position: "absolute",
-            right: "-120px",
-            top: "-120px",
-            width: "520px",
-            height: "520px",
-            borderRadius: "50%",
-            background: "rgba(255,153,0,0.07)",
-            display: "flex",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            right: "120px",
-            bottom: "-160px",
-            width: "380px",
-            height: "380px",
-            borderRadius: "50%",
-            background: "rgba(255,153,0,0.04)",
-            display: "flex",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            left: "-60px",
-            bottom: "80px",
-            width: "200px",
-            height: "200px",
-            borderRadius: "50%",
-            background: "rgba(255,153,0,0.03)",
-            display: "flex",
-          }}
-        />
-
-        {/* Logo + badge row */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "16px",
-            marginBottom: "44px",
-          }}
-        >
-          {/* Logo */}
-          <img
-            src={logoSrc}
-            alt="Proteinoteka logo"
-            style={{ width: "52px", height: "52px", objectFit: "contain", borderRadius: "10px" }}
-          />
-
-          {/* Domain badge */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              background: "rgba(255,153,0,0.12)",
-              border: "1px solid rgba(255,153,0,0.28)",
-              borderRadius: "100px",
-              padding: "9px 22px",
-            }}
-          >
-            <span style={{ color: "#FF9900", fontSize: "18px", fontWeight: "600" }}>
+        {/* ── LEFT PANEL ─────────────────────────────────── */}
+        <div style={{
+          width: "420px",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          padding: "52px 48px",
+          position: "relative",
+          zIndex: 1,
+          flexShrink: 0,
+        }}>
+          {/* Logo + domain */}
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <img src={logoSrc} style={{ width: "38px", height: "38px", objectFit: "contain" }} />
+            <span style={{ color: "rgba(255,255,255,0.45)", fontSize: "17px", fontWeight: "500" }}>
               proteinoteka.rs
             </span>
           </div>
-        </div>
 
-        {/* Main title */}
-        <div
-          style={{
-            fontSize: "88px",
-            fontWeight: "900",
-            lineHeight: 1,
-            marginBottom: "18px",
-            display: "flex",
-            alignItems: "baseline",
-          }}
-        >
-          <span style={{ color: "#ffffff", display: "flex" }}>PROTEIN</span>
-          <span style={{ color: "#FF9900", display: "flex", marginLeft: "-6px" }}>OTEKA</span>
-        </div>
-
-        {/* Orange accent bar */}
-        <div
-          style={{
-            width: "90px",
-            height: "5px",
-            background: "#FF9900",
-            borderRadius: "3px",
-            marginBottom: "28px",
-            display: "flex",
-          }}
-        />
-
-        {/* Tagline */}
-        <div
-          style={{
-            fontSize: "34px",
-            fontWeight: "700",
-            color: "#FF9900",
-            marginBottom: "16px",
-            display: "flex",
-          }}
-        >
-          Uporedi cene proteina u Srbiji
-        </div>
-
-        {/* Description */}
-        <div
-          style={{
-            fontSize: "22px",
-            color: "#94a3b8",
-            lineHeight: 1.5,
-            display: "flex",
-          }}
-        >
-          Pronađi najjeftiniji whey protein, izolat i kreatin.
-          Cene iz svih prodavnica na jednom mestu. Besplatno.
-        </div>
-
-        {/* Store pills */}
-        <div
-          style={{
-            display: "flex",
-            gap: "12px",
-            marginTop: "auto",
-            flexWrap: "wrap",
-          }}
-        >
-          {stores.map((store) => (
-            <div
-              key={store}
-              style={{
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: "10px",
-                padding: "10px 18px",
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              <span style={{ color: "#cbd5e1", fontSize: "16px", fontWeight: "500" }}>
-                {store}
+          {/* Headline */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
+            <div style={{
+              display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px",
+            }}>
+              <div style={{ width: "28px", height: "3px", background: "#FF9900", borderRadius: "2px", display: "flex" }} />
+              <span style={{ color: "#FF9900", fontSize: "14px", fontWeight: "700", letterSpacing: "0.1em", textTransform: "uppercase", display: "flex" }}>
+                Srbija · 2026
               </span>
             </div>
+            <div style={{ color: "#ffffff", fontSize: "52px", fontWeight: "900", lineHeight: 1.05, letterSpacing: "-0.02em", display: "flex", flexDirection: "column" }}>
+              <span style={{ display: "flex" }}>Gde je</span>
+              <span style={{ color: "#FF9900", display: "flex" }}>najjeftiniji</span>
+              <span style={{ display: "flex" }}>protein?</span>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div style={{ display: "flex", gap: "20px" }}>
+            {[["550+", "proteina"], ["11", "prodavnica"]].map(([val, lbl]) => (
+              <div key={lbl} style={{ display: "flex", flexDirection: "column" }}>
+                <span style={{ color: "#FF9900", fontSize: "28px", fontWeight: "800", lineHeight: 1, display: "flex" }}>{val}</span>
+                <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "13px", fontWeight: "500", marginTop: "3px", display: "flex" }}>{lbl}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── DIVIDER ────────────────────────────────────── */}
+        <div style={{
+          width: "1px",
+          background: "rgba(255,255,255,0.08)",
+          alignSelf: "stretch",
+          display: "flex",
+          margin: "0",
+        }} />
+
+        {/* ── RIGHT PANEL — product table ────────────────── */}
+        <div style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          padding: "44px 48px",
+          gap: "0",
+          position: "relative",
+        }}>
+          {/* Glow */}
+          <div style={{
+            position: "absolute", top: "-120px", right: "-120px",
+            width: "500px", height: "500px", borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(255,153,0,0.12) 0%, transparent 65%)",
+            display: "flex",
+          }} />
+
+          {/* Table header */}
+          <div style={{
+            display: "flex", alignItems: "center",
+            paddingBottom: "14px",
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
+            marginBottom: "8px",
+          }}>
+            <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "12px", fontWeight: "700", letterSpacing: "0.1em", textTransform: "uppercase", flex: 1, display: "flex" }}>Proizvod</span>
+            <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "12px", fontWeight: "700", letterSpacing: "0.1em", textTransform: "uppercase", width: "90px", display: "flex", justifyContent: "flex-end" }}>Cena</span>
+            <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "12px", fontWeight: "700", letterSpacing: "0.1em", textTransform: "uppercase", width: "70px", display: "flex", justifyContent: "flex-end" }}>Score</span>
+          </div>
+
+          {/* Rows */}
+          {rows.map((r, i) => (
+            <div
+              key={r.name}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                padding: "16px 0",
+                borderBottom: i < rows.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
+                background: i === 0 ? "rgba(255,153,0,0.05)" : "transparent",
+                borderRadius: i === 0 ? "8px" : "0",
+                paddingLeft: i === 0 ? "10px" : "0",
+                paddingRight: i === 0 ? "10px" : "0",
+                marginLeft: i === 0 ? "-10px" : "0",
+                marginRight: i === 0 ? "-10px" : "0",
+              }}
+            >
+              {/* Rank */}
+              <span style={{
+                color: i === 0 ? "#FF9900" : "rgba(255,255,255,0.2)",
+                fontSize: "13px", fontWeight: "800",
+                width: "22px", flexShrink: 0, display: "flex",
+              }}>
+                {i + 1}
+              </span>
+
+              {/* Name + store + bar */}
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "5px", marginRight: "16px" }}>
+                <span style={{
+                  color: i === 0 ? "#ffffff" : "rgba(255,255,255,0.7)",
+                  fontSize: i === 0 ? "15px" : "14px",
+                  fontWeight: i === 0 ? "700" : "500",
+                  display: "flex",
+                  lineHeight: 1,
+                }}>
+                  {r.name}
+                </span>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "12px", display: "flex" }}>{r.store}</span>
+                  {/* protein bar */}
+                  <div style={{ flex: 1, height: "3px", background: "rgba(255,255,255,0.08)", borderRadius: "2px", display: "flex" }}>
+                    <div style={{ width: `${r.pct}%`, height: "100%", background: i === 0 ? "#FF9900" : "rgba(255,153,0,0.4)", borderRadius: "2px", display: "flex" }} />
+                  </div>
+                  <span style={{ color: "rgba(255,255,255,0.25)", fontSize: "11px", display: "flex" }}>{r.pct}g/100g</span>
+                </div>
+              </div>
+
+              {/* Price */}
+              <span style={{
+                color: i === 0 ? "#ffffff" : "rgba(255,255,255,0.5)",
+                fontSize: "14px", fontWeight: "700",
+                width: "90px", display: "flex", justifyContent: "flex-end",
+              }}>
+                {r.price} RSD
+              </span>
+
+              {/* Score badge */}
+              <div style={{
+                width: "70px", display: "flex", justifyContent: "flex-end",
+              }}>
+                <div style={{
+                  background: `${scoreColor(r.score)}20`,
+                  border: `1px solid ${scoreColor(r.score)}50`,
+                  borderRadius: "6px",
+                  padding: "3px 8px",
+                  display: "flex",
+                  alignItems: "center",
+                }}>
+                  <span style={{ color: scoreColor(r.score), fontSize: "13px", fontWeight: "800", display: "flex" }}>
+                    {r.score}
+                  </span>
+                </div>
+              </div>
+            </div>
           ))}
+
+          {/* Bottom hint */}
+          <div style={{
+            marginTop: "auto",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+          }}>
+            <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#22c55e", display: "flex" }} />
+            <span style={{ color: "rgba(255,255,255,0.25)", fontSize: "13px", display: "flex" }}>
+              Cene se ažuriraju nedeljno iz svih srpskih prodavnica
+            </span>
+          </div>
         </div>
       </div>
     ),
