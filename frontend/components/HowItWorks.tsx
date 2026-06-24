@@ -21,7 +21,7 @@ const FEATURES = [
     emoji: "🏪",
     title: "Isti protein, sve prodavnice",
     description:
-      "Pronađi u kojoj prodavnici je isti protein najjeftiniji. Poredimo 9 prodavnica odjednom — bez Googleovanja.",
+      "Pronađi u kojoj prodavnici je isti protein najjeftiniji. Poredimo 10 prodavnica odjednom — bez Googleovanja.",
     href: null,
     linkLabel: null,
   },

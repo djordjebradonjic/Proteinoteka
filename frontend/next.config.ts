@@ -4,6 +4,13 @@ const nextConfig: NextConfig = {
   output: "standalone",
   async redirects() {
     return [
+      // Canonical host: always redirect www → non-www (permanent 301)
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'www.proteinoteka.rs' }],
+        destination: 'https://proteinoteka.rs/:path*',
+        permanent: true,
+      },
       { source: '/kako-racunamo', destination: '/kako-racunamo-value-score', permanent: true },
       { source: '/brendovi',      destination: '/',                           permanent: true },
       { source: '/blog',          destination: '/vodici',                     permanent: true },

@@ -47,7 +47,7 @@ const BADGES = [
   },
   {
     icon: Store,
-    value: "9 prodavnica",
+    value: "10 prodavnica",
     label: "Isti protein, sve cene, jedan pregled",
     delay: 0.55,
   },
@@ -200,24 +200,21 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
               : { opacity: 0, color: "#FF9900" }
           }
         >
-          Cene. Ocene. Jedna stranica.
+          Pronađi. Uporedi. Kupi.
         </p>
 
         {/* H1 — reduced size, below tagline, above search */}
         <h1
-          className="text-[1.6rem] sm:text-3xl md:text-4xl font-extrabold text-white leading-[1.15] tracking-tight mb-5 sm:mb-6"
+          className="text-[1.6rem] sm:text-3xl md:text-4xl font-extrabold text-white leading-[1.15] tracking-tight mb-3 sm:mb-4"
           style={visible ? { animation: "heroIn 0.5s cubic-bezier(0.16,1,0.3,1) 0.07s both" } : { opacity: 0 }}
         >
-          Pronađi najbolji{" "}
-          <span
-            style={{
-              color: "#FF9900",
-              textShadow: "0 0 28px rgba(255,153,0,0.4), 0 0 8px rgba(255,153,0,0.2)",
-            }}
-          >
-            protein
-          </span>
-          {" "}u Srbiji.
+          Proteini iz{" "}
+          <span style={{ color: "#FF9900", textShadow: "0 0 28px rgba(255,153,0,0.4), 0 0 8px rgba(255,153,0,0.2)" }}>10</span>
+          {" "}najvećih prodavnica u{" "}
+          <span style={{ color: "#FF9900", textShadow: "0 0 28px rgba(255,153,0,0.4), 0 0 8px rgba(255,153,0,0.2)" }}>Srbiji</span>
+          {" "}na{" "}
+          <span style={{ color: "#FF9900", textShadow: "0 0 28px rgba(255,153,0,0.4), 0 0 8px rgba(255,153,0,0.2)" }}>jednom</span>
+          {" "}mestu.
         </h1>
 
         {/* Search bar — visible on all screen sizes */}
@@ -262,6 +259,32 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
               </span>
             </div>
           ))}
+        </div>
+
+        {/* CTA button */}
+        <div
+          className="flex justify-center mb-6"
+          style={visible ? { animation: "heroBadge 0.45s cubic-bezier(0.16,1,0.3,1) 0.65s both" } : { opacity: 0 }}
+        >
+          <a
+            href="#najbolja-kupovina"
+            className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl text-base sm:text-lg font-extrabold transition-all duration-150"
+            style={{
+              background: "#FF9900",
+              color: "#131921",
+              boxShadow: "0 0 28px rgba(255,153,0,0.45), 0 4px 16px rgba(0,0,0,0.3)",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.background = "#ffad33";
+              (e.currentTarget as HTMLElement).style.boxShadow = "0 0 40px rgba(255,153,0,0.6), 0 4px 20px rgba(0,0,0,0.3)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.background = "#FF9900";
+              (e.currentTarget as HTMLElement).style.boxShadow = "0 0 28px rgba(255,153,0,0.45), 0 4px 16px rgba(0,0,0,0.3)";
+            }}
+          >
+            Najbolje ocenjeni →
+          </a>
         </div>
 
         {/* Category pills */}
