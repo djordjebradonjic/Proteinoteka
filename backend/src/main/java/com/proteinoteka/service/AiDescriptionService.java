@@ -79,6 +79,11 @@ public class AiDescriptionService {
                 ? String.valueOf(product.getPrimaryWeightGrams().intValue())
                 : "N/A";
 
+        boolean isHr = "hr".equals(product.getMarket());
+        return isHr ? buildHrPrompt(product, desc, weightStr) : buildRsPrompt(product, desc, weightStr);
+    }
+
+    private String buildRsPrompt(Product product, String desc, String weightStr) {
         return """
 Ti si SEO ekspert za srpsko tržište suplementacije.
 
@@ -107,6 +112,49 @@ Masti na 100g: %sg
 Šećer na 100g: %sg
 Kalorije na 100g: %skcal
 Težina pakovanja: %sg
+Originalni opis (za kontekst, NE kopiraj): %s
+""".formatted(
+                nvl(product.getName()),
+                nvl(product.getBrand()),
+                nvl(product.getProteinSource()),
+                nvl(product.getProteinPer100g()),
+                nvl(product.getFatPer100g()),
+                nvl(product.getSugarPer100g()),
+                nvl(product.getCaloriePer100g()),
+                weightStr,
+                desc != null ? desc : "N/A"
+        );
+    }
+
+    private String buildHrPrompt(Product product, String desc, String weightStr) {
+        return """
+Ti si SEO stručnjak za hrvatsko tržište suplemenata.
+
+Napiši opis proizvoda za proteinski suplement na hrvatskom jeziku.
+
+Pravila:
+- Duljina: 120-150 riječi
+- Ton: informativan, vjerodostojan, ne reklamni
+- Bez superlativa ("najbolji", "vrhunski", "jedinstven")
+- KRITIČNO: Samo čisti tekst bez ikakvog formatiranja — bez Markdown, bez #, bez *, bez -, bez naslova, bez sekcija, bez bullet points
+- Počni DIREKTNO prvom rečenicom opisa — nikad ne počinji s imenom proizvoda kao naslovom
+- Nutritivne vrijednosti navedi prirodno u rečenici ako postoje, primjer: "Sa 74g proteina na 100g, ovaj whey..." NE ovako: "Protein: 74g, Masti: 4g"
+- Navedi: vrstu proteina, postotak proteina ako postoji, težinu pakiranja, za koga je idealan (masa/mršavljenje/oporavak)
+- Prirodno uključi ključne riječi: ime brenda, whey protein, cijena, Hrvatska — bez spama
+- Zadnja rečenica mora biti točno: "Usporedi cijene i pronađi najbolju ponudu na Proteinoteka.com.hr."
+- NE kopiraj originalni opis — napiši potpuno novi tekst
+- NE izmišljaj nutritivne vrijednosti — koristi samo zadane podatke
+- Ako nutritivni podaci nisu dostupni, napiši opis bez njih
+
+Podaci o proizvodu:
+Naziv: %s
+Brend: %s
+Kategorija: %s
+Proteini na 100g: %sg
+Masti na 100g: %sg
+Šećeri na 100g: %sg
+Kalorije na 100g: %skcal
+Težina pakiranja: %sg
 Originalni opis (za kontekst, NE kopiraj): %s
 """.formatted(
                 nvl(product.getName()),

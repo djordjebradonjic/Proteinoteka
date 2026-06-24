@@ -77,6 +77,11 @@ public class ProductSpecifications {
         };
     }
 
+    public static Specification<Product> hasMarket(String market) {
+        return (root, query, cb) -> market == null || market.isEmpty() ?
+                cb.equal(root.get("market"), "rs") : cb.equal(root.get("market"), market);
+    }
+
     public static Specification<Product> hasWeightRange(String ranges) {
         return (root, query, cb) -> {
             if (ranges == null || ranges.isEmpty()) return cb.conjunction();

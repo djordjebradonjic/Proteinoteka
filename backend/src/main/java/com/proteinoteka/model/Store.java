@@ -14,4 +14,10 @@ public class Store {
 
     private String name;
     private String baseUrl;
+
+    @Column(name = "market", nullable = false)
+    private String market = "rs";
+
+    @Column(name = "currency", nullable = false)
+    private String currency = "RSD";
 }

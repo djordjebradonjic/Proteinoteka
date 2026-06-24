@@ -38,7 +38,9 @@ import java.util.Optional;
 @CrossOrigin(origins = {
         "http://localhost:3000",
         "https://proteinoteka.rs",
-        "https://www.proteinoteka.rs"
+        "https://www.proteinoteka.rs",
+        "https://proteinoteka.com.hr",
+        "https://www.proteinoteka.com.hr"
 })
 public class ProductController {
 
@@ -61,9 +63,10 @@ public class ProductController {
             @RequestParam(required = false) Double minPrice,
             @RequestParam(required = false) Double maxPrice,
             @RequestParam(required = false) String weightRange,
+            @RequestParam(required = false) String market,
             Pageable pageable) {
 
-        Specification<Product> spec = buildSpec(name, storeName, brand, flavour, category, minPrice, maxPrice, weightRange);
+        Specification<Product> spec = buildSpec(name, storeName, brand, flavour, category, minPrice, maxPrice, weightRange, market);
 
         // JPA Criteria API doesn't support NULLS LAST — exclude nulls via spec instead.
         // Products with no valueScore/proteinPerRsd are irrelevant when sorting by those fields.
@@ -91,8 +94,9 @@ public class ProductController {
 
     private Specification<Product> buildSpec(String name, String storeName, String brand,
                                              String flavour, String category,
-                                             Double minPrice, Double maxPrice, String weightRange) {
-        Specification<Product> spec = Specification.where(null);
+                                             Double minPrice, Double maxPrice, String weightRange,
+                                             String market) {
+        Specification<Product> spec = Specification.where(ProductSpecifications.hasMarket(market));
         if (name != null && !name.isEmpty())
             spec = spec.and(ProductSpecifications.hasName(name));
         if (storeName != null && !storeName.isEmpty())
@@ -429,7 +433,9 @@ public class ProductController {
                 prevPrice,
                 product.getPercentileRank(),
                 product.getLastUpdated(),
-                product.getCanonicalSlug()
+                product.getCanonicalSlug(),
+                product.getMarket(),
+                product.getCurrency()
         );
     }
 }

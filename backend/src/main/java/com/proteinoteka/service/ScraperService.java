@@ -547,9 +547,10 @@ public class ScraperService {
             log.warn("[{}] Skipping '{}' - no valid price", store.getName(), scraped.getName());
             return false;
         }
-        if (numericPrice < 1000) {
-            log.info("[{}] Skipping '{}' - price {} RSD below minimum 1000 RSD (likely sachet/single-serving)",
-                    store.getName(), scraped.getName(), Math.round(numericPrice));
+        double minPrice = "EUR".equals(store.getCurrency()) ? 5.0 : 1000.0;
+        if (numericPrice < minPrice) {
+            log.info("[{}] Skipping '{}' - price {} {} below minimum {} (likely sachet/single-serving)",
+                    store.getName(), scraped.getName(), numericPrice, store.getCurrency(), minPrice);
             return false;
         }
 
@@ -670,6 +671,9 @@ public class ScraperService {
                 existing.setProteinSource(scraped.getProteinSource());
 
             existing.setProteinPerRsd(computeProteinPerRsd(numericPrice, existing));
+            existing.setProteinPerCurrency(computeProteinPerRsd(numericPrice, existing));
+            existing.setMarket(store.getMarket() != null ? store.getMarket() : "rs");
+            existing.setCurrency(store.getCurrency() != null ? store.getCurrency() : "RSD");
             double slugWeight = weightGrams > 0 ? weightGrams
                     : (existing.getPrimaryWeightGrams() != null ? existing.getPrimaryWeightGrams() : 0);
             existing.setCanonicalSlug(slugifyWithWeight(existing.getName(), slugWeight > 0 ? slugWeight : null));
@@ -686,6 +690,9 @@ public class ScraperService {
             scraped.setValueScore(valueScore);
             if (weightGrams > 0) scraped.setPrimaryWeightGrams(weightGrams);
             scraped.setProteinPerRsd(computeProteinPerRsd(numericPrice, scraped));
+            scraped.setProteinPerCurrency(computeProteinPerRsd(numericPrice, scraped));
+            scraped.setMarket(store.getMarket() != null ? store.getMarket() : "rs");
+            scraped.setCurrency(store.getCurrency() != null ? store.getCurrency() : "RSD");
             scraped.setCanonicalSlug(slugifyWithWeight(scraped.getName(), weightGrams > 0 ? weightGrams : null));
             productRepository.save(scraped);
             productGroupService.tryAutoAssign(scraped);

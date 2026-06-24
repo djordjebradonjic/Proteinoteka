@@ -80,7 +80,7 @@ export const metadata: Metadata = {
 async function getInitialProducts() {
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/products?page=0&size=12&sort=valueScore,desc`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/products?page=0&size=12&sort=valueScore,desc&market=${process.env.NEXT_PUBLIC_MARKET ?? 'rs'}`,
       { next: { revalidate: 21600 } },
     );
     const data = await res.json();

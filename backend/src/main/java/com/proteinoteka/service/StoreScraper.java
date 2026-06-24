@@ -12,6 +12,10 @@ public interface StoreScraper {
 
     String getBaseUrl();
 
+    default String getMarket() { return "rs"; }
+
+    default String getCurrency() { return "RSD"; }
+
     List<Product> scrape(Page page, Document doc);
 
     default List<Product> scrape(Page page, Document doc, Set<String> skipUrls) {

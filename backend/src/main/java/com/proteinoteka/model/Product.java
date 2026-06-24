@@ -95,4 +95,13 @@ public class Product {
 
     @Column(name = "group_id")
     private Long groupId;
+
+    @Column(name = "market", nullable = false)
+    private String market = "rs";
+
+    @Column(name = "currency", nullable = false)
+    private String currency = "RSD";
+
+    @Column(name = "protein_per_currency")
+    private Double proteinPerCurrency;
 }

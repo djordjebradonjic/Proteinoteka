@@ -30,36 +30,39 @@ public class ScrapingSchedulerService {
     private static final LocalDate CYCLE_EPOCH = LocalDate.of(2025, 1, 1);
 
     /**
-     * 7-day rolling schedule — every store scraped once per week.
+     * 14-day rolling schedule — RS stores (days 1–7) + HR stores (days 8–14).
      *
      * Store types:
      *   Playwright (browser, heavy): Proteinbox, SupplementStore, Proteini.si, Supplementshop, Shopbuilder
-     *   HTTP/API   (light):          FitLab, GymBeam, MyProtein, Pansport, Lama, Ogistrashop
+     *   HTTP/API   (light):          FitLab, GymBeam, MyProtein, Pansport, Lama, Ogistrashop,
+     *                                GymBeam HR, MyProtein HR
      *
      * Rules: max 1 heavy Playwright scraper per day; heavy scrapers run alone or
      * paired only with a light scraper in a separate time window.
      */
     record ScrapeWindow(List<String> stores, int fromHour, int toHour) {}
 
-    private static final Map<Integer, List<ScrapeWindow>> SCHEDULE = Map.of(
-        // Day 1 — Proteinbox alone (Playwright, 74 products)
-        1, List.of(new ScrapeWindow(List.of("Proteinbox"),                   9, 13)),
-        // Day 2 — FitLab + Lama (HTTP, 121 + 17 products)
-        2, List.of(new ScrapeWindow(List.of("FitLab", "Lama"),              10, 14)),
-        // Day 3 — SupplementStore alone (Playwright, 57 products)
-        3, List.of(new ScrapeWindow(List.of("SupplementStore"),             10, 14)),
-        // Day 4 — GymBeam + Ogistrashop (GraphQL + HTTP, 61 + 30 products)
-        4, List.of(new ScrapeWindow(List.of("GymBeam", "Ogistrashop"),       9, 13)),
-        // Day 5 — Proteini.si alone (Playwright, 36 products)
-        5, List.of(new ScrapeWindow(List.of("Proteini.si"),                 10, 14)),
-        // Day 6 — MyProtein + Pansport (HTTP + HTTP, 35 + 43 products)
-        6, List.of(new ScrapeWindow(List.of("MyProtein", "Pansport"),        9, 13)),
-        // Day 7 — Supplementshop + Shopbuilder (Playwright small, 15 + 19 products, separate windows)
-        7, List.of(
-            new ScrapeWindow(List.of("Supplementshop"),                     10, 12),
-            new ScrapeWindow(List.of("Shopbuilder"),                        13, 15)
-        )
-    );
+    private static final Map<Integer, List<ScrapeWindow>> SCHEDULE;
+    static {
+        Map<Integer, List<ScrapeWindow>> m = new java.util.HashMap<>();
+        // ── RS stores (days 1–7) ─────────────────────────────────────────────
+        m.put(1,  List.of(new ScrapeWindow(List.of("Proteinbox"),                   9, 13)));
+        m.put(2,  List.of(new ScrapeWindow(List.of("FitLab", "Lama"),              10, 14)));
+        m.put(3,  List.of(new ScrapeWindow(List.of("SupplementStore"),             10, 14)));
+        m.put(4,  List.of(new ScrapeWindow(List.of("GymBeam", "Ogistrashop"),       9, 13)));
+        m.put(5,  List.of(new ScrapeWindow(List.of("Proteini.si"),                 10, 14)));
+        m.put(6,  List.of(new ScrapeWindow(List.of("MyProtein", "Pansport"),        9, 13)));
+        m.put(7,  List.of(
+            new ScrapeWindow(List.of("Supplementshop"),                            10, 12),
+            new ScrapeWindow(List.of("Shopbuilder"),                               13, 15)
+        ));
+        // ── HR stores (days 8–14) ────────────────────────────────────────────
+        m.put(8,  List.of(new ScrapeWindow(List.of("GymBeam HR"),                   9, 13)));
+        m.put(9,  List.of(new ScrapeWindow(List.of("MyProtein HR"),                 9, 13)));
+        // Days 10–12: reserved for Polleo Sport, Proteka, Nutrition Shop HR when implemented
+        // Days 13–14: rest
+        SCHEDULE = java.util.Collections.unmodifiableMap(m);
+    }
 
     private final ScraperService scraperService;
     private final List<StoreScraper> scrapers;
@@ -243,7 +246,7 @@ public class ScrapingSchedulerService {
 
     public int currentCycleDay() {
         long days = ChronoUnit.DAYS.between(CYCLE_EPOCH, LocalDate.now(BELGRADE));
-        return (int)(days % 7) + 1; // 1–7
+        return (int)(days % 14) + 1; // 1–14
     }
 
     private LocalTime randomTimeInWindow(int fromHour, int toHour) {
@@ -253,8 +256,8 @@ public class ScrapingSchedulerService {
     }
 
     private String computeNextScheduledTime(String storeName, int todayCycleDay) {
-        for (int offset = 0; offset < 7; offset++) {
-            int checkDay = (todayCycleDay - 1 + offset) % 7 + 1;
+        for (int offset = 0; offset < 14; offset++) {
+            int checkDay = (todayCycleDay - 1 + offset) % 14 + 1;
             List<ScrapeWindow> windows = SCHEDULE.getOrDefault(checkDay, List.of());
             for (ScrapeWindow w : windows) {
                 if (w.stores().stream().anyMatch(s -> s.equalsIgnoreCase(storeName))) {
