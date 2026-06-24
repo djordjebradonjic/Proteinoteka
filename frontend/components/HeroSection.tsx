@@ -47,7 +47,7 @@ const BADGES = [
   },
   {
     icon: Store,
-    value: "10 prodavnica",
+    value: "11 prodavnica",
     label: "Isti protein, sve cene, jedan pregled",
     delay: 0.55,
   },
