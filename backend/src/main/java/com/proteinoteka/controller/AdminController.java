@@ -83,73 +83,63 @@ public class AdminController {
     }
 
     @PostMapping("/scrape/pansport")
-    public ResponseEntity<String> scrapePansport(
-            @RequestParam(defaultValue = "false") boolean testMode) {
-        runAsync("scraper-pansport", () -> scraperService.scrapeStore(findScraper("Pansport"), testMode));
-        return ResponseEntity.accepted().body("Pansport scraping started in background" + (testMode ? " [TEST MODE]" : ""));
+    public ResponseEntity<String> scrapePansport() {
+        runAsync("scraper-pansport", () -> schedulerService.scrapeStoreNow("Pansport"));
+        return ResponseEntity.accepted().body("Pansport scraping started in background");
     }
 
     @PostMapping("/scrape/proteinbox")
-    public ResponseEntity<String> scrapeProteinbox(
-            @RequestParam(defaultValue = "false") boolean testMode) {
-        runAsync("scraper-proteinbox", () -> scraperService.scrapeStore(findScraper("Proteinbox"), testMode));
-        return ResponseEntity.accepted().body("Proteinbox scraping started in background" + (testMode ? " [TEST MODE]" : ""));
+    public ResponseEntity<String> scrapeProteinbox() {
+        runAsync("scraper-proteinbox", () -> schedulerService.scrapeStoreNow("Proteinbox"));
+        return ResponseEntity.accepted().body("Proteinbox scraping started in background");
     }
 
     @PostMapping("/scrape/supplementshop")
-    public ResponseEntity<String> scrapeSupplementShop(
-            @RequestParam(defaultValue = "false") boolean testMode) {
-        runAsync("scraper-supplementshop", () -> scraperService.scrapeStore(findScraper("Supplementshop"), testMode));
-        return ResponseEntity.accepted().body("Supplementshop scraping started in background" + (testMode ? " [TEST MODE]" : ""));
+    public ResponseEntity<String> scrapeSupplementShop() {
+        runAsync("scraper-supplementshop", () -> schedulerService.scrapeStoreNow("Supplementshop"));
+        return ResponseEntity.accepted().body("Supplementshop scraping started in background");
     }
 
     @PostMapping("/scrape/ogistra")
-    public ResponseEntity<String> scrapeOgistra(
-            @RequestParam(defaultValue = "false") boolean testMode) {
-        runAsync("scraper-ogistra", () -> scraperService.scrapeStore(findScraper("Ogistrashop"), testMode));
-        return ResponseEntity.accepted().body("Ogistrashop scraping started in background" + (testMode ? " [TEST MODE]" : ""));
+    public ResponseEntity<String> scrapeOgistra() {
+        runAsync("scraper-ogistra", () -> schedulerService.scrapeStoreNow("Ogistrashop"));
+        return ResponseEntity.accepted().body("Ogistrashop scraping started in background");
     }
 
     @PostMapping("/scrape/fitlab")
-    public ResponseEntity<String> scrapeFitLab(
-            @RequestParam(defaultValue = "false") boolean testMode) {
-        runAsync("scraper-fitlab", () -> scraperService.scrapeStore(findScraper("FitLab"), testMode));
-        return ResponseEntity.accepted().body("FitLab scraping started in background" + (testMode ? " [TEST MODE]" : ""));
+    public ResponseEntity<String> scrapeFitLab() {
+        runAsync("scraper-fitlab", () -> schedulerService.scrapeStoreNow("FitLab"));
+        return ResponseEntity.accepted().body("FitLab scraping started in background");
     }
 
     @PostMapping("/scrape/proteinisi")
-    public ResponseEntity<String> scrapeProteiniSi(
-            @RequestParam(defaultValue = "false") boolean testMode) {
-        runAsync("scraper-proteinisi", () -> scraperService.scrapeStore(findScraper("Proteini.si"), testMode));
-        return ResponseEntity.accepted().body("Proteini.si scraping started in background" + (testMode ? " [TEST MODE]" : ""));
+    public ResponseEntity<String> scrapeProteiniSi() {
+        runAsync("scraper-proteinisi", () -> schedulerService.scrapeStoreNow("Proteini.si"));
+        return ResponseEntity.accepted().body("Proteini.si scraping started in background");
     }
 
     @PostMapping("/scrape/gymbeam")
-    public ResponseEntity<String> scrapeGymBeam(
-            @RequestParam(defaultValue = "false") boolean testMode) {
-        runAsync("scraper-gymbeam", () -> scraperService.scrapeStore(findScraper("GymBeam"), testMode));
-        return ResponseEntity.accepted().body("GymBeam scraping started in background" + (testMode ? " [TEST MODE]" : ""));
+    public ResponseEntity<String> scrapeGymBeam() {
+        runAsync("scraper-gymbeam", () -> schedulerService.scrapeStoreNow("GymBeam"));
+        return ResponseEntity.accepted().body("GymBeam scraping started in background");
     }
 
     @PostMapping("/scrape/myprotein")
-    public ResponseEntity<String> scrapeMyProtein(
-            @RequestParam(defaultValue = "false") boolean testMode) {
-        runAsync("scraper-myprotein", () -> scraperService.scrapeStore(findScraper("MyProtein"), testMode));
-        return ResponseEntity.accepted().body("MyProtein scraping started in background" + (testMode ? " [TEST MODE]" : ""));
+    public ResponseEntity<String> scrapeMyProtein() {
+        runAsync("scraper-myprotein", () -> schedulerService.scrapeStoreNow("MyProtein"));
+        return ResponseEntity.accepted().body("MyProtein scraping started in background");
     }
 
     @PostMapping("/scrape/lama")
-    public ResponseEntity<String> scrapeLama(
-            @RequestParam(defaultValue = "false") boolean testMode) {
-        runAsync("scraper-lama", () -> scraperService.scrapeStore(findScraper("Lama"), testMode));
-        return ResponseEntity.accepted().body("Lama scraping started in background" + (testMode ? " [TEST MODE]" : ""));
+    public ResponseEntity<String> scrapeLama() {
+        runAsync("scraper-lama", () -> schedulerService.scrapeStoreNow("Lama"));
+        return ResponseEntity.accepted().body("Lama scraping started in background");
     }
 
     @PostMapping("/scrape/shopbuilder")
-    public ResponseEntity<String> scrapeShopbuilder(
-            @RequestParam(defaultValue = "false") boolean testMode) {
-        runAsync("scraper-shopbuilder", () -> scraperService.scrapeStore(findScraper("Shopbuilder"), testMode));
-        return ResponseEntity.accepted().body("Shopbuilder scraping started in background" + (testMode ? " [TEST MODE]" : ""));
+    public ResponseEntity<String> scrapeShopbuilder() {
+        runAsync("scraper-shopbuilder", () -> schedulerService.scrapeStoreNow("Shopbuilder"));
+        return ResponseEntity.accepted().body("Shopbuilder scraping started in background");
     }
 
     @PostMapping("/scrape/shopbuilder/test")
@@ -172,17 +162,15 @@ public class AdminController {
     }
 
     @PostMapping("/scrape/xsport")
-    public ResponseEntity<String> scrapeXSport(
-            @RequestParam(defaultValue = "false") boolean testMode) {
-        runAsync("scraper-xsport", () -> scraperService.scrapeStore(findScraper("XSport"), testMode));
-        return ResponseEntity.accepted().body("XSport scraping started in background" + (testMode ? " [TEST MODE]" : ""));
+    public ResponseEntity<String> scrapeXSport() {
+        runAsync("scraper-xsport", () -> schedulerService.scrapeStoreNow("XSport"));
+        return ResponseEntity.accepted().body("XSport scraping started in background");
     }
 
     @PostMapping("/scrape/supplementstore")
-    public ResponseEntity<String> scrapeSupplementStore(
-            @RequestParam(defaultValue = "false") boolean testMode) {
-        runAsync("scraper-supplementstore", () -> scraperService.scrapeStore(findScraper("SupplementStore"), testMode));
-        return ResponseEntity.accepted().body("SupplementStore scraping started in background" + (testMode ? " [TEST MODE]" : ""));
+    public ResponseEntity<String> scrapeSupplementStore() {
+        runAsync("scraper-supplementstore", () -> schedulerService.scrapeStoreNow("SupplementStore"));
+        return ResponseEntity.accepted().body("SupplementStore scraping started in background");
     }
 
     @PostMapping("/scrape/supplementstore/test")
