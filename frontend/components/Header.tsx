@@ -99,6 +99,12 @@ function Logo() {
 }
 
 const GUIDES = [
+  { label: "Whey protein cena",          href: "/whey-protein-cena"                  },
+  { label: "Najjeftiniji whey protein",  href: "/najjeftiniji-whey-protein"          },
+  { label: "Najbolji whey protein",      href: "/najbolji-whey-protein-srbija"       },
+  { label: "Whey izolat Srbija",         href: "/whey-isolate-srbija"                },
+  { label: "Biljni protein Srbija",      href: "/biljni-protein-srbija"              },
+  { label: "Protein za masu",            href: "/protein-za-masu"                    },
   { label: "Protein za mršavljenje",     href: "/vodici/protein-za-mrsavljenje"      },
   { label: "Koliko proteina dnevno?",    href: "/vodici/koliko-proteina-dnevno"      },
   { label: "Isolate vs Concentrate",     href: "/vodici/whey-isolate-vs-concentrate" },
@@ -106,11 +112,6 @@ const GUIDES = [
   { label: "Kada piti protein?",         href: "/vodici/kada-piti-protein"           },
   { label: "Kako računamo Value Score",  href: "/kako-racunamo-value-score"          },
   { label: "O Proteinoteci",             href: "/o-nama"                             },
-  { label: "Najbolji whey protein",      href: "/najbolji-whey-protein-srbija"       },
-  { label: "Najjeftiniji whey",          href: "/najjeftiniji-whey-protein"          },
-  { label: "Whey protein cena",          href: "/whey-protein-cena"                  },
-  { label: "Whey izolat Srbija",         href: "/whey-isolate-srbija"                },
-  { label: "Protein za masu",            href: "/protein-za-masu"                    },
 ];
 
 function GuidesDropdown({ mobile = false }: { mobile?: boolean }) {
@@ -248,8 +249,9 @@ export default function Header({ hasHero = false }: { hasHero?: boolean }) {
 
         <nav className="hidden md:flex items-center gap-5">
           <GuidesDropdown />
+          <NavLink href="/whey-protein-cena">Cene</NavLink>
+          <NavLink href="/najbolji-whey-protein-srbija">Top lista</NavLink>
           <NavLink href="/baza-podataka">Baza podataka</NavLink>
-          <NavLink href="/#kontakt">Kontakt</NavLink>
 
           {/* Desktop Wishlist */}
           <button

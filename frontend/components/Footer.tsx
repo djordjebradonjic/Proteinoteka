@@ -34,12 +34,16 @@ const GUIDES = [
 ];
 
 const SITE_LINKS = [
-  { label: "Početna",              href: "/"                          },
-  { label: "O nama",               href: "/o-nama"                    },
-  { label: "Kontakt",              href: "/#kontakt"                  },
-  { label: "Kako računamo score",  href: "/kako-racunamo-value-score" },
-  { label: "Politika privatnosti", href: "/privacy-policy"           },
-  { label: "Uslovi korišćenja",    href: "/terms-of-use"             },
+  { label: "Whey protein cena",         href: "/whey-protein-cena"             },
+  { label: "Najjeftiniji whey protein", href: "/najjeftiniji-whey-protein"     },
+  { label: "Najbolji whey protein",     href: "/najbolji-whey-protein-srbija"  },
+  { label: "Whey izolat Srbija",        href: "/whey-isolate-srbija"           },
+  { label: "Početna",                   href: "/"                              },
+  { label: "O nama",                    href: "/o-nama"                        },
+  { label: "Kontakt",                   href: "/#kontakt"                      },
+  { label: "Kako računamo score",       href: "/kako-racunamo-value-score"     },
+  { label: "Politika privatnosti",      href: "/privacy-policy"                },
+  { label: "Uslovi korišćenja",         href: "/terms-of-use"                  },
 ];
 
 function ColHeading({ children }: { children: React.ReactNode }) {
@@ -107,9 +111,9 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Col 4 — Sajt + Pravne */}
+          {/* Col 4 — Popularno + Pravne */}
           <div>
-            <ColHeading>Sajt</ColHeading>
+            <ColHeading>Popularno</ColHeading>
             <ul className="flex flex-col gap-2">
               {SITE_LINKS.map((l) => (
                 <FooterLink key={l.href} href={l.href}>{l.label}</FooterLink>
