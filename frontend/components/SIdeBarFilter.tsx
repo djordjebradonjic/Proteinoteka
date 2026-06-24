@@ -321,6 +321,7 @@ const STORES = [
   "MyProtein",
   "Lama",
   "Shopbuilder",
+  "XSport",
 ];
 
 function FilterContent({
