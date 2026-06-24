@@ -40,9 +40,14 @@ export default function FeaturedPriceDropCard({ product }: Props) {
 
       {/* Body */}
       <div className="flex flex-col flex-1 p-3 gap-2">
-        {product.brand && (
-          <p className="text-[10px] text-slate-400 uppercase tracking-wider font-medium truncate">{product.brand}</p>
-        )}
+        <div className="flex items-center justify-between gap-1">
+          {product.brand && (
+            <p className="text-[10px] text-slate-400 uppercase tracking-wider font-medium truncate">{product.brand}</p>
+          )}
+          {product.primaryWeightGrams && (
+            <span className="text-[11px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full shrink-0">{product.primaryWeightGrams}g</span>
+          )}
+        </div>
 
         <Link href={detailUrl}>
           <h3 className="text-sm font-bold text-slate-900 leading-snug line-clamp-2 hover:text-[#FF9900] transition-colors">
@@ -52,21 +57,21 @@ export default function FeaturedPriceDropCard({ product }: Props) {
 
         {/* Price drop hero block */}
         {hasDrop ? (
-          <div className="bg-red-50 border border-red-100 rounded-xl p-3">
-            <p className="text-2xl font-bold text-red-600 leading-none mb-2">
-              🔥 -{dropPct}%
-            </p>
-            <div className="flex items-baseline gap-2 flex-wrap">
+          <div className="bg-red-50 border border-red-100 rounded-xl p-2 sm:p-3">
+            <div className="flex items-center justify-between">
+              <p className="text-xl sm:text-2xl font-bold text-red-600 leading-none">🔥 -{dropPct}%</p>
+              {savings > 0 && (
+                <p className="text-[11px] text-green-600 font-semibold hidden sm:block">
+                  Uštedite <PriceTag price={savings} className="text-[11px] text-green-600 font-semibold" currencyClassName="text-[0.85em] ml-0.5 text-green-500" />
+                </p>
+              )}
+            </div>
+            <div className="flex items-baseline gap-2 flex-wrap mt-1">
               {prev != null && (
                 <span className="text-sm line-through text-slate-400"><PriceTag price={prev} className="text-sm line-through text-slate-400" currencyClassName="text-[0.85em] ml-0.5 text-slate-400" /></span>
               )}
               <PriceTag price={product.numericPrice} className="text-lg font-bold text-slate-900" />
             </div>
-            {savings > 0 && (
-              <p className="text-sm text-green-600 font-semibold mt-1.5">
-                Uštedite <PriceTag price={savings} className="text-sm text-green-600 font-semibold" currencyClassName="text-[0.85em] ml-0.5 text-green-500" />
-              </p>
-            )}
           </div>
         ) : (
           <div className="mt-auto pt-1">
