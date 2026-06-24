@@ -5,6 +5,7 @@ export const CATEGORIES = [
   { label: "Kazein",           slug: "kazein",           value: "casein"           },
   { label: "Biljni protein",   slug: "biljni-protein",   value: "vegan"            },
   { label: "Blend",            slug: "blend",            value: "blend"            },
+  { label: "Egg protein",      slug: "egg-protein",      value: "egg"              },
 ] as const;
 
 export type CategoryValue = typeof CATEGORIES[number]["value"];

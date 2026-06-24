@@ -32,6 +32,38 @@ import { getScoreColor, getScoreLabel } from "@/lib/scoreColor";
 
 const PriceHistoryChart = dynamic(() => import("@/components/PriceHistoryChart"), { ssr: false });
 
+// ── Flavours section ──────────────────────────────────────────────────────────
+
+function FlavoursSection({ flavours }: { flavours: string[] }) {
+  const [expanded, setExpanded] = useState(false);
+  const hasMore = flavours.length > 4;
+  const visible = expanded ? flavours : flavours.slice(0, 4);
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+      <p className="text-xs uppercase tracking-wider text-slate-400 font-bold mb-2">Dostupni ukusi</p>
+      <div className="flex flex-wrap gap-1.5">
+        {visible.map((f) => (
+          <span
+            key={f}
+            className="px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap"
+          >
+            {f}
+          </span>
+        ))}
+        {hasMore && (
+          <button
+            onClick={() => setExpanded((v) => !v)}
+            className="px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-50 text-[#FF9900] border border-orange-200 hover:bg-orange-100 transition-colors whitespace-nowrap"
+          >
+            {expanded ? "Prikaži manje ↑" : `+${flavours.length - 4} više ↓`}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Price insight computation ─────────────────────────────────────────────────
 
 type PriceInsight =
@@ -662,6 +694,10 @@ export default function ProductPageContent({ product, similar, storePrices, revi
                   }
                 </div>
               </div>
+            )}
+
+            {product.flavours && product.flavours.length > 0 && (
+              <FlavoursSection flavours={product.flavours} />
             )}
 
             <a
