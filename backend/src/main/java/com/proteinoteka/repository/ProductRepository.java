@@ -74,4 +74,12 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     List<Product> findByAiDescriptionIsNull();
 
     List<Product> findByGroupId(Long groupId);
+
+    @Query("SELECT p FROM products p WHERE LOWER(TRIM(p.name)) = LOWER(TRIM(:name)) " +
+           "AND p.store = :store " +
+           "AND p.primaryWeightGrams IS NOT NULL " +
+           "AND ABS(p.primaryWeightGrams - :weight) < 10")
+    Optional<Product> findByNameAndStoreAndWeight(@Param("name") String name,
+                                                  @Param("store") Store store,
+                                                  @Param("weight") Double weight);
 }

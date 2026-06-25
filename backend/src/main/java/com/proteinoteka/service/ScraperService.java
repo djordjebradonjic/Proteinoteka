@@ -559,6 +559,20 @@ public class ScraperService {
         // uzmi protein iz baze — cena se uvek azurira za postojece proizvode.
         Optional<Product> existingOpt = productRepository.findByUrl(scraped.getUrl());
 
+        // Fallback: ako URL ne matchuje (SKU se promenio), traži po imenu+prodavnici+gramazi
+        if (existingOpt.isEmpty() && scraped.getPrimaryWeightGrams() != null) {
+            Optional<Product> byWeight = productRepository.findByNameAndStoreAndWeight(
+                    scraped.getName(), store, scraped.getPrimaryWeightGrams());
+            if (byWeight.isPresent()) {
+                log.info("[{}] SKU promenjen za '{}' {}g — stari URL: {}, novi URL: {}",
+                        store.getName(), scraped.getName(),
+                        Math.round(scraped.getPrimaryWeightGrams()),
+                        byWeight.get().getUrl(), scraped.getUrl());
+                byWeight.get().setUrl(scraped.getUrl());
+                existingOpt = byWeight;
+            }
+        }
+
         if (scraped.getProteinPer100g() == null || scraped.getProteinPer100g() < 15) {
             if (existingOpt.isPresent() && existingOpt.get().getProteinPer100g() != null
                     && existingOpt.get().getProteinPer100g() >= 15) {
