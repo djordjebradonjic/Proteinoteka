@@ -2,11 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
+import { CURRENT_MARKET } from "@/lib/marketConfig";
+
+const IS_HR = CURRENT_MARKET === "hr";
 
 const STORAGE_KEY = "vs_banner_dismissed";
 
 const pillars = [
-  { icon: "💰", label: "Vrednost/cena", weight: "35%" },
+  { icon: "💰", label: IS_HR ? "Vrijednost/cijena" : "Vrednost/cena", weight: "35%" },
   { icon: "🧬", label: "Čistoća proteina", weight: "20%" },
   { icon: "⚡", label: "Digestibilnost", weight: "15%" },
   { icon: "🌿", label: "Sastojci", weight: "15%" },
@@ -50,13 +53,15 @@ export default function ValueScoreBanner() {
           <span className="text-xs font-semibold opacity-95 leading-none">Odličan</span>
         </div>
         <p className="text-sm font-semibold text-slate-700 leading-snug">
-          Šta predstavlja ova ocena?
+          {IS_HR ? "Što predstavlja ova ocjena?" : "Šta predstavlja ova ocena?"}
         </p>
       </div>
 
       {/* Opis */}
       <p className="text-xs text-slate-500 mb-2">
-        Objektivna ocena proteina 1–10. Ovih 5 faktora formira ocenu:
+        {IS_HR
+          ? "Objektivna ocjena proteina 1–10. Ovih 5 faktora formira ocjenu:"
+          : "Objektivna ocena proteina 1–10. Ovih 5 faktora formira ocenu:"}
       </p>
 
       {/* Faktori — vertikalni kompaktni list na mobilnom, flex red na sm+ */}

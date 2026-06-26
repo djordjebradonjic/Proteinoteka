@@ -15,6 +15,7 @@ import { analytics } from "@/lib/analytics";
 import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
 
 const { locale: MARKET_LOCALE, currency: MARKET_CURRENCY } = MARKET_CONFIG[CURRENT_MARKET];
+const IS_HR = CURRENT_MARKET === "hr";
 
 export interface AlertableProduct {
   id: number;
@@ -197,7 +198,7 @@ export default function PriceAlertModal({ product, initialAlert, onClose }: Prop
               <h3 className="text-lg font-bold text-slate-900 mb-2">Alert aktiviran!</h3>
               <p className="text-sm text-slate-500 mb-6 leading-relaxed">
                 Poslaćemo email na <span className="font-semibold text-slate-700">{email}</span> čim
-                cena {useTargetPrice ? `padne ispod ${formatPrice(parseInputPrice(targetInput) ?? 0)} ${MARKET_CURRENCY}` : "značajno padne"}.
+                {IS_HR ? "cijena" : "cena"} {useTargetPrice ? `padne ispod ${formatPrice(parseInputPrice(targetInput) ?? 0)} ${MARKET_CURRENCY}` : "značajno padne"}.
               </p>
               <button
                 onClick={() => onClose(true)}
@@ -290,7 +291,9 @@ export default function PriceAlertModal({ product, initialAlert, onClose }: Prop
                       </div>
                     </div>
                     <span className="text-sm text-slate-600 leading-snug">
-                      Obavesti me samo kada cena padne ispod određene vrednosti
+                      {IS_HR
+                        ? "Obavijesti me samo kada cijena padne ispod određene vrijednosti"
+                        : "Obavesti me samo kada cena padne ispod određene vrednosti"}
                     </span>
                   </label>
 
@@ -336,7 +339,9 @@ export default function PriceAlertModal({ product, initialAlert, onClose }: Prop
                   ) : (
                     <>
                       <Bell className="w-4 h-4" />
-                      {isEditMode ? "Sačuvaj izmene" : "Obavesti me"}
+                      {isEditMode
+                        ? (IS_HR ? "Spremi izmjene" : "Sačuvaj izmene")
+                        : (IS_HR ? "Obavijesti me" : "Obavesti me")}
                     </>
                   )}
                 </button>

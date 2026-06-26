@@ -167,7 +167,7 @@ function PriceRange({
         className="flex items-center justify-between w-full text-left"
       >
         <span className="text-sm font-bold text-[#1A1A1A] uppercase tracking-wide flex items-center gap-2">
-          Cena ({LABELS.currency})
+          {IS_HR ? "Cijena" : "Cena"} ({LABELS.currency})
           {isActive && (
             <span className="w-1.5 h-1.5 rounded-full bg-[#FF9900] shrink-0" />
           )}
@@ -209,7 +209,7 @@ function PriceRange({
           </div>
           {isInvalid && (
             <p className="text-[11px] text-red-500">
-              Minimalna cena ne može biti veća od maksimalne.
+              {IS_HR ? "Minimalna cijena ne može biti veća od maksimalne." : "Minimalna cena ne može biti veća od maksimalne."}
             </p>
           )}
           <button

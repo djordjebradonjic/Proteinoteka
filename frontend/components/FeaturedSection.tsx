@@ -5,6 +5,9 @@ import { Product } from "@/types/product";
 import FeaturedValueCard from "@/components/FeaturedValueCard";
 import FeaturedPriceDropCard from "@/components/FeaturedPriceDropCard";
 import ScrollableRow from "@/components/ScrollableRow";
+import { CURRENT_MARKET } from "@/lib/marketConfig";
+
+const IS_HR = CURRENT_MARKET === "hr";
 
 interface Props {
   topValueProducts: Product[];
@@ -19,8 +22,8 @@ export default function FeaturedSection({ topValueProducts, priceDropProducts }:
   if (!topValueProducts.length && !priceDropProducts.length) return null;
 
   const tabs: { id: Tab; label: string }[] = [
-    { id: "value", label: "⚡ Top vrednost" },
-    { id: "drops", label: "🔥 Najveći pad cene" },
+    { id: "value", label: IS_HR ? "⚡ Top vrijednost" : "⚡ Top vrednost" },
+    { id: "drops", label: IS_HR ? "🔥 Najveći pad cijene" : "🔥 Najveći pad cene" },
   ];
 
   return (
@@ -47,7 +50,9 @@ export default function FeaturedSection({ topValueProducts, priceDropProducts }:
             Izdvojeno
           </h2>
           <p className="text-sm text-slate-500 mt-0.5 hidden sm:block">
-            Proteini sa najboljim Value Score-om i najvećim padom cene
+            {IS_HR
+              ? "Proteini sa najboljim Value Score-om i najvećim padom cijene"
+              : "Proteini sa najboljim Value Score-om i najvećim padom cene"}
           </p>
         </div>
 

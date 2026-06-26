@@ -5,8 +5,10 @@ import PriceTag from "@/components/PriceTag";
 import Header from "@/components/Header";
 import { SEOProductCard } from "./SEOProductCard";
 import { getScoreColor } from "@/lib/scoreColor";
+import { CURRENT_MARKET } from "@/lib/marketConfig";
 
-const BASE_URL = "https://proteinoteka.rs";
+const IS_HR = CURRENT_MARKET === "hr";
+const BASE_URL = IS_HR ? "https://proteinoteka.com.hr" : "https://proteinoteka.rs";
 
 export interface StoreFAQ { q: string; a: string; }
 
@@ -90,7 +92,7 @@ function ProductTable({ products }: { products: Product[] }) {
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       <div className="px-5 py-4 border-b border-slate-100">
-        <h2 className="text-base font-bold text-slate-900">Svi proteini — pregled cena</h2>
+        <h2 className="text-base font-bold text-slate-900">Svi proteini — {IS_HR ? "pregled cijena" : "pregled cena"}</h2>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
@@ -98,7 +100,7 @@ function ProductTable({ products }: { products: Product[] }) {
             <tr className="border-b border-slate-100 bg-slate-50">
               <th className="text-left py-3 px-5 text-xs font-semibold text-slate-500 uppercase tracking-wide">#</th>
               <th className="text-left py-3 pr-4 text-xs font-semibold text-slate-500 uppercase tracking-wide">Proizvod</th>
-              <th className="text-right py-3 pr-4 text-xs font-semibold text-slate-500 uppercase tracking-wide">Cena</th>
+              <th className="text-right py-3 pr-4 text-xs font-semibold text-slate-500 uppercase tracking-wide">{IS_HR ? "Cijena" : "Cena"}</th>
               <th className="text-right py-3 pr-4 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Protein</th>
               <th className="text-right py-3 pr-4 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Score</th>
               <th className="text-right py-3 pr-5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Akcija</th>
@@ -196,9 +198,10 @@ function StoreDisclaimer({ storeName }: { storeName: string }) {
     <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 flex items-start gap-3">
       <span className="text-amber-500 text-lg shrink-0 mt-0.5">ℹ️</span>
       <p className="text-xs text-amber-800 leading-relaxed">
-        <strong>Napomena:</strong> Proteinoteka je nezavisan servis za poređenje cena i nije povezana sa prodavnicom {storeName} niti je njihov ovlašćeni zastupnik ili distributer.
-        Cene su prikupljene automatski i mogu se razlikovati od aktuelnih cena na sajtu prodavca.
-        Klikom na &quot;Pogledaj&quot; bićeš preusmeren na sajt prodavca gde se vrši kupovina.
+        <strong>Napomena:</strong> Proteinoteka je nezavisan servis za {IS_HR ? "usporedbu cijena" : "poređenje cena"} i nije povezana sa {IS_HR ? `trgovinom ${storeName}` : `prodavnicom ${storeName}`} niti je njihov ovlašćeni zastupnik ili distributer.
+        {IS_HR
+          ? ` Cijene su prikupljene automatski i mogu se razlikovati od aktualnih cijena na stranici prodavača. Klikom na "Pogledaj" bit ćeš preusmjeren na stranicu prodavača gdje se vrši kupnja.`
+          : ` Cene su prikupljene automatski i mogu se razlikovati od aktuelnih cena na sajtu prodavca. Klikom na "Pogledaj" bićeš preusmeren na sajt prodavca gde se vrši kupovina.`}
       </p>
     </div>
   );
@@ -294,7 +297,7 @@ export function SEOStorePage({
           <nav className="flex items-center gap-1.5 text-xs text-slate-400 mb-5" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-[#FF9900] transition-colors">Početna</Link>
             <span>/</span>
-            <span>Prodavnice</span>
+            <span>{IS_HR ? "Trgovine" : "Prodavnice"}</span>
             <span>/</span>
             <span className="text-slate-300">{storeName}</span>
           </nav>
@@ -336,9 +339,11 @@ export function SEOStorePage({
 
         {/* Bottom CTA */}
         <div className="bg-white rounded-xl border border-slate-200 p-6 text-center shadow-sm">
-          <h2 className="text-lg font-bold text-slate-900 mb-2">Poredi sa ostalim prodavnicama</h2>
+          <h2 className="text-lg font-bold text-slate-900 mb-2">{IS_HR ? "Usporedi s ostalim trgovinama" : "Poredi sa ostalim prodavnicama"}</h2>
           <p className="text-slate-500 text-sm mb-5">
-            Pregledaj iste brendove i kategorije u svim srpskim prodavnicama — na jednom mestu.
+            {IS_HR
+              ? "Pregledaj iste brendove i kategorije u svim hrvatskim trgovinama — na jednom mjestu."
+              : "Pregledaj iste brendove i kategorije u svim srpskim prodavnicama — na jednom mestu."}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
@@ -357,7 +362,9 @@ export function SEOStorePage({
         </div>
 
         <p className="text-xs text-slate-400 text-center leading-relaxed pb-4">
-          Cene su informativnog karaktera i mogu se razlikovati od aktuelnih cena na sajtovima prodavnica.
+          {IS_HR
+            ? "Cijene su informativnog karaktera i mogu se razlikovati od aktualnih cijena na stranicama trgovina."
+            : "Cene su informativnog karaktera i mogu se razlikovati od aktuelnih cena na sajtovima prodavnica."}
         </p>
 
       </div>

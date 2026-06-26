@@ -6,8 +6,10 @@ import Header from "@/components/Header";
 import { SEOProductCard } from "./SEOProductCard";
 import { formatPrice } from "@/lib/formatPrice";
 import { getScoreColor } from "@/lib/scoreColor";
+import { CURRENT_MARKET } from "@/lib/marketConfig";
 
-const BASE_URL = "https://proteinoteka.rs";
+const IS_HR = CURRENT_MARKET === "hr";
+const BASE_URL = IS_HR ? "https://proteinoteka.com.hr" : "https://proteinoteka.rs";
 
 const CATEGORY_LINKS = [
   { label: "Whey Concentrate", href: "/kategorija/whey-concentrate" },
@@ -37,9 +39,13 @@ function Disclaimer({ brandName }: { brandName: string }) {
     <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 flex items-start gap-3">
       <span className="text-amber-500 text-lg shrink-0 mt-0.5">ℹ️</span>
       <p className="text-xs text-amber-800 leading-relaxed">
-        <strong>Napomena:</strong> Proteinoteka je nezavisan servis za poređenje cena i nije povezana sa brendom {brandName} niti je njihov ovlašćeni distributer.
-        Cene su prikupljene automatski iz srpskih prodavnica i mogu se razlikovati od cena na sajtovima prodavaca.
-        Klikom na "Kupi" bićeš preusmeren na sajt prodavca gde se vrši kupovina.
+        <strong>Napomena:</strong> Proteinoteka je nezavisan servis za {IS_HR ? "usporedbu cijena" : "poređenje cena"} i nije povezana sa brendom {brandName} niti je njihov ovlašćeni distributer.
+        {IS_HR
+          ? `Cijene su prikupljene automatski iz hrvatskih trgovina i mogu se razlikovati od cijena na stranicama prodavača.`
+          : `Cene su prikupljene automatski iz srpskih prodavnica i mogu se razlikovati od cena na sajtovima prodavaca.`}
+        {IS_HR
+          ? ` Klikom na "Kupi" bit ćeš preusmjeren na stranicu prodavača gdje se vrši kupnja.`
+          : ` Klikom na "Kupi" bićeš preusmeren na sajt prodavca gde se vrši kupovina.`}
       </p>
     </div>
   );
@@ -111,19 +117,19 @@ function WhereToBuySection({ products, brandName }: { products: Product[]; brand
   return (
     <section>
       <h2 className="text-xl font-extrabold text-slate-900 mb-2">
-        Gde kupiti {brandName} u Srbiji
+        {IS_HR ? `Gdje kupiti ${brandName} u Hrvatskoj` : `Gde kupiti ${brandName} u Srbiji`}
       </h2>
       <p className="text-sm text-slate-500 mb-4">
-        Sortirano po najnižoj dostupnoj ceni u svakoj prodavnici.
+        {IS_HR ? "Sortirano po najnižoj dostupnoj cijeni u svakoj trgovini." : "Sortirano po najnižoj dostupnoj ceni u svakoj prodavnici."}
       </p>
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="text-left py-3 px-5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Prodavnica</th>
+                <th className="text-left py-3 px-5 text-xs font-semibold text-slate-500 uppercase tracking-wide">{IS_HR ? "Trgovina" : "Prodavnica"}</th>
                 <th className="text-right py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Broj proizvoda</th>
-                <th className="text-right py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">Najniža cena</th>
+                <th className="text-right py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">{IS_HR ? "Najniža cijena" : "Najniža cena"}</th>
                 <th className="text-right py-3 px-5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Akcija</th>
               </tr>
             </thead>
@@ -164,7 +170,7 @@ function ProductTable({ products, brandName }: { products: Product[]; brandName:
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       <div className="px-5 py-4 border-b border-slate-100">
-        <h2 className="text-base font-bold text-slate-900">Svi {brandName} proizvodi — pregled cena</h2>
+        <h2 className="text-base font-bold text-slate-900">Svi {brandName} proizvodi — {IS_HR ? "pregled cijena" : "pregled cena"}</h2>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
@@ -172,7 +178,7 @@ function ProductTable({ products, brandName }: { products: Product[]; brandName:
             <tr className="border-b border-slate-100 bg-slate-50">
               <th className="text-left py-3 px-5 text-xs font-semibold text-slate-500 uppercase tracking-wide">#</th>
               <th className="text-left py-3 pr-4 text-xs font-semibold text-slate-500 uppercase tracking-wide">Proizvod</th>
-              <th className="text-right py-3 pr-4 text-xs font-semibold text-slate-500 uppercase tracking-wide">Cena</th>
+              <th className="text-right py-3 pr-4 text-xs font-semibold text-slate-500 uppercase tracking-wide">{IS_HR ? "Cijena" : "Cena"}</th>
               <th className="text-right py-3 pr-4 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Protein</th>
               <th className="text-right py-3 pr-4 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Score</th>
               <th className="text-right py-3 pr-5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Akcija</th>
@@ -306,7 +312,7 @@ export function SEOBrandPage({
   const itemListJsonLd = sorted.length > 0 ? {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: `${brandName} proteini u Srbiji`,
+    name: `${brandName} proteini u ${IS_HR ? "Hrvatskoj" : "Srbiji"}`,
     url: `${BASE_URL}/${currentSlug}`,
     numberOfItems: sorted.length,
     itemListElement: sorted.slice(0, 10).map((p, i) => ({
@@ -360,7 +366,7 @@ export function SEOBrandPage({
         {sorted.length > 0 && (
           <section>
             <h2 className="text-xl font-extrabold text-slate-900 mb-4">
-              {brandName} proteini — sortirani po vrednosti za novac
+              {brandName} proteini — sortirani po {IS_HR ? "vrijednosti za novac" : "vrednosti za novac"}
             </h2>
             <div className="space-y-3">
               {sorted.slice(0, 8).map((p, i) => (
@@ -381,7 +387,9 @@ export function SEOBrandPage({
         <div className="bg-white rounded-xl border border-slate-200 p-6 text-center shadow-sm">
           <h2 className="text-lg font-bold text-slate-900 mb-2">Poredi sa ostalim brendovima</h2>
           <p className="text-slate-500 text-sm mb-5">
-            Pronađi koji protein nudi najbolju vrednost za novac — bez obzira na brend ili prodavnicu.
+            {IS_HR
+              ? "Pronađi koji protein nudi najbolju vrijednost za novac — bez obzira na brend ili trgovinu."
+              : "Pronađi koji protein nudi najbolju vrednost za novac — bez obzira na brend ili prodavnicu."}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/" className="px-6 py-3 rounded-xl bg-[#131921] text-white font-bold text-sm hover:bg-[#243860] transition-colors">
@@ -394,8 +402,9 @@ export function SEOBrandPage({
         </div>
 
         <p className="text-xs text-slate-400 text-center leading-relaxed pb-4">
-          Cene su informativnog karaktera i prikupljene su automatski. Proteinoteka nije odgovorna za promene cena na sajtovima prodavnica.
-          {brandName} i svi nazivi proizvoda su robne marke njihovih vlasnika.
+          {IS_HR
+            ? `Cijene su informativnog karaktera i prikupljene su automatski. Proteinoteka nije odgovorna za promjene cijena na stranicama trgovina. ${brandName} i svi nazivi proizvoda robne su marke njihovih vlasnika.`
+            : `Cene su informativnog karaktera i prikupljene su automatski. Proteinoteka nije odgovorna za promene cena na sajtovima prodavnica. ${brandName} i svi nazivi proizvoda su robne marke njihovih vlasnika.`}
         </p>
 
       </div>

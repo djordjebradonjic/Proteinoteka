@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { Send, CheckCircle, AlertCircle, Mail, Clock } from "lucide-react";
+import { CURRENT_MARKET } from "@/lib/marketConfig";
+
+const IS_HR = CURRENT_MARKET === "hr";
 
 function KontaktForma() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
@@ -47,12 +50,12 @@ function KontaktForma() {
         <h3 className="text-base font-bold text-slate-800 mb-1">
           Poruka poslata!
         </h3>
-        <p className="text-slate-500 text-xs mb-4">Odgovorićemo ti što pre.</p>
+        <p className="text-slate-500 text-xs mb-4">{IS_HR ? "Odgovorit ćemo vam što prije." : "Odgovorićemo ti što pre."}</p>
         <button
           onClick={() => setStatus("idle")}
           className="px-4 py-1.5 bg-[#FF9900] hover:bg-[#e68a00] text-[#131921] font-semibold rounded-lg text-xs transition-colors"
         >
-          Pošalji novu poruku
+          {IS_HR ? "Pošaljite novu poruku" : "Pošalji novu poruku"}
         </button>
       </div>
     );
@@ -100,7 +103,7 @@ function KontaktForma() {
           onChange={handleChange}
           required
           rows={4}
-          placeholder="Napiši svoju poruku ovde..."
+          placeholder={IS_HR ? "Napišite svoju poruku ovdje..." : "Napiši svoju poruku ovde..."}
           className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-[#FF9900] focus:border-transparent transition-all placeholder:text-slate-400 resize-none"
         />
       </div>
@@ -141,7 +144,7 @@ function KontaktForma() {
         ) : (
           <>
             <Send className="w-4 h-4" />
-            Pošalji poruku
+            {IS_HR ? "Pošaljite poruku" : "Pošalji poruku"}
           </>
         )}
       </button>
@@ -156,7 +159,7 @@ export default function KontaktSekcija() {
         <div className="text-center mb-6">
           <h2 className="text-2xl font-black text-[#131921] mb-1">Kontakt</h2>
           <p className="text-slate-500 text-xs">
-            Pitanje, sugestija ili prijava greške? Piši nam.
+            {IS_HR ? "Pitanje, prijedlog ili prijava greške? Pišite nam." : "Pitanje, sugestija ili prijava greške? Piši nam."}
           </p>
         </div>
 

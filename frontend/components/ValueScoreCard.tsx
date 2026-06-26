@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { Product } from "@/types/product";
 import { getScoreColor, getScoreBg, getScoreLabel } from "@/lib/scoreColor";
+import { CURRENT_MARKET } from "@/lib/marketConfig";
+
+const IS_HR = CURRENT_MARKET === "hr";
 
 // ── Donut chart ───────────────────────────────────────────────────────────────
 
@@ -96,12 +99,11 @@ function buildConclusion(
       ? product.numericPrice / ((product.primaryWeightGrams * product.proteinPer100g) / 100)
       : null;
 
-  // Vrednost za novac
   if (pricePerGramProt !== null) {
-    if (pricePerGramProt < 4)      strengths.push("odlična cena po gramu proteina");
-    else if (pricePerGramProt < 6) strengths.push("dobra cena po gramu proteina");
-    else if (pricePerGramProt > 9) weaknesses.push("visoka cena po gramu proteina");
-    else if (pricePerGramProt > 7) weaknesses.push("iznadprosečna cena");
+    if (pricePerGramProt < 4)      strengths.push(IS_HR ? "odlična cijena po gramu proteina" : "odlična cena po gramu proteina");
+    else if (pricePerGramProt < 6) strengths.push(IS_HR ? "dobra cijena po gramu proteina" : "dobra cena po gramu proteina");
+    else if (pricePerGramProt > 9) weaknesses.push(IS_HR ? "visoka cijena po gramu proteina" : "visoka cena po gramu proteina");
+    else if (pricePerGramProt > 7) weaknesses.push(IS_HR ? "iznadprosječna cijena" : "iznadprosečna cena");
   }
 
   // Čistoća
@@ -137,8 +139,8 @@ function buildConclusion(
     const s = strengths.length  ? ` Pozitivno: ${strengths.join(", ")}.` : "";
     return `Prosečan proizvod${w}.${s}`;
   }
-  const w = weaknesses.length ? weaknesses.join(", ") : "nepovoljnog odnosa cene i kvaliteta";
-  return `Niska ocena zbog: ${w}.`;
+  const w = weaknesses.length ? weaknesses.join(", ") : (IS_HR ? "nepovoljnog odnosa cijene i kvaliteta" : "nepovoljnog odnosa cene i kvaliteta");
+  return IS_HR ? `Niska ocjena zbog: ${w}.` : `Niska ocena zbog: ${w}.`;
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -178,7 +180,7 @@ export default function ValueScoreCard({
 
         {/* Dimenzije */}
         <div className="flex-1 w-full space-y-3">
-          <DimBar icon="💰" label="Vrednost za novac" score={score} />
+          <DimBar icon="💰" label={IS_HR ? "Vrijednost za novac" : "Vrednost za novac"} score={score} />
           <DimBar icon="🧬" label="Čistoća proteina"  score={proteinPurityScore} />
           <DimBar icon="⚡" label="Apsorpcija"         score={digestScore} />
           <DimBar icon="🌿" label="Sastojci"           score={ingredientsScore} />
@@ -190,7 +192,7 @@ export default function ValueScoreCard({
         className="rounded-xl px-4 py-3 text-sm leading-relaxed"
         style={{ backgroundColor: bg, color: "#374151" }}
       >
-        <span className="font-semibold" style={{ color }}>Zašto ova ocena? </span>
+        <span className="font-semibold" style={{ color }}>{IS_HR ? "Zašto ova ocjena? " : "Zašto ova ocena? "}</span>
         {conclusion}
       </div>
     </div>

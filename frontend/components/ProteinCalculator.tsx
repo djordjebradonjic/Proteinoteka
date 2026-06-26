@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { CURRENT_MARKET } from "@/lib/marketConfig";
+
+const IS_HR = CURRENT_MARKET === "hr";
 
 const GOALS = [
   { id: "recreational", label: "Rekreativac (3×/ned.)", lo: 1.2, hi: 1.6 },
@@ -88,7 +91,7 @@ export default function ProteinCalculator() {
 
         <div className="border-t border-slate-200 pt-3 space-y-2.5">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-slate-500">Iz hrane (procena 3 obroka)</span>
+            <span className="text-slate-500">{IS_HR ? "Iz hrane (procjena 3 obroka)" : "Iz hrane (procena 3 obroka)"}</span>
             <span className="font-semibold text-slate-700">~{fromFood} g</span>
           </div>
           <div className="flex items-center justify-between text-sm">
@@ -110,8 +113,9 @@ export default function ProteinCalculator() {
       </div>
 
       <p className="text-[11px] text-slate-400 mt-3 leading-relaxed">
-        Procena polazi od ~{FOOD_ESTIMATE}g proteina iz hrane (npr. jaja + piletina + mlečni
-        proizvodi). Ako jedeš manje mesa, povećaj broj šejkova za 1.
+        {IS_HR
+          ? `Procjena polazi od ~${FOOD_ESTIMATE}g proteina iz hrane (npr. jaja + piletina + mliječni proizvodi). Ako jedeš manje mesa, povećaj broj shakeva za 1.`
+          : `Procena polazi od ~${FOOD_ESTIMATE}g proteina iz hrane (npr. jaja + piletina + mlečni proizvodi). Ako jedeš manje mesa, povećaj broj šejkova za 1.`}
       </p>
     </div>
   );
