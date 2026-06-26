@@ -29,6 +29,10 @@ import PriceTag from "@/components/PriceTag";
 import ValueScoreCard from "@/components/ValueScoreCard";
 import { formatPrice } from "@/lib/formatPrice";
 import { getScoreColor, getScoreLabel } from "@/lib/scoreColor";
+import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
+
+const IS_HR = CURRENT_MARKET === "hr";
+const MARKET = MARKET_CONFIG[CURRENT_MARKET];
 
 const PriceHistoryChart = dynamic(() => import("@/components/PriceHistoryChart"), { ssr: false });
 
@@ -41,7 +45,7 @@ function FlavoursSection({ flavours }: { flavours: string[] }) {
 
   return (
     <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-      <p className="text-xs uppercase tracking-wider text-slate-400 font-bold mb-2">Dostupni ukusi</p>
+      <p className="text-xs uppercase tracking-wider text-slate-400 font-bold mb-2">{IS_HR ? "Dostupni okusi" : "Dostupni ukusi"}</p>
       <div className="flex flex-wrap gap-1.5">
         {visible.map((f) => (
           <span
@@ -152,9 +156,9 @@ function PriceAlertSection({ product }: { product: Product }) {
             : "bg-emerald-50 text-emerald-700 border-b border-emerald-100"
         }`}>
           {insight.type === "low" ? (
-            <><span>🔥</span> Najniža cena u poslednjih 30 dana</>
+            <><span>🔥</span> {IS_HR ? "Najniža cijena u posljednjih 30 dana" : "Najniža cena u poslednjih 30 dana"}</>
           ) : (
-            <><span>📉</span> Cena je pala {insight.pct}% u poslednjih 30 dana</>
+            <><span>📉</span> {IS_HR ? `Cijena je pala ${insight.pct}% u posljednjih 30 dana` : `Cena je pala ${insight.pct}% u poslednjih 30 dana`}</>
           )}
         </div>
       )}
@@ -166,12 +170,14 @@ function PriceAlertSection({ product }: { product: Product }) {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <Bell className="w-4 h-4 text-emerald-600" fill="#16a34a" />
-                <span className="text-sm font-bold text-emerald-700">Obaveštenje aktivno</span>
+                <span className="text-sm font-bold text-emerald-700">{IS_HR ? "Obavijest aktivna" : "Obaveštenje aktivno"}</span>
               </div>
               <p className="text-xs text-slate-500">
                 {alertData?.targetPrice
-                  ? `Dobićeš email kada cena padne ispod ${new Intl.NumberFormat("sr-RS").format(Math.round(alertData.targetPrice))} RSD`
-                  : "Dobićeš email kada cena značajno padne"}
+                  ? (IS_HR
+                      ? `Dobit ćeš email kada cijena padne ispod ${new Intl.NumberFormat(MARKET.locale).format(Math.round(alertData.targetPrice))} ${MARKET.currency}`
+                      : `Dobićeš email kada cena padne ispod ${new Intl.NumberFormat("sr-RS").format(Math.round(alertData.targetPrice))} RSD`)
+                  : (IS_HR ? "Dobit ćeš email kada cijena značajno padne" : "Dobićeš email kada cena značajno padne")}
               </p>
               {removeError && (
                 <p className="text-xs text-red-500 mt-1">Greška. Pokušaj ponovo.</p>
@@ -198,8 +204,8 @@ function PriceAlertSection({ product }: { product: Product }) {
           /* Alert not active */
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
-              <p className="text-sm font-semibold text-slate-800 mb-0.5">Prati promenu cene</p>
-              <p className="text-xs text-slate-500">Email kada cena značajno padne. Bez registracije.</p>
+              <p className="text-sm font-semibold text-slate-800 mb-0.5">{IS_HR ? "Prati promjenu cijene" : "Prati promenu cene"}</p>
+              <p className="text-xs text-slate-500">{IS_HR ? "Email kada cijena značajno padne. Bez registracije." : "Email kada cena značajno padne. Bez registracije."}</p>
             </div>
             <button
               onClick={() => {
@@ -209,7 +215,7 @@ function PriceAlertSection({ product }: { product: Product }) {
               className="shrink-0 flex items-center gap-2 px-4 py-2.5 bg-[#1B2B4B] text-white font-bold text-sm rounded-xl hover:bg-[#243860] transition-colors"
             >
               <Bell className="w-4 h-4" />
-              Obavesti me
+              {IS_HR ? "Obavijesti me" : "Obavesti me"}
             </button>
           </div>
         )}
@@ -344,7 +350,7 @@ function ReviewSection({ productId, reviews, aggregateRating }: {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (rating === 0) { setError("Izaberi ocenu."); return; }
+    if (rating === 0) { setError(IS_HR ? "Izaberi ocjenu." : "Izaberi ocenu."); return; }
     setSubmitting(true);
     setError("");
     try {
@@ -401,7 +407,7 @@ function ReviewSection({ productId, reviews, aggregateRating }: {
       {formOpen && !submitted && (
         <form onSubmit={handleSubmit} className="px-6 py-5 border-b border-slate-100 space-y-4 bg-slate-50">
           <div>
-            <p className="text-sm font-semibold text-slate-700 mb-2">Ocena *</p>
+            <p className="text-sm font-semibold text-slate-700 mb-2">{IS_HR ? "Ocjena *" : "Ocena *"}</p>
             <InteractiveStars value={rating} onChange={setRating} />
           </div>
           <div>
@@ -446,7 +452,7 @@ function ReviewSection({ productId, reviews, aggregateRating }: {
                 <Stars rating={r.rating} />
                 <span className="text-xs font-semibold text-slate-700">{r.displayName ?? "Anonimno"}</span>
                 <span className="text-[10px] text-slate-400 ml-auto">
-                  {new Date(r.createdAt).toLocaleDateString("sr-Latn", { day: "2-digit", month: "2-digit", year: "numeric" })}
+                  {new Date(r.createdAt).toLocaleDateString(MARKET.locale, { day: "2-digit", month: "2-digit", year: "numeric" })}
                 </span>
               </div>
               {r.comment && <p className="text-sm text-slate-600 leading-relaxed">{r.comment}</p>}
@@ -500,13 +506,13 @@ export default function ProductPageContent({ product, similar, storePrices, revi
     .filter((h) => h.numericPrice != null && h.numericPrice > 0)
     .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
     .map((h) => ({
-      datum: new Date(h.timestamp).toLocaleDateString("sr-RS", { day: "2-digit", month: "short" }),
+      datum: new Date(h.timestamp).toLocaleDateString(MARKET.locale, { day: "2-digit", month: "short" }),
       cena: h.numericPrice as number,
     }));
 
   // Add current price as the final point so the chart always ends at today's price
   const currentPoint = product.numericPrice > 0 ? {
-    datum: new Date(product.lastUpdated ?? Date.now()).toLocaleDateString("sr-RS", { day: "2-digit", month: "short" }),
+    datum: new Date(product.lastUpdated ?? Date.now()).toLocaleDateString(MARKET.locale, { day: "2-digit", month: "short" }),
     cena: product.numericPrice,
   } : null;
 
@@ -631,7 +637,7 @@ export default function ProductPageContent({ product, similar, storePrices, revi
             </h1>
 
             <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-              <p className="text-xs uppercase tracking-wider text-slate-400 font-bold mb-1">Trenutna cena</p>
+              <p className="text-xs uppercase tracking-wider text-slate-400 font-bold mb-1">{IS_HR ? "Trenutna cijena" : "Trenutna cena"}</p>
               {product.previousPrice != null &&
                product.previousPrice > 0 &&
                product.previousPrice !== product.numericPrice && (
@@ -666,14 +672,16 @@ export default function ProductPageContent({ product, similar, storePrices, revi
                     <span className="text-base shrink-0">💡</span>
                     <div className="flex-1 min-w-0">
                       <span className="text-xs font-bold text-emerald-800">{cheapest.storeName}: {cheapest.price}</span>
-                      <span className="text-xs text-emerald-700"> — uštedi {saving.toLocaleString("sr-RS")} RSD</span>
+                      <span className="text-xs text-emerald-700"> — uštedi {formatPrice(saving)}</span>
                     </div>
                     <span className="text-xs font-semibold text-emerald-500 shrink-0">vidi sve ↓</span>
                   </button>
                 );
               })()}
               <p className="text-[11px] text-slate-400 mt-2 leading-snug">
-                Cene se ažuriraju nedeljno. Finalna cena na sajtu prodavca može se razlikovati.
+                {IS_HR
+                  ? "Cijene se ažuriraju tjedno. Konačna cijena na web-stranici prodavača može se razlikovati."
+                  : "Cene se ažuriraju nedeljno. Finalna cena na sajtu prodavca može se razlikovati."}
               </p>
             </div>
 
@@ -725,7 +733,7 @@ export default function ProductPageContent({ product, similar, storePrices, revi
             <div id="store-prices" className="bg-white rounded-2xl border border-slate-200 shadow-sm mb-6 overflow-hidden">
               <div className="flex items-center gap-2 px-6 py-4 border-b border-slate-100">
                 <Store className="w-4 h-4 text-[#FF9900]" />
-                <h2 className="text-base font-bold text-slate-900">Cena po prodavnicama</h2>
+                <h2 className="text-base font-bold text-slate-900">{IS_HR ? "Cijena po trgovinama" : "Cena po prodavnicama"}</h2>
               </div>
               <ul>
                 {orderedPrices.map((sp, i) => {
@@ -763,7 +771,7 @@ export default function ProductPageContent({ product, similar, storePrices, revi
                             )}
                             {diff != null && (
                               <span className="text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-full">
-                                +{diff.toLocaleString("sr-RS")} RSD skuplje
+                                +{formatPrice(diff)} skuplje
                               </span>
                             )}
                           </div>
@@ -804,7 +812,7 @@ export default function ProductPageContent({ product, similar, storePrices, revi
 
         {/* ── Nutrition ──────────────────────────────────────────────── */}
         <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm mb-6">
-          <h2 className="text-base font-bold text-slate-900 mb-2">Nutritivne vrednosti</h2>
+          <h2 className="text-base font-bold text-slate-900 mb-2">{IS_HR ? "Nutritivne vrijednosti" : "Nutritivne vrednosti"}</h2>
           <p className="text-xs text-slate-400 mb-4">Na 100g proizvoda</p>
           <NutritionRow label="Proteini" value={product.proteinPer100g}  unit="g"     icon={<Zap className="w-4 h-4" />} />
           <NutritionRow label="Masti"    value={product.fatPer100g}      unit="g"     icon={<Droplets className="w-4 h-4" />} />
@@ -818,7 +826,7 @@ export default function ProductPageContent({ product, similar, storePrices, revi
           )}
           {product.primaryWeightGrams && (
             <div className="flex items-center justify-between py-3">
-              <span className="text-sm text-slate-600 flex items-center gap-2"><Package className="w-4 h-4 text-[#FF9900]" /> Pakovanje</span>
+              <span className="text-sm text-slate-600 flex items-center gap-2"><Package className="w-4 h-4 text-[#FF9900]" /> {IS_HR ? "Pakiranje" : "Pakovanje"}</span>
               <span className="text-sm font-bold text-slate-900">
                 {product.primaryWeightGrams >= 1000 ? `${(product.primaryWeightGrams / 1000).toFixed(1)} kg` : `${product.primaryWeightGrams} g`}
               </span>
@@ -973,7 +981,9 @@ export default function ProductPageContent({ product, similar, storePrices, revi
             <div className="flex-1 min-w-0">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Brend</p>
               <p className="text-sm font-bold text-slate-900 group-hover:text-blue-700 transition-colors leading-snug">
-                Svi {product.brand} proizvodi u Srbiji — poređenje cena
+                {IS_HR
+                  ? `Svi ${product.brand} proizvodi u Hrvatskoj — usporedba cijena`
+                  : `Svi ${product.brand} proizvodi u Srbiji — poređenje cena`}
               </p>
             </div>
             <ArrowRight className="w-4 h-4 text-blue-400 shrink-0" />

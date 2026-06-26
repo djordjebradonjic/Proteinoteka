@@ -2,7 +2,7 @@ export const GUIDES = {
   "whey-isolate-vs-concentrate": {
     path: "/vodici/whey-isolate-vs-concentrate",
     title: "Whey Isolate vs Concentrate",
-    description: "Koja je razlika i šta da odabereš?",
+    description: "Koja je razlika i što da odabereš?",
   },
   "kada-piti-protein": {
     path: "/vodici/kada-piti-protein",
