@@ -74,8 +74,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ] : [];
 
   const hrOnlyPages: MetadataRoute.Sitemap = CURRENT_MARKET === "hr" ? [
+    { url: `${BASE}/najbolji-whey-protein-hrvatska`,     changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/najjeftiniji-whey-protein-hrvatska`, changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/whey-protein-cijena`,                changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
+    { url: `${BASE}/whey-isolate-hrvatska`,              changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
+    { url: `${BASE}/hidrolizat-protein-hrvatska`,        changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/kazein-protein-hrvatska`,            changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/biljni-protein-hrvatska`,            changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/whey-protein-do-20-eura`,            changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },

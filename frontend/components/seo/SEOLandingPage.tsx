@@ -6,16 +6,32 @@ import PriceTag from "@/components/PriceTag";
 import Header from "@/components/Header";
 import { SEOProductCard } from "./SEOProductCard";
 import { getScoreColor } from "@/lib/scoreColor";
+import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
 
-const SEO_PAGES = [
-  { slug: "najbolji-whey-protein-srbija",   label: "🥇 Najbolji Whey"        },
-  { slug: "najjeftiniji-whey-protein",      label: "💰 Najjeftiniji Whey"     },
-  { slug: "whey-protein-cena",              label: "📊 Whey Protein Cena"     },
-  { slug: "whey-isolate-srbija",            label: "✨ Whey Izolat"           },
-  { slug: "protein-za-masu",               label: "💪 Protein za Masu"       },
-  { slug: "whey-protein-do-3000-dinara",   label: "🏷️ Whey do 3000 RSD"     },
-  { slug: "whey-protein-do-5000-dinara",   label: "🏷️ Whey do 5000 RSD"     },
+const IS_HR = CURRENT_MARKET === "hr";
+const BASE_URL_CONST = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
+
+const RS_SEO_PAGES = [
+  { slug: "najbolji-whey-protein-srbija",  label: "🥇 Najbolji Whey"        },
+  { slug: "najjeftiniji-whey-protein",     label: "💰 Najjeftiniji Whey"     },
+  { slug: "whey-protein-cena",             label: "📊 Whey Protein Cena"     },
+  { slug: "whey-isolate-srbija",           label: "✨ Whey Izolat"           },
+  { slug: "protein-za-masu",              label: "💪 Protein za Masu"       },
+  { slug: "whey-protein-do-3000-dinara",  label: "🏷️ Whey do 3000 RSD"     },
+  { slug: "whey-protein-do-5000-dinara",  label: "🏷️ Whey do 5000 RSD"     },
 ] as const;
+
+const HR_SEO_PAGES = [
+  { slug: "najbolji-whey-protein-hrvatska",    label: "🥇 Najbolji Whey"       },
+  { slug: "najjeftiniji-whey-protein-hrvatska", label: "💰 Najjeftiniji Whey"  },
+  { slug: "whey-protein-cijena",               label: "📊 Whey Protein Cijena" },
+  { slug: "whey-isolate-hrvatska",             label: "✨ Whey Izolat"         },
+  { slug: "biljni-protein-hrvatska",           label: "🌿 Biljni Protein"      },
+  { slug: "whey-protein-do-20-eura",           label: "🏷️ Whey do 20 EUR"     },
+  { slug: "whey-protein-do-40-eura",           label: "🏷️ Whey do 40 EUR"     },
+] as const;
+
+const SEO_PAGES = IS_HR ? HR_SEO_PAGES : RS_SEO_PAGES;
 
 // ── Sub-components (inlined, no extra files) ──────────────────────────────────
 
@@ -33,8 +49,8 @@ function CompareShortcut({ products }: { products: Product[] }) {
   const medals = ["🥇", "🥈", "🥉"];
   return (
     <div className="bg-[#131921] text-white rounded-xl p-6">
-      <h2 className="text-lg font-extrabold mb-1">Uporedi najisplativije opcije</h2>
-      <p className="text-slate-400 text-sm mb-5">Postavi ih jedne pored druge — cena, proteini i score na jednom mestu.</p>
+      <h2 className="text-lg font-extrabold mb-1">{IS_HR ? "Usporedi najisplativije opcije" : "Uporedi najisplativije opcije"}</h2>
+      <p className="text-slate-400 text-sm mb-5">{IS_HR ? "Postavi ih jedne pored druge — cijena, proteini i score na jednom mjestu." : "Postavi ih jedne pored druge — cena, proteini i score na jednom mestu."}</p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
         {top3.map((p, i) => (
           <Link
@@ -70,7 +86,7 @@ function CompareShortcut({ products }: { products: Product[] }) {
           href="/compare"
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#FF9900] text-[#131921] font-bold text-sm hover:bg-[#e68a00] transition-colors"
         >
-          Otvori poređenje →
+          {IS_HR ? "Otvori usporedbu →" : "Otvori poređenje →"}
         </Link>
       </div>
     </div>
@@ -89,7 +105,7 @@ function ProductTable({ products, caption }: { products: Product[]; caption: str
             <tr className="border-b border-slate-100 bg-slate-50">
               <th className="text-left py-3 px-5 text-xs font-semibold text-slate-500 uppercase tracking-wide">#</th>
               <th className="text-left py-3 pr-4 text-xs font-semibold text-slate-500 uppercase tracking-wide">Proizvod</th>
-              <th className="text-right py-3 pr-4 text-xs font-semibold text-slate-500 uppercase tracking-wide">Cena</th>
+              <th className="text-right py-3 pr-4 text-xs font-semibold text-slate-500 uppercase tracking-wide">{IS_HR ? "Cijena" : "Cena"}</th>
               <th className="text-right py-3 pr-4 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Protein</th>
               <th className="text-right py-3 pr-4 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Score</th>
               <th className="text-right py-3 pr-5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Akcija</th>
@@ -144,7 +160,7 @@ function DecisionSummary({ products }: { products: Product[] }) {
   const cards: { icon: string; label: string; product: Product | null; extra?: string }[] = [
     { icon: "⭐", label: "Najbolji value score", product: bestValue,    extra: bestValue?.valueScore != null ? `Score: ${bestValue.valueScore.toFixed(1)}/10` : undefined },
     { icon: "💰", label: "Najjeftiniji",         product: cheapest,     extra: undefined },
-    { icon: "⚡", label: "Najviše proteina/RSD", product: bestRatio ?? null, extra: bestRatio?.proteinPer100g != null ? `${bestRatio.proteinPer100g}g/100g` : undefined },
+    { icon: "⚡", label: IS_HR ? "Najviše proteina/EUR" : "Najviše proteina/RSD", product: bestRatio ?? null, extra: bestRatio?.proteinPer100g != null ? `${bestRatio.proteinPer100g}g/100g` : undefined },
   ];
 
   return (
@@ -232,7 +248,7 @@ export interface SEOLandingPageProps {
   middleSection?: React.ReactNode;
 }
 
-const BASE_URL = "https://proteinoteka.rs";
+const BASE_URL = BASE_URL_CONST;
 
 export function SEOLandingPage({
   h1, intro, quickAnswer, products, tableCaption, listHeading, currentSlug,
@@ -351,7 +367,9 @@ export function SEOLandingPage({
         <div className="bg-white rounded-xl border border-slate-200 p-6 text-center shadow-sm">
           <h2 className="text-lg font-bold text-slate-900 mb-2">Istraži kompletnu ponudu</h2>
           <p className="text-slate-500 text-sm mb-5">
-            Pregledaj sve proteine i suplemente sa aktuelnim cenama iz svih prodavnica u Srbiji.
+            {IS_HR
+              ? "Pregledaj sve proteine i suplemente s aktualnim cijenama iz svih trgovina u Hrvatskoj."
+              : "Pregledaj sve proteine i suplemente sa aktuelnim cenama iz svih prodavnica u Srbiji."}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
@@ -364,7 +382,7 @@ export function SEOLandingPage({
               href="/compare"
               className="px-6 py-3 rounded-xl border-2 border-[#FF9900] text-[#FF9900] font-bold text-sm hover:bg-amber-50 transition-colors"
             >
-              Uporedi cene
+              {IS_HR ? "Usporedi cijene" : "Uporedi cene"}
             </Link>
           </div>
         </div>
