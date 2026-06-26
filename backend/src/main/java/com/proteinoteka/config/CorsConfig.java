@@ -17,7 +17,9 @@ public class CorsConfig implements WebMvcConfigurer {
                         "https://proteinoteka.rs",
                         "https://www.proteinoteka.rs",
                         "https://proteinoteka.com.hr",
-                        "https://www.proteinoteka.com.hr"
+                        "https://www.proteinoteka.com.hr",
+                        "http://proteinoteka.com.hr",
+                        "http://www.proteinoteka.com.hr"
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE")
                 .allowedHeaders("*");
