@@ -1,3 +1,4 @@
+import { CURRENT_MARKET, MARKET_CONFIG } from '@/lib/marketConfig';
 import { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
@@ -14,20 +15,20 @@ export const metadata: Metadata = {
   title: { absolute: "Koliko novca mesečno treba za proteine u Srbiji 2026: 3.900–6.200 din za 70 kg | Proteinoteka" },
   description:
     "Konkretna računica za 2026: mesec dana whey concentrate za 70 kg = 3.900–4.500 din, isolate = 5.700–6.200 din, biljni = 4.200–5.500 din. Cene iz 8 prodavnica, ažurirane sedmično.",
-  alternates: { canonical: "https://proteinoteka.rs/vodici/koliko-novca-mesecno-za-proteine" },
+  alternates: { canonical: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/vodici/koliko-novca-mesecno-za-proteine` },
   openGraph: {
     title: "Koliko novca mesečno treba za proteine u Srbiji 2026: 3.900–6.200 din za 70 kg | Proteinoteka",
     description:
       "Konkretna računica za 2026: mesec dana whey concentrate za 70 kg = 3.900–4.500 din, isolate = 5.700–6.200 din, biljni = 4.200–5.500 din. Cene iz 8 prodavnica, ažurirane sedmično.",
-    url: "https://proteinoteka.rs/vodici/koliko-novca-mesecno-za-proteine",
+    url: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/vodici/koliko-novca-mesecno-za-proteine`,
     siteName: "Proteinoteka",
-    locale: "sr_RS",
+    locale: MARKET_CONFIG[CURRENT_MARKET].ogLocale,
     type: "article",
-    images: [{ url: "https://proteinoteka.rs/opengraph-image", width: 1200, height: 630 }],
+    images: [{ url: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/opengraph-image`, width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    images: ["https://proteinoteka.rs/opengraph-image"],
+    images: [`https://${MARKET_CONFIG[CURRENT_MARKET].domain}/opengraph-image`],
   },
 };
 
@@ -84,7 +85,7 @@ const faqItems = [
   },
 ];
 
-const BASE = "https://proteinoteka.rs";
+const BASE = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
 const SLUG = "/vodici/koliko-novca-mesecno-za-proteine";
 
 const tocSections: TocSection[] = [

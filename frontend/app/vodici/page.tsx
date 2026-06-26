@@ -1,3 +1,4 @@
+import { CURRENT_MARKET, MARKET_CONFIG } from '@/lib/marketConfig';
 import { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
@@ -6,14 +7,14 @@ export const metadata: Metadata = {
   title: { absolute: "Vodiči o proteinima i suplementaciji | Proteinoteka" },
   description:
     "Praktični vodiči o proteinima na srpskom jeziku — koliko proteina dnevno, razlika između whey isolate i concentrate, da li protein goji, i kada piti protein.",
-  alternates: { canonical: "https://proteinoteka.rs/vodici" },
+  alternates: { canonical: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/vodici` },
   openGraph: {
     title: "Vodiči o proteinima i suplementaciji | Proteinoteka",
     description:
       "Praktični vodiči o proteinima na srpskom jeziku — koliko proteina dnevno, razlika između whey isolate i concentrate, da li protein goji, i kada piti protein.",
-    url: "https://proteinoteka.rs/vodici",
+    url: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/vodici`,
     siteName: "Proteinoteka",
-    locale: "sr_RS",
+    locale: MARKET_CONFIG[CURRENT_MARKET].ogLocale,
     type: "website",
   },
 };
@@ -180,15 +181,15 @@ const jsonLd = [
     "@type": "CollectionPage",
     name: "Vodiči o proteinima i suplementaciji",
     description: "Praktični vodiči o proteinima na srpskom jeziku — koliko proteina dnevno, razlika između whey isolate i concentrate, da li protein goji, i kada piti protein.",
-    url: "https://proteinoteka.rs/vodici",
-    publisher: { "@type": "Organization", name: "Proteinoteka", url: "https://proteinoteka.rs" },
+    url: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/vodici`,
+    publisher: { "@type": "Organization", name: "Proteinoteka", url: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}` },
   },
   {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Početna", item: "https://proteinoteka.rs" },
-      { "@type": "ListItem", position: 2, name: "Vodiči", item: "https://proteinoteka.rs/vodici" },
+      { "@type": "ListItem", position: 1, name: "Početna", item: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}` },
+      { "@type": "ListItem", position: 2, name: "Vodiči", item: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/vodici` },
     ],
   },
 ];

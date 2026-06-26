@@ -1,3 +1,4 @@
+import { CURRENT_MARKET, MARKET_CONFIG } from '@/lib/marketConfig';
 import { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
@@ -14,20 +15,20 @@ export const metadata: Metadata = {
   title: { absolute: "Protein za žene u Srbiji — mitovi i istine (bez marketinga) | Proteinoteka" },
   description:
     "Da li protein pravi mišiće kao muškarcima? Šta je takozvani ženski protein i da li vredi? Konkretni odgovori bez marketinga — sa aktuelnim cenama iz srpskih prodavnica.",
-  alternates: { canonical: "https://proteinoteka.rs/vodici/protein-za-zene" },
+  alternates: { canonical: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/vodici/protein-za-zene` },
   openGraph: {
     title: "Protein za žene u Srbiji — mitovi i istine (bez marketinga) | Proteinoteka",
     description:
       "Da li protein pravi mišiće kao muškarcima? Šta je takozvani ženski protein i da li vredi? Konkretni odgovori bez marketinga — sa aktuelnim cenama iz srpskih prodavnica.",
-    url: "https://proteinoteka.rs/vodici/protein-za-zene",
+    url: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/vodici/protein-za-zene`,
     siteName: "Proteinoteka",
-    locale: "sr_RS",
+    locale: MARKET_CONFIG[CURRENT_MARKET].ogLocale,
     type: "article",
-    images: [{ url: "https://proteinoteka.rs/opengraph-image", width: 1200, height: 630 }],
+    images: [{ url: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/opengraph-image`, width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    images: ["https://proteinoteka.rs/opengraph-image"],
+    images: [`https://${MARKET_CONFIG[CURRENT_MARKET].domain}/opengraph-image`],
   },
 };
 
@@ -73,7 +74,7 @@ function ppg(p: Product): number | null {
   return p.numericPrice / totalProt;
 }
 
-const BASE = "https://proteinoteka.rs";
+const BASE = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
 const SLUG = "/vodici/protein-za-zene";
 
 export default async function Page() {

@@ -1,3 +1,4 @@
+import { CURRENT_MARKET, MARKET_CONFIG } from '@/lib/marketConfig';
 import { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
@@ -10,20 +11,20 @@ export const metadata: Metadata = {
   title: { absolute: "Koliko proteina dnevno? Tačan broj za tvoju težinu | Proteinoteka" },
   description:
     "Za 80kg osobu koja trenira: 128–176g proteina dnevno (1.6–2.2g/kg). Tabela preporuka po cilju i težini — masa, mršavljenje, rekreacija. Konkretna računica.",
-  alternates: { canonical: "https://proteinoteka.rs/vodici/koliko-proteina-dnevno" },
+  alternates: { canonical: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/vodici/koliko-proteina-dnevno` },
   openGraph: {
     title: "Koliko proteina dnevno? Tačan broj za tvoju težinu | Proteinoteka",
     description:
       "Za 80kg osobu koja trenira: 128–176g proteina dnevno (1.6–2.2g/kg). Tabela preporuka po cilju i težini — masa, mršavljenje, rekreacija. Konkretna računica.",
-    url: "https://proteinoteka.rs/vodici/koliko-proteina-dnevno",
+    url: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/vodici/koliko-proteina-dnevno`,
     siteName: "Proteinoteka",
-    locale: "sr_RS",
+    locale: MARKET_CONFIG[CURRENT_MARKET].ogLocale,
     type: "article",
-    images: [{ url: "https://proteinoteka.rs/opengraph-image", width: 1200, height: 630 }],
+    images: [{ url: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/opengraph-image`, width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    images: ["https://proteinoteka.rs/opengraph-image"],
+    images: [`https://${MARKET_CONFIG[CURRENT_MARKET].domain}/opengraph-image`],
   },
 };
 
@@ -59,7 +60,7 @@ const faqItems = [
   },
 ];
 
-const BASE = "https://proteinoteka.rs";
+const BASE = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
 const SLUG = "/vodici/koliko-proteina-dnevno";
 const WORDS = 1300;
 const READ_MIN = Math.ceil(WORDS / 200);

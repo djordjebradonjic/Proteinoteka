@@ -1,3 +1,4 @@
+import { CURRENT_MARKET, MARKET_CONFIG } from '@/lib/marketConfig';
 import { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
@@ -14,20 +15,20 @@ export const metadata: Metadata = {
   title: { absolute: "Whey Isolate vs Concentrate: šta da odabereš? | Proteinoteka" },
   description:
     "Isolate: 85–94g proteina/100g, skoro bez laktoze, skuplje 20–40%. Concentrate: 70–80g proteina, niža cena, isti rezultati za većinu. Tabela razlika + live cene iz Srbije.",
-  alternates: { canonical: "https://proteinoteka.rs/vodici/whey-isolate-vs-concentrate" },
+  alternates: { canonical: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/vodici/whey-isolate-vs-concentrate` },
   openGraph: {
     title: "Whey Isolate vs Concentrate: šta da odabereš? | Proteinoteka",
     description:
       "Isolate: 85–94g proteina/100g, skoro bez laktoze, skuplje 20–40%. Concentrate: 70–80g proteina, niža cena, isti rezultati za većinu. Tabela razlika + live cene iz Srbije.",
-    url: "https://proteinoteka.rs/vodici/whey-isolate-vs-concentrate",
+    url: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/vodici/whey-isolate-vs-concentrate`,
     siteName: "Proteinoteka",
-    locale: "sr_RS",
+    locale: MARKET_CONFIG[CURRENT_MARKET].ogLocale,
     type: "article",
-    images: [{ url: "https://proteinoteka.rs/opengraph-image", width: 1200, height: 630 }],
+    images: [{ url: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/opengraph-image`, width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    images: ["https://proteinoteka.rs/opengraph-image"],
+    images: [`https://${MARKET_CONFIG[CURRENT_MARKET].domain}/opengraph-image`],
   },
 };
 
@@ -69,7 +70,7 @@ const faqItems = [
   },
 ];
 
-const BASE = "https://proteinoteka.rs";
+const BASE = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
 const SLUG = "/vodici/whey-isolate-vs-concentrate";
 
 export default async function Page() {

@@ -1,3 +1,4 @@
+import { CURRENT_MARKET, MARKET_CONFIG } from '@/lib/marketConfig';
 import { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
@@ -14,20 +15,20 @@ export const metadata: Metadata = {
   title: { absolute: "Gold Standard 100% Whey — recenzija i cena u Srbiji 2026 | Proteinoteka" },
   description:
     "Nutritivni sastav, poređenje sa alternativama i aktuelne cene Gold Standard 100% Whey iz svih srpskih prodavnica na jednom mestu — ažurirano automatski.",
-  alternates: { canonical: "https://proteinoteka.rs/vodici/gold-standard-whey-recenzija" },
+  alternates: { canonical: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/vodici/gold-standard-whey-recenzija` },
   openGraph: {
     title: "Gold Standard 100% Whey — recenzija i cena u Srbiji 2026 | Proteinoteka",
     description:
       "Nutritivni sastav, poređenje sa alternativama i aktuelne cene Gold Standard 100% Whey iz svih srpskih prodavnica na jednom mestu — ažurirano automatski.",
-    url: "https://proteinoteka.rs/vodici/gold-standard-whey-recenzija",
+    url: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/vodici/gold-standard-whey-recenzija`,
     siteName: "Proteinoteka",
-    locale: "sr_RS",
+    locale: MARKET_CONFIG[CURRENT_MARKET].ogLocale,
     type: "article",
-    images: [{ url: "https://proteinoteka.rs/opengraph-image", width: 1200, height: 630 }],
+    images: [{ url: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/opengraph-image`, width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    images: ["https://proteinoteka.rs/opengraph-image"],
+    images: [`https://${MARKET_CONFIG[CURRENT_MARKET].domain}/opengraph-image`],
   },
 };
 
@@ -75,7 +76,7 @@ function ppg(p: Product): number | null {
   return p.numericPrice / totalProt;
 }
 
-const BASE = "https://proteinoteka.rs";
+const BASE = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
 const SLUG = "/vodici/gold-standard-whey-recenzija";
 
 export default async function Page() {

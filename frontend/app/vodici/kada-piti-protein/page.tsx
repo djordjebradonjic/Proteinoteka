@@ -1,3 +1,4 @@
+import { CURRENT_MARKET, MARKET_CONFIG } from '@/lib/marketConfig';
 import { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
@@ -9,20 +10,20 @@ export const metadata: Metadata = {
   title: { absolute: "Kada piti protein: pre ili posle treninga? | Proteinoteka" },
   description:
     "Posle treninga nije jedini dobar momenat — ujutru i pre sna imaju podjednaku naučnu podlogu. Konkretni raspored za osobu od 80 kg koja trenira 4× nedeljno, plus kada tajming uopšte nije bitan.",
-  alternates: { canonical: "https://proteinoteka.rs/vodici/kada-piti-protein" },
+  alternates: { canonical: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/vodici/kada-piti-protein` },
   openGraph: {
     title: "Kada piti protein: pre ili posle treninga? | Proteinoteka",
     description:
       "Posle treninga nije jedini dobar momenat — ujutru i pre sna imaju podjednaku naučnu podlogu. Konkretni raspored za osobu od 80 kg koja trenira 4× nedeljno, plus kada tajming uopšte nije bitan.",
-    url: "https://proteinoteka.rs/vodici/kada-piti-protein",
+    url: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/vodici/kada-piti-protein`,
     siteName: "Proteinoteka",
-    locale: "sr_RS",
+    locale: MARKET_CONFIG[CURRENT_MARKET].ogLocale,
     type: "article",
-    images: [{ url: "https://proteinoteka.rs/opengraph-image", width: 1200, height: 630 }],
+    images: [{ url: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/opengraph-image`, width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    images: ["https://proteinoteka.rs/opengraph-image"],
+    images: [`https://${MARKET_CONFIG[CURRENT_MARKET].domain}/opengraph-image`],
   },
 };
 
@@ -60,7 +61,7 @@ const faqItems = [
   },
 ];
 
-const BASE = "https://proteinoteka.rs";
+const BASE = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
 const SLUG = "/vodici/kada-piti-protein";
 
 export default function Page() {

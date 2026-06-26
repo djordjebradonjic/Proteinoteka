@@ -10,11 +10,12 @@ import {
   KATEGORIJA_SLUGS,
   PRODUCT_CATEGORY_TO_KATEGORIJA,
 } from "@/lib/productUrl";
+import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
 
 export const revalidate = 86400;
 
 const API      = process.env.NEXT_PUBLIC_API_URL ?? "";
-const BASE_URL = "https://proteinoteka.rs";
+const BASE_URL = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
 
 interface StorePrice { id: number; storeName: string; price: string; numericPrice: number | null; name: string | null; primaryWeightGrams: number | null; proteinSource: string | null; canonicalSlug: string | null; }
 interface ReviewDTO { id: number; displayName: string | null; rating: number; comment: string | null; createdAt: string; }
@@ -67,7 +68,11 @@ async function fetchAggregateRating(productId: number): Promise<AggregateRatingD
 
 // ── Metadata ───────────────────────────────────────────────────────────────────
 
-const SUFFIX = " – Cena u Srbiji | Proteinoteka"; // 31 chars
+const MARKET_STRINGS = {
+  rs: { suffix: " – Cena u Srbiji | Proteinoteka", descSuffix: "— uporedi cene u srpskim prodavnicama. Najniža cena i value score na jednom mestu." },
+  hr: { suffix: " – Cijena u Hrvatskoj | Proteinoteka", descSuffix: "— usporedi cijene u hrvatskim trgovinama. Najniža cijena i value score na jednom mjestu." },
+} as const;
+const SUFFIX = MARKET_STRINGS[CURRENT_MARKET].suffix;
 // Truncate product name at a word boundary so the full title stays under this limit.
 // Raise this value if you find important product names getting cut.
 const MAX_TITLE_CHARS = 65;
@@ -100,22 +105,29 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       : `${product.primaryWeightGrams}g pakovanje`);
   }
   const nutritionHint = descParts.length > 0 ? ` (${descParts.join(", ")})` : "";
-  const description = `${product.name}${nutritionHint} — uporedi cene u srpskim prodavnicama. Najniža cena i value score na jednom mestu.`;
+  const description = `${product.name}${nutritionHint} ${MARKET_STRINGS[CURRENT_MARKET].descSuffix}`;
 
   return {
     title:       { absolute: title },
     description,
-    alternates:  { canonical },
+    alternates: {
+      canonical,
+      languages: {
+        "sr": `https://proteinoteka.rs${productUrl(product)}`,
+        "hr": `https://proteinoteka.com.hr${productUrl(product)}`,
+        "x-default": `https://proteinoteka.rs${productUrl(product)}`,
+      },
+    },
     openGraph: {
       title,
       description,
       url: canonical,
       siteName: "Proteinoteka",
-      locale: "sr_RS",
+      locale: MARKET_CONFIG[CURRENT_MARKET].ogLocale,
       type: "website",
       images: product.imageUrl
         ? [{ url: product.imageUrl, width: 800, height: 800, alt: product.name }]
-        : [{ url: "https://proteinoteka.rs/opengraph-image", width: 1200, height: 630, alt: title }],
+        : [{ url: `${BASE_URL}/opengraph-image`, width: 1200, height: 630, alt: title }],
     },
     twitter: {
       card: "summary_large_image",
@@ -123,7 +135,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       description,
       images: product.imageUrl
         ? [product.imageUrl]
-        : ["https://proteinoteka.rs/opengraph-image"],
+        : [`${BASE_URL}/opengraph-image`],
     },
   };
 }
@@ -198,14 +210,14 @@ export default async function ProductSlugPage({ params }: Params) {
     validStorePrices.length > 1
       ? {
           "@type": "AggregateOffer",
-          priceCurrency: "RSD",
+          priceCurrency: MARKET_CONFIG[CURRENT_MARKET].currency,
           lowPrice: Math.min(...validStorePrices.map((sp) => sp.numericPrice!)),
           highPrice: Math.max(...validStorePrices.map((sp) => sp.numericPrice!)),
           offerCount: validStorePrices.length,
           offers: validStorePrices.map((sp) => ({
             "@type": "Offer",
             price: sp.numericPrice,
-            priceCurrency: "RSD",
+            priceCurrency: MARKET_CONFIG[CURRENT_MARKET].currency,
             availability: "https://schema.org/InStock",
             itemCondition: "https://schema.org/NewCondition",
             priceValidUntil,
@@ -215,7 +227,7 @@ export default async function ProductSlugPage({ params }: Params) {
       : {
           "@type": "Offer",
           price: product.numericPrice,
-          priceCurrency: "RSD",
+          priceCurrency: MARKET_CONFIG[CURRENT_MARKET].currency,
           availability: "https://schema.org/InStock",
           itemCondition: "https://schema.org/NewCondition",
           priceValidUntil,

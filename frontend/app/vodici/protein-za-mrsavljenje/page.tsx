@@ -1,3 +1,4 @@
+import { CURRENT_MARKET, MARKET_CONFIG } from '@/lib/marketConfig';
 import { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
   title: { absolute: "Koji protein za mršavljenje? + Cene u Srbiji | Proteinoteka" },
   description:
     "Whey izolat je optimalan — 85–94g proteina/100g, minimum masti i laktoze. Evo poređenja tipova i koliko košta mesec dana suplementacije u srpskim prodavnicama.",
-  alternates: { canonical: "https://proteinoteka.rs/vodici/protein-za-mrsavljenje" },
+  alternates: { canonical: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/vodici/protein-za-mrsavljenje` },
   keywords: [
     "protein za mršavljenje srbija",
     "whey izolat za mršavljenje",
@@ -26,19 +27,19 @@ export const metadata: Metadata = {
     title: "Koji protein za mršavljenje? + Cene u Srbiji | Proteinoteka",
     description:
       "Whey izolat je optimalan — 85–94g proteina/100g, minimum masti i laktoze. Evo poređenja tipova i koliko košta mesec dana suplementacije u srpskim prodavnicama.",
-    url: "https://proteinoteka.rs/vodici/protein-za-mrsavljenje",
+    url: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/vodici/protein-za-mrsavljenje`,
     siteName: "Proteinoteka",
-    locale: "sr_RS",
+    locale: MARKET_CONFIG[CURRENT_MARKET].ogLocale,
     type: "article",
-    images: [{ url: "https://proteinoteka.rs/opengraph-image", width: 1200, height: 630 }],
+    images: [{ url: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/opengraph-image`, width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    images: ["https://proteinoteka.rs/opengraph-image"],
+    images: [`https://${MARKET_CONFIG[CURRENT_MARKET].domain}/opengraph-image`],
   },
 };
 
-const BASE = "https://proteinoteka.rs";
+const BASE = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
 const SLUG = "/vodici/protein-za-mrsavljenje";
 
 const tocSections: TocSection[] = [

@@ -1,3 +1,4 @@
+import { CURRENT_MARKET, MARKET_CONFIG } from '@/lib/marketConfig';
 import { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
@@ -14,20 +15,20 @@ export const metadata: Metadata = {
   title: { absolute: "BioTech USA 100% Pure Whey i ISO Whey Zero — recenzija i cene u Srbiji 2026 | Proteinoteka" },
   description:
     "Razlika između BioTech USA 100% Pure Whey i ISO Whey Zero, nutritivni sastav i aktuelne cene iz svih srpskih prodavnica na jednom mestu — ažurirano automatski.",
-  alternates: { canonical: "https://proteinoteka.rs/vodici/biotechusa-100-pure-whey" },
+  alternates: { canonical: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/vodici/biotechusa-100-pure-whey` },
   openGraph: {
     title: "BioTech USA 100% Pure Whey i ISO Whey Zero — recenzija i cene u Srbiji 2026 | Proteinoteka",
     description:
       "Razlika između BioTech USA 100% Pure Whey i ISO Whey Zero, nutritivni sastav i aktuelne cene iz svih srpskih prodavnica na jednom mestu — ažurirano automatski.",
-    url: "https://proteinoteka.rs/vodici/biotechusa-100-pure-whey",
+    url: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/vodici/biotechusa-100-pure-whey`,
     siteName: "Proteinoteka",
-    locale: "sr_RS",
+    locale: MARKET_CONFIG[CURRENT_MARKET].ogLocale,
     type: "article",
-    images: [{ url: "https://proteinoteka.rs/opengraph-image", width: 1200, height: 630 }],
+    images: [{ url: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/opengraph-image`, width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    images: ["https://proteinoteka.rs/opengraph-image"],
+    images: [`https://${MARKET_CONFIG[CURRENT_MARKET].domain}/opengraph-image`],
   },
 };
 
@@ -75,7 +76,7 @@ function ppg(p: Product): number | null {
   return p.numericPrice / totalProt;
 }
 
-const BASE = "https://proteinoteka.rs";
+const BASE = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
 const SLUG = "/vodici/biotechusa-100-pure-whey";
 
 export default async function Page() {

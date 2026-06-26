@@ -1,3 +1,4 @@
+import { CURRENT_MARKET, MARKET_CONFIG } from '@/lib/marketConfig';
 import { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
@@ -14,20 +15,20 @@ export const metadata: Metadata = {
   title: { absolute: "Whey protein za početnike: šta, koliko i odakle? | Proteinoteka" },
   description:
     "Kao početnik, WPC (whey concentrate) je sve što trebaš — jeftin i efikasan. Koliko uzimati, kada piti i koliko košta mesec dana u Srbiji — sa aktuelnim cenama.",
-  alternates: { canonical: "https://proteinoteka.rs/vodici/whey-protein-za-pocetnike" },
+  alternates: { canonical: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/vodici/whey-protein-za-pocetnike` },
   openGraph: {
     title: "Whey protein za početnike: šta, koliko i odakle? | Proteinoteka",
     description:
       "Kao početnik, WPC (whey concentrate) je sve što trebaš — jeftin i efikasan. Koliko uzimati, kada piti i koliko košta mesec dana u Srbiji — sa aktuelnim cenama.",
-    url: "https://proteinoteka.rs/vodici/whey-protein-za-pocetnike",
+    url: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/vodici/whey-protein-za-pocetnike`,
     siteName: "Proteinoteka",
-    locale: "sr_RS",
+    locale: MARKET_CONFIG[CURRENT_MARKET].ogLocale,
     type: "article",
-    images: [{ url: "https://proteinoteka.rs/opengraph-image", width: 1200, height: 630 }],
+    images: [{ url: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/opengraph-image`, width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    images: ["https://proteinoteka.rs/opengraph-image"],
+    images: [`https://${MARKET_CONFIG[CURRENT_MARKET].domain}/opengraph-image`],
   },
 };
 
@@ -69,7 +70,7 @@ const faqItems = [
   },
 ];
 
-const BASE = "https://proteinoteka.rs";
+const BASE = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
 const SLUG = "/vodici/whey-protein-za-pocetnike";
 const MONTHLY_PROTEIN_G = 900; // 30g/day × 30 days
 

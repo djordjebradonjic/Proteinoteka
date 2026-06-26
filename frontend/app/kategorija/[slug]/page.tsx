@@ -5,6 +5,7 @@ import Link from "next/link";
 import HomeContent from "@/components/HomeContent";
 import { CATEGORIES, getCategoryBySlug } from "@/lib/categories";
 import { CATEGORY_CONTENT } from "@/lib/category-content";
+import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
 
 export const revalidate = 86400;
 
@@ -14,71 +15,126 @@ export function generateStaticParams() {
   return CATEGORIES.map((c) => ({ slug: c.slug }));
 }
 
-const META: Record<string, { title: string; description: string }> = {
+const META: Record<string, { rs: { title: string; description: string }; hr: { title: string; description: string } }> = {
   whey_concentrate: {
-    title: "Whey Concentrate – Uporedi cene u Srbiji 2026",
-    description:
-      "Poredi cene whey concentrate proteina iz 8 srpskih prodavnica. Vidi koliko košta gram proteina u svakom paketu — nađi najboljу vrednost za novac.",
+    rs: {
+      title: "Whey Concentrate – Uporedi cene u Srbiji 2026",
+      description:
+        "Poredi cene whey concentrate proteina iz 8 srpskih prodavnica. Vidi koliko košta gram proteina u svakom paketu — nađi najboljу vrednost za novac.",
+    },
+    hr: {
+      title: "Whey Concentrate – Usporedi cijene u Hrvatskoj 2026",
+      description:
+        "Usporedi cijene whey concentrate proteina iz hrvatskih trgovina. Vidi koliko košta gram proteina u svakom pakiranju — pronađi najbolju vrijednost za novac.",
+    },
   },
   whey_isolate: {
-    title: "Whey Isolate – Uporedi cene u Srbiji 2026",
-    description:
-      "Poredi cene whey izolata iz 8 srpskih prodavnica. Filtriraj po ceni ili gramu proteina — nađi najisplativiji izolat odmah.",
+    rs: {
+      title: "Whey Isolate – Uporedi cene u Srbiji 2026",
+      description:
+        "Poredi cene whey izolata iz 8 srpskih prodavnica. Filtriraj po ceni ili gramu proteina — nađi najisplativiji izolat odmah.",
+    },
+    hr: {
+      title: "Whey Isolate – Usporedi cijene u Hrvatskoj 2026",
+      description:
+        "Usporedi cijene whey izolata iz hrvatskih trgovina. Filtriraj po cijeni ili gramu proteina — pronađi najisplativiji izolat odmah.",
+    },
   },
   hydrolysate: {
-    title: "Hidrolizat proteina – Uporedi cene u Srbiji 2026",
-    description:
-      "Pronađi najisplativiji hidrolizovani whey protein u Srbiji. Brza apsorpcija, visoka čistoća – po najboljoj ceni.",
+    rs: {
+      title: "Hidrolizat proteina – Uporedi cene u Srbiji 2026",
+      description:
+        "Pronađi najisplativiji hidrolizovani whey protein u Srbiji. Brza apsorpcija, visoka čistoća – po najboljoj ceni.",
+    },
+    hr: {
+      title: "Hidrolizat proteina – Usporedi cijene u Hrvatskoj 2026",
+      description:
+        "Pronađi najisplativiji hidroliziran whey protein u Hrvatskoj. Brza apsorpcija, visoka čistoća – po najboljoj cijeni.",
+    },
   },
   casein: {
-    title: "Kazein protein – Uporedi cene u Srbiji 2026",
-    description:
-      "Pronađi najisplativiji kazein protein u Srbiji. Sporo varenje za noćni oporavak – po najboljoj ceni.",
+    rs: {
+      title: "Kazein protein – Uporedi cene u Srbiji 2026",
+      description:
+        "Pronađi najisplativiji kazein protein u Srbiji. Sporo varenje za noćni oporavak – po najboljoj ceni.",
+    },
+    hr: {
+      title: "Kazein protein – Usporedi cijene u Hrvatskoj 2026",
+      description:
+        "Pronađi najisplativiji kazein protein u Hrvatskoj. Sporo varenje za noćni oporavak – po najboljoj cijeni.",
+    },
   },
   vegan: {
-    title: "Biljni protein – Uporedi cene u Srbiji 2026",
-    description:
-      "Pronađi najisplativiji biljni (vegan) protein u Srbiji. Poredimo sve prodavnice i računamo RSD po gramu proteina.",
+    rs: {
+      title: "Biljni protein – Uporedi cene u Srbiji 2026",
+      description:
+        "Pronađi najisplativiji biljni (vegan) protein u Srbiji. Poredimo sve prodavnice i računamo RSD po gramu proteina.",
+    },
+    hr: {
+      title: "Biljni protein – Usporedi cijene u Hrvatskoj 2026",
+      description:
+        "Pronađi najisplativiji biljni (vegan) protein u Hrvatskoj. Uspoređujemo sve trgovine i računamo EUR po gramu proteina.",
+    },
   },
   blend: {
-    title: "Protein blend – Uporedi cene u Srbiji 2026",
-    description:
-      "Pronađi najisplativiji protein blend u Srbiji. Mešavina whey i kazeina za dugotrajan efekat – po najboljoj ceni.",
+    rs: {
+      title: "Protein blend – Uporedi cene u Srbiji 2026",
+      description:
+        "Pronađi najisplativiji protein blend u Srbiji. Mešavina whey i kazeina za dugotrajan efekat – po najboljoj ceni.",
+    },
+    hr: {
+      title: "Protein blend – Usporedi cijene u Hrvatskoj 2026",
+      description:
+        "Pronađi najisplativiji protein blend u Hrvatskoj. Mješavina wheya i kazeina za dugotrajan učinak – po najboljoj cijeni.",
+    },
   },
   egg: {
-    title: "Egg protein – Uporedi cene u Srbiji 2026",
-    description:
-      "Pronađi najisplativiji egg protein (albumin) u Srbiji. Visok sadržaj proteina bez laktoze – poredimo cene iz svih prodavnica.",
+    rs: {
+      title: "Egg protein – Uporedi cene u Srbiji 2026",
+      description:
+        "Pronađi najisplativiji egg protein (albumin) u Srbiji. Visok sadržaj proteina bez laktoze – poredimo cene iz svih prodavnica.",
+    },
+    hr: {
+      title: "Egg protein – Usporedi cijene u Hrvatskoj 2026",
+      description:
+        "Pronađi najisplativiji egg protein (albumin) u Hrvatskoj. Visok sadržaj proteina bez laktoze – uspoređujemo cijene iz svih trgovina.",
+    },
   },
 };
+
+const BASE_URL = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const cat = getCategoryBySlug(slug);
   if (!cat) return {};
 
-  const m = META[cat.value];
+  const m = META[cat.value][CURRENT_MARKET];
   return {
     title: m.title,
     description: m.description,
     alternates: {
-      canonical: `https://proteinoteka.rs/kategorija/${slug}`,
-      languages: { "sr-RS": `https://proteinoteka.rs/kategorija/${slug}` },
+      canonical: `${BASE_URL}/kategorija/${slug}`,
+      languages: {
+        "sr": `https://proteinoteka.rs/kategorija/${slug}`,
+        "hr": `https://proteinoteka.com.hr/kategorija/${slug}`,
+        "x-default": `https://proteinoteka.rs/kategorija/${slug}`,
+      },
     },
     openGraph: {
       title: m.title,
       description: m.description,
-      url: `https://proteinoteka.rs/kategorija/${slug}`,
+      url: `${BASE_URL}/kategorija/${slug}`,
       siteName: "Proteinoteka",
-      locale: "sr_RS",
+      locale: MARKET_CONFIG[CURRENT_MARKET].ogLocale,
       type: "website",
-      images: [{ url: "https://proteinoteka.rs/opengraph-image", width: 1200, height: 630, alt: m.title }],
+      images: [{ url: `${BASE_URL}/opengraph-image`, width: 1200, height: 630, alt: m.title }],
     },
     twitter: {
       card: "summary_large_image",
       title: m.title,
       description: m.description,
-      images: ["https://proteinoteka.rs/opengraph-image"],
+      images: [`${BASE_URL}/opengraph-image`],
     },
   };
 }
@@ -99,8 +155,6 @@ async function getCategoryProducts(categoryValue: string) {
   }
 }
 
-const BASE_URL = "https://proteinoteka.rs";
-
 export default async function KategorijaPage({ params }: Props) {
   const { slug } = await params;
   const cat = getCategoryBySlug(slug);
@@ -108,7 +162,7 @@ export default async function KategorijaPage({ params }: Props) {
 
   const initialData = await getCategoryProducts(cat.value);
   const content = CATEGORY_CONTENT[cat.value];
-  const m = META[cat.value];
+  const m = META[cat.value][CURRENT_MARKET];
 
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
@@ -118,7 +172,7 @@ export default async function KategorijaPage({ params }: Props) {
       {
         "@type": "ListItem",
         position: 2,
-        name: m?.title.replace(" – Uporedi cene u Srbiji 2026", "") ?? cat.label,
+        name: cat.label,
         item: `${BASE_URL}/kategorija/${slug}`,
       },
     ],

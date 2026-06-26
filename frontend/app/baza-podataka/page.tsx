@@ -1,3 +1,4 @@
+import { CURRENT_MARKET, MARKET_CONFIG } from '@/lib/marketConfig';
 import { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
@@ -17,19 +18,19 @@ export const metadata: Metadata = {
     "baza podataka whey protein srbija",
     "cene suplemenata api",
   ],
-  alternates: { canonical: "https://proteinoteka.rs/baza-podataka" },
+  alternates: { canonical: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/baza-podataka` },
   openGraph: {
     title: "B2B Baza Podataka Proteina i Suplemenata | Proteinoteka",
     description:
       "Pristup strukturisanoj bazi podataka proteina i suplemenata u Srbiji. REST API ili jednokratni dump za developere i e-commerce sajove.",
-    url: "https://proteinoteka.rs/baza-podataka",
+    url: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/baza-podataka`,
     siteName: "Proteinoteka",
-    locale: "sr_RS",
+    locale: MARKET_CONFIG[CURRENT_MARKET].ogLocale,
     type: "website",
   },
 };
 
-const BASE = "https://proteinoteka.rs";
+const BASE = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
 
 const FEATURES = [
   {
@@ -291,10 +292,10 @@ export default function Page() {
                   Pošaljite upit →
                 </Link>
                 <a
-                  href="mailto:kontakt@proteinoteka.rs"
+                  href={`mailto:kontakt@${MARKET_CONFIG[CURRENT_MARKET].domain}`}
                   className="inline-block px-7 py-3 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl text-sm transition-colors"
                 >
-                  kontakt@proteinoteka.rs
+                  {`kontakt@${MARKET_CONFIG[CURRENT_MARKET].domain}`}
                 </a>
               </div>
             </div>

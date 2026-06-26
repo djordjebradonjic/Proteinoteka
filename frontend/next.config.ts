@@ -34,6 +34,12 @@ const nextConfig: NextConfig = {
         destination: 'https://proteinoteka.rs/:path*',
         permanent: true,
       },
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'www.proteinoteka.com.hr' }],
+        destination: 'https://proteinoteka.com.hr/:path*',
+        permanent: true,
+      },
       { source: '/kako-racunamo', destination: '/kako-racunamo-value-score', permanent: true },
       { source: '/brendovi',      destination: '/',                           permanent: true },
       { source: '/blog',          destination: '/vodici',                     permanent: true },

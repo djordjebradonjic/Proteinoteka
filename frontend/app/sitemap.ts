@@ -73,7 +73,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/xsport-proteini`,            changeFrequency: "weekly" as const, priority: 0.8, lastModified: now },
   ] : [];
 
-  const staticPages = [...commonPages, ...rsOnlyPages];
+  const hrOnlyPages: MetadataRoute.Sitemap = CURRENT_MARKET === "hr" ? [
+    { url: `${BASE}/najjeftiniji-whey-protein-hrvatska`, changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
+    { url: `${BASE}/whey-protein-cijena`,                changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
+    { url: `${BASE}/kazein-protein-hrvatska`,            changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
+    { url: `${BASE}/biljni-protein-hrvatska`,            changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
+    { url: `${BASE}/whey-protein-do-20-eura`,            changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
+    { url: `${BASE}/whey-protein-do-40-eura`,            changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
+  ] : [];
+
+  const staticPages = [...commonPages, ...rsOnlyPages, ...hrOnlyPages];
 
   try {
     // Fetch products with enough data to build slug-based URLs

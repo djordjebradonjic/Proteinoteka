@@ -1,3 +1,4 @@
+import { CURRENT_MARKET, MARKET_CONFIG } from '@/lib/marketConfig';
 import { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
@@ -9,20 +10,20 @@ export const metadata: Metadata = {
   title: { absolute: "Da li protein goji? Ne — ali postoji jedan uslov | Proteinoteka" },
   description:
     "Kratki odgovor: ne. Goji te kalorijski suficit — a whey protein ima viši termički efekat od ugljenih hidrata i pomaže sitosti. Evo kada šejk zapravo može da te ugoji i kada pomaže mršavljenju.",
-  alternates: { canonical: "https://proteinoteka.rs/vodici/da-li-protein-goji" },
+  alternates: { canonical: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/vodici/da-li-protein-goji` },
   openGraph: {
     title: "Da li protein goji? Ne — ali postoji jedan uslov | Proteinoteka",
     description:
       "Kratki odgovor: ne. Goji te kalorijski suficit — a whey protein ima viši termički efekat od ugljenih hidrata i pomaže sitosti. Evo kada šejk zapravo može da te ugoji i kada pomaže mršavljenju.",
-    url: "https://proteinoteka.rs/vodici/da-li-protein-goji",
+    url: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/vodici/da-li-protein-goji`,
     siteName: "Proteinoteka",
-    locale: "sr_RS",
+    locale: MARKET_CONFIG[CURRENT_MARKET].ogLocale,
     type: "article",
-    images: [{ url: "https://proteinoteka.rs/opengraph-image", width: 1200, height: 630 }],
+    images: [{ url: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/opengraph-image`, width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    images: ["https://proteinoteka.rs/opengraph-image"],
+    images: [`https://${MARKET_CONFIG[CURRENT_MARKET].domain}/opengraph-image`],
   },
 };
 
@@ -58,7 +59,7 @@ const faqItems = [
   },
 ];
 
-const BASE = "https://proteinoteka.rs";
+const BASE = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
 const SLUG = "/vodici/da-li-protein-goji";
 
 export default function Page() {

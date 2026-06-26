@@ -4,6 +4,7 @@ export const MARKET_CONFIG = {
   rs: {
     currency: 'RSD',
     locale: 'sr-RS',
+    ogLocale: 'sr_RS',
     domain: 'proteinoteka.rs',
     lang: 'sr',
     gaId: 'G-JR077S64MV',
@@ -11,6 +12,7 @@ export const MARKET_CONFIG = {
   hr: {
     currency: 'EUR',
     locale: 'hr-HR',
+    ogLocale: 'hr_HR',
     domain: 'proteinoteka.com.hr',
     lang: 'hr',
     gaId: 'G-YT56QM8MJW',
