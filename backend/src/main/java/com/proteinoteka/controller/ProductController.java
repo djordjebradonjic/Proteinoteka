@@ -339,22 +339,26 @@ public class ProductController {
         return productRepository.findAllIds();
     }
 
-    @Cacheable(value = "products-meta", key = "'brands'")
+    @Cacheable(value = "products-meta", key = "'brands-' + (#market ?: 'rs')")
     @GetMapping("/brands")
-    List<String> getAllBrands() {
-        return productRepository.findAllUniqueBrands();
+    List<String> getAllBrands(@RequestParam(required = false) String market) {
+        String effectiveMarket = (market == null || market.isEmpty()) ? "rs" : market;
+        return productRepository.findAllUniqueBrandsByMarket(effectiveMarket);
     }
 
-    @Cacheable(value = "products-meta", key = "'flavours'")
+    @Cacheable(value = "products-meta", key = "'flavours-' + (#market ?: 'rs')")
     @GetMapping("/flavours")
-    List<String> getAllFlavours() {
-        return productRepository.findAllUniqueFlavours();
+    List<String> getAllFlavours(@RequestParam(required = false) String market) {
+        String effectiveMarket = (market == null || market.isEmpty()) ? "rs" : market;
+        return productRepository.findAllUniqueFlavoursByMarket(effectiveMarket);
     }
 
-    @Cacheable(value = "products-meta", key = "'weight-distribution'")
+    @Cacheable(value = "products-meta", key = "'weight-distribution-' + (#market ?: 'rs')")
     @GetMapping("/weight-distribution")
-    Map<String, Long> getWeightDistribution() {
-        List<Product> all = productRepository.findAll();
+    Map<String, Long> getWeightDistribution(@RequestParam(required = false) String market) {
+        String effectiveMarket = (market == null || market.isEmpty()) ? "rs" : market;
+        Specification<Product> spec = ProductSpecifications.hasMarket(effectiveMarket);
+        List<Product> all = productRepository.findAll(spec);
         Map<String, Long> dist = new java.util.LinkedHashMap<>();
         dist.put("0-500",     countInRange(all, 0, 500));
         dist.put("500-1000",  countInRange(all, 500, 1000));

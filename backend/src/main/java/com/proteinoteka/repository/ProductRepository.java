@@ -45,8 +45,33 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
             """, nativeQuery = true)
     List<String> findAllUniqueBrands();
 
+    @Query(value = """
+            SELECT DISTINCT brand FROM products
+            WHERE brand IS NOT NULL
+              AND market = :market
+              AND brand NOT LIKE '%RSD%'
+              AND brand NOT LIKE '%Kategorij%'
+              AND brand NOT LIKE '%Dodaj%'
+              AND brand NOT LIKE '%stanju%'
+              AND brand NOT LIKE '%korpu%'
+              AND brand NOT LIKE '%kom.%'
+              AND LENGTH(brand) <= 60
+            ORDER BY brand ASC
+            """, nativeQuery = true)
+    List<String> findAllUniqueBrandsByMarket(@Param("market") String market);
+
     @Query(value = "SELECT DISTINCT flavour FROM product_flavours WHERE flavour IS NOT NULL ORDER BY flavour ASC", nativeQuery = true)
     List<String> findAllUniqueFlavours();
+
+    @Query(value = """
+            SELECT DISTINCT pf.flavour
+            FROM product_flavours pf
+            JOIN products p ON pf.product_id = p.id
+            WHERE pf.flavour IS NOT NULL
+              AND p.market = :market
+            ORDER BY pf.flavour ASC
+            """, nativeQuery = true)
+    List<String> findAllUniqueFlavoursByMarket(@Param("market") String market);
 
     @Query("SELECT p FROM products p WHERE p.proteinPer100g IS NULL")
     List<Product> findByProteinPer100gIsNull();
