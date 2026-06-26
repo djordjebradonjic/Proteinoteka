@@ -2,6 +2,7 @@ import { ImageResponse } from "next/og";
 import sharp from "sharp";
 import { extractProductId } from "@/lib/productUrl";
 import { getScoreColor, getScoreLabel } from "@/lib/scoreColor";
+import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
@@ -169,7 +170,7 @@ export default async function Image({
               }}
             >
               <span style={{ color: "#FF9900", fontSize: "15px", fontWeight: "600" }}>
-                proteinoteka.rs
+                {MARKET_CONFIG[CURRENT_MARKET].domain}
               </span>
             </div>
             {product.brand && (
