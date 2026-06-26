@@ -1,6 +1,7 @@
 import Link from "next/link";
+import { CURRENT_MARKET } from "@/lib/marketConfig";
 
-const FEATURES = [
+const FEATURES_RS = [
   {
     emoji: "⚡",
     title: "Value Score",
@@ -26,6 +27,35 @@ const FEATURES = [
     linkLabel: null,
   },
 ];
+
+const FEATURES_HR = [
+  {
+    emoji: "⚡",
+    title: "Value Score",
+    description:
+      "Jedina objektivna ocjena 0–10 za svaki protein u Hrvatskoj. Automatski računa cijenu, količinu proteina i reputaciju brenda — odmah vidiš je li protein vrijedan novca.",
+    href: "/kako-racunamo-value-score",
+    linkLabel: "Kako računamo Value Score →",
+  },
+  {
+    emoji: "💰",
+    title: "Cijena po gramu proteina",
+    description:
+      "Ne gledaj cijenu kutije — gledaj EUR/g proteina koji stvarno dobivaš. Nitko drugi ovo ne računa automatski za hrvatsko tržište.",
+    href: null,
+    linkLabel: null,
+  },
+  {
+    emoji: "🏪",
+    title: "Isti protein, sve trgovine",
+    description:
+      "Pronađi u kojoj trgovini je isti protein najjeftiniji. Uspoređujemo 5 trgovina odjednom — bez Googleanja.",
+    href: null,
+    linkLabel: null,
+  },
+];
+
+const FEATURES = CURRENT_MARKET === "hr" ? FEATURES_HR : FEATURES_RS;
 
 export default function HowItWorks() {
   return (

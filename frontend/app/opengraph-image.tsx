@@ -1,8 +1,11 @@
 import { ImageResponse } from "next/og";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { CURRENT_MARKET } from "@/lib/marketConfig";
 
-export const alt = "Proteinoteka — Uporedi cene proteina u Srbiji";
+export const alt = CURRENT_MARKET === "hr"
+  ? "Proteinoteka — Usporedi cijene proteina u Hrvatskoj"
+  : "Proteinoteka — Uporedi cene proteina u Srbiji";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

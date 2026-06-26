@@ -9,6 +9,10 @@ import {
   MapPin,
   Clock,
 } from "lucide-react";
+import { CURRENT_MARKET } from "@/lib/marketConfig";
+
+const isHR = CURRENT_MARKET === "hr";
+const contactEmail = isHR ? "kontakt@proteinoteka.com.hr" : "kontakt@proteinoteka.rs";
 
 export default function KontaktPage() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
@@ -46,7 +50,7 @@ export default function KontaktPage() {
       setStatus("success");
       setForm({ name: "", email: "", message: "" });
     } catch {
-      setErrorMsg("Greška pri slanju poruke. Pokušaj ponovo.");
+      setErrorMsg(isHR ? "Greška pri slanju poruke. Pokušaj ponovo." : "Greška pri slanju poruke. Pokušaj ponovo.");
       setStatus("error");
     }
   }
@@ -58,7 +62,9 @@ export default function KontaktPage() {
         <div className="text-center mb-10">
           <h1 className="text-3xl font-black text-[#131921] mb-2">Kontakt</h1>
           <p className="text-slate-500 text-sm">
-            Imaš pitanje, sugestiju ili prijavu greške? Piši nam.
+            {isHR
+              ? "Imaš pitanje, prijedlog ili prijavu greške? Piši nam."
+              : "Imaš pitanje, sugestiju ili prijavu greške? Piši nam."}
           </p>
         </div>
 
@@ -74,7 +80,7 @@ export default function KontaktPage() {
                   Email
                 </span>
               </div>
-              <p className="text-sm text-slate-500">kontakt@proteinoteka.rs</p>
+              <p className="text-sm text-slate-500">{contactEmail}</p>
             </div>
 
             <div className="bg-white rounded-xl p-5 border border-slate-100 shadow-sm">
@@ -83,10 +89,10 @@ export default function KontaktPage() {
                   <Clock className="w-4 h-4 text-[#FF9900]" />
                 </div>
                 <span className="font-semibold text-sm text-slate-700">
-                  Vreme odgovora
+                  {isHR ? "Vrijeme odgovora" : "Vreme odgovora"}
                 </span>
               </div>
-              <p className="text-sm text-slate-500">Obično unutar 24h</p>
+              <p className="text-sm text-slate-500">{isHR ? "Obično unutar 24h" : "Obično unutar 24h"}</p>
             </div>
 
             <div className="bg-white rounded-xl p-5 border border-slate-100 shadow-sm">
@@ -98,7 +104,7 @@ export default function KontaktPage() {
                   Lokacija
                 </span>
               </div>
-              <p className="text-sm text-slate-500">Srbija</p>
+              <p className="text-sm text-slate-500">{isHR ? "Hrvatska" : "Srbija"}</p>
             </div>
           </div>
 
@@ -108,23 +114,23 @@ export default function KontaktPage() {
               <div className="flex flex-col items-center justify-center h-full py-12 text-center">
                 <CheckCircle className="w-14 h-14 text-green-500 mb-4" />
                 <h2 className="text-xl font-bold text-slate-800 mb-2">
-                  Poruka poslata!
+                  {isHR ? "Poruka poslana!" : "Poruka poslata!"}
                 </h2>
                 <p className="text-slate-500 text-sm mb-6">
-                  Hvala na poruci. Odgovorićemo ti što pre.
+                  {isHR ? "Hvala na poruci. Odgovorit ćemo ti što prije." : "Hvala na poruci. Odgovorićemo ti što pre."}
                 </p>
                 <button
                   onClick={() => setStatus("idle")}
                   className="px-5 py-2 bg-[#FF9900] hover:bg-[#e68a00] text-[#131921] font-semibold rounded-lg text-sm transition-colors"
                 >
-                  Pošalji novu poruku
+                  {isHR ? "Pošalji novu poruku" : "Pošalji novu poruku"}
                 </button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Ime i prezime
+                    {isHR ? "Ime i prezime" : "Ime i prezime"}
                   </label>
                   <input
                     type="text"
@@ -162,7 +168,7 @@ export default function KontaktPage() {
                     onChange={handleChange}
                     required
                     rows={5}
-                    placeholder="Napiši svoju poruku ovde..."
+                    placeholder={isHR ? "Napiši svoju poruku ovdje..." : "Napiši svoju poruku ovde..."}
                     className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-[#FF9900] focus:border-transparent transition-all placeholder:text-slate-400 resize-none"
                   />
                 </div>
@@ -200,12 +206,12 @@ export default function KontaktPage() {
                           d="M4 12a8 8 0 018-8v8H4z"
                         />
                       </svg>
-                      Slanje...
+                      {isHR ? "Slanje..." : "Slanje..."}
                     </>
                   ) : (
                     <>
                       <Send className="w-4 h-4" />
-                      Pošalji poruku
+                      {isHR ? "Pošalji poruku" : "Pošalji poruku"}
                     </>
                   )}
                 </button>
