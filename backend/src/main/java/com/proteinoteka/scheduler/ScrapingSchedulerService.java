@@ -59,7 +59,9 @@ public class ScrapingSchedulerService {
         // ── HR stores (days 8–14) ────────────────────────────────────────────
         m.put(8,  List.of(new ScrapeWindow(List.of("GymBeam HR"),                   9, 13)));
         m.put(9,  List.of(new ScrapeWindow(List.of("MyProtein HR"),                 9, 13)));
-        // Days 10–12: reserved for Polleo Sport, Proteka, Nutrition Shop HR when implemented
+        m.put(10, List.of(new ScrapeWindow(List.of("Polleo Sport"),                 9, 13)));
+        m.put(11, List.of(new ScrapeWindow(List.of("Proteka"),                      9, 12)));
+        m.put(12, List.of(new ScrapeWindow(List.of("Nutrition Shop HR"),            9, 13)));
         // Days 13–14: rest
         SCHEDULE = java.util.Collections.unmodifiableMap(m);
     }
