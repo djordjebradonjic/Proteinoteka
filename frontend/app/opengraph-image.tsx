@@ -1,20 +1,32 @@
 import { ImageResponse } from "next/og";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { CURRENT_MARKET } from "@/lib/marketConfig";
+import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
 
-export const alt = CURRENT_MARKET === "hr"
+const IS_HR = CURRENT_MARKET === "hr";
+const DOMAIN = MARKET_CONFIG[CURRENT_MARKET].domain;
+
+export const alt = IS_HR
   ? "Proteinoteka — Usporedi cijene proteina u Hrvatskoj"
   : "Proteinoteka — Uporedi cene proteina u Srbiji";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-const rows = [
+const RS_ROWS = [
   { name: "Gold Standard Whey 2.27kg", store: "Proteini.si", price: "11.990", score: 9.1, pct: 80 },
   { name: "Scitec 100% Whey Pro 2.35kg", store: "Pansport", price: "8.120", score: 8.4, pct: 73 },
   { name: "Prostar 100% Whey 2.39kg", store: "FitLab", price: "8.950", score: 7.9, pct: 83 },
   { name: "BioTech 100% Pure Whey 2.27kg", store: "Ogistrashop", price: "7.990", score: 7.2, pct: 79 },
 ];
+
+const HR_ROWS = [
+  { name: "Anabolic Monster Beef 2.2kg", store: "GymBeam HR", price: "59,95", score: 8.8, pct: 90 },
+  { name: "Pure IsoWhey 2.5kg", store: "GymBeam HR", price: "100,95", score: 8.7, pct: 86 },
+  { name: "Impact Whey Izolat 2.5kg", store: "MyProtein HR", price: "159,99", score: 8.7, pct: 82 },
+  { name: "100% Casein 1.81kg", store: "MyProtein HR", price: "79,95", score: 8.1, pct: 78 },
+];
+
+const rows = IS_HR ? HR_ROWS : RS_ROWS;
 
 function scoreColor(s: number) {
   if (s >= 8.5) return "#22c55e";
@@ -54,7 +66,7 @@ export default async function Image() {
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <img src={logoSrc} style={{ width: "38px", height: "38px", objectFit: "contain" }} />
             <span style={{ color: "rgba(255,255,255,0.45)", fontSize: "17px", fontWeight: "500" }}>
-              proteinoteka.rs
+              {DOMAIN}
             </span>
           </div>
 
@@ -65,11 +77,11 @@ export default async function Image() {
             }}>
               <div style={{ width: "28px", height: "3px", background: "#FF9900", borderRadius: "2px", display: "flex" }} />
               <span style={{ color: "#FF9900", fontSize: "14px", fontWeight: "700", letterSpacing: "0.1em", textTransform: "uppercase", display: "flex" }}>
-                Srbija · 2026
+                {IS_HR ? "Hrvatska · 2026" : "Srbija · 2026"}
               </span>
             </div>
             <div style={{ color: "#ffffff", fontSize: "52px", fontWeight: "900", lineHeight: 1.05, letterSpacing: "-0.02em", display: "flex", flexDirection: "column" }}>
-              <span style={{ display: "flex" }}>Gde je</span>
+              <span style={{ display: "flex" }}>{IS_HR ? "Gdje je" : "Gde je"}</span>
               <span style={{ color: "#FF9900", display: "flex" }}>najjeftiniji</span>
               <span style={{ display: "flex" }}>protein?</span>
             </div>
@@ -77,7 +89,7 @@ export default async function Image() {
 
           {/* Stats */}
           <div style={{ display: "flex", gap: "20px" }}>
-            {[["550+", "proteina"], ["11", "prodavnica"]].map(([val, lbl]) => (
+            {(IS_HR ? [["103+", "proteina"], ["5", "trgovina"]] : [["550+", "proteina"], ["11", "prodavnica"]]).map(([val, lbl]) => (
               <div key={lbl} style={{ display: "flex", flexDirection: "column" }}>
                 <span style={{ color: "#FF9900", fontSize: "28px", fontWeight: "800", lineHeight: 1, display: "flex" }}>{val}</span>
                 <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "13px", fontWeight: "500", marginTop: "3px", display: "flex" }}>{lbl}</span>
@@ -120,7 +132,7 @@ export default async function Image() {
             marginBottom: "8px",
           }}>
             <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "12px", fontWeight: "700", letterSpacing: "0.1em", textTransform: "uppercase", flex: 1, display: "flex" }}>Proizvod</span>
-            <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "12px", fontWeight: "700", letterSpacing: "0.1em", textTransform: "uppercase", width: "90px", display: "flex", justifyContent: "flex-end" }}>Cena</span>
+            <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "12px", fontWeight: "700", letterSpacing: "0.1em", textTransform: "uppercase", width: "90px", display: "flex", justifyContent: "flex-end" }}>{IS_HR ? "Cijena" : "Cena"}</span>
             <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "12px", fontWeight: "700", letterSpacing: "0.1em", textTransform: "uppercase", width: "70px", display: "flex", justifyContent: "flex-end" }}>Score</span>
           </div>
 
@@ -177,7 +189,7 @@ export default async function Image() {
                 fontSize: "14px", fontWeight: "700",
                 width: "90px", display: "flex", justifyContent: "flex-end",
               }}>
-                {r.price} RSD
+                {r.price} {IS_HR ? "EUR" : "RSD"}
               </span>
 
               {/* Score badge */}
@@ -209,7 +221,9 @@ export default async function Image() {
           }}>
             <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#22c55e", display: "flex" }} />
             <span style={{ color: "rgba(255,255,255,0.25)", fontSize: "13px", display: "flex" }}>
-              Cene se ažuriraju nedeljno iz svih srpskih prodavnica
+              {IS_HR
+                ? "Cijene se ažuriraju tjedno iz svih hrvatskih trgovina"
+                : "Cene se ažuriraju nedeljno iz svih srpskih prodavnica"}
             </span>
           </div>
         </div>
