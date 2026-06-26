@@ -22,6 +22,7 @@ export default async function ProductRedirectPage({
 
   const product = await fetchProduct(id);
   if (!product) permanentRedirect("/");
+  if (product.market && product.market !== (process.env.NEXT_PUBLIC_MARKET ?? "rs")) notFound();
 
   permanentRedirect(productUrl(product));
 }

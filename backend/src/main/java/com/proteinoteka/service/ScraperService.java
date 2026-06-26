@@ -690,7 +690,9 @@ public class ScraperService {
             existing.setCurrency(store.getCurrency() != null ? store.getCurrency() : "RSD");
             double slugWeight = weightGrams > 0 ? weightGrams
                     : (existing.getPrimaryWeightGrams() != null ? existing.getPrimaryWeightGrams() : 0);
-            existing.setCanonicalSlug(slugifyWithWeight(existing.getName(), slugWeight > 0 ? slugWeight : null));
+            if (existing.getCanonicalSlug() == null || existing.getCanonicalSlug().isBlank()) {
+                existing.setCanonicalSlug(slugifyWithWeight(existing.getName(), slugWeight > 0 ? slugWeight : null));
+            }
             productRepository.save(existing);
             productGroupService.tryAutoAssign(existing);
 

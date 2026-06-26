@@ -29,4 +29,6 @@ export interface Product {
   percentileRank?: number | null;
   lastUpdated?: string | null;
   canonicalSlug?: string | null;
+  market?: string | null;
+  currency?: string | null;
 }

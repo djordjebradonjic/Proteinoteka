@@ -34,7 +34,7 @@ async function fetchProduct(id: number): Promise<Product | null> {
 
 async function fetchSimilar(category: string, excludeId: number): Promise<Product[]> {
   try {
-    const res = await fetch(`${API}/api/v1/products?category=${category}&size=7`, { next: { revalidate: 86400, tags: ["products"] } });
+    const res = await fetch(`${API}/api/v1/products?category=${category}&size=7&market=${CURRENT_MARKET}`, { next: { revalidate: 86400, tags: ["products"] } });
     if (!res.ok) return [];
     const data = await res.json();
     return (data.content as Product[]).filter((p) => p.id !== excludeId).slice(0, 6);
@@ -92,7 +92,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   if (!id) return { title: { absolute: "Proizvod | Proteinoteka" } };
 
   const product = await fetchProduct(id);
-  if (!product) return { title: { absolute: "Proizvod | Proteinoteka" } };
+  if (!product || (product.market && product.market !== CURRENT_MARKET)) return { title: { absolute: "Proizvod | Proteinoteka" } };
 
   const canonical   = `${BASE_URL}${productUrl(product)}`;
   const title       = buildProductTitle(product.name);
@@ -112,11 +112,6 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     description,
     alternates: {
       canonical,
-      languages: {
-        "sr": `https://proteinoteka.rs${productUrl(product)}`,
-        "hr": `https://proteinoteka.com.hr${productUrl(product)}`,
-        "x-default": `https://proteinoteka.rs${productUrl(product)}`,
-      },
     },
     openGraph: {
       title,
@@ -157,6 +152,10 @@ export default async function ProductSlugPage({ params }: Params) {
     // can recrawl a useful page instead of accumulating 404s in GSC.
     permanentRedirect(PRODUCT_CATEGORY_TO_KATEGORIJA[category] ?? "/");
   }
+
+  // Wrong-market product accessed on this deployment — hard 404 to prevent
+  // cross-domain duplicate content (RS products served on HR site and vice versa).
+  if (product.market && product.market !== CURRENT_MARKET) notFound();
 
   // Canonical enforcement: stale or mistyped URLs redirect to the current canonical form
   const canonical = productUrl(product);

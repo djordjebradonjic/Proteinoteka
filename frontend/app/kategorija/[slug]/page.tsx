@@ -142,7 +142,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 async function getCategoryProducts(categoryValue: string) {
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/products?page=0&size=12&sort=id,desc&category=${categoryValue}`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/products?page=0&size=12&sort=id,desc&category=${categoryValue}&market=${CURRENT_MARKET}`,
       { next: { revalidate: 86400 } },
     );
     const data = await res.json();
