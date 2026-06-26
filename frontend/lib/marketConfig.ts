@@ -6,12 +6,14 @@ export const MARKET_CONFIG = {
     locale: 'sr-RS',
     domain: 'proteinoteka.rs',
     lang: 'sr',
+    gaId: 'G-JR077S64MV',
   },
   hr: {
     currency: 'EUR',
     locale: 'hr-HR',
     domain: 'proteinoteka.com.hr',
     lang: 'hr',
+    gaId: 'G-YT56QM8MJW',
   },
 } as const;
 

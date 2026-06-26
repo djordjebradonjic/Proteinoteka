@@ -195,9 +195,9 @@ export default async function RootLayout({
                 ad_personalization: 'denied',
               });
               gtag('js', new Date());
-              gtag('config', 'G-JR077S64MV');
+              gtag('config', '${MARKET_CONFIG[CURRENT_MARKET].gaId}');
               var _s = document.createElement('script');
-              _s.src = 'https://www.googletagmanager.com/gtag/js?id=G-JR077S64MV';
+              _s.src = 'https://www.googletagmanager.com/gtag/js?id=${MARKET_CONFIG[CURRENT_MARKET].gaId}';
               _s.async = true;
               document.head.appendChild(_s);
             `,
