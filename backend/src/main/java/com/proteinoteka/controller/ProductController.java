@@ -208,14 +208,15 @@ public class ProductController {
     public List<ProductDTO> getTopProducts(
             @RequestParam(required = false) String category,
             @RequestParam(defaultValue = "valueScore") String sortBy,
-            @RequestParam(defaultValue = "10") int limit) {
+            @RequestParam(defaultValue = "10") int limit,
+            @RequestParam(required = false) String market) {
 
         int safeLimit = Math.min(limit, 30);
 
-        Specification<Product> spec = (root, query, cb) -> cb.and(
+        Specification<Product> spec = ((Specification<Product>) (root, query, cb) -> cb.and(
                 cb.isNotNull(root.get("valueScore")),
                 cb.greaterThan(root.get("numericPrice"), 0.0)
-        );
+        )).and(ProductSpecifications.hasMarket(market));
         if (category != null && !category.isBlank()) {
             spec = spec.and(ProductSpecifications.hasProteinSource(category));
         }
@@ -230,14 +231,15 @@ public class ProductController {
                 .toList();
     }
 
-    @Cacheable("products")
+    @Cacheable(value = "products", key = "'top-value-' + #market + '-' + #limit")
     @GetMapping("/top-value")
     public List<ProductDTO> getTopValueProducts(
-            @RequestParam(defaultValue = "5") int limit) {
+            @RequestParam(defaultValue = "5") int limit,
+            @RequestParam(required = false) String market) {
 
         int safeLimit = Math.min(limit, 20);
 
-        Specification<Product> spec = (root, query, cb) -> cb.and(
+        Specification<Product> spec = ((Specification<Product>) (root, query, cb) -> cb.and(
                 cb.isNotNull(root.get("valueScore")),
                 cb.greaterThan(root.get("numericPrice"), 0.0),
                 cb.isNotNull(root.get("sugarPer100g")),
@@ -246,7 +248,7 @@ public class ProductController {
                 cb.isNotNull(root.get("description")),
                 cb.notEqual(cb.trim(root.get("description")), ""),
                 cb.greaterThanOrEqualTo(root.get("primaryWeightGrams"), 500.0)
-        );
+        )).and(ProductSpecifications.hasMarket(market));
 
         // Fetch 5× more than needed so both deduplication passes still fill the limit.
         // Guardrails: max 1 product per brand; per-source caps:
@@ -279,12 +281,14 @@ public class ProductController {
                 .toList();
     }
 
-    @Cacheable("price-drops")
+    @Cacheable(value = "price-drops", key = "'drops-' + #market + '-' + #limit")
     @GetMapping("/price-drops")
     public List<ProductDTO> getPriceDrops(
-            @RequestParam(defaultValue = "5") int limit) {
+            @RequestParam(defaultValue = "5") int limit,
+            @RequestParam(required = false) String market) {
 
         int safeLimit = Math.min(limit, 20);
+        String effectiveMarket = (market == null || market.isEmpty()) ? "rs" : market;
 
         // Find all products that have ever changed price (2+ history entries).
         // convertToDTO already sets previousPrice = most-recent history entry
@@ -292,6 +296,7 @@ public class ProductController {
         // If previousPrice > numericPrice the price dropped — no time window needed.
         return priceHistoryRepository.findProductsWithMultiplePriceEntries().stream()
                 .filter(p -> p.getNumericPrice() != null && p.getNumericPrice() > 0)
+                .filter(p -> effectiveMarket.equals(p.getMarket()))
                 .map(this::convertToDTO)
                 .filter(dto -> dto.previousPrice() != null
                         && dto.numericPrice() != null
