@@ -625,9 +625,9 @@ public class ScraperService {
             if (oldNumericPrice != null && oldNumericPrice > 0) {
                 double changePct = Math.abs(numericPrice - oldNumericPrice) / oldNumericPrice;
                 if (changePct > 0.65) {
-                    log.warn("[{}] Suspicious price change for '{}': {} → {} RSD ({}%) — keeping old price",
+                    log.warn("[{}] Suspicious price change for '{}': {} → {} {} ({}%) — keeping old price",
                             store.getName(), existing.getName(),
-                            Math.round(oldNumericPrice), Math.round(numericPrice),
+                            oldNumericPrice, numericPrice, store.getCurrency(),
                             Math.round(changePct * 100));
                     return true;
                 }
@@ -636,9 +636,9 @@ public class ScraperService {
             String oldPrice = existing.getPrice();
             if (oldNumericPrice != null && numericPrice != null
                     && Math.abs(oldNumericPrice - numericPrice) > 0.01) {
-                log.info("[{}] Price change for '{}': {} -> {} RSD",
+                log.info("[{}] Price change for '{}': {} -> {} {}",
                         store.getName(), existing.getName(),
-                        Math.round(oldNumericPrice), Math.round(numericPrice));
+                        oldNumericPrice, numericPrice, store.getCurrency());
                 PriceHistory history = new PriceHistory();
                 history.setProduct(existing);
                 history.setPrice(oldPrice);
@@ -666,12 +666,23 @@ public class ScraperService {
                 existing.setPackage_weight(scraped.getPackage_weight());
             if (scraped.getFlavours() != null && !scraped.getFlavours().isEmpty())
                 existing.setFlavours(scraped.getFlavours());
-            if (weightGrams > 0)
-                existing.setPrimaryWeightGrams(weightGrams);
+            if (weightGrams > 0) {
+                Double oldWeight = existing.getPrimaryWeightGrams();
+                // Only update weight when change exceeds 2% — prevents source-of-truth
+                // discrepancies (e.g. vendor catalog says 1600g, manufacturer label says 1590g)
+                // from reverting manual corrections while still catching real packaging changes.
+                if (oldWeight == null || Math.abs(weightGrams - oldWeight) / oldWeight > 0.02) {
+                    existing.setPrimaryWeightGrams(weightGrams);
+                }
+            }
 
-            // GROUP 3 — ažuriraj samo ako je null u bazi
-            if (scraped.getProteinPer100g() != null && scraped.getProteinPer100g() <= 95) {
-                if (existing.getProteinPer100g() == null || existing.getProteinPer100g() < 15) {
+            // GROUP 3 — ažuriraj protein ako je null ili ako se promenio za >3g/100g
+            // (hvata reformulacije i ispravlja pogrešne stare vrijednosti)
+            if (scraped.getProteinPer100g() != null && scraped.getProteinPer100g() <= 95
+                    && scraped.getProteinPer100g() >= 15) {
+                Double existingProtein = existing.getProteinPer100g();
+                if (existingProtein == null || existingProtein < 15
+                        || Math.abs(scraped.getProteinPer100g() - existingProtein) > 3.0) {
                     existing.setProteinPer100g(scraped.getProteinPer100g());
                 }
             }
