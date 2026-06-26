@@ -130,6 +130,12 @@ public class AdminController {
         return ResponseEntity.accepted().body("MyProtein scraping started in background");
     }
 
+    @PostMapping("/scrape/myprotein-hr")
+    public ResponseEntity<String> scrapeMyProteinHr() {
+        runAsync("scraper-myprotein-hr", () -> schedulerService.scrapeStoreNow("MyProtein HR"));
+        return ResponseEntity.accepted().body("MyProtein HR scraping started in background");
+    }
+
     @PostMapping("/scrape/lama")
     public ResponseEntity<String> scrapeLama() {
         runAsync("scraper-lama", () -> schedulerService.scrapeStoreNow("Lama"));
