@@ -4,6 +4,7 @@ import { useRef, useState, useEffect, useCallback } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Product } from "@/types/product";
 import ProductCard from "@/components/ProductCard";
+import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
 
 interface Props {
   products: Product[];
@@ -20,6 +21,7 @@ export default function ProductCarousel({
   accentColor = "#FF9900",
   showPriceDropBadge = false,
 }: Props) {
+  const { currency } = MARKET_CONFIG[CURRENT_MARKET];
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canLeft, setCanLeft]   = useState(false);
   const [canRight, setCanRight] = useState(false);
@@ -139,7 +141,7 @@ export default function ProductCarousel({
                   {priceDrop > 0 && (
                     <div className="absolute top-[7px] left-[7px] z-30 pointer-events-none">
                       <span className="flex items-center gap-0.5 bg-green-500 text-white text-[10px] font-black px-2 py-[3px] rounded-md shadow-lg leading-none">
-                        ↓{Math.round(priceDrop).toLocaleString()} RSD
+                        ↓{currency === "EUR" ? priceDrop.toFixed(2) : Math.round(priceDrop).toLocaleString()} {currency}
                       </span>
                     </div>
                   )}

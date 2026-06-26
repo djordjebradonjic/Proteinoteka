@@ -4,14 +4,19 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer,
 } from "recharts";
+import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
 
 interface ChartPoint {
   datum: string;
   cena: number;
 }
 
+const { currency } = MARKET_CONFIG[CURRENT_MARKET];
+
 function fmt(val: number) {
-  return Math.round(val).toLocaleString("de-DE");
+  return currency === "EUR"
+    ? val.toFixed(2)
+    : Math.round(val).toLocaleString("de-DE");
 }
 
 export default function PriceHistoryChart({ data }: { data: ChartPoint[] }) {
@@ -53,7 +58,7 @@ export default function PriceHistoryChart({ data }: { data: ChartPoint[] }) {
                 <p className="text-[11px] text-slate-400 mb-1">{payload[0].payload.datum}</p>
                 <p className="text-[15px] font-black text-slate-900 leading-none">
                   {fmt(payload[0].value as number)}{" "}
-                  <span className="text-xs font-semibold text-slate-400">RSD</span>
+                  <span className="text-xs font-semibold text-slate-400">{currency}</span>
                 </p>
               </div>
             ) : null

@@ -1,3 +1,5 @@
+import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
+
 interface Props {
   numericPrice: number;
   proteinPer100g: number | null;
@@ -7,7 +9,15 @@ interface Props {
 
 type Tier = { label: string; valueCls: string; badgeCls: string };
 
+const { currency } = MARKET_CONFIG[CURRENT_MARKET];
+const isEur = currency === "EUR";
+
 function getTier(v: number): Tier {
+  if (isEur) {
+    if (v < 0.05) return { label: "Odlična vrijednost", valueCls: "text-green-700", badgeCls: "bg-green-100 text-green-700" };
+    if (v <= 0.09) return { label: "Prosječna vrijednost", valueCls: "text-amber-700", badgeCls: "bg-amber-100 text-amber-700" };
+    return { label: "Visoka cijena", valueCls: "text-red-700", badgeCls: "bg-red-100 text-red-700" };
+  }
   if (v < 5)  return { label: "Odlična vrednost", valueCls: "text-green-700", badgeCls: "bg-green-100 text-green-700" };
   if (v <= 9) return { label: "Prosečna vrednost", valueCls: "text-amber-700",  badgeCls: "bg-amber-100  text-amber-700"  };
   return       { label: "Visoka cena",          valueCls: "text-red-700",   badgeCls: "bg-red-100   text-red-700"   };
@@ -39,8 +49,8 @@ export default function PricePerGramBadge({
       {/* Number + pill in the same column → pill aligns with number */}
       <div className="flex flex-col gap-1">
         <p className={`font-bold leading-none ${metricSize}`}>
-          <span className={tier.valueCls}>{v.toFixed(1)}</span>
-          <span className="text-[#8A8A9A] font-normal"> RSD/g proteina</span>
+          <span className={tier.valueCls}>{v.toFixed(isEur ? 2 : 1)}</span>
+          <span className="text-[#8A8A9A] font-normal"> {currency}/g proteina</span>
         </p>
         <span className={`inline-flex items-center w-fit rounded-full font-semibold leading-none ${tier.badgeCls} ${pillSize}`}>
           {tier.label}

@@ -5,10 +5,12 @@ import { Product } from "@/types/product";
 import { productUrl } from "@/lib/productUrl";
 import PriceTag from "@/components/PriceTag";
 import { getScoreConfig } from "@/lib/scoreColor";
+import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
 
 interface Props { product: Product }
 
 export default function FeaturedValueCard({ product }: Props) {
+  const { currency } = MARKET_CONFIG[CURRENT_MARKET];
   const vs  = product.valueScore;
   const cfg = vs != null ? getScoreConfig(vs) : null;
 
@@ -76,7 +78,7 @@ export default function FeaturedValueCard({ product }: Props) {
         <div className="mt-auto pt-1">
           <PriceTag price={product.numericPrice} className="text-lg font-semibold text-slate-900" />
           {ppg != null && ppg < 50 && (
-            <p className="text-xs text-slate-400">🏷️ {ppg.toFixed(1)} RSD/g proteina</p>
+            <p className="text-xs text-slate-400">🏷️ {ppg.toFixed(currency === "EUR" ? 2 : 1)} {currency}/g proteina</p>
           )}
         </div>
 
