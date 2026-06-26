@@ -15,7 +15,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -272,11 +271,20 @@ public class MyProteinHrScraper implements StoreScraper {
         List<Product> variants = new ArrayList<>();
         String cleanName = ProductNameCleaner.clean(masterData.path("pageTitle").asText(stub.getName()));
 
-        // Group by price in cents to distinguish real price tiers while collapsing
-        // same-tier flavour variants. EUR prices have decimals so we round to cents
-        // (multiply by 100) rather than to the nearest integer as the RS scraper does.
-        Map<Long, List<JsonNode>> groupsByPrice = new LinkedHashMap<>();
-        Map<JsonNode, Double> gramsByVariant = new IdentityHashMap<>();
+        // MyProtein HR ties gram weight to flavour, not to serving tier:
+        //   30Porcija → Banana=780g, Čokolada karamel=810g, Americano=840g, Vanilija=900g — all €83.99
+        //   90Porcija → 2.34kg–2.7kg depending on flavour — all €228.99
+        // Grouping by exact grams creates 4 near-duplicate listings for one price tier.
+        // Grouping by price collapses the 83Porcija special (2.5KG €228.99) with the
+        // 90Porcija standard tier (2.34–2.7kg €228.99) into one entry.
+        // Grouping by SERVING COUNT (the "Porcija" number) matches how MyProtein presents
+        // its tiers on the product page and avoids both problems. Within each tier we
+        // keep the largest gram weight (most representative pack) and the cheapest
+        // variant's SKU for the ?variation= direct-link so the user lands on the exact SKU.
+        Map<Integer, JsonNode> cheapestByServings = new LinkedHashMap<>();
+        Map<Integer, Double> maxGramsByServings = new LinkedHashMap<>();
+        Map<Integer, List<String>> flavoursByServings = new LinkedHashMap<>();
+        String productImageUrl = null;
 
         for (JsonNode v : masterData.path("variants")) {
             if (!v.path("inStock").asBoolean(false)) continue;
@@ -307,71 +315,87 @@ public class MyProteinHrScraper implements StoreScraper {
             double price = v.path("price").path("price").path("amount").asDouble(0);
             if (price <= 0) continue;
 
-            long priceCents = Math.round(price * 100);
-            groupsByPrice.computeIfAbsent(priceCents, k -> new ArrayList<>()).add(v);
-            gramsByVariant.put(v, grams);
+            // Serving count is the natural tier key MyProtein uses ("30Porcija", "90Porcija" etc.).
+            // When unparseable (unusual format), fall back to grams as surrogate group key.
+            int servings = parseServingCount(amountTitle);
+            int groupKey = servings >= 0 ? servings : (int) grams;
+
+            if (flavourTitle != null && !flavourTitle.isBlank()) {
+                flavoursByServings.computeIfAbsent(groupKey, k -> new ArrayList<>()).add(flavourTitle);
+            } else {
+                flavoursByServings.computeIfAbsent(groupKey, k -> new ArrayList<>());
+            }
+
+            // Max grams in this tier = the largest / most representative pack
+            maxGramsByServings.merge(groupKey, grams, Math::max);
+
+            // Cheapest variant in this tier — its SKU becomes ?variation= in the buy link.
+            // Confirmed from live masterData: 'sku' field = ?variation= parameter in browser URL.
+            JsonNode existing = cheapestByServings.get(groupKey);
+            double existingPrice = existing != null
+                    ? existing.path("price").path("price").path("amount").asDouble(Double.MAX_VALUE)
+                    : Double.MAX_VALUE;
+            if (existing == null || price < existingPrice) {
+                cheapestByServings.put(groupKey, v);
+            }
+
+            // Product-level image (v.product.images) is shared across all variants
+            if (productImageUrl == null) {
+                JsonNode images = v.path("product").path("images");
+                if (images.isArray() && !images.isEmpty()) {
+                    String img = images.get(0).path("original").asText(null);
+                    if (img != null && !img.isBlank()) productImageUrl = img;
+                }
+            }
         }
 
-        Map<String, Product> variantsByWeightLabel = new LinkedHashMap<>();
+        // Strip any query params from the stub URL — a redirected stub can carry stale params
+        String baseUrl = stub.getUrl().contains("?") ? stub.getUrl().split("\\?")[0] : stub.getUrl();
+        String fallbackImage = productImageUrl != null ? productImageUrl : stub.getImageUrl();
 
-        for (Map.Entry<Long, List<JsonNode>> entry : groupsByPrice.entrySet()) {
-            long priceCents = entry.getKey();
-            List<JsonNode> members = entry.getValue();
+        for (Map.Entry<Integer, JsonNode> entry : cheapestByServings.entrySet()) {
+            int groupKey = entry.getKey();
+            JsonNode cheapest = entry.getValue();
 
-            double minGrams = members.stream()
-                    .mapToDouble(gramsByVariant::get)
-                    .min().orElse(0);
-            if (minGrams <= 0) continue;
-            String weightLabel = formatWeightLabel(minGrams);
+            double price = cheapest.path("price").path("price").path("amount").asDouble(0);
+            double maxGrams = maxGramsByServings.getOrDefault(groupKey, 0.0);
+            if (maxGrams <= 0) continue;
+            String weightLabel = formatWeightLabel(maxGrams);
 
-            String imageUrl = null;
-            for (JsonNode v : members) {
-                if (imageUrl == null) {
-                    JsonNode images = v.path("product").path("images");
-                    if (images.isArray() && !images.isEmpty()) {
-                        String img = images.get(0).path("original").asText(null);
-                        if (img != null && !img.isBlank()) imageUrl = img;
-                    }
-                }
+            String variationId = cheapest.path("sku").asText(null);
+            String variantUrl = baseUrl + "?pakovanje=" + weightLabel;
+            if (variationId != null && !variationId.isBlank() && !"null".equals(variationId)) {
+                variantUrl += "&variation=" + variationId;
             }
 
             List<String> flavours = new ArrayList<>();
-            for (JsonNode v : members) {
-                for (JsonNode c : v.path("choices")) {
-                    if ("Flavour".equals(c.path("optionKey").asText())) {
-                        String flavour = c.path("title").asText().trim();
-                        if (!flavour.isBlank() && !flavours.contains(flavour))
-                            flavours.add(flavour);
-                    }
-                }
+            for (String f : flavoursByServings.getOrDefault(groupKey, Collections.emptyList())) {
+                if (!flavours.contains(f)) flavours.add(f);
             }
 
-            Product existing = variantsByWeightLabel.get(weightLabel);
-            long existingCents = existing != null
-                    ? Math.round(Double.parseDouble(existing.getPrice()) * 100) : Long.MAX_VALUE;
+            Product variant = new Product();
+            variant.setName(cleanName);
+            variant.setUrl(variantUrl);
+            variant.setPrice(formatEurPrice(price));
+            variant.setImageUrl(fallbackImage);
+            variant.getPackage_weight().add(weightLabel);
+            variant.setPrimaryWeightGrams(maxGrams);
+            variant.getFlavours().addAll(flavours);
 
-            if (existing == null || priceCents < existingCents) {
-                Product variant = new Product();
-                variant.setName(cleanName);
-                variant.setUrl(stub.getUrl() + (stub.getUrl().contains("?") ? "&" : "?") + "pakovanje=" + weightLabel);
-                variant.setPrice(formatEurPrice(priceCents / 100.0));
-                variant.setImageUrl(imageUrl != null ? imageUrl : stub.getImageUrl());
-                variant.getPackage_weight().add(weightLabel);
-                variant.setPrimaryWeightGrams(minGrams);
-                variant.getFlavours().addAll(flavours);
-                if (existing != null) {
-                    for (String f : existing.getFlavours())
-                        if (!variant.getFlavours().contains(f)) variant.getFlavours().add(f);
-                }
-                variantsByWeightLabel.put(weightLabel, variant);
-            } else {
-                for (String f : flavours)
-                    if (!existing.getFlavours().contains(f)) existing.getFlavours().add(f);
-            }
+            variants.add(variant);
         }
 
-        variants.addAll(variantsByWeightLabel.values());
         return variants;
+    }
+
+    // Parses "30Porcija" or "90 Porcija" from an Amount title; returns -1 if not found.
+    private static int parseServingCount(String title) {
+        if (title == null) return -1;
+        Matcher m = Pattern.compile("(\\d+)\\s*Porcija", Pattern.CASE_INSENSITIVE).matcher(title);
+        if (m.find()) {
+            try { return Integer.parseInt(m.group(1)); } catch (Exception ignored) {}
+        }
+        return -1;
     }
 
     private static void copyNutritionFields(Product from, Product to) {
@@ -474,7 +498,7 @@ public class MyProteinHrScraper implements StoreScraper {
 
                     // HR table sub-rows (e.g. "od toga zasićene", "od toga šećeri") have
                     // a regular non-empty first cell — no column offset needed (unlike RS).
-                    String label = cells.get(0).text().replace(" ", " ").trim().toLowerCase();
+                    String label = cells.get(0).text().replace(" ", " ").trim().toLowerCase();
                     int valueCol = per100gCol;
                     if (cells.size() <= valueCol) continue;
 
