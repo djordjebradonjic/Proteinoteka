@@ -1,4 +1,5 @@
 import { MetadataRoute } from 'next';
+import { CURRENT_MARKET, MARKET_CONFIG } from '@/lib/marketConfig';
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -27,6 +28,6 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: 'https://proteinoteka.rs/sitemap.xml',
+    sitemap: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/sitemap.xml`,
   };
 }
