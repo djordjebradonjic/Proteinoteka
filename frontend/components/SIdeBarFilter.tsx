@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Plus, Minus, SlidersHorizontal, X, Search } from "lucide-react";
 import { CATEGORIES } from "@/lib/categories";
+import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
 
 function FilterGroup({
   label,
@@ -154,7 +155,7 @@ function PriceRange({
         className="flex items-center justify-between w-full text-left"
       >
         <span className="text-sm font-bold text-[#1A1A1A] uppercase tracking-wide flex items-center gap-2">
-          Cena (RSD)
+          Cena ({MARKET_CONFIG[CURRENT_MARKET].currency})
           {isActive && (
             <span className="w-1.5 h-1.5 rounded-full bg-[#FF9900] shrink-0" />
           )}
@@ -310,19 +311,30 @@ export interface SidebarFilterProps {
   onCloseDrawer: () => void;
 }
 
-const STORES = [
-  "Pansport",
-  "Proteini.si",
-  "Proteinbox",
-  "Supplementshop",
-  "FitLab",
-  "Ogistrashop",
-  "GymBeam",
-  "MyProtein",
-  "Lama",
-  "Shopbuilder",
-  "XSport",
-];
+const STORES_BY_MARKET: Record<string, string[]> = {
+  rs: [
+    "Pansport",
+    "Proteini.si",
+    "Proteinbox",
+    "Supplementshop",
+    "FitLab",
+    "Ogistrashop",
+    "GymBeam",
+    "MyProtein",
+    "Lama",
+    "Shopbuilder",
+    "XSport",
+  ],
+  hr: [
+    "GymBeam HR",
+    "MyProtein HR",
+    "Polleo Sport",
+    "Proteka",
+    "Nutrition Shop HR",
+  ],
+};
+
+const STORES = STORES_BY_MARKET[CURRENT_MARKET] ?? STORES_BY_MARKET.rs;
 
 function FilterContent({
   brands,

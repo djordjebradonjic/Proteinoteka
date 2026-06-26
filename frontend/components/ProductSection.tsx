@@ -8,6 +8,7 @@ import SortSelect from "./SortSelect";
 import ProductGrid from "./ProductGrid";
 import { ArrowUpDown, SlidersHorizontal, X } from "lucide-react";
 import { getCategoryByValue } from "@/lib/categories";
+import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
 import RelatedGuides from "@/components/RelatedGuides";
 import ValueScoreBanner from "@/components/ValueScoreBanner";
 
@@ -313,8 +314,8 @@ export default function ProductSection({
     ...selectedFlavours.map(f => ({ key: `flavour-${f}`, label: `Ukus: ${f}`,  onRemove: () => toggleFilter("flavour", f) })),
     ...urlCategories.map(  c => ({ key: `cat-${c}`,      label: getCategoryByValue(c)?.label ?? c, onRemove: () => toggleFilter("category", c) })),
     ...selectedWeightRanges.map(w => ({ key: `pak-${w}`, label: WEIGHT_RANGES.find(r => r.value === w)?.label ?? w, onRemove: () => toggleFilter("pakovanje", w) })),
-    minPrice  ? { key: "minPrice", label: `od ${minPrice} RSD`, onRemove: () => updateFilters("minPrice", "") } : null,
-    maxPrice  ? { key: "maxPrice", label: `do ${maxPrice} RSD`, onRemove: () => updateFilters("maxPrice", "") } : null,
+    minPrice  ? { key: "minPrice", label: `od ${minPrice} ${MARKET_CONFIG[CURRENT_MARKET].currency}`, onRemove: () => updateFilters("minPrice", "") } : null,
+    maxPrice  ? { key: "maxPrice", label: `do ${maxPrice} ${MARKET_CONFIG[CURRENT_MARKET].currency}`, onRemove: () => updateFilters("maxPrice", "") } : null,
   ].filter(Boolean) as Chip[];
 
   // Show guides when exactly one category is active (dedicated page or single filter)
