@@ -9,6 +9,9 @@ import { productUrl } from "@/lib/productUrl";
 import { navigateTo } from "@/lib/navigation";
 import PriceTag from "@/components/PriceTag";
 import { getScoreColor, getScoreBg, getScoreLabel } from "@/lib/scoreColor";
+import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
+
+const { locale, currency } = MARKET_CONFIG[CURRENT_MARKET];
 
 interface ProductSuggestion {
   id: number;
@@ -95,7 +98,7 @@ export default function SearchAutocomplete({
             id: p.id,
             name: p.name,
             imageUrl: p.imageUrl ?? "",
-            price: p.price ?? `${p.numericPrice?.toLocaleString("sr-RS")} RSD`,
+            price: p.price ?? `${p.numericPrice?.toLocaleString(locale)} ${currency}`,
             numericPrice: p.numericPrice ?? 0,
             brand: p.brand ?? "",
             valueScore: p.valueScore,

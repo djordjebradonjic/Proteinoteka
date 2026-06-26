@@ -5,6 +5,18 @@ import { Plus, Minus, SlidersHorizontal, X, Search } from "lucide-react";
 import { CATEGORIES } from "@/lib/categories";
 import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
 
+const IS_HR = CURRENT_MARKET === "hr";
+
+const LABELS = {
+  stores:       IS_HR ? "Trgovina"      : "Prodavnica",
+  flavour:      IS_HR ? "Okus"          : "Ukus",
+  weight:       IS_HR ? "Pakiranje"     : "Pakovanje",
+  searchFlavour: IS_HR ? "Pretraži okus..." : "Pretraži ukus...",
+  resetAll:     IS_HR ? "Poništi sve"   : "Resetuj sve",
+  showResults:  IS_HR ? "Prikaži rezultate" : "Prikaži rezultate",
+  currency:     MARKET_CONFIG[CURRENT_MARKET].currency,
+};
+
 function FilterGroup({
   label,
   options,
@@ -68,7 +80,7 @@ function FilterGroup({
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Pretraži ukus..."
+                placeholder={LABELS.searchFlavour}
                 className="w-full border border-slate-200 rounded-md pl-8 pr-7 py-1.5 text-sm outline-none focus:ring-1 focus:ring-[#FF9900] focus:border-[#FF9900] placeholder:text-slate-400"
               />
               {search && (
@@ -155,7 +167,7 @@ function PriceRange({
         className="flex items-center justify-between w-full text-left"
       >
         <span className="text-sm font-bold text-[#1A1A1A] uppercase tracking-wide flex items-center gap-2">
-          Cena ({MARKET_CONFIG[CURRENT_MARKET].currency})
+          Cena ({LABELS.currency})
           {isActive && (
             <span className="w-1.5 h-1.5 rounded-full bg-[#FF9900] shrink-0" />
           )}
@@ -238,7 +250,7 @@ function WeightRangeFilter({
         className="flex items-center justify-between w-full text-left"
       >
         <span className="text-sm font-bold text-[#1A1A1A] uppercase tracking-wide flex items-center gap-2">
-          Pakovanje
+          {LABELS.weight}
           {selected.length > 0 && (
             <span className="bg-[#FF9900] text-[#1B2B4B] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
               {selected.length}
@@ -379,7 +391,7 @@ function FilterContent({
             onClick={onReset}
             className="text-xs text-[#FF9900] hover:text-[#e68a00] font-semibold transition-colors"
           >
-            Resetuj sve
+            {LABELS.resetAll}
           </button>
         )}
       </div>
@@ -410,7 +422,7 @@ function FilterContent({
       </div>
 
       <FilterGroup
-        label="Prodavnica"
+        label={LABELS.stores}
         options={STORES}
         selected={selectedStore}
         onChange={onStoreChange}
@@ -424,7 +436,7 @@ function FilterContent({
         onChange={onBrandChange}
       />
       <FilterGroup
-        label="Ukus"
+        label={LABELS.flavour}
         options={flavours}
         selected={selectedFlavour}
         onChange={onFlavourChange}

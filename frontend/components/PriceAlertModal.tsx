@@ -12,6 +12,9 @@ import {
 import { addToWishlist, removeFromWishlist } from "@/store/wishlistSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { analytics } from "@/lib/analytics";
+import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
+
+const { locale: MARKET_LOCALE, currency: MARKET_CURRENCY } = MARKET_CONFIG[CURRENT_MARKET];
 
 export interface AlertableProduct {
   id: number;
@@ -33,7 +36,7 @@ type Phase = "form" | "loading" | "success" | "error";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function formatPrice(n: number) {
-  return new Intl.NumberFormat("sr-RS").format(Math.round(n));
+  return new Intl.NumberFormat(MARKET_LOCALE).format(Math.round(n));
 }
 
 function parseInputPrice(raw: string): number | null {
@@ -194,7 +197,7 @@ export default function PriceAlertModal({ product, initialAlert, onClose }: Prop
               <h3 className="text-lg font-bold text-slate-900 mb-2">Alert aktiviran!</h3>
               <p className="text-sm text-slate-500 mb-6 leading-relaxed">
                 Poslaćemo email na <span className="font-semibold text-slate-700">{email}</span> čim
-                cena {useTargetPrice ? `padne ispod ${formatPrice(parseInputPrice(targetInput) ?? 0)} RSD` : "značajno padne"}.
+                cena {useTargetPrice ? `padne ispod ${formatPrice(parseInputPrice(targetInput) ?? 0)} ${MARKET_CURRENCY}` : "značajno padne"}.
               </p>
               <button
                 onClick={() => onClose(true)}
@@ -243,7 +246,7 @@ export default function PriceAlertModal({ product, initialAlert, onClose }: Prop
                   )}
                   <div className="min-w-0">
                     <p className="text-xs font-semibold text-slate-800 truncate leading-tight">{product.name}</p>
-                    <p className="text-base font-black text-slate-900 mt-0.5">{formatPrice(product.numericPrice ?? 0)} RSD</p>
+                    <p className="text-base font-black text-slate-900 mt-0.5">{formatPrice(product.numericPrice ?? 0)} {MARKET_CURRENCY}</p>
                   </div>
                 </div>
 
@@ -306,7 +309,7 @@ export default function PriceAlertModal({ product, initialAlert, onClose }: Prop
                             targetError ? "border-red-400" : "border-slate-200 focus:border-[#FF9900]"
                           }`}
                         />
-                        <span className="text-sm font-semibold text-slate-500">RSD</span>
+                        <span className="text-sm font-semibold text-slate-500">{MARKET_CURRENCY}</span>
                       </div>
                       {targetError && (
                         <p className="text-xs text-red-500 mt-1 font-medium">{targetError}</p>

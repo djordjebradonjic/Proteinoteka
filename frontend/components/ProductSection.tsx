@@ -9,18 +9,20 @@ import ProductGrid from "./ProductGrid";
 import { ArrowUpDown, SlidersHorizontal, X } from "lucide-react";
 import { getCategoryByValue } from "@/lib/categories";
 import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
+import { useTranslations } from "next-intl";
 import RelatedGuides from "@/components/RelatedGuides";
 import ValueScoreBanner from "@/components/ValueScoreBanner";
 
-const SORT_OPTIONS = [
-  { value: "valueScore,desc",     label: "🏆 Najbolja vrednost" },
-  { value: "proteinPerRsd,desc",  label: "⚡ Najviše proteina za novac" },
-  { value: "numericPrice,asc",    label: "Cena: Niža ka višoj" },
-  { value: "numericPrice,desc",   label: "Cena: Viša ka nižoj" },
-  { value: "id,desc",             label: "Najnovije dodato" },
-  { value: "random",              label: "Nasumično" },
-  { value: "name,asc",            label: "Naziv: A-Z" },
-];
+// Sort values mapped to translation keys — labels come from useTranslations("sort")
+const SORT_VALUE_MAP = [
+  { value: "random",             tKey: "all"          },
+  { value: "id,desc",            tKey: "newest"       },
+  { value: "valueScore,desc",    tKey: "bestValue"    },
+  { value: "proteinPerRsd,desc", tKey: "mostProtein"  },
+  { value: "numericPrice,asc",   tKey: "priceAsc"     },
+  { value: "numericPrice,desc",  tKey: "priceDesc"    },
+  { value: "name,asc",           tKey: "nameAz"       },
+] as const;
 
 interface Props {
   initialProducts: Product[];
@@ -62,6 +64,10 @@ export default function ProductSection({
   initialTotalItems = 0,
   initialCategory = "",
 }: Props) {
+  const tSort = useTranslations("sort");
+  const currency = MARKET_CONFIG[CURRENT_MARKET].currency;
+  const flavourLabel = CURRENT_MARKET === "hr" ? "Okus" : "Ukus";
+
   const pendingGridScroll = useRef(false);
   // tick drives all re-fetches — incremented on every URL update
   const [tick, setTick] = useState(0);
@@ -311,11 +317,11 @@ export default function ProductSection({
     search    ? { key: "query",    label: `"${search}"`,         onRemove: () => updateFilters("query",    "") } : null,
     ...selectedStores.map( s => ({ key: `store-${s}`,    label: s,             onRemove: () => toggleFilter("store",   s) })),
     ...selectedBrands.map( b => ({ key: `brand-${b}`,    label: b,             onRemove: () => toggleFilter("brand",   b) })),
-    ...selectedFlavours.map(f => ({ key: `flavour-${f}`, label: `Ukus: ${f}`,  onRemove: () => toggleFilter("flavour", f) })),
+    ...selectedFlavours.map(f => ({ key: `flavour-${f}`, label: `${flavourLabel}: ${f}`,  onRemove: () => toggleFilter("flavour", f) })),
     ...urlCategories.map(  c => ({ key: `cat-${c}`,      label: getCategoryByValue(c)?.label ?? c, onRemove: () => toggleFilter("category", c) })),
     ...selectedWeightRanges.map(w => ({ key: `pak-${w}`, label: WEIGHT_RANGES.find(r => r.value === w)?.label ?? w, onRemove: () => toggleFilter("pakovanje", w) })),
-    minPrice  ? { key: "minPrice", label: `od ${minPrice} ${MARKET_CONFIG[CURRENT_MARKET].currency}`, onRemove: () => updateFilters("minPrice", "") } : null,
-    maxPrice  ? { key: "maxPrice", label: `do ${maxPrice} ${MARKET_CONFIG[CURRENT_MARKET].currency}`, onRemove: () => updateFilters("maxPrice", "") } : null,
+    minPrice  ? { key: "minPrice", label: `od ${minPrice} ${currency}`, onRemove: () => updateFilters("minPrice", "") } : null,
+    maxPrice  ? { key: "maxPrice", label: `do ${maxPrice} ${currency}`, onRemove: () => updateFilters("maxPrice", "") } : null,
   ].filter(Boolean) as Chip[];
 
   // Show guides when exactly one category is active (dedicated page or single filter)
@@ -468,7 +474,7 @@ export default function ProductSection({
             </button>
           </div>
           <div className="px-4 py-3 pb-8 flex flex-col gap-2">
-            {SORT_OPTIONS.map((opt) => (
+            {SORT_VALUE_MAP.map((opt) => (
               <button
                 key={opt.value}
                 onClick={() => {
@@ -481,7 +487,7 @@ export default function ProductSection({
                     : "bg-slate-50 text-slate-700 active:bg-slate-100"
                 }`}
               >
-                {opt.label}
+                {tSort(opt.tKey)}
               </button>
             ))}
           </div>
