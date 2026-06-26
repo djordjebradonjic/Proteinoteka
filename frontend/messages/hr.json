@@ -1,0 +1,63 @@
+{
+  "nav": {
+    "guides": "Vodiči",
+    "allGuides": "Svi vodiči",
+    "prices": "Cijene",
+    "topList": "Top lista",
+    "database": "Baza podataka",
+    "wishlist": "Lista željenih"
+  },
+  "hero": {
+    "tagline": "Pronađi. Usporedi. Kupi.",
+    "h1Start": "Proteini iz",
+    "h1Count": "5",
+    "h1Middle": "najvećih trgovina u",
+    "h1Country": "Hrvatskoj",
+    "h1End": "na jednom mjestu.",
+    "cta": "Najbolje ocijenjeni →",
+    "badge1Value": "Value Score",
+    "badge1Label": "Objektivna ocjena 0–10 za svaki protein",
+    "badge2Value": "EUR/g proteina",
+    "badge2Label": "Prava mjera isplativosti, ne cijena kutije",
+    "badge3Value": "5 trgovina",
+    "badge3Label": "Isti protein, sve cijene, jedan pregled"
+  },
+  "sort": {
+    "label": "Sortiraj:",
+    "placeholder": "Odaberi sortiranje",
+    "all": "Svi proteini",
+    "newest": "Najnovije dodano",
+    "bestValue": "🏆 Najbolja vrijednost",
+    "mostProtein": "⚡ Najviše proteina za novac",
+    "priceAsc": "Cijena: Niža prema višoj",
+    "priceDesc": "Cijena: Viša prema nižoj",
+    "nameAz": "Naziv: A-Z"
+  },
+  "filter": {
+    "priceRange": "Raspon cijene ({currency})"
+  },
+  "cookie": {
+    "text": "Pomozi nam da poboljšamo stranicu — koristimo samo anonimnu statistiku posjeta.",
+    "learnMore": "Saznaj više",
+    "accept": "Prihvati",
+    "reject": "Odbij",
+    "ariaLabel": "Pristanak za kolačiće"
+  },
+  "footer": {
+    "categories": "Kategorije",
+    "stores": "Trgovine",
+    "guides": "Vodiči",
+    "popular": "Popularno",
+    "cookieSettings": "Postavke kolačića",
+    "copyright": "Cijene su informativnog karaktera. Neki linkovi mogu biti affiliate."
+  },
+  "seo": {
+    "homeTitle": "Proteinoteka | Usporedi cijene proteina i suplemenata u Hrvatskoj",
+    "homeDescription": "Pronađi najjeftiniji whey protein, izolat i kreatin u Hrvatskoj. Uspoređujemo aktualne cijene suplemenata i računamo isplativost u EUR po gramu proteina.",
+    "homeKeywords": "proteini hrvatska,whey protein cijena,najbolji protein hrvatska,jeftini suplementi hrvatska,gymbeam hrvatska,polleo sport,cijena proteina po gramu",
+    "ogTitle": "Gdje je najjeftiniji protein u Hrvatskoj? | Proteinoteka",
+    "ogDescription": "Uštedi na suplementaciji. Usporedi cijene svih brendova i saznaj koji whey protein nudi najviše za tvoj novac.",
+    "twitterTitle": "Najbolje cijene proteina u Hrvatskoj | Proteinoteka",
+    "twitterDescription": "Prestani preplaćivati suplemente. Usporedi cijene odmah."
+  }
+}

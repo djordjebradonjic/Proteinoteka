@@ -7,6 +7,8 @@ import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { toggleWishlist } from "@/store/wishlistSlice";
 import SearchAutocomplete from "@/components/SearchAutocomplete";
 import { navigateTo } from "@/lib/navigation";
+import { useTranslations } from "next-intl";
+import { HEADER_GUIDES, HEADER_NAV_LINKS } from "@/lib/navConfig";
 
 function Logo() {
   return (
@@ -98,23 +100,9 @@ function Logo() {
   );
 }
 
-const GUIDES = [
-  { label: "Whey protein cena",          href: "/whey-protein-cena"                  },
-  { label: "Najjeftiniji whey protein",  href: "/najjeftiniji-whey-protein"          },
-  { label: "Najbolji whey protein",      href: "/najbolji-whey-protein-srbija"       },
-  { label: "Whey izolat Srbija",         href: "/whey-isolate-srbija"                },
-  { label: "Biljni protein Srbija",      href: "/biljni-protein-srbija"              },
-  { label: "Protein za masu",            href: "/protein-za-masu"                    },
-  { label: "Protein za mršavljenje",     href: "/vodici/protein-za-mrsavljenje"      },
-  { label: "Koliko proteina dnevno?",    href: "/vodici/koliko-proteina-dnevno"      },
-  { label: "Isolate vs Concentrate",     href: "/vodici/whey-isolate-vs-concentrate" },
-  { label: "Da li protein goji?",        href: "/vodici/da-li-protein-goji"          },
-  { label: "Kada piti protein?",         href: "/vodici/kada-piti-protein"           },
-  { label: "Kako računamo Value Score",  href: "/kako-racunamo-value-score"          },
-  { label: "O Proteinoteci",             href: "/o-nama"                             },
-];
 
 function GuidesDropdown({ mobile = false }: { mobile?: boolean }) {
+  const t = useTranslations("nav");
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -126,6 +114,8 @@ function GuidesDropdown({ mobile = false }: { mobile?: boolean }) {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
+  if (HEADER_GUIDES.length === 0) return null;
+
   return (
     <div ref={ref} className="relative z-[300]">
       <button
@@ -133,14 +123,13 @@ function GuidesDropdown({ mobile = false }: { mobile?: boolean }) {
         className="flex items-center gap-0.5 text-sm font-medium text-slate-200 hover:text-[#FF9900] transition-colors whitespace-nowrap px-1 cursor-pointer"
         aria-expanded={open}
       >
-        Vodiči <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-150 ${open ? "rotate-180" : ""}`} />
+        {t("guides")} <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-150 ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
         <div className={`absolute ${mobile ? "right-0" : "left-0"} top-full w-56 pt-2 z-[300]`}>
           <div className="bg-white rounded-xl shadow-xl border border-slate-100 flex flex-col max-h-[320px]">
-            {/* Scrollable guide links */}
             <div className="overflow-y-auto flex-1 py-1">
-              {GUIDES.map((g) => (
+              {HEADER_GUIDES.map((g) => (
                 <Link
                   key={g.href}
                   href={g.href}
@@ -151,14 +140,13 @@ function GuidesDropdown({ mobile = false }: { mobile?: boolean }) {
                 </Link>
               ))}
             </div>
-            {/* Fixed bottom — always visible */}
             <div className="border-t border-slate-100 p-2 shrink-0">
               <Link
                 href="/vodici"
                 onClick={() => setOpen(false)}
                 className="flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-bold text-[#FF9900] hover:bg-[#FFF8EC] rounded-lg transition-colors"
               >
-                Svi vodiči
+                {t("allGuides")}
                 <span aria-hidden="true">→</span>
               </Link>
             </div>
@@ -188,6 +176,7 @@ function NavLink({
 
 
 export default function Header({ hasHero = false }: { hasHero?: boolean }) {
+  const t = useTranslations("nav");
   const dispatch = useAppDispatch();
   const wishlistCount = useAppSelector(
     (state) => (state as any).wishlist.count,
@@ -249,15 +238,15 @@ export default function Header({ hasHero = false }: { hasHero?: boolean }) {
 
         <nav className="hidden md:flex items-center gap-5">
           <GuidesDropdown />
-          <NavLink href="/whey-protein-cena">Cene</NavLink>
-          <NavLink href="/najbolji-whey-protein-srbija">Top lista</NavLink>
-          <NavLink href="/baza-podataka">Baza podataka</NavLink>
+          {HEADER_NAV_LINKS.map((link) => (
+            <NavLink key={link.href} href={link.href}>{link.label}</NavLink>
+          ))}
 
           {/* Desktop Wishlist */}
           <button
             onClick={() => dispatch(toggleWishlist())}
             className="relative flex items-center group"
-            aria-label="Lista željenih"
+            aria-label={t("wishlist")}
           >
             <span className="text-slate-200 group-hover:text-[#FF9900] transition-colors">
               <Heart className="w-6 h-6" strokeWidth={1.8} fill={displayFill} />
@@ -276,7 +265,7 @@ export default function Header({ hasHero = false }: { hasHero?: boolean }) {
           <button
             onClick={() => dispatch(toggleWishlist())}
             className="relative flex items-center group"
-            aria-label="Lista željenih"
+            aria-label={t("wishlist")}
           >
             <span className="text-slate-200 group-hover:text-[#FF9900] transition-colors">
               <Heart className="w-6 h-6" strokeWidth={1.8} fill={displayFill} />

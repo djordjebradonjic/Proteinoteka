@@ -5,6 +5,7 @@ import { Store, Zap, BarChart2 } from "lucide-react";
 import { CATEGORIES } from "@/lib/categories";
 import { navigateTo } from "@/lib/navigation";
 import SearchAutocomplete from "@/components/SearchAutocomplete";
+import { useTranslations } from "next-intl";
 
 interface HeroProps {
   selectedCategories?: string[];
@@ -32,26 +33,8 @@ const DOTS = [
   { x: 42, y: 42, s: 2, dur: 8,  del: 2.0 },
 ];
 
-const BADGES = [
-  {
-    icon: Zap,
-    value: "Value Score",
-    label: "Objektivna ocena 0–10 za svaki protein",
-    delay: 0.35,
-  },
-  {
-    icon: BarChart2,
-    value: "RSD/g proteina",
-    label: "Prava mera isplativosti, ne cena kutije",
-    delay: 0.45,
-  },
-  {
-    icon: Store,
-    value: "11 prodavnica",
-    label: "Isti protein, sve cene, jedan pregled",
-    delay: 0.55,
-  },
-] as const;
+const BADGE_ICONS = [Zap, BarChart2, Store] as const;
+const BADGE_DELAYS = [0.35, 0.45, 0.55] as const;
 
 function readUrlCategories(): string[] {
   if (typeof window === "undefined") return [];
@@ -61,6 +44,7 @@ function readUrlCategories(): string[] {
 }
 
 export default function HeroSection({ selectedCategories: propCategories, onCategoryToggle }: HeroProps) {
+  const t = useTranslations("hero");
   const [visible, setVisible]               = useState(false);
   const [urlCategories, setUrlCategories]   = useState<string[]>([]);
   const [localSearch, setLocalSearch]       = useState("");
@@ -200,21 +184,18 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
               : { opacity: 0, color: "#FF9900" }
           }
         >
-          Pronađi. Uporedi. Kupi.
+          {t("tagline")}
         </p>
 
-        {/* H1 — reduced size, below tagline, above search */}
         <h1
           className="text-[1.6rem] sm:text-3xl md:text-4xl font-extrabold text-white leading-[1.15] tracking-tight mb-3 sm:mb-4"
           style={visible ? { animation: "heroIn 0.5s cubic-bezier(0.16,1,0.3,1) 0.07s both" } : { opacity: 0 }}
         >
-          Proteini iz{" "}
-          <span style={{ color: "#FF9900", textShadow: "0 0 28px rgba(255,153,0,0.4), 0 0 8px rgba(255,153,0,0.2)" }}>10</span>
-          {" "}najvećih prodavnica u{" "}
-          <span style={{ color: "#FF9900", textShadow: "0 0 28px rgba(255,153,0,0.4), 0 0 8px rgba(255,153,0,0.2)" }}>Srbiji</span>
-          {" "}na{" "}
-          <span style={{ color: "#FF9900", textShadow: "0 0 28px rgba(255,153,0,0.4), 0 0 8px rgba(255,153,0,0.2)" }}>jednom</span>
-          {" "}mestu.
+          {t("h1Start")}{" "}
+          <span style={{ color: "#FF9900", textShadow: "0 0 28px rgba(255,153,0,0.4), 0 0 8px rgba(255,153,0,0.2)" }}>{t("h1Count")}</span>
+          {" "}{t("h1Middle")}{" "}
+          <span style={{ color: "#FF9900", textShadow: "0 0 28px rgba(255,153,0,0.4), 0 0 8px rgba(255,153,0,0.2)" }}>{t("h1Country")}</span>
+          {" "}{t("h1End")}
         </h1>
 
         {/* Search bar — visible on all screen sizes */}
@@ -233,32 +214,35 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
         <div
           className="grid grid-cols-3 gap-2 sm:gap-3 mb-6 sm:mb-8 w-full max-w-xl mx-auto mt-6 sm:mt-7"
         >
-          {BADGES.map(({ icon: Icon, value, label, delay }, i) => (
-            <div
-              key={value}
-              className="flex flex-col items-center gap-2 py-4 sm:py-5 px-2 sm:px-3 rounded-xl"
-              style={{
-                background: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.09)",
-                ...(visible
-                  ? { animation: `heroBadge 0.45s cubic-bezier(0.16,1,0.3,1) ${delay}s both` }
-                  : { opacity: 0 }),
-              }}
-            >
+          {BADGE_ICONS.map((Icon, i) => {
+            const badgeKey = (i + 1) as 1 | 2 | 3;
+            return (
               <div
-                className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0"
-                style={{ background: "rgba(255,153,0,0.15)" }}
+                key={i}
+                className="flex flex-col items-center gap-2 py-4 sm:py-5 px-2 sm:px-3 rounded-xl"
+                style={{
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.09)",
+                  ...(visible
+                    ? { animation: `heroBadge 0.45s cubic-bezier(0.16,1,0.3,1) ${BADGE_DELAYS[i]}s both` }
+                    : { opacity: 0 }),
+                }}
               >
-                <Icon className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-[#FF9900]" strokeWidth={2} />
+                <div
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: "rgba(255,153,0,0.15)" }}
+                >
+                  <Icon className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-[#FF9900]" strokeWidth={2} />
+                </div>
+                <span className="text-xs sm:text-sm font-extrabold text-white text-center leading-snug">
+                  {t(`badge${badgeKey}Value`)}
+                </span>
+                <span className="text-[9px] sm:text-[11px] text-slate-400 text-center leading-snug hidden sm:block">
+                  {t(`badge${badgeKey}Label`)}
+                </span>
               </div>
-              <span className="text-xs sm:text-sm font-extrabold text-white text-center leading-snug">
-                {value}
-              </span>
-              <span className="text-[9px] sm:text-[11px] text-slate-400 text-center leading-snug hidden sm:block">
-                {label}
-              </span>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* CTA button */}
@@ -283,7 +267,7 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
               (e.currentTarget as HTMLElement).style.boxShadow = "0 0 28px rgba(255,153,0,0.45), 0 4px 16px rgba(0,0,0,0.3)";
             }}
           >
-            Najbolje ocenjeni →
+            {t("cta")}
           </a>
         </div>
 

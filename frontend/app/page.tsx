@@ -3,62 +3,71 @@ import { Metadata } from "next";
 import { Suspense } from "react";
 import { fetchTopProducts, fetchTopValueProducts, fetchPriceDropProducts } from "@/lib/seo-data";
 import { productUrl } from "@/lib/productUrl";
+import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
 
 // useSearchParams() now lives only inside ProductSection (wrapped in its own Suspense)
 // and inside mini SearchSync/CategorySync components (each in their own Suspense).
 // The outer page and HomeContent are free of useSearchParams → static generation works.
 export const revalidate = 21600;
 
+const PAGE_SEO = {
+  rs: {
+    title: "Proteinoteka – Uporedi cene proteina u Srbiji",
+    description: "Pronađi najisplativiji whey protein u Srbiji. Poredimo cene iz svih većih prodavnica i računamo RSD po gramu proteina – tako uvek znaš da li je kupovina vredna.",
+    keywords: ["whey protein srbija", "najjeftiniji protein srbija", "uporedi cene proteina", "protein cena po gramu", "suplementi srbija cena", "isplativ protein", "pansport proteini cena", "proteini.si cena", "proteinbox cena", "whey izolat srbija", "kreatin srbija cena", "protein kalkulator srbija"],
+    canonical: "https://proteinoteka.rs",
+    ogLocale: "sr_RS",
+    ogTitle: "Proteinoteka – Da li je tvoj protein vredan novca?",
+    ogDescription: "Poredimo cene whey proteina, izolata i kreatina iz svih srpskih prodavnica. Videćeš tačno koliko platiš po gramu proteina i gde je najisplativija kupovina.",
+    twitterTitle: "Proteinoteka – Najisplativiji protein u Srbiji",
+    twitterDescription: "Poredimo cene proteina iz svih prodavnica i računamo RSD/g proteina. Znaćeš uvek gde je najpametnije kupiti.",
+    schemaName: "Najbolji whey proteini u Srbiji",
+    schemaDescription: "Top 10 protein suplemenata po vrednosti na srpskom tržištu",
+  },
+  hr: {
+    title: "Proteinoteka – Usporedi cijene proteina u Hrvatskoj",
+    description: "Pronađi najjeftiniji whey protein u Hrvatskoj. Uspoređujemo cijene iz najvećih trgovina i računamo EUR po gramu proteina – tako uvijek znaš je li kupovina isplativa.",
+    keywords: ["whey protein hrvatska", "najjeftiniji protein hrvatska", "usporedi cijene proteina", "cijena proteina po gramu", "suplementi hrvatska cijena", "isplativ protein", "gymbeam hrvatska", "polleo sport cijena", "myprotein hrvatska", "whey izolat hrvatska", "kreatin hrvatska cijena"],
+    canonical: "https://proteinoteka.com.hr",
+    ogLocale: "hr_HR",
+    ogTitle: "Proteinoteka – Je li tvoj protein vrijedan novca?",
+    ogDescription: "Uspoređujemo cijene whey proteina, izolata i kreatina iz najvećih hrvatskih trgovina. Vidjet ćeš točno koliko plaćaš po gramu proteina i gdje je najisplativija kupnja.",
+    twitterTitle: "Proteinoteka – Najisplativiji protein u Hrvatskoj",
+    twitterDescription: "Uspoređujemo cijene proteina iz svih trgovina i računamo EUR/g proteina. Uvijek ćeš znati gdje je najpametnije kupiti.",
+    schemaName: "Najbolji whey proteini u Hrvatskoj",
+    schemaDescription: "Top 10 proteinskih suplemenata po vrijednosti na hrvatskom tržištu",
+  },
+} as const;
+
+const seo = PAGE_SEO[CURRENT_MARKET];
+const marketDomain = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
 
 export const metadata: Metadata = {
   title: {
-    default: "Proteinoteka – Uporedi cene proteina u Srbiji",
+    default: seo.title,
     template: "%s | Proteinoteka",
   },
-  description:
-    "Pronađi najisplativiji whey protein u Srbiji. Poredimo cene iz svih većih prodavnica i računamo RSD po gramu proteina – tako uvek znaš da li je kupovina vredna.",
-
-  keywords: [
-    "whey protein srbija",
-    "najjeftiniji protein srbija",
-    "uporedi cene proteina",
-    "protein cena po gramu",
-    "suplementi srbija cena",
-    "isplativ protein",
-    "pansport proteini cena",
-    "proteini.si cena",
-    "proteinbox cena",
-    "whey izolat srbija",
-    "kreatin srbija cena",
-    "protein kalkulator srbija",
-  ],
-
-  authors: [{ name: "Proteinoteka", url: "https://proteinoteka.rs" }],
+  description: seo.description,
+  keywords: [...seo.keywords],
+  authors: [{ name: "Proteinoteka", url: marketDomain }],
   creator: "Proteinoteka",
-  metadataBase: new URL("https://proteinoteka.rs"),
-
+  metadataBase: new URL(marketDomain),
   alternates: {
-    canonical: "https://proteinoteka.rs",
-    languages: { "sr-RS": "https://proteinoteka.rs" },
+    canonical: seo.canonical,
   },
-
   openGraph: {
     type: "website",
-    locale: "sr_RS",
-    url: "https://proteinoteka.rs",
+    locale: seo.ogLocale,
+    url: marketDomain,
     siteName: "Proteinoteka",
-    title: "Proteinoteka – Da li je tvoj protein vredan novca?",
-    description:
-      "Poredimo cene whey proteina, izolata i kreatina iz svih srpskih prodavnica. Videćeš tačno koliko platiš po gramu proteina i gde je najisplativija kupovina.",
+    title: seo.ogTitle,
+    description: seo.ogDescription,
   },
-
   twitter: {
     card: "summary_large_image",
-    title: "Proteinoteka – Najisplativiji protein u Srbiji",
-    description:
-      "Poredimo cene proteina iz svih prodavnica i računamo RSD/g proteina. Znaćeš uvek gde je najpametnije kupiti.",
+    title: seo.twitterTitle,
+    description: seo.twitterDescription,
   },
-
   robots: {
     index: true,
     follow: true,
@@ -71,7 +80,6 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-
   verification: {
     google: "KG3Xm4xm-dKMX6kadJDsoEYZKUx8a_0LqrF98S-Cl4g",
   },
@@ -94,8 +102,6 @@ async function getInitialProducts() {
   }
 }
 
-const BASE_URL = "https://proteinoteka.rs";
-
 export default async function Home() {
   const [initialData, topProducts, topValueProducts, priceDropProducts] = await Promise.all([
     getInitialProducts(),
@@ -108,14 +114,14 @@ export default async function Home() {
   const itemListJsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: "Najbolji whey proteini u Srbiji",
-    description: "Top 10 protein suplemenata po vrednosti na srpskom tržištu",
+    name: seo.schemaName,
+    description: seo.schemaDescription,
     numberOfItems: top10.length,
     itemListElement: top10.map((p, i) => ({
       "@type": "ListItem",
       position: i + 1,
       name: p.name,
-      url: `${BASE_URL}${productUrl(p)}`,
+      url: `${marketDomain}${productUrl(p)}`,
     })),
   };
 

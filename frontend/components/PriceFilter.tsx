@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useTranslations } from "next-intl";
+import { MARKET_CONFIG, CURRENT_MARKET } from "@/lib/marketConfig";
 
 interface PriceFilterProps {
   minPrice: string;
@@ -12,7 +14,8 @@ interface PriceFilterProps {
 }
 
 export default function PriceFilter({ minPrice, maxPrice, onMinChange, onMaxChange }: PriceFilterProps) {
-  // 1. Lokalni state za trenutni unos (da kucanje ne secka)
+  const t = useTranslations("filter");
+  const currency = MARKET_CONFIG[CURRENT_MARKET].currency;
   const [localMin, setLocalMin] = useState(minPrice);
   const [localMax, setLocalMax] = useState(maxPrice);
 
@@ -43,7 +46,7 @@ export default function PriceFilter({ minPrice, maxPrice, onMinChange, onMaxChan
 
   return (
     <div className="flex flex-col gap-2 p-1">
-      <Label className="text-xs text-slate-500 font-medium ml-1 text-nowrap">Opseg cene (RSD)</Label>
+      <Label className="text-xs text-slate-500 font-medium ml-1 text-nowrap">{t("priceRange", { currency })}</Label>
       <div className="flex items-center gap-2">
         <Input
           type="number"

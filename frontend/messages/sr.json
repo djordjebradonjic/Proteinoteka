@@ -1,0 +1,63 @@
+{
+  "nav": {
+    "guides": "Vodiči",
+    "allGuides": "Svi vodiči",
+    "prices": "Cene",
+    "topList": "Top lista",
+    "database": "Baza podataka",
+    "wishlist": "Lista željenih"
+  },
+  "hero": {
+    "tagline": "Pronađi. Uporedi. Kupi.",
+    "h1Start": "Proteini iz",
+    "h1Count": "11",
+    "h1Middle": "najvećih prodavnica u",
+    "h1Country": "Srbiji",
+    "h1End": "na jednom mestu.",
+    "cta": "Najbolje ocenjeni →",
+    "badge1Value": "Value Score",
+    "badge1Label": "Objektivna ocena 0–10 za svaki protein",
+    "badge2Value": "RSD/g proteina",
+    "badge2Label": "Prava mera isplativosti, ne cena kutije",
+    "badge3Value": "11 prodavnica",
+    "badge3Label": "Isti protein, sve cene, jedan pregled"
+  },
+  "sort": {
+    "label": "Sortiraj:",
+    "placeholder": "Izaberi sortiranje",
+    "all": "Svi proteini",
+    "newest": "Najnovije dodato",
+    "bestValue": "🏆 Najbolja vrednost",
+    "mostProtein": "⚡ Najviše proteina za novac",
+    "priceAsc": "Cena: Niža ka višoj",
+    "priceDesc": "Cena: Viša ka nižoj",
+    "nameAz": "Naziv: A-Z"
+  },
+  "filter": {
+    "priceRange": "Opseg cene ({currency})"
+  },
+  "cookie": {
+    "text": "Pomozi nam da poboljšamo sajt — koristimo samo anonimnu statistiku poseta.",
+    "learnMore": "Saznaj više",
+    "accept": "Prihvati",
+    "reject": "Odbij",
+    "ariaLabel": "Saglasnost za kolačiće"
+  },
+  "footer": {
+    "categories": "Kategorije",
+    "stores": "Prodavnice",
+    "guides": "Vodiči",
+    "popular": "Popularno",
+    "cookieSettings": "Cookie postavke",
+    "copyright": "Cene su informativnog karaktera. Neki linkovi mogu biti affiliate."
+  },
+  "seo": {
+    "homeTitle": "Proteinoteka | Uporedi cene proteina i suplemenata u Srbiji",
+    "homeDescription": "Pronađi najjeftiniji whey protein, izolat i kreatin u Srbiji. Upoređujemo aktuelne cene suplemenata i računamo isplativost u RSD po gramu proteina.",
+    "homeKeywords": "proteini srbija,whey protein cena,najbolji protein,jeftini suplementi,pansport,proteini.si,cena proteina po gramu",
+    "ogTitle": "Gde je najjeftiniji protein u Srbiji? | Proteinoteka",
+    "ogDescription": "Uštedi na suplementaciji. Uporedi cene svih brendova i saznaj koji whey protein nudi najviše za tvoj novac.",
+    "twitterTitle": "Najbolje cene proteina u Srbiji | Proteinoteka",
+    "twitterDescription": "Prestani da preplaćuješ suplemente. Uporedi cene odmah."
+  }
+}

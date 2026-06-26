@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 export default function CookieBanner() {
+  const t = useTranslations("cookie");
   const [visible, setVisible] = useState(false);
   const bannerRef = useRef<HTMLDivElement>(null);
 
@@ -74,7 +76,7 @@ export default function CookieBanner() {
       ref={bannerRef}
       role="dialog"
       aria-modal="true"
-      aria-label="Saglasnost za kolačiće"
+      aria-label={t("ariaLabel")}
       className="fixed bottom-0 left-0 right-0 z-50"
     >
       {/* Card floating above bottom edge */}
@@ -84,13 +86,12 @@ export default function CookieBanner() {
           <div className="flex items-start sm:items-center gap-2.5 flex-1 min-w-0">
             <span className="text-xl shrink-0">🍪</span>
             <p className="text-sm text-gray-700 leading-relaxed">
-              Pomozi nam da poboljšamo sajt — koristimo samo anonimnu statistiku
-              poseta.{" "}
+              {t("text")}{" "}
               <Link
                 href="/privacy-policy"
                 className="text-[#e07b00] hover:underline font-medium whitespace-nowrap"
               >
-                Saznaj više
+                {t("learnMore")}
               </Link>
             </p>
           </div>
@@ -101,13 +102,13 @@ export default function CookieBanner() {
               onClick={handleReject}
               className="flex-1 sm:flex-none px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer"
             >
-              Odbij
+              {t("reject")}
             </button>
             <button
               onClick={handleAccept}
               className="flex-1 sm:flex-none px-5 py-2 text-sm font-bold bg-[#FF9900] hover:bg-[#e68a00] text-[#131921] rounded-xl transition-colors cursor-pointer shadow-sm"
             >
-              Prihvati
+              {t("accept")}
             </button>
           </div>
         </div>
