@@ -893,7 +893,7 @@ public class ScraperService {
         if (proteinSource == null) return 5.5;
         String src = proteinSource.toLowerCase();
         // Benchmarks calibrated to actual RS market median prices (RSD/g protein)
-        // RS medians: hydro=4.11, iso=7.25, casein=5.37, vegan=5.56, blend=5.89, conc=5.43
+        // RS medians: hydro=4.11, iso=6.84, casein=5.37, vegan=5.38, blend=5.86, conc=5.39, egg=9.61
         if (src.contains("hydro"))       return 5.0;
         if (src.contains("cfm"))         return 7.5;
         if (src.contains("isolat"))      return 7.5;
@@ -901,7 +901,7 @@ public class ScraperService {
         if (src.contains("vegan"))       return 5.8;
         if (src.contains("blend"))       return 6.0;
         if (src.contains("concentrat"))  return 5.5;
-        if (src.contains("egg"))         return 6.5;
+        if (src.contains("egg"))         return 9.5;
         return 5.5;
     }
 
