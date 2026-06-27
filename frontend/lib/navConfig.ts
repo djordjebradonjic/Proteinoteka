@@ -34,7 +34,6 @@ export const HEADER_NAV_LINKS: NavLink[] =
     ? [
         { label: "Cijene",          href: "/" },
         { label: "Top lista",       href: "/?sort=valueScore%2Cdesc" },
-        { label: "Baza podataka",   href: "/baza-podataka" },
       ]
     : [
         { label: "Cene",            href: "/whey-protein-cena" },
