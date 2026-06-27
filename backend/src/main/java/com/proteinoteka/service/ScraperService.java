@@ -852,17 +852,17 @@ public class ScraperService {
 
     private double getCategoryBenchmark(String proteinSource, String currency) {
         if ("EUR".equals(currency)) {
-            if (proteinSource == null) return 0.057;
+            if (proteinSource == null) return 0.060;
             String src = proteinSource.toLowerCase();
-            if (src.contains("hydro"))       return 0.057;
-            if (src.contains("cfm"))         return 0.059;
-            if (src.contains("isolat"))      return 0.059;
-            if (src.contains("casein"))      return 0.043;
-            if (src.contains("vegan"))       return 0.061;
-            if (src.contains("blend"))       return 0.050;
-            if (src.contains("concentrat"))  return 0.048;
-            if (src.contains("egg"))         return 0.057;
-            return 0.057;
+            if (src.contains("hydro"))       return 0.056;
+            if (src.contains("cfm"))         return 0.073;
+            if (src.contains("isolat"))      return 0.073;
+            if (src.contains("casein"))      return 0.058;
+            if (src.contains("vegan"))       return 0.051;
+            if (src.contains("blend"))       return 0.059;
+            if (src.contains("concentrat"))  return 0.062;
+            if (src.contains("egg"))         return 0.059;
+            return 0.060;
         }
         if (proteinSource == null) return 6.5;
         String src = proteinSource.toLowerCase();
