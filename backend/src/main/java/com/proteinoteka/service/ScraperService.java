@@ -857,10 +857,12 @@ public class ScraperService {
         if ("EUR".equals(currency)) {
             if (proteinSource == null) return 0.059;
             String src = proteinSource.toLowerCase();
-            if (src.contains("hydro"))       return 0.056;
+            // Hydrolysate is the most expensive form (enzymatic pre-digestion) — must be > isolate
+            if (src.contains("hydro"))       return 0.085;
             if (src.contains("cfm"))         return 0.069;
             if (src.contains("isolat"))      return 0.069;
-            if (src.contains("casein"))      return 0.058;
+            // Casein typically priced between concentrate and isolate in Croatian market
+            if (src.contains("casein"))      return 0.065;
             if (src.contains("vegan"))       return 0.038;
             if (src.contains("blend"))       return 0.048;
             if (src.contains("concentrat"))  return 0.059;
@@ -869,10 +871,12 @@ public class ScraperService {
         }
         if (proteinSource == null) return 6.5;
         String src = proteinSource.toLowerCase();
-        if (src.contains("hydro"))       return 6.5;
+        // Hydrolysate is the most expensive form — must be > isolate (6.8)
+        if (src.contains("hydro"))       return 8.5;
         if (src.contains("cfm"))         return 6.8;
         if (src.contains("isolat"))      return 6.8;
-        if (src.contains("casein"))      return 4.9;
+        // Casein priced between concentrate and isolate
+        if (src.contains("casein"))      return 5.8;
         if (src.contains("vegan"))       return 7.0;
         if (src.contains("blend"))       return 5.8;
         if (src.contains("concentrat"))  return 5.5;
