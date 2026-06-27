@@ -100,10 +100,19 @@ function buildConclusion(
       : null;
 
   if (pricePerGramProt !== null) {
-    if (pricePerGramProt < 4)      strengths.push(IS_HR ? "odlična cijena po gramu proteina" : "odlična cena po gramu proteina");
-    else if (pricePerGramProt < 6) strengths.push(IS_HR ? "dobra cijena po gramu proteina" : "dobra cena po gramu proteina");
-    else if (pricePerGramProt > 9) weaknesses.push(IS_HR ? "visoka cijena po gramu proteina" : "visoka cena po gramu proteina");
-    else if (pricePerGramProt > 7) weaknesses.push(IS_HR ? "iznadprosječna cijena" : "iznadprosečna cena");
+    if (IS_HR) {
+      // EUR/g thresholds (HR market medians: concentrate ~0.065, isolate ~0.074)
+      if (pricePerGramProt < 0.050)      strengths.push("odlična cijena po gramu proteina");
+      else if (pricePerGramProt < 0.068) strengths.push("dobra cijena po gramu proteina");
+      else if (pricePerGramProt > 0.090) weaknesses.push("visoka cijena po gramu proteina");
+      else if (pricePerGramProt > 0.075) weaknesses.push("iznadprosječna cijena");
+    } else {
+      // RSD/g thresholds (RS market medians: concentrate ~5.4, isolate ~7.25)
+      if (pricePerGramProt < 4)      strengths.push("odlična cena po gramu proteina");
+      else if (pricePerGramProt < 6) strengths.push("dobra cena po gramu proteina");
+      else if (pricePerGramProt > 9) weaknesses.push("visoka cena po gramu proteina");
+      else if (pricePerGramProt > 7) weaknesses.push("iznadprosečna cena");
+    }
   }
 
   // Čistoća

@@ -78,7 +78,11 @@ export default function FeaturedValueCard({ product }: Props) {
         <div className="mt-auto pt-1">
           <PriceTag price={product.numericPrice} className="text-lg font-semibold text-slate-900" />
           {ppg != null && ppg < 50 && (
-            <p className="text-xs text-slate-400">🏷️ {ppg.toFixed(currency === "EUR" ? 2 : 1)} {currency}/g proteina</p>
+            <p className="text-xs text-slate-400">
+              🏷️ {currency === "EUR"
+                ? `${(ppg * 100).toFixed(2)} EUR/100g proteina`
+                : `${ppg.toFixed(1)} RSD/g proteina`}
+            </p>
           )}
         </div>
 

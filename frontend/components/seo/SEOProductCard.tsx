@@ -4,13 +4,21 @@ import { Product } from "@/types/product";
 import { productUrl } from "@/lib/productUrl";
 import PriceTag from "@/components/PriceTag";
 import { getScoreColor, getScoreBg } from "@/lib/scoreColor";
+import { CURRENT_MARKET } from "@/lib/marketConfig";
+
+const IS_HR = CURRENT_MARKET === "hr";
 
 export function SEOProductCard({ product, rank, priority = false }: { product: Product; rank: number; priority?: boolean }) {
   const score = product.valueScore;
-  const pricePerProtein =
+  const ppgRaw =
     product.numericPrice && product.proteinPer100g && product.primaryWeightGrams
-      ? (product.numericPrice / ((product.proteinPer100g / 100) * product.primaryWeightGrams)).toFixed(0)
+      ? product.numericPrice / ((product.proteinPer100g / 100) * product.primaryWeightGrams)
       : null;
+  const pricePerProteinLabel = ppgRaw != null
+    ? IS_HR
+      ? `${(ppgRaw * 100).toFixed(2)} EUR/100g proteina`
+      : `${ppgRaw.toFixed(0)} RSD/g proteina`
+    : null;
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-4 flex gap-3 hover:shadow-md hover:border-[#FF9900] transition-all duration-150">
@@ -63,8 +71,8 @@ export function SEOProductCard({ product, rank, priority = false }: { product: P
           {product.proteinPer100g != null && (
             <span className="text-[10px] text-slate-500">🥩 {product.proteinPer100g}g/100g</span>
           )}
-          {pricePerProtein && (
-            <span className="text-[10px] text-slate-400">{pricePerProtein} RSD/g proteina</span>
+          {pricePerProteinLabel && (
+            <span className="text-[10px] text-slate-400">{pricePerProteinLabel}</span>
           )}
         </div>
       </div>
