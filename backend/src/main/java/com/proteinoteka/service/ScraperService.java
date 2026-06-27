@@ -757,7 +757,18 @@ public class ScraperService {
         double packageGrams = extractPackageGrams(p);
         if (packageGrams <= 0) return null;
 
-        // 1. VALUE FOR MONEY (0-10) - weight 0.40
+        // Detect beef/collagen hydrolysate — nutritionally inferior to whey (no tryptophan, low BCAAs).
+        // These products report high protein % by nitrogen assay but have poor DIAAS/PDCAAS scores.
+        boolean isBeefCollagen = false;
+        if (p.getName() != null) {
+            String nameLower = p.getName().toLowerCase();
+            isBeefCollagen = nameLower.contains("beef") || nameLower.contains("goveđ") ||
+                    nameLower.contains("govedi") || nameLower.contains("hovezi") ||
+                    nameLower.contains("collagen") || nameLower.contains("hydrobeef") ||
+                    nameLower.contains("hydro beef");
+        }
+
+        // 1. VALUE FOR MONEY (0-10) - weight 0.35
         double proteinTotalGrams = (p.getProteinPer100g() / 100.0) * packageGrams;
         if (proteinTotalGrams <= 0) return null;
         double pricePerGramProtein = numericPrice / proteinTotalGrams;
@@ -776,11 +787,17 @@ public class ScraperService {
         // 2. PROTEIN PURITY (0-10) - weight 0.20
         double proteinPct = p.getProteinPer100g();
         double proteinPurity = 10 * Math.pow(Math.max(0, (proteinPct - 60) / 40.0), 0.7);
+        // Beef/collagen protein has high nitrogen content but poor essential AA profile —
+        // the measured protein % overstates the effective quality. Apply a 50% purity penalty.
+        if (isBeefCollagen) proteinPurity *= 0.50;
         proteinPurity = Math.max(0, Math.min(10, proteinPurity));
 
         // 3. DIGESTIBILITY (0-10) - weight 0.15
         double digestibility = 7.0;
-        if (p.getProteinSource() != null) {
+        if (isBeefCollagen) {
+            // Collagen is missing tryptophan — DIAAS ≈ 0 for muscle protein synthesis purposes
+            digestibility = 4.5;
+        } else if (p.getProteinSource() != null) {
             String src = p.getProteinSource().toLowerCase();
             if (src.contains("hydro"))           digestibility = 10.0;
             else if (src.contains("cfm"))        digestibility = 9.7;
@@ -842,6 +859,10 @@ public class ScraperService {
                         (0.15 * brandScore);
 
         total *= confidencePenalty;
+
+        // Beef/collagen proteins are nutritionally incomplete — apply a final 0.72x multiplier
+        // so they score below quality whey products even when cheaply priced.
+        if (isBeefCollagen) total *= 0.72;
 
         return Math.round(total * 10.0) / 10.0;
     }
