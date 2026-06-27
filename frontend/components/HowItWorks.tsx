@@ -41,7 +41,7 @@ const FEATURES_HR = [
     emoji: "💰",
     title: "Cijena po gramu proteina",
     description:
-      "Ne gledaj cijenu kutije — gledaj EUR/g proteina koji stvarno dobivaš. Nitko drugi ovo ne računa automatski za hrvatsko tržište.",
+      "Ne gledaj cijenu kutije — gledaj EUR/100g proteina koji stvarno dobivaš. Nitko drugi ovo ne računa automatski za hrvatsko tržište.",
     href: null,
     linkLabel: null,
   },

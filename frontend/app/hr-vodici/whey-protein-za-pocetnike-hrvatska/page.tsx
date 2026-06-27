@@ -278,7 +278,7 @@ export default async function Page() {
                       <tr className="bg-slate-50 text-left">
                         <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 min-w-[180px]">Proizvod</th>
                         <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 text-right whitespace-nowrap">Prot/100g</th>
-                        <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 text-right whitespace-nowrap hidden sm:table-cell">EUR/g prot.</th>
+                        <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 text-right whitespace-nowrap hidden sm:table-cell">EUR/100g prot.</th>
                         <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 text-right whitespace-nowrap">Value Score</th>
                       </tr>
                     </thead>
@@ -303,7 +303,7 @@ export default async function Page() {
                             {p.proteinPer100g?.toFixed(0) ?? "—"}g
                           </td>
                           <td className="px-4 py-3 text-right font-medium text-slate-700 whitespace-nowrap hidden sm:table-cell">
-                            {p.ppg ? `${p.ppg.toFixed(3)}` : "—"}
+                            {p.ppg ? `${(p.ppg * 100).toFixed(2)}` : "—"}
                           </td>
                           <td className="px-4 py-3 text-right whitespace-nowrap">
                             {p.valueScore ? (
@@ -323,7 +323,7 @@ export default async function Page() {
               <div className="bg-[#FFF8EC] border border-[#FF9900]/30 rounded-xl p-4">
                 <p className="text-[14px] text-slate-700 leading-relaxed">
                   <strong className="text-slate-900">Najisplativija opcija trenutno:</strong>{" "}
-                  {bestValue.name} po {bestValue.ppg.toFixed(3)} EUR/g proteina —
+                  {bestValue.name} po {(bestValue.ppg * 100).toFixed(2)} EUR/100g proteina —
                   mjesec dana suplementacije (900g proteina) košta oko{" "}
                   <strong className="text-slate-900">~{bestMonthlyCost} EUR</strong>.
                 </p>

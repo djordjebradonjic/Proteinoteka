@@ -13,14 +13,14 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: { absolute: "Koliko košta whey protein u Hrvatskoj? Usporedba cijena 2026. | Proteinoteka" },
   description:
-    "Aktualna usporedba cijena whey proteina u Hrvatskoj u EUR po gramu proteina. Koji proteini nude najbolji omjer kvalitete i cijene u GymBeam HR, MyProtein HR i Polleo Sport.",
+    "Aktualna usporedba cijena whey proteina u Hrvatskoj u EUR/100g proteina. Koji proteini nude najbolji omjer kvalitete i cijene u GymBeam HR, MyProtein HR i Polleo Sport.",
   alternates: {
     canonical: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/hr-vodici/koliko-kosta-protein-hrvatska`,
   },
   openGraph: {
     title: "Koliko košta whey protein u Hrvatskoj? Usporedba cijena 2026.",
     description:
-      "Aktualna usporedba cijena whey proteina u Hrvatskoj — EUR po gramu proteina, s tjednim ažuriranjem.",
+      "Aktualna usporedba cijena whey proteina u Hrvatskoj — EUR/100g proteina, s tjednim ažuriranjem.",
     url: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/hr-vodici/koliko-kosta-protein-hrvatska`,
     siteName: "Proteinoteka",
     locale: MARKET_CONFIG[CURRENT_MARKET].ogLocale,
@@ -61,7 +61,7 @@ const faqItems = [
   },
   {
     q: "Koliko košta prosječan mjesec whey proteina u Hrvatskoj?",
-    a: "Uz 30g proteina dnevno (900g proteina iz shakea mjesečno) i prosječnu cijenu od 0.04–0.06 EUR/g proteina, mjesečni trošak iznosi 36–54 EUR. Uz najpovoljnije opcije može biti i 30–35 EUR.",
+    a: "Uz 30g proteina dnevno (900g proteina iz shakea mjesečno) i prosječnu cijenu od 4–6 EUR/100g proteina, mjesečni trošak iznosi 36–54 EUR. Uz najpovoljnije opcije može biti i 30–35 EUR.",
   },
 ];
 
@@ -147,7 +147,7 @@ export default async function Page() {
           <div className="mb-8 p-5 bg-white rounded-2xl border border-slate-200 shadow-sm">
             <p className="text-lg text-slate-700 leading-relaxed">
               <strong className="text-slate-900">Kratki odgovor:</strong> whey koncentrat u Hrvatskoj košta
-              između <strong className="text-slate-900">0.035 i 0.065 EUR po gramu proteina</strong>.
+              između <strong className="text-slate-900">3.5 i 6.5 EUR/100g proteina</strong>.
               Uz 30g proteina dnevno, to znači{" "}
               <strong className="text-slate-900">30–58 EUR mjesečno</strong>. Razlika između najjeftinijeg i
               najskupljeg identičnog proteina može biti i 40% — jedino što ima smisla uspoređivati je{" "}
@@ -164,7 +164,7 @@ export default async function Page() {
             <div className="space-y-4 text-[15px] leading-relaxed text-slate-700 mb-6">
               <p>
                 Hrvatska je od 2023. u eurozone, pa su sve cijene u EUR. Uspoređivanje je jednostavno — ključan
-                je parametar <strong className="text-slate-800">EUR po gramu proteina</strong>, koji izravno
+                je parametar <strong className="text-slate-800">EUR/100g proteina</strong>, koji izravno
                 odražava vrijednost za novac bez obzira na veličinu pakiranja.
               </p>
             </div>
@@ -180,15 +180,15 @@ export default async function Page() {
                   <thead>
                     <tr className="bg-slate-50 text-left">
                       <th className="px-4 py-2.5 text-xs font-semibold text-slate-500">Tip proteina</th>
-                      <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 text-right whitespace-nowrap">EUR/g prot.</th>
+                      <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 text-right whitespace-nowrap">EUR/100g prot.</th>
                       <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 text-right whitespace-nowrap">Mj. trošak*</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {[
-                      { tip: "Whey koncentrat (WPC)", range: "0.035–0.055", monthly: "31–50 EUR", highlight: true },
-                      { tip: "Whey izolat (WPI)", range: "0.055–0.080", monthly: "50–72 EUR", highlight: false },
-                      { tip: "Biljni protein (grašak/riža)", range: "0.050–0.080", monthly: "45–72 EUR", highlight: false },
+                      { tip: "Whey koncentrat (WPC)", range: "3.5–5.5", monthly: "31–50 EUR", highlight: true },
+                      { tip: "Whey izolat (WPI)", range: "5.5–8.0", monthly: "50–72 EUR", highlight: false },
+                      { tip: "Biljni protein (grašak/riža)", range: "5.0–8.0", monthly: "45–72 EUR", highlight: false },
                     ].map(({ tip, range, monthly, highlight }) => (
                       <tr key={tip} className={highlight ? "bg-[#FFF8EC]" : ""}>
                         <td className="px-4 py-3 font-medium text-slate-800">{tip}</td>
@@ -224,7 +224,7 @@ export default async function Page() {
                       <tr className="bg-slate-50 text-left">
                         <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 min-w-[180px]">Proizvod</th>
                         <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 text-right whitespace-nowrap">Cijena</th>
-                        <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 text-right whitespace-nowrap hidden sm:table-cell">EUR/g prot.</th>
+                        <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 text-right whitespace-nowrap hidden sm:table-cell">EUR/100g prot.</th>
                         <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 text-right whitespace-nowrap">Score</th>
                       </tr>
                     </thead>
@@ -242,7 +242,7 @@ export default async function Page() {
                           </td>
                           <td className="px-4 py-3 text-right text-slate-700 whitespace-nowrap">{p.price}</td>
                           <td className="px-4 py-3 text-right font-medium text-slate-700 whitespace-nowrap hidden sm:table-cell">
-                            {p.ppg ? `${p.ppg.toFixed(3)}` : "—"}
+                            {p.ppg ? `${(p.ppg * 100).toFixed(2)}` : "—"}
                           </td>
                           <td className="px-4 py-3 text-right whitespace-nowrap">
                             {p.valueScore ? (
@@ -271,7 +271,7 @@ export default async function Page() {
                       <tr className="bg-slate-50 text-left">
                         <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 min-w-[180px]">Proizvod</th>
                         <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 text-right whitespace-nowrap">Cijena</th>
-                        <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 text-right whitespace-nowrap hidden sm:table-cell">EUR/g prot.</th>
+                        <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 text-right whitespace-nowrap hidden sm:table-cell">EUR/100g prot.</th>
                         <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 text-right whitespace-nowrap">Score</th>
                       </tr>
                     </thead>
@@ -289,7 +289,7 @@ export default async function Page() {
                           </td>
                           <td className="px-4 py-3 text-right text-slate-700 whitespace-nowrap">{p.price}</td>
                           <td className="px-4 py-3 text-right font-medium text-slate-700 whitespace-nowrap hidden sm:table-cell">
-                            {p.ppg ? `${p.ppg.toFixed(3)}` : "—"}
+                            {p.ppg ? `${(p.ppg * 100).toFixed(2)}` : "—"}
                           </td>
                           <td className="px-4 py-3 text-right whitespace-nowrap">
                             {p.valueScore ? (
@@ -342,14 +342,14 @@ export default async function Page() {
               <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
                 <p className="font-semibold text-slate-900 mb-2 text-[15px]">Formula za usporedbu</p>
                 <p className="text-[14px] text-slate-700 font-mono bg-slate-50 rounded-lg p-3">
-                  EUR/g proteina = cijena paketa (EUR) ÷ (težina (g) × % proteina / 100)
+                  EUR/100g proteina = cijena paketa (EUR) ÷ (težina (g) × % proteina / 100) × 100
                 </p>
                 <p className="text-[13px] text-slate-500 mt-2">
-                  Primjer: 2kg paket od 45 EUR s 78g proteina/100g → 45 ÷ (2000 × 0.78) = <strong>0.029 EUR/g proteina</strong>
+                  Primjer: 2kg paket od 45 EUR s 78g proteina/100g → 45 ÷ (2000 × 0.78) × 100 = <strong>2.88 EUR/100g proteina</strong>
                 </p>
               </div>
               <p>
-                Proteinoteka ovu računicu radi automatski za sve proizvode i prikazuje je u stupcu &quot;EUR/g
+                Proteinoteka ovu računicu radi automatski za sve proizvode i prikazuje je u stupcu &quot;EUR/100g
                 prot.&quot; Naš Value Score dodatno uzima u obzir i kvalitetu aminokiselinskog profila.
               </p>
             </div>
@@ -369,7 +369,7 @@ export default async function Page() {
                   <p className="text-[14px] text-slate-700 leading-relaxed">
                     <strong className="text-slate-900">Trenutno najisplativija opcija u HR:</strong>{" "}
                     {bestConcentrate.name} ({bestConcentrate.storeName}) po{" "}
-                    {bestConcentrate.ppg.toFixed(3)} EUR/g proteina.{" "}
+                    {(bestConcentrate.ppg * 100).toFixed(2)} EUR/100g proteina.{" "}
                     Mjesec dana suplementacije košta oko{" "}
                     <strong className="text-slate-900">
                       ~{(bestConcentrate.ppg * MONTHLY_PROTEIN_G).toFixed(2)} EUR

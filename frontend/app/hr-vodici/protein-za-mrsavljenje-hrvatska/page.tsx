@@ -225,7 +225,7 @@ export default async function Page() {
                         <tr className="bg-slate-50 text-left">
                           <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 min-w-[180px]">Proizvod</th>
                           <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 text-right whitespace-nowrap">Prot/100g</th>
-                          <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 text-right whitespace-nowrap hidden sm:table-cell">EUR/g prot.</th>
+                          <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 text-right whitespace-nowrap hidden sm:table-cell">EUR/100g prot.</th>
                           <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 text-right whitespace-nowrap">Value Score</th>
                         </tr>
                       </thead>
@@ -245,7 +245,7 @@ export default async function Page() {
                               {p.proteinPer100g?.toFixed(0) ?? "—"}g
                             </td>
                             <td className="px-4 py-3 text-right font-medium text-slate-700 whitespace-nowrap hidden sm:table-cell">
-                              {p.ppg ? `${p.ppg.toFixed(3)}` : "—"}
+                              {p.ppg ? `${(p.ppg * 100).toFixed(2)}` : "—"}
                             </td>
                             <td className="px-4 py-3 text-right whitespace-nowrap">
                               {p.valueScore ? (
@@ -263,7 +263,7 @@ export default async function Page() {
               {bestIsolate && bestIsolate.ppg && (
                 <p className="text-[13px] text-slate-500 italic">
                   {bestIsolate.name} trenutno nudi jednu od najboljih vrijednosti u kategoriji —{" "}
-                  {bestIsolate.ppg.toFixed(3)} EUR/g proteina uz Value Score{" "}
+                  {(bestIsolate.ppg * 100).toFixed(2)} EUR/100g proteina uz Value Score{" "}
                   {bestIsolate.valueScore?.toFixed(1)}/10.
                 </p>
               )}
@@ -361,7 +361,7 @@ export default async function Page() {
                 <thead>
                   <tr className="bg-slate-50">
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500">Opcija</th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500">Okvirna cijena/g prot.</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500">Okvirna cijena/100g prot.</th>
                     <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500">~Mjesečno</th>
                   </tr>
                 </thead>
@@ -374,18 +374,18 @@ export default async function Page() {
                           ({bestIsolate.name.split(" ").slice(0, 3).join(" ")}...)
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-right text-slate-700">{bestIsolate.ppg.toFixed(3)} EUR/g</td>
+                      <td className="px-4 py-3 text-right text-slate-700">{(bestIsolate.ppg * 100).toFixed(2)} EUR/100g</td>
                       <td className="px-4 py-3 text-right font-bold text-[#FF9900]">~{bestMonthlyCost} EUR</td>
                     </tr>
                   )}
                   <tr>
                     <td className="px-4 py-3 text-slate-700">Prosječan izolat</td>
-                    <td className="px-4 py-3 text-right text-slate-700">0.060 EUR/g</td>
+                    <td className="px-4 py-3 text-right text-slate-700">6.0 EUR/100g</td>
                     <td className="px-4 py-3 text-right text-slate-700">~54 EUR</td>
                   </tr>
                   <tr>
                     <td className="px-4 py-3 text-slate-700">Premium brend</td>
-                    <td className="px-4 py-3 text-right text-slate-700">0.085+ EUR/g</td>
+                    <td className="px-4 py-3 text-right text-slate-700">8.5+ EUR/100g</td>
                     <td className="px-4 py-3 text-right text-slate-700">~77 EUR</td>
                   </tr>
                 </tbody>
@@ -442,7 +442,7 @@ export default async function Page() {
                 ugljikohidrata, lako se uklapa u kalorijski deficit.
                 {bestIsolate && bestIsolate.ppg && (
                   <> Na hrvatskom tržištu trenutno postoje opcije od{" "}
-                    <strong className="text-slate-900">{bestIsolate.ppg.toFixed(3)} EUR/g proteina</strong>, što
+                    <strong className="text-slate-900">{(bestIsolate.ppg * 100).toFixed(2)} EUR/100g proteina</strong>, što
                     čini mjesec dana suplementacije pristupačnim.
                   </>
                 )}
