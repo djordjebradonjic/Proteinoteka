@@ -598,6 +598,9 @@ public class ScraperService {
                 return false;
             }
         }
+        scraped.setMarket(store.getMarket() != null ? store.getMarket() : "rs");
+        scraped.setCurrency(store.getCurrency() != null ? store.getCurrency() : "RSD");
+
         Double valueScore = calculateValueScore(numericPrice, scraped);
         double weightGrams = extractPackageGrams(scraped);
 
@@ -706,6 +709,8 @@ public class ScraperService {
             existing.setProteinPerCurrency(computeProteinPerRsd(numericPrice, existing));
             existing.setMarket(store.getMarket() != null ? store.getMarket() : "rs");
             existing.setCurrency(store.getCurrency() != null ? store.getCurrency() : "RSD");
+            Double updatedScore = calculateValueScore(numericPrice, existing);
+            if (updatedScore != null) existing.setValueScore(updatedScore);
             double slugWeight = weightGrams > 0 ? weightGrams
                     : (existing.getPrimaryWeightGrams() != null ? existing.getPrimaryWeightGrams() : 0);
             if (existing.getCanonicalSlug() == null || existing.getCanonicalSlug().isBlank()) {
@@ -725,8 +730,6 @@ public class ScraperService {
             if (weightGrams > 0) scraped.setPrimaryWeightGrams(weightGrams);
             scraped.setProteinPerRsd(computeProteinPerRsd(numericPrice, scraped));
             scraped.setProteinPerCurrency(computeProteinPerRsd(numericPrice, scraped));
-            scraped.setMarket(store.getMarket() != null ? store.getMarket() : "rs");
-            scraped.setCurrency(store.getCurrency() != null ? store.getCurrency() : "RSD");
             scraped.setCanonicalSlug(slugifyWithWeight(scraped.getName(), weightGrams > 0 ? weightGrams : null));
             productRepository.save(scraped);
             productGroupService.tryAutoAssign(scraped);
