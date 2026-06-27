@@ -1,0 +1,1 @@
+ALTER TABLE product_groups ADD COLUMN market VARCHAR(2) NOT NULL DEFAULT 'rs';

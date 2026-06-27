@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface ProductGroupRepository extends JpaRepository<ProductGroup, Long> {
-    List<ProductGroup> findByBrandIgnoreCase(String brand);
+    List<ProductGroup> findByBrandIgnoreCaseAndMarket(String brand, String market);
 }

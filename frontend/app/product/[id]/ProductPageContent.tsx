@@ -841,7 +841,7 @@ export default function ProductPageContent({ product, similar, storePrices, revi
             {/* Header */}
             <div className="flex items-start justify-between mb-5">
               <div>
-                <h2 className="text-base font-bold text-slate-900">Istorija cene</h2>
+                <h2 className="text-base font-bold text-slate-900">{IS_HR ? "Historija cijene" : "Istorija cene"}</h2>
                 <p className="text-xs text-slate-400 mt-0.5">od {chartData[0]?.datum}</p>
               </div>
               {Math.abs(chartChangePct) >= 1 && (

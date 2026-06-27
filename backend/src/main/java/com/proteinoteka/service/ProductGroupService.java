@@ -63,12 +63,13 @@ public class ProductGroupService {
     public Map<String, Object> autoGenerateGroups() {
         List<Product> all = productRepository.findAll();
 
-        // Group by brand (lowercase) + protein_source_normalized
+        // Group by market + brand (lowercase) + protein_source_normalized
         Map<String, List<Product>> byBrandSource = new HashMap<>();
         for (Product p : all) {
             if (p.getBrand() == null || p.getPrimaryWeightGrams() == null) continue;
             if (p.getGroupId() != null) continue;
-            String key = p.getBrand().toLowerCase().trim() + "|" + normalizeSource(p.getProteinSource());
+            String market = p.getMarket() != null ? p.getMarket() : "rs";
+            String key = market + "|" + p.getBrand().toLowerCase().trim() + "|" + normalizeSource(p.getProteinSource());
             byBrandSource.computeIfAbsent(key, k -> new ArrayList<>()).add(p);
         }
 
@@ -110,10 +111,13 @@ public class ProductGroupService {
                     double avgWeight = deduped.stream()
                             .mapToDouble(Product::getPrimaryWeightGrams).average().orElse(0);
 
+                    String market = deduped.get(0).getMarket() != null ? deduped.get(0).getMarket() : "rs";
+
                     ProductGroup group = new ProductGroup();
                     group.setCanonicalName(canonicalName);
                     group.setBrand(brand);
                     group.setWeightGrams(avgWeight);
+                    group.setMarket(market);
                     group = productGroupRepository.save(group);
 
                     for (Product p : deduped) {
@@ -234,11 +238,16 @@ public class ProductGroupService {
                 .filter(p -> p.getPrimaryWeightGrams() != null)
                 .mapToDouble(Product::getPrimaryWeightGrams)
                 .average().orElse(0);
+        String market = products.stream()
+                .filter(p -> p.getMarket() != null)
+                .map(Product::getMarket)
+                .findFirst().orElse("rs");
 
         ProductGroup group = new ProductGroup();
         group.setCanonicalName(canonicalName);
         group.setBrand(brand);
         group.setWeightGrams(avgWeight);
+        group.setMarket(market);
         group = productGroupRepository.save(group);
 
         for (Product p : products) {
@@ -268,8 +277,9 @@ public class ProductGroupService {
         String brandNorm = product.getBrand().toLowerCase().trim();
         String sourceNorm = normalizeSource(product.getProteinSource());
         double weight = product.getPrimaryWeightGrams();
+        String market = product.getMarket() != null ? product.getMarket() : "rs";
 
-        List<ProductGroup> candidates = productGroupRepository.findByBrandIgnoreCase(brandNorm);
+        List<ProductGroup> candidates = productGroupRepository.findByBrandIgnoreCaseAndMarket(brandNorm, market);
         List<ProductGroup> matches = candidates.stream()
                 .filter(g -> {
                     if (g.getWeightGrams() == null) return false;

@@ -21,4 +21,7 @@ public class ProductGroup {
 
     @Column(name = "weight_grams")
     private Double weightGrams;
+
+    @Column(name = "market", nullable = false)
+    private String market = "rs";
 }
