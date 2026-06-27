@@ -13,14 +13,9 @@ const { currency } = MARKET_CONFIG[CURRENT_MARKET];
 const isEur = currency === "EUR";
 
 function getTier(v: number): Tier {
-  if (isEur) {
-    if (v < 0.05) return { label: "Odlična vrijednost", valueCls: "text-green-700", badgeCls: "bg-green-100 text-green-700" };
-    if (v <= 0.09) return { label: "Prosječna vrijednost", valueCls: "text-amber-700", badgeCls: "bg-amber-100 text-amber-700" };
-    return { label: "Visoka cijena", valueCls: "text-red-700", badgeCls: "bg-red-100 text-red-700" };
-  }
-  if (v < 5)  return { label: "Odlična vrednost", valueCls: "text-green-700", badgeCls: "bg-green-100 text-green-700" };
-  if (v <= 9) return { label: "Prosečna vrednost", valueCls: "text-amber-700",  badgeCls: "bg-amber-100  text-amber-700"  };
-  return       { label: "Visoka cena",          valueCls: "text-red-700",   badgeCls: "bg-red-100   text-red-700"   };
+  if (v < 5)  return { label: isEur ? "Odlična vrijednost" : "Odlična vrednost",  valueCls: "text-green-700", badgeCls: "bg-green-100 text-green-700" };
+  if (v <= 9) return { label: isEur ? "Prosječna vrijednost" : "Prosečna vrednost", valueCls: "text-amber-700", badgeCls: "bg-amber-100 text-amber-700" };
+  return       { label: isEur ? "Visoka cijena" : "Visoka cena",                   valueCls: "text-red-700",   badgeCls: "bg-red-100 text-red-700" };
 }
 
 export default function PricePerGramBadge({
@@ -33,9 +28,10 @@ export default function PricePerGramBadge({
   if (numericPrice <= 0 || proteinPer100g <= 0 || primaryWeightGrams <= 0) return null;
 
   const v = numericPrice / ((proteinPer100g / 100) * primaryWeightGrams);
-  if (!isFinite(v) || v > 50) return null;
+  const displayV = isEur ? v * 100 : v;
+  if (!isFinite(displayV) || displayV > 50) return null;
 
-  const tier = getTier(v);
+  const tier = getTier(displayV);
   const isMd = size === "md";
 
   const metricSize = isMd ? "text-base" : "text-xs md:text-sm";
@@ -49,8 +45,8 @@ export default function PricePerGramBadge({
       {/* Number + pill in the same column → pill aligns with number */}
       <div className="flex flex-col gap-1">
         <p className={`font-bold leading-none ${metricSize}`}>
-          <span className={tier.valueCls}>{v.toFixed(isEur ? 2 : 1)}</span>
-          <span className="text-[#8A8A9A] font-normal"> {currency}/g proteina</span>
+          <span className={tier.valueCls}>{displayV.toFixed(1)}</span>
+          <span className="text-[#8A8A9A] font-normal"> {currency}/{isEur ? "100g" : "g"} proteina</span>
         </p>
         <span className={`inline-flex items-center w-fit rounded-full font-semibold leading-none ${tier.badgeCls} ${pillSize}`}>
           {tier.label}

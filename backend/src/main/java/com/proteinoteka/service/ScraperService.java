@@ -751,8 +751,9 @@ public class ScraperService {
         double proteinTotalGrams = (p.getProteinPer100g() / 100.0) * packageGrams;
         if (proteinTotalGrams <= 0) return null;
         double pricePerGramProtein = numericPrice / proteinTotalGrams;
-        if (pricePerGramProtein > 50) return null;
-        double benchmark = getCategoryBenchmark(p.getProteinSource());
+        double maxPricePerGram = "EUR".equals(p.getCurrency()) ? 0.50 : 50.0;
+        if (pricePerGramProtein > maxPricePerGram) return null;
+        double benchmark = getCategoryBenchmark(p.getProteinSource(), p.getCurrency());
         // Trusted brands justify a price premium — shift the benchmark up so they aren't penalized
         // for costing more than no-name locals (9.5 brand = 25% tolerance, 7.0+ = 12%)
         if (brandScore >= 8.0)      benchmark *= 1.25;
@@ -842,7 +843,20 @@ public class ScraperService {
         return (p.getProteinPer100g() / 100.0 * p.getPrimaryWeightGrams()) / numericPrice;
     }
 
-    private double getCategoryBenchmark(String proteinSource) {
+    private double getCategoryBenchmark(String proteinSource, String currency) {
+        if ("EUR".equals(currency)) {
+            if (proteinSource == null) return 0.057;
+            String src = proteinSource.toLowerCase();
+            if (src.contains("hydro"))       return 0.057;
+            if (src.contains("cfm"))         return 0.059;
+            if (src.contains("isolat"))      return 0.059;
+            if (src.contains("casein"))      return 0.043;
+            if (src.contains("vegan"))       return 0.061;
+            if (src.contains("blend"))       return 0.050;
+            if (src.contains("concentrat"))  return 0.048;
+            if (src.contains("egg"))         return 0.057;
+            return 0.057;
+        }
         if (proteinSource == null) return 6.5;
         String src = proteinSource.toLowerCase();
         if (src.contains("hydro"))       return 6.5;
