@@ -876,33 +876,33 @@ public class ScraperService {
 
     private double getCategoryBenchmark(String proteinSource, String currency) {
         if ("EUR".equals(currency)) {
-            if (proteinSource == null) return 0.059;
+            if (proteinSource == null) return 0.065;
             String src = proteinSource.toLowerCase();
-            // Hydrolysate is the most expensive form (enzymatic pre-digestion) — must be > isolate
-            if (src.contains("hydro"))       return 0.085;
-            if (src.contains("cfm"))         return 0.069;
-            if (src.contains("isolat"))      return 0.069;
-            // Casein typically priced between concentrate and isolate in Croatian market
+            // Benchmarks calibrated to actual HR market median prices (EUR/g protein)
+            // HR medians: hydro=0.070, cfm/iso=0.074, casein=0.063, vegan=0.042, blend=0.053, conc=0.065
+            if (src.contains("hydro"))       return 0.075;
+            if (src.contains("cfm"))         return 0.075;
+            if (src.contains("isolat"))      return 0.075;
             if (src.contains("casein"))      return 0.065;
             if (src.contains("vegan"))       return 0.038;
-            if (src.contains("blend"))       return 0.048;
-            if (src.contains("concentrat"))  return 0.059;
+            if (src.contains("blend"))       return 0.053;
+            if (src.contains("concentrat"))  return 0.065;
             if (src.contains("egg"))         return 0.065;
-            return 0.059;
+            return 0.065;
         }
-        if (proteinSource == null) return 6.5;
+        if (proteinSource == null) return 5.5;
         String src = proteinSource.toLowerCase();
-        // Hydrolysate is the most expensive form — must be > isolate (6.8)
-        if (src.contains("hydro"))       return 8.5;
-        if (src.contains("cfm"))         return 6.8;
-        if (src.contains("isolat"))      return 6.8;
-        // Casein priced between concentrate and isolate
-        if (src.contains("casein"))      return 5.8;
-        if (src.contains("vegan"))       return 7.0;
-        if (src.contains("blend"))       return 5.8;
+        // Benchmarks calibrated to actual RS market median prices (RSD/g protein)
+        // RS medians: hydro=4.11, iso=7.25, casein=5.37, vegan=5.56, blend=5.89, conc=5.43
+        if (src.contains("hydro"))       return 5.0;
+        if (src.contains("cfm"))         return 7.5;
+        if (src.contains("isolat"))      return 7.5;
+        if (src.contains("casein"))      return 5.5;
+        if (src.contains("vegan"))       return 5.8;
+        if (src.contains("blend"))       return 6.0;
         if (src.contains("concentrat"))  return 5.5;
         if (src.contains("egg"))         return 6.5;
-        return 6.5;
+        return 5.5;
     }
 
     /**
