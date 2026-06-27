@@ -8,7 +8,7 @@ import { toggleWishlist } from "@/store/wishlistSlice";
 import SearchAutocomplete from "@/components/SearchAutocomplete";
 import { navigateTo } from "@/lib/navigation";
 import { useTranslations } from "next-intl";
-import { HEADER_GUIDES, HEADER_NAV_LINKS } from "@/lib/navConfig";
+import { HEADER_GUIDES, HEADER_NAV_LINKS, ALL_GUIDES_HREF } from "@/lib/navConfig";
 
 function Logo() {
   return (
@@ -142,7 +142,7 @@ function GuidesDropdown({ mobile = false }: { mobile?: boolean }) {
             </div>
             <div className="border-t border-slate-100 p-2 shrink-0">
               <Link
-                href="/vodici"
+                href={ALL_GUIDES_HREF}
                 onClick={() => setOpen(false)}
                 className="flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-bold text-[#FF9900] hover:bg-[#FFF8EC] rounded-lg transition-colors"
               >

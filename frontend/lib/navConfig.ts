@@ -18,8 +18,10 @@ const RS_HEADER_GUIDES: NavLink[] = [
   { label: "O Proteinoteci",             href: "/o-nama"                             },
 ];
 
-// HR guides will be added in Faza 3 (blog/MDX phase)
-const HR_HEADER_GUIDES: NavLink[] = [];
+const HR_HEADER_GUIDES: NavLink[] = [
+  { label: "Whey protein za početnike", href: "/hr-vodici/whey-protein-za-pocetnike-hrvatska" },
+  { label: "Koliko košta protein u HR?", href: "/hr-vodici/koliko-kosta-protein-hrvatska" },
+];
 
 export const HEADER_GUIDES =
   CURRENT_MARKET === "hr" ? HR_HEADER_GUIDES : RS_HEADER_GUIDES;
@@ -72,8 +74,11 @@ const RS_FOOTER_GUIDES: NavLink[] = [
   { label: "Svi vodiči →",            href: "/vodici"                             },
 ];
 
-// HR guides will be added in Faza 3
-const HR_FOOTER_GUIDES: NavLink[] = [];
+const HR_FOOTER_GUIDES: NavLink[] = [
+  { label: "Whey protein za početnike", href: "/hr-vodici/whey-protein-za-pocetnike-hrvatska" },
+  { label: "Koliko košta protein u HR?", href: "/hr-vodici/koliko-kosta-protein-hrvatska" },
+  { label: "Svi vodiči →",              href: "/hr-vodici" },
+];
 
 export const FOOTER_GUIDES =
   CURRENT_MARKET === "hr" ? HR_FOOTER_GUIDES : RS_FOOTER_GUIDES;
@@ -100,3 +105,6 @@ const HR_FOOTER_POPULAR: NavLink[] = [
 
 export const FOOTER_POPULAR =
   CURRENT_MARKET === "hr" ? HR_FOOTER_POPULAR : RS_FOOTER_POPULAR;
+
+export const ALL_GUIDES_HREF =
+  CURRENT_MARKET === "hr" ? "/hr-vodici" : "/vodici";
