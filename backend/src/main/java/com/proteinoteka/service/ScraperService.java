@@ -512,6 +512,13 @@ public class ScraperService {
             return false;
         }
 
+        // Odbaci mass gainere i snackove sa premalo proteina (gaineri, barovi, namazi)
+        if (scraped.getProteinPer100g() != null && scraped.getProteinPer100g() < 25.0) {
+            log.info("[{}] Skipping '{}' — protein {}g/100g too low for a protein supplement",
+                    store.getName(), scraped.getName(), scraped.getProteinPer100g());
+            return false;
+        }
+
         // 1. Normalizuj brend
         if (scraped.getBrand() != null) {
             scraped.setBrand(brandNormalizer.normalize(scraped.getBrand()));

@@ -124,6 +124,7 @@ public class BaseScraperEnricher {
                 lower.contains("gainer") || lower.contains("myogainer") ||
                 lower.contains("hyper mass") || lower.contains("pro mass") ||
                 lower.contains("beefmass") || lower.contains("instant mass") ||
+                lower.contains("serious mass") || lower.contains("nitromax") ||
                 lower.contains("namaz") || lower.contains("keks") || lower.contains("kaša") ||
                 lower.contains("dekstroza") || lower.contains("dextrose") ||
                 lower.contains("+ creatine") || lower.contains("+ kreatin") ||
@@ -144,6 +145,13 @@ public class BaseScraperEnricher {
                 lower.contains("protein chip") || lower.contains("protein snack") ||
                 lower.contains("protein food") || lower.contains("protein desert") ||
                 lower.contains("protein dessert") ||
+                lower.contains("protein cream") || lower.contains("cocoa cream") ||
+                lower.contains("peanut butter") || lower.contains("kikiriki") ||
+                lower.contains("cashew butter") || lower.contains("almond butter") || lower.contains("nut butter") ||
+                lower.contains("lava cookie") || lower.contains("baked cookie") ||
+                lower.contains("woppers") ||
+                lower.contains("meal replacement") ||
+                lower.contains("fit&slim") || lower.contains("fit & slim") || lower.contains("fit slim") ||
                 lower.contains("waffle") || lower.contains("vafla") ||
                 lower.contains("trail mix") || lower.contains("nutty mix") || lower.contains("fruity") ||
                 lower.contains("oats & whey") || lower.contains("oats and whey") ||
