@@ -57,7 +57,7 @@ const faqItems = [
     a: "Pogledajte Value Score na Proteinoteka.com.hr — rangiramo sve dostupne WPC proteine po gramu proteina za novac. GymBeam Whey Protein, MyProtein Impact Whey i Scitec 100% Whey stalno su pri vrhu liste po isplativosti.",
   },
   {
-    q: "Mogu li uzimati protein na prazan stomak ujutro?",
+    q: "Mogu li uzimati protein na prazan želudac ujutro?",
     a: "Da — whey protein ujutro je odlična ideja. Nakon noćnog posta mišići su u blagom kataboličkom stanju, a whey se brzo apsorbira i pokreće sintezu mišićnih proteina. Možete ga kombinirati s ovsenim pahuljicama ili voćem.",
   },
   {

@@ -39,7 +39,7 @@ const tocSections: TocSection[] = [
 
 const faqItems = [
   {
-    q: "Da li 2g proteina po kg tjelesne mase može naškoditi bubrezima?",
+    q: "Može li 2g proteina po kg tjelesne mase naškoditi bubrezima?",
     a: "Kod zdravih ljudi s normalnom funkcijom bubrega, istraživanja nisu pronašla negativne učinke ni pri unosima do 3g/kg. Ako imate prethodno oštećenje bubrega, savjetujte se s liječnikom prije nego što povećate unos proteina.",
   },
   {
@@ -47,11 +47,11 @@ const faqItems = [
     a: "Vaše tijelo može iskoristiti veće količine proteina u jednom obroku nego što se ranije mislilo — istraživanja pokazuju da se i 100g odjednom apsorbira, samo sporije. Ipak, raspoređivanje na 3–4 obroka od po 30–40g daje optimalniji odgovor mišića.",
   },
   {
-    q: "Da li biljni proteini računaju jednako kao životinjski?",
+    q: "Računaju li biljni proteini jednako kao životinjski?",
     a: "Biljni proteini uglavnom imaju nešto lošiji aminokiselinski profil i niži DIAAS skor, pa treba unositi 10–20% više da biste dobili isti učinak. Kombiniranje izvora (riža + grašak, grah + kukuruz) rješava ovaj problem.",
   },
   {
-    q: "Da li treba povećati proteine u fazi mršavljenja?",
+    q: "Treba li povećati proteine u fazi mršavljenja?",
     a: "Da — u kalorijskom deficitu preporučuje se 2.0–2.4g/kg jer visok unos proteina štiti mišićnu masu dok gubite mast. Više proteina znači i veći osjećaj sitosti, što olakšava pridržavanje dijete.",
   },
 ];
@@ -341,7 +341,7 @@ export default function Page() {
                 Protein za mršavljenje
               </Link>
               <Link href="/hr-vodici/da-li-protein-goji-hrvatska" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
-                Da li protein goji?
+                Goji li protein?
               </Link>
               <Link href="/hr-vodici/koliko-kosta-protein-hrvatska" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
                 Koliko košta protein u HR?

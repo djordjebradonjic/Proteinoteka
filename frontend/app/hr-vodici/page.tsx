@@ -46,7 +46,7 @@ const HR_GUIDES = [
   },
   {
     href: "/hr-vodici/da-li-protein-goji-hrvatska",
-    title: "Da li protein goji? Ne — ali postoji jedan uvjet",
+    title: "Goji li protein? Ne — ali postoji jedan uvjet",
     desc: "Kratki odgovor: ne. Goji te kalorijski suficit. Što kalorije shakea i termički učinak znače za vas.",
     readMin: 7,
   },

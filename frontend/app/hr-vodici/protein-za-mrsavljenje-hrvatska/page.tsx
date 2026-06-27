@@ -33,12 +33,12 @@ const SLUG = "/hr-vodici/protein-za-mrsavljenje-hrvatska";
 const MONTHLY_PROTEIN_G = 900;
 
 const tocSections: TocSection[] = [
-  { id: "da-li-pomaze", title: "Da li protein zaista pomaže pri mršavljenju?" },
+  { id: "da-li-pomaze", title: "Pomaže li protein zaista pri mršavljenju?" },
   { id: "termicki-ucinak", title: "Termički učinak i sitost", level: 3 },
   { id: "koji-tip", title: "Koji tip proteina odabrati?" },
   { id: "izolat", title: "Whey izolat — optimalni izbor za deficit", level: 3 },
   { id: "concentrate-mrsavljenje", title: "Whey koncentrat uz manji budžet", level: 3 },
-  { id: "izbegavati", title: "Što izbjegavati pri mršavljenju" },
+  { id: "izbjegavati", title: "Što izbjegavati pri mršavljenju" },
   { id: "koliko-proteina", title: "Koliko proteina unositi pri mršavljenju" },
   { id: "koliko-kosta", title: "Koliko košta mjesec dana u Hrvatskoj" },
   { id: "kada-piti", title: "Kada piti protein pri mršavljenju" },
@@ -62,7 +62,7 @@ const faqItems = [
     a: "Whey izolat generalno ima najmanje kalorija po gramu proteina jer je najčišći — minimalno masti i ugljikohidrata. Tražite izolate s 85g+ proteina na 100g i ispod 2g masti.",
   },
   {
-    q: "Da li žene trebaju uzimati isti protein kao muškarci?",
+    q: "Trebaju li žene uzimati isti protein kao muškarci?",
     a: "Da. Ne postoji biološki razlog da žene uzimaju 'ženski protein'. Marketing koji nagovara na posebne proizvode za žene uglavnom prodaje isti protein u ružičastoj ambalaži po višoj cijeni. Gledajte sastav, ne pakiranje.",
   },
   {
@@ -161,7 +161,7 @@ export default async function Page() {
           <GuideToc sections={tocSections} />
 
           <section className="mb-10">
-            <h2 id="da-li-pomaze" className="text-xl font-bold text-slate-900 mb-4">Da li protein zaista pomaže pri mršavljenju?</h2>
+            <h2 id="da-li-pomaze" className="text-xl font-bold text-slate-900 mb-4">Pomaže li protein zaista pri mršavljenju?</h2>
             <div className="space-y-4 text-[15px] leading-relaxed text-slate-700 mb-6">
               <p>
                 Da — ali ne na način koji se često reklamira. Protein nema "fat burning" učinak. Ono što ima
@@ -306,7 +306,7 @@ export default async function Page() {
           </section>
 
           <section className="mb-10">
-            <h2 id="izbegavati" className="text-xl font-bold text-slate-900 mb-4">Što izbjegavati pri mršavljenju</h2>
+            <h2 id="izbjegavati" className="text-xl font-bold text-slate-900 mb-4">Što izbjegavati pri mršavljenju</h2>
             <div className="space-y-3">
               {[
                 {
@@ -461,7 +461,7 @@ export default async function Page() {
                 Top lista po Value Score
               </Link>
               <Link href="/hr-vodici/da-li-protein-goji-hrvatska" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
-                Da li protein goji?
+                Goji li protein?
               </Link>
               <Link href="/hr-vodici/koliko-proteina-dnevno-hrvatska" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
                 Koliko proteina dnevno?

@@ -42,7 +42,7 @@ const faqItems = [
     a: "Shake može biti dio obroka, ali rijetko ga u potpunosti zamjenjuje po sitosti i mikronutrijentima. Ako shakeom zamijenite obrok s manje kalorija i ostanete u deficitu, gubite kilograme — ali to vrijedi za svaku hranu, ne samo za protein.",
   },
   {
-    q: "Da li protein nakon treninga goji ako ne treniram dovoljno?",
+    q: "Goji li protein nakon treninga ako ne treniram dovoljno?",
     a: "Ako unesete više kalorija nego što trošite, višak se skladišti kao mast — bez obzira na to što ste pojeli. Protein nije iznimka od prvog zakona termodinamike. Trening bez deficita u prehrani neće sam po sebi smanjiti tjelesnu masu.",
   },
   {
@@ -50,7 +50,7 @@ const faqItems = [
     a: "Jedna porcija whey proteina (30g) u vodi daje uglavnom 100–130 kcal i 22–27g proteina. S 250ml punomasnog mlijeka dodajete još 150 kcal — ukupno 250–280 kcal. To je manje od prosječnog ručka.",
   },
   {
-    q: "Da li ženski proteini goje manje od muških?",
+    q: "Goje li ženski proteini manje od muških?",
     a: "Ne postoji 'ženski' ili 'muški' protein u biokemijskom smislu. Marketing koji nagovara na posebne formule za žene uglavnom prodaje isti protein u drugačijoj ambalaži. Gledajte sastav: postotak proteina, šećer, masti — ne oznake na pakiranju.",
   },
 ];
@@ -104,12 +104,12 @@ export default function Page() {
             <span>/</span>
             <Link href="/hr-vodici" className="hover:text-[#FF9900] transition-colors">Vodiči</Link>
             <span>/</span>
-            <span className="text-slate-600">Da li protein goji?</span>
+            <span className="text-slate-600">Goji li protein?</span>
           </nav>
 
           <div className="mb-8">
             <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 leading-tight mb-4">
-              Da li protein goji?
+              Goji li protein?
             </h1>
             <div className="flex items-center gap-3 text-sm text-slate-400">
               <span>7 min čitanja</span>
