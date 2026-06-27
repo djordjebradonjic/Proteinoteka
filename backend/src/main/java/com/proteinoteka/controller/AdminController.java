@@ -14,6 +14,7 @@ import com.proteinoteka.scheduler.ScrapingSchedulerService;
 import com.proteinoteka.dto.NutritionDataDTO;
 import com.proteinoteka.service.AiNutritionService;
 import com.proteinoteka.service.ScraperService;
+import com.proteinoteka.service.PolleoSportScraper;
 import com.proteinoteka.service.ShopbuilderScraper;
 import com.proteinoteka.service.StoreScraper;
 import com.proteinoteka.service.SupplementStoreScraper;
@@ -196,6 +197,31 @@ public class AdminController {
             }
         });
         return ResponseEntity.accepted().body("SupplementStore TEST scrape started — limit: " + limit + " products");
+    }
+
+    @PostMapping("/scrape/polleo-sport-hr")
+    public ResponseEntity<String> scrapePolleoSportHr() {
+        runAsync("scraper-polleo-sport-hr", () -> schedulerService.scrapeStoreNow("Polleo Sport"));
+        return ResponseEntity.accepted().body("Polleo Sport HR scraping started in background");
+    }
+
+    @PostMapping("/scrape/polleo-sport-hr/test")
+    public ResponseEntity<String> scrapePolleoSportHrTest(
+            @RequestParam(defaultValue = "3") int limit) {
+        PolleoSportScraper scraper = scrapers.stream()
+                .filter(s -> s instanceof PolleoSportScraper)
+                .map(s -> (PolleoSportScraper) s)
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("PolleoSport scraper not found"));
+        scraper.setProductLimit(limit);
+        runAsync("scraper-polleo-sport-hr-test", () -> {
+            try {
+                scraperService.scrapeStore(scraper, true);
+            } finally {
+                scraper.resetProductLimit();
+            }
+        });
+        return ResponseEntity.accepted().body("Polleo Sport HR TEST scrape started — limit: " + limit + " products");
     }
 
     private void runAsync(String threadName, Runnable task) {
