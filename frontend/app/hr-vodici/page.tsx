@@ -32,6 +32,24 @@ const HR_GUIDES = [
     desc: "Usporedba cijena whey proteina u EUR po gramu proteina — s aktualnim podacima.",
     readMin: 5,
   },
+  {
+    href: "/hr-vodici/koliko-proteina-dnevno-hrvatska",
+    title: "Koliko proteina dnevno treba uzimati?",
+    desc: "Tablica preporuka po cilju i tjelesnoj masi. Za osobu od 80kg koja trenira: 128–176g dnevno.",
+    readMin: 7,
+  },
+  {
+    href: "/hr-vodici/protein-za-mrsavljenje-hrvatska",
+    title: "Koji protein za mršavljenje? + Cijene u Hrvatskoj",
+    desc: "Whey izolat je optimalni izbor — visok postotak proteina, minimum masti. Koliko košta mjesec.",
+    readMin: 8,
+  },
+  {
+    href: "/hr-vodici/da-li-protein-goji-hrvatska",
+    title: "Da li protein goji? Ne — ali postoji jedan uvjet",
+    desc: "Kratki odgovor: ne. Goji te kalorijski suficit. Što kalorije shakea i termički učinak znače za vas.",
+    readMin: 7,
+  },
 ];
 
 export default function Page() {

@@ -20,7 +20,10 @@ const RS_HEADER_GUIDES: NavLink[] = [
 
 const HR_HEADER_GUIDES: NavLink[] = [
   { label: "Whey protein za početnike", href: "/hr-vodici/whey-protein-za-pocetnike-hrvatska" },
-  { label: "Koliko košta protein u HR?", href: "/hr-vodici/koliko-kosta-protein-hrvatska" },
+  { label: "Koliko košta protein u HR?", href: "/hr-vodici/koliko-kosta-protein-hrvatska"      },
+  { label: "Koliko proteina dnevno?",   href: "/hr-vodici/koliko-proteina-dnevno-hrvatska"     },
+  { label: "Protein za mršavljenje",    href: "/hr-vodici/protein-za-mrsavljenje-hrvatska"     },
+  { label: "Da li protein goji?",       href: "/hr-vodici/da-li-protein-goji-hrvatska"         },
 ];
 
 export const HEADER_GUIDES =
@@ -76,8 +79,11 @@ const RS_FOOTER_GUIDES: NavLink[] = [
 
 const HR_FOOTER_GUIDES: NavLink[] = [
   { label: "Whey protein za početnike", href: "/hr-vodici/whey-protein-za-pocetnike-hrvatska" },
-  { label: "Koliko košta protein u HR?", href: "/hr-vodici/koliko-kosta-protein-hrvatska" },
-  { label: "Svi vodiči →",              href: "/hr-vodici" },
+  { label: "Koliko košta protein u HR?", href: "/hr-vodici/koliko-kosta-protein-hrvatska"      },
+  { label: "Koliko proteina dnevno?",   href: "/hr-vodici/koliko-proteina-dnevno-hrvatska"    },
+  { label: "Protein za mršavljenje",    href: "/hr-vodici/protein-za-mrsavljenje-hrvatska"    },
+  { label: "Da li protein goji?",       href: "/hr-vodici/da-li-protein-goji-hrvatska"        },
+  { label: "Svi vodiči →",              href: "/hr-vodici"                                     },
 ];
 
 export const FOOTER_GUIDES =

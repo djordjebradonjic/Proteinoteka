@@ -78,6 +78,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/hr-vodici`,                                         changeFrequency: "monthly" as const, priority: 0.7,  lastModified: now },
     { url: `${BASE}/hr-vodici/whey-protein-za-pocetnike-hrvatska`,      changeFrequency: "monthly" as const, priority: 0.75, lastModified: now },
     { url: `${BASE}/hr-vodici/koliko-kosta-protein-hrvatska`,           changeFrequency: "weekly"  as const, priority: 0.8,  lastModified: now },
+    { url: `${BASE}/hr-vodici/koliko-proteina-dnevno-hrvatska`,        changeFrequency: "monthly" as const, priority: 0.75, lastModified: now },
+    { url: `${BASE}/hr-vodici/da-li-protein-goji-hrvatska`,            changeFrequency: "monthly" as const, priority: 0.75, lastModified: now },
+    { url: `${BASE}/hr-vodici/protein-za-mrsavljenje-hrvatska`,        changeFrequency: "weekly"  as const, priority: 0.8,  lastModified: now },
     // SEO landing pages
     { url: `${BASE}/najbolji-whey-protein-hrvatska`,     changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/najjeftiniji-whey-protein-hrvatska`, changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
