@@ -26,6 +26,54 @@ const nextConfig: NextConfig = {
     ];
   },
   async redirects() {
+    // HR-only pages — redirect to proteinoteka.com.hr when accessed on proteinoteka.rs
+    const hrPagesOnRs = [
+      '/whey-protein-cijena',
+      '/najjeftiniji-whey-protein-hrvatska',
+      '/najbolji-whey-protein-hrvatska',
+      '/whey-isolate-hrvatska',
+      '/biljni-protein-hrvatska',
+      '/hidrolizat-protein-hrvatska',
+      '/kazein-protein-hrvatska',
+      '/whey-protein-do-20-eura',
+      '/whey-protein-do-40-eura',
+    ].map((source) => ({
+      source,
+      has: [{ type: 'host' as const, value: 'proteinoteka.rs' }],
+      destination: `https://proteinoteka.com.hr${source}`,
+      permanent: true,
+    }));
+
+    // RS-only pages — redirect to proteinoteka.rs when accessed on proteinoteka.com.hr
+    const rsPagesOnHr = [
+      '/najjeftiniji-whey-protein',
+      '/najbolji-whey-protein-srbija',
+      '/whey-protein-cena',
+      '/whey-isolate-srbija',
+      '/protein-za-masu',
+      '/whey-protein-do-3000-dinara',
+      '/whey-protein-do-5000-dinara',
+      '/kazein-protein-srbija',
+      '/biljni-protein-srbija',
+      '/hidrolizat-protein-srbija',
+      '/gold-standard-whey-cena',
+      '/ogistrashop-proteini',
+      '/supplementshop-proteini',
+      '/pansport-proteini',
+      '/fitlab-proteini',
+      '/proteinbox-proteini',
+      '/proteini-si-srbija',
+      '/lama-proteini',
+      '/shopbuilder-proteini',
+      '/supplement-store-proteini',
+      '/xsport-proteini',
+    ].map((source) => ({
+      source,
+      has: [{ type: 'host' as const, value: 'proteinoteka.com.hr' }],
+      destination: `https://proteinoteka.rs${source}`,
+      permanent: true,
+    }));
+
     return [
       // Canonical host: always redirect www → non-www (permanent 301)
       {
@@ -40,6 +88,10 @@ const nextConfig: NextConfig = {
         destination: 'https://proteinoteka.com.hr/:path*',
         permanent: true,
       },
+      // Cross-market redirects — prevent wrong-market pages from being indexed
+      ...hrPagesOnRs,
+      ...rsPagesOnHr,
+      // Legacy redirects
       { source: '/kako-racunamo', destination: '/kako-racunamo-value-score', permanent: true },
       { source: '/brendovi',      destination: '/',                           permanent: true },
       { source: '/blog',          destination: '/vodici',                     permanent: true },
