@@ -82,7 +82,7 @@ public class PolleoSportScraper implements StoreScraper {
     public List<Product> scrape(Page page, Document doc, Set<String> skipUrls) {
         List<Product> stubs = new ArrayList<>();
 
-        Elements cards = doc.select("div.product-item");
+        Elements cards = doc.select("div.product-item-container");
         log.info("[{}] Found {} product cards on listing page", STORE_NAME, cards.size());
 
         for (Element card : cards) {
@@ -97,7 +97,8 @@ public class PolleoSportScraper implements StoreScraper {
 
     private Product parseCard(Element card) {
         try {
-            Element nameAnchor = card.selectFirst("h3 a, h2 a");
+            // Name + URL from "div.name h2 a" (relative href like "1st-whey-454-g-...")
+            Element nameAnchor = card.selectFirst("div.name h2 a, div.name a");
             if (nameAnchor == null) return null;
 
             String name = nameAnchor.text().trim();
@@ -107,19 +108,21 @@ public class PolleoSportScraper implements StoreScraper {
             if (href.isBlank()) return null;
             String url = href.startsWith("http") ? href : SITE_ORIGIN + "/" + href.replaceFirst("^/", "");
 
-            Element priceEl = card.selectFirst("span.price");
+            // Price from listing: "span.final-price-polleo-grid" → "24,99 €"
+            Element priceEl = card.selectFirst("span.final-price-polleo-grid");
             Double price = priceEl != null ? parseEuroPrice(priceEl.text()) : null;
 
+            // Brand: "div.brandc"
             String brand = null;
-            Element brandEl = card.selectFirst("div.product-brand, span.brand, .brand");
+            Element brandEl = card.selectFirst("div.brandc");
             if (brandEl != null) brand = brandEl.text().trim();
 
+            // Image
             String imageUrl = null;
-            Element img = card.selectFirst("img");
+            Element img = card.selectFirst("a.polleo-product-single-item-image-link img, div.image img, img");
             if (img != null) {
                 imageUrl = img.attr("src");
                 if (imageUrl.isBlank()) imageUrl = img.attr("data-src");
-                // Strip size param — keep full-size image
                 if (imageUrl.contains("?size=")) imageUrl = imageUrl.substring(0, imageUrl.indexOf("?size="));
             }
 
@@ -208,8 +211,8 @@ public class PolleoSportScraper implements StoreScraper {
         // Price from detail page (in case listing price was 0 or missing)
         enrichPriceFromDetailPage(doc, p);
 
-        // Brand
-        Element brandEl = doc.selectFirst(".brand-info a, .product-brand a, .brand a");
+        // Brand: first div.brandc in the product content (not related-products section)
+        Element brandEl = doc.selectFirst("div.brandc");
         if (brandEl != null && !brandEl.text().isBlank()) p.setBrand(brandEl.text().trim());
 
         // Description
@@ -282,7 +285,7 @@ public class PolleoSportScraper implements StoreScraper {
             String label = cells.get(0).text().trim().toLowerCase();
             String rawCell = cells.get(per100gCol).text().trim();
 
-            if (label.contains("energij") || label.contains("energy")) {
+            if (label.contains("energij") || label.contains("energy") || label.contains("energetska")) {
                 Matcher kcalM = Pattern.compile("(\\d+[.,]?\\d*)\\s*kcal", Pattern.CASE_INSENSITIVE).matcher(rawCell);
                 if (kcalM.find()) {
                     try { p.setCaloriePer100g(Double.parseDouble(kcalM.group(1).replace(",", "."))); }
@@ -297,8 +300,8 @@ public class PolleoSportScraper implements StoreScraper {
             if ((label.contains("protein") || label.contains("bjelančevine"))
                     && !label.contains("koncentrat") && !label.contains("izolat")) {
                 if (value <= 95) p.setProteinPer100g(value);
-            } else if ((label.equals("masti") || label.equals("fat") || label.equals("ukupne masti"))
-                    && !label.contains("zasić")) {
+            } else if ((label.contains("masti") || label.contains("fat"))
+                    && !label.contains("zasić") && !label.contains("satur") && !label.startsWith("-")) {
                 if (value <= 100) p.setFatPer100g(value);
             } else if (label.contains("šećeri") || label.contains("seceri") || label.contains("sugar")) {
                 if (value <= 100) p.setSugarPer100g(value);
@@ -345,7 +348,8 @@ public class PolleoSportScraper implements StoreScraper {
 
     private void enrichPriceFromDetailPage(Document doc, Product p) {
         if (p.getPrice() != null && !p.getPrice().isBlank() && !p.getPrice().equals("0.0")) return;
-        Element priceEl = doc.selectFirst("span.price, .product-price span, .price");
+        // Detail page uses a different class than listing ("product-page" vs "polleo-grid")
+        Element priceEl = doc.selectFirst("span.final-price-product-page");
         if (priceEl != null) {
             Double price = parseEuroPrice(priceEl.text());
             if (price != null && price > 0) p.setPrice(String.valueOf(price));
