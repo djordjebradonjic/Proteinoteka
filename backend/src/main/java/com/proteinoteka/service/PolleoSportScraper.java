@@ -52,7 +52,17 @@ public class PolleoSportScraper implements StoreScraper {
     @Override public String getBaseUrl()   { return BASE_URL; }
     @Override public String getMarket()    { return "hr"; }
     @Override public String getCurrency()  { return "EUR"; }
-    @Override public boolean usePlaywrightForListing() { return false; }
+    @Override public boolean usePlaywrightForListing() { return true; }
+
+    @Override
+    public void waitForListing(Page page) {
+        try {
+            page.waitForSelector("div.product-item-container",
+                    new com.microsoft.playwright.Page.WaitForSelectorOptions().setTimeout(15000));
+        } catch (Exception e) {
+            log.warn("[{}] Timeout waiting for product cards on listing page", STORE_NAME);
+        }
+    }
 
     @Override
     public String buildPageUrl(int page) {
