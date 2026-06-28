@@ -29,7 +29,7 @@ export default async function Page() {
   const raw = await fetchTopProducts({
     category: "whey_concentrate",
     sortBy: "price",
-    limit: 200,
+    limit: 500,
   });
   const products = raw.filter(
     p => p.primaryWeightGrams != null && p.primaryWeightGrams >= 2500 && p.primaryWeightGrams < 3500
