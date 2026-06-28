@@ -289,7 +289,7 @@ export default async function Page() {
               <div className="space-y-3 text-[15px] leading-relaxed text-slate-700 mb-4">
                 <p>
                   Biljni proteini (protein graška, riže, kombinacije) imaju nešto niži biološki skor od whey-a,
-                  ali su odlična opcija za osobe netolerante na laktozu, vegane i vegetarijance.
+                  ali su odlična opcija za osobe s intolerancijom na laktozu, vegane i vegetarijance.
                 </p>
               </div>
               {topVegan && (

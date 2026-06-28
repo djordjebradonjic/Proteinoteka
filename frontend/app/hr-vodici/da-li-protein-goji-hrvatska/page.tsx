@@ -6,12 +6,12 @@ import GuideToc, { TocSection } from "@/components/GuideToc";
 import GuideDisclaimer from "@/components/GuideDisclaimer";
 
 export const metadata: Metadata = {
-  title: { absolute: "Da li protein goji? Ne — ali postoji jedan uvjet | Proteinoteka" },
+  title: { absolute: "Goji li protein? Ne — ali postoji jedan uvjet | Proteinoteka" },
   description:
     "Kratki odgovor: ne. Goji te kalorijski suficit — a whey protein ima viši termički učinak od ugljikohidrata i pomaže sitosti. Kada shake zapravo može povećati tjelesnu težinu i kada pomaže mršavljenju.",
   alternates: { canonical: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/hr-vodici/da-li-protein-goji-hrvatska` },
   openGraph: {
-    title: "Da li protein goji? Ne — ali postoji jedan uvjet | Proteinoteka",
+    title: "Goji li protein? Ne — ali postoji jedan uvjet | Proteinoteka",
     description:
       "Kratki odgovor: ne. Goji te kalorijski suficit — a whey protein ima viši termički učinak od ugljikohidrata i pomaže sitosti.",
     url: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/hr-vodici/da-li-protein-goji-hrvatska`,

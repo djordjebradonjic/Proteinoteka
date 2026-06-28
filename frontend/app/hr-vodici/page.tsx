@@ -33,7 +33,7 @@ const HR_SEO_PAGES = [
   {
     href: "/whey-protein-cijena",
     title: "Whey protein cijena u Hrvatskoj",
-    desc: "Pregled aktualnih cijena concentrate, izolata i hidrolizata iz svih trgovina.",
+    desc: "Pregled aktualnih cijena koncentrata, izolata i hidrolizata iz svih trgovina.",
   },
   {
     href: "/whey-isolate-hrvatska",
