@@ -155,7 +155,9 @@ public class ScraperService {
         Set<String> completeNutritionUrls = productRepository.findNutritionStatusByStoreName(store.getName())
                 .stream()
                 .filter(p -> baseEnricher.isNonProteinProduct(p.getName())
-                        || (p.getSugarPer100g() != null && p.getCaloriePer100g() != null && p.getProteinSource() != null))
+                        || (p.getSugarPer100g() != null
+                            && p.getCaloriePer100g() != null && p.getCaloriePer100g() >= 200
+                            && p.getProteinSource() != null))
                 .map(Product::getUrl)
                 .collect(Collectors.toSet());
         log.info("[{}] {} products already have complete nutrition — detail page will be skipped",
