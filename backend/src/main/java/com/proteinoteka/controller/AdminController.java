@@ -205,6 +205,12 @@ public class AdminController {
         return ResponseEntity.accepted().body("Polleo Sport HR scraping started in background");
     }
 
+    @PostMapping("/scrape/proteka-hr")
+    public ResponseEntity<String> scrapeProtekaHr() {
+        runAsync("scraper-proteka-hr", () -> schedulerService.scrapeStoreNow("Proteka"));
+        return ResponseEntity.accepted().body("Proteka HR scraping started in background");
+    }
+
     @PostMapping("/scrape/polleo-sport-hr/test")
     public ResponseEntity<String> scrapePolleoSportHrTest(
             @RequestParam(defaultValue = "3") int limit) {
