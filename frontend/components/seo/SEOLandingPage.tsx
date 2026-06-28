@@ -13,7 +13,7 @@ const BASE_URL_CONST = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
 
 const RS_SEO_PAGES = [
   { slug: "najbolji-whey-protein-srbija",  label: "🥇 Najbolji Whey"        },
-  { slug: "najjeftiniji-whey-protein",     label: "💰 Najjeftiniji Whey"     },
+  { slug: "najjeftiniji-whey-protein",     label: "💰 Najjeftiniji Whey (po kg)" },
   { slug: "whey-protein-cena",             label: "📊 Whey Protein Cena"     },
   { slug: "whey-isolate-srbija",           label: "✨ Whey Izolat"           },
   { slug: "protein-za-masu",              label: "💪 Protein za Masu"       },
@@ -106,6 +106,7 @@ function ProductTable({ products, caption }: { products: Product[]; caption: str
               <th className="text-left py-3 px-5 text-xs font-semibold text-slate-500 uppercase tracking-wide">#</th>
               <th className="text-left py-3 pr-4 text-xs font-semibold text-slate-500 uppercase tracking-wide">Proizvod</th>
               <th className="text-right py-3 pr-4 text-xs font-semibold text-slate-500 uppercase tracking-wide">{IS_HR ? "Cijena" : "Cena"}</th>
+              <th className="text-right py-3 pr-4 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Gramaža</th>
               <th className="text-right py-3 pr-4 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Protein</th>
               <th className="text-right py-3 pr-4 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Score</th>
               <th className="text-right py-3 pr-5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Akcija</th>
@@ -120,6 +121,13 @@ function ProductTable({ products, caption }: { products: Product[]; caption: str
                   <div className="text-[10px] text-slate-400 mt-0.5">{p.brand} · {p.storeName}</div>
                 </td>
                 <td className="py-3 pr-4 text-right font-bold text-slate-900 whitespace-nowrap">{p.price}</td>
+                <td className="py-3 pr-4 text-right text-slate-600 hidden sm:table-cell">
+                  {p.primaryWeightGrams != null
+                    ? p.primaryWeightGrams < 1000
+                      ? `${p.primaryWeightGrams}g`
+                      : `${+(p.primaryWeightGrams / 1000).toFixed(2).replace(/\.?0+$/, "")}kg`
+                    : "—"}
+                </td>
                 <td className="py-3 pr-4 text-right text-slate-600 hidden sm:table-cell">
                   {p.proteinPer100g != null ? `${p.proteinPer100g}g` : "—"}
                 </td>

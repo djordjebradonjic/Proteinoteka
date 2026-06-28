@@ -59,7 +59,16 @@ export function SEOProductCard({ product, rank, priority = false }: { product: P
           </span>
         </div>
         <div className="flex items-center gap-2 mt-2 flex-wrap">
-          <PriceTag price={product.numericPrice} className="text-base font-black text-slate-900" />
+          <div className="flex items-baseline gap-1.5">
+            <PriceTag price={product.numericPrice} className="text-base font-black text-slate-900" />
+            {product.primaryWeightGrams != null && (
+              <span className="text-xs font-semibold text-slate-400">
+                · {product.primaryWeightGrams < 1000
+                  ? `${product.primaryWeightGrams}g`
+                  : `${+(product.primaryWeightGrams / 1000).toFixed(2).replace(/\.?0+$/, "")}kg`}
+              </span>
+            )}
+          </div>
           {score != null && (
             <span
               className="text-[10px] font-bold px-2 py-0.5 rounded-full"
