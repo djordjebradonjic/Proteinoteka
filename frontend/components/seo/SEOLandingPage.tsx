@@ -185,10 +185,27 @@ function DecisionSummary({ products }: { products: Product[] }) {
             href={productUrl(product)}
             className="bg-white border border-slate-200 rounded-xl p-4 hover:border-[#FF9900] hover:shadow-md transition-all duration-150 flex flex-col"
           >
-            <div className="text-xl mb-1">{icon}</div>
-            <div className="text-[10px] font-bold uppercase text-slate-400 tracking-wide mb-1">{label}</div>
-            <div className="font-bold text-sm text-slate-900 line-clamp-2 leading-snug flex-1">{product.name}</div>
-            <div className="mt-2 flex items-center justify-between flex-wrap gap-1">
+            <div className="flex items-start gap-3 mb-2">
+              {product.imageUrl ? (
+                <div className="w-16 h-16 shrink-0 flex items-center justify-center bg-slate-50 rounded-lg border border-slate-100 p-1">
+                  <Image
+                    src={product.imageUrl}
+                    alt={product.name}
+                    width={64}
+                    height={64}
+                    className="w-full h-full object-contain"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                </div>
+              ) : (
+                <div className="text-xl">{icon}</div>
+              )}
+              <div className="flex flex-col min-w-0">
+                <div className="text-[10px] font-bold uppercase text-slate-400 tracking-wide mb-1">{icon} {label}</div>
+                <div className="font-bold text-sm text-slate-900 line-clamp-2 leading-snug">{product.name}</div>
+              </div>
+            </div>
+            <div className="mt-auto flex items-center justify-between flex-wrap gap-1">
               <PriceTag price={product.numericPrice} className="text-base font-black text-[#FF9900]" currencyClassName="text-[0.7em] font-medium text-[#FF9900] opacity-70 ml-1" />
               {extra && <span className="text-[10px] text-slate-400">{extra}</span>}
             </div>
