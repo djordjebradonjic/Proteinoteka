@@ -398,12 +398,14 @@ export function SEOLandingPage({
             >
               Pogledaj sve ponude
             </Link>
-            <Link
-              href={compareHref}
-              className="px-6 py-3 rounded-xl border-2 border-[#FF9900] text-[#FF9900] font-bold text-sm hover:bg-amber-50 transition-colors"
-            >
-              {IS_HR ? "Usporedi cijene" : "Uporedi cene"}
-            </Link>
+            {topCompareIds && (
+              <Link
+                href={compareHref}
+                className="px-6 py-3 rounded-xl border-2 border-[#FF9900] text-[#FF9900] font-bold text-sm hover:bg-amber-50 transition-colors"
+              >
+                {IS_HR ? "Usporedi cijene" : "Uporedi cene"}
+              </Link>
+            )}
           </div>
         </div>
 

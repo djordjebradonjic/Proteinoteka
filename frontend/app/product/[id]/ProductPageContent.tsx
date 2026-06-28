@@ -6,7 +6,9 @@ import { useRouter } from "next/navigation";
 import { Product } from "@/types/product";
 import Header from "@/components/Header";
 import Link from "next/link";
-import { ShoppingCart, ArrowLeft, Package, Zap, Droplets, Flame, Store, Bell, BellOff, BookOpen, ArrowRight } from "lucide-react";
+import { ShoppingCart, ArrowLeft, Package, Zap, Droplets, Flame, Store, Bell, BellOff, BookOpen, ArrowRight, GitCompare } from "lucide-react";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { addToCompare, removeFromCompare } from "@/store/compareSlice";
 import { GUIDES, CATEGORY_GUIDES } from "@/lib/guides";
 
 const BRAND_PAGE_SLUGS: Record<string, string> = {
@@ -482,6 +484,11 @@ interface Props {
 
 export default function ProductPageContent({ product, similar, storePrices, reviews, aggregateRating }: Props) {
   const router = useRouter();
+  const dispatch = useAppDispatch();
+  const compareIds = useAppSelector((state) => (state as any).compare.ids) as number[];
+  const inCompare = compareIds.includes(product.id);
+  const compareCount = compareIds.length;
+
   const [descExpanded, setDescExpanded] = useState(false);
   const [descOverflows, setDescOverflows] = useState(false);
   const [imgError, setImgError] = useState(false);
@@ -719,6 +726,31 @@ export default function ProductPageContent({ product, similar, storePrices, revi
               <ShoppingCart className="w-5 h-5" />
               Kupi u {product.storeName}
             </a>
+
+            <button
+              onClick={() => {
+                if (inCompare) {
+                  dispatch(removeFromCompare(product.id));
+                } else {
+                  dispatch(addToCompare({ id: product.id, name: product.name }));
+                }
+              }}
+              disabled={!inCompare && compareCount >= 4}
+              className={`w-full flex items-center justify-center gap-2.5 py-3 rounded-2xl font-bold text-sm transition-all duration-150 active:scale-[0.98] border-2 ${
+                inCompare
+                  ? "border-[#FF9900] bg-amber-50 text-[#FF9900]"
+                  : compareCount >= 4
+                  ? "border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed"
+                  : "border-slate-200 bg-white text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900]"
+              }`}
+            >
+              <GitCompare className="w-4 h-4" />
+              {inCompare
+                ? (IS_HR ? "Ukloni iz usporedbe" : "Ukloni iz poređenja")
+                : compareCount >= 4
+                ? (IS_HR ? "Usporedba je puna (4/4)" : "Poređenje je puno (4/4)")
+                : (IS_HR ? "Dodaj u usporedbu" : "Dodaj u poređenje")}
+            </button>
           </div>
         </div>
 

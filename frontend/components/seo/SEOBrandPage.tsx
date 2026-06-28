@@ -289,6 +289,8 @@ export function SEOBrandPage({
   h1, brandName, intro, products, currentSlug, faqs,
 }: SEOBrandPageProps) {
   const sorted = [...products].sort((a, b) => (b.valueScore ?? 0) - (a.valueScore ?? 0));
+  const topCompareIds = sorted.slice(0, 3).map(p => p.id).join(",");
+  const compareHref = topCompareIds ? `/compare?ids=${topCompareIds}` : "/compare";
 
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
@@ -395,9 +397,11 @@ export function SEOBrandPage({
             <Link href="/" className="px-6 py-3 rounded-xl bg-[#131921] text-white font-bold text-sm hover:bg-[#243860] transition-colors">
               Pogledaj sve ponude
             </Link>
-            <Link href="/compare" className="px-6 py-3 rounded-xl border-2 border-[#FF9900] text-[#FF9900] font-bold text-sm hover:bg-amber-50 transition-colors">
-              Uporedi cene
-            </Link>
+            {topCompareIds && (
+              <Link href={compareHref} className="px-6 py-3 rounded-xl border-2 border-[#FF9900] text-[#FF9900] font-bold text-sm hover:bg-amber-50 transition-colors">
+                Uporedi cene
+              </Link>
+            )}
           </div>
         </div>
 
