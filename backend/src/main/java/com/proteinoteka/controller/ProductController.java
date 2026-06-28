@@ -327,7 +327,8 @@ public class ProductController {
                         p.getName(),
                         p.getPrimaryWeightGrams(),
                         p.getProteinSource(),
-                        p.getCanonicalSlug()
+                        p.getCanonicalSlug(),
+                        p.getUrl()
                 ))
                 .sorted(Comparator.comparingDouble(
                         p -> p.numericPrice() != null ? p.numericPrice() : Double.MAX_VALUE))

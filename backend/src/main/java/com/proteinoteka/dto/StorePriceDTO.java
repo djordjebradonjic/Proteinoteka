@@ -8,5 +8,6 @@ public record StorePriceDTO(
         String name,
         Double primaryWeightGrams,
         String proteinSource,
-        String canonicalSlug
+        String canonicalSlug,
+        String url
 ) {}

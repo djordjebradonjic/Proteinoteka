@@ -17,7 +17,7 @@ export const revalidate = 86400;
 const API      = process.env.NEXT_PUBLIC_API_URL ?? "";
 const BASE_URL = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
 
-interface StorePrice { id: number; storeName: string; price: string; numericPrice: number | null; name: string | null; primaryWeightGrams: number | null; proteinSource: string | null; canonicalSlug: string | null; }
+interface StorePrice { id: number; storeName: string; price: string; numericPrice: number | null; name: string | null; primaryWeightGrams: number | null; proteinSource: string | null; canonicalSlug: string | null; url: string | null; }
 interface ReviewDTO { id: number; displayName: string | null; rating: number; comment: string | null; createdAt: string; }
 interface AggregateRatingDTO { averageRating: number; reviewCount: number; }
 interface Params { params: Promise<{ category: string; slug: string }> }
@@ -221,6 +221,7 @@ export default async function ProductSlugPage({ params }: Params) {
             itemCondition: "https://schema.org/NewCondition",
             priceValidUntil,
             seller: { "@type": "Organization", name: sp.storeName },
+            ...(sp.url && { url: sp.url }),
           })),
         }
       : {

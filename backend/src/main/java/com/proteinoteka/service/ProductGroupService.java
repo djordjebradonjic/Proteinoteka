@@ -35,7 +35,8 @@ public class ProductGroupService {
                     product.getName(),
                     product.getPrimaryWeightGrams(),
                     product.getProteinSource(),
-                    product.getCanonicalSlug()
+                    product.getCanonicalSlug(),
+                    product.getUrl()
             ));
         }
 
@@ -48,7 +49,8 @@ public class ProductGroupService {
                     cheapestPerStore.putIfAbsent(store, new StorePriceDTO(
                             p.getId(), store, p.getPrice(), p.getNumericPrice(),
                             p.getName(), p.getPrimaryWeightGrams(),
-                            p.getProteinSource(), p.getCanonicalSlug()
+                            p.getProteinSource(), p.getCanonicalSlug(),
+                            p.getUrl()
                     ));
                 });
 
