@@ -2,6 +2,7 @@ package com.proteinoteka.service;
 
 import com.microsoft.playwright.Page;
 import com.proteinoteka.model.Product;
+import com.proteinoteka.repository.BrandReputationRepository;
 import com.proteinoteka.util.ProductNameCleaner;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -56,6 +57,7 @@ public class NutritionShopHrScraper implements StoreScraper {
     private final NutritionParserService nutritionParser;
     private final BaseScraperEnricher baseEnricher;
     private final ProxyAwareHttpClient httpClient;
+    private final BrandReputationRepository brandReputationRepository;
 
     @Override public String getStoreName()              { return STORE_NAME; }
     @Override public String getBaseUrl()                { return BASE_URL; }
@@ -232,6 +234,12 @@ public class NutritionShopHrScraper implements StoreScraper {
             if (weight != null) p.setPrimaryWeightGrams(weight);
         }
 
+        // Brand extraction
+        if (p.getBrand() == null || p.getBrand().isBlank()) {
+            String brand = extractBrand(doc, p.getName());
+            if (brand != null) p.setBrand(brand);
+        }
+
         // Descriptions
         Element shortDesc = doc.selectFirst(".woocommerce-product-details__short-description");
         Element longDesc = doc.selectFirst("#tab-description .woocommerce-Tabs-panel,"
@@ -403,6 +411,58 @@ public class NutritionShopHrScraper implements StoreScraper {
 
     private static double round1(double v) {
         return Math.round(v * 10.0) / 10.0;
+    }
+
+    // ── Brand extraction ──────────────────────────────────────────────────────
+
+    /**
+     * Tries two strategies to extract the brand:
+     * 1. WooCommerce Perfect Brands plugin nav item: the current product's brand ancestor
+     *    is marked with class "current-product-parent" on the li element.
+     * 2. Name-based fallback: checks whether the product name starts with (or ends with,
+     *    after " – ") a brand from the brand_reputation table.
+     */
+    private String extractBrand(Document doc, String productName) {
+        // Strategy 1: pwb-brand nav taxonomy
+        Element brandEl = doc.selectFirst(
+                "li.menu-item-object-pwb-brand.current-product-parent a, " +
+                "li.menu-item-object-pwb-brand.current-product-ancestor a[href*='/brand/']");
+        if (brandEl != null) {
+            String brand = brandEl.text().trim();
+            if (!brand.isBlank()) {
+                log.debug("[{}] Brand from nav: '{}'", STORE_NAME, brand);
+                return brand;
+            }
+        }
+
+        // Strategy 2: match product name against known brands (start or after " – ")
+        if (productName == null) return null;
+        String nameLower = productName.toLowerCase();
+        List<String> knownBrands = brandReputationRepository.findAll().stream()
+                .map(b -> b.getBrandName())
+                .toList();
+        // Check prefix match first (e.g. "NUTREND 100% WHEY...")
+        for (String brand : knownBrands) {
+            if (nameLower.startsWith(brand.toLowerCase() + " ")
+                    || nameLower.startsWith(brand.toLowerCase() + ",")
+                    || nameLower.startsWith(brand.toLowerCase() + "-")) {
+                log.debug("[{}] Brand from name prefix: '{}'", STORE_NAME, brand);
+                return brand;
+            }
+        }
+        // Check suffix after " – " (e.g. "Animal Whey – Universal Nutrition")
+        int dashIdx = productName.indexOf(" – ");
+        if (dashIdx > 0) {
+            String suffix = productName.substring(dashIdx + 3).trim()
+                    .replaceAll(",?\\s*\\d+\\s*[gk][g]?\\s*$", "").trim();
+            for (String brand : knownBrands) {
+                if (suffix.equalsIgnoreCase(brand)) {
+                    log.debug("[{}] Brand from name suffix: '{}'", STORE_NAME, brand);
+                    return brand;
+                }
+            }
+        }
+        return null;
     }
 
     // ── Weight extraction ─────────────────────────────────────────────────────
