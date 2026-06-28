@@ -88,7 +88,7 @@ function CompareShortcut({ products }: { products: Product[] }) {
       </div>
       <div className="text-center">
         <Link
-          href="/compare"
+          href={`/compare?ids=${top3.map(p => p.id).join(",")}`}
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#FF9900] text-[#131921] font-bold text-sm hover:bg-[#e68a00] transition-colors"
         >
           {IS_HR ? "Otvori usporedbu →" : "Otvori poređenje →"}
@@ -268,6 +268,9 @@ export function SEOLandingPage({
   h1, intro, quickAnswer, products, tableCaption, listHeading, currentSlug,
   faqs, extraLinks, disclaimer, headerSection, middleSection,
 }: SEOLandingPageProps) {
+  const topCompareIds = products.slice(0, 3).map(p => p.id).join(",");
+  const compareHref = topCompareIds ? `/compare?ids=${topCompareIds}` : "/compare";
+
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -396,7 +399,7 @@ export function SEOLandingPage({
               Pogledaj sve ponude
             </Link>
             <Link
-              href="/compare"
+              href={compareHref}
               className="px-6 py-3 rounded-xl border-2 border-[#FF9900] text-[#FF9900] font-bold text-sm hover:bg-amber-50 transition-colors"
             >
               {IS_HR ? "Usporedi cijene" : "Uporedi cene"}
