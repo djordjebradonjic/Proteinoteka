@@ -5,7 +5,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, Legend,
 } from "recharts";
-import { Trash2, RefreshCw, ChevronDown, ChevronRight, Zap, Users, Star, Check } from "lucide-react";
+import { Trash2, RefreshCw, ChevronDown, ChevronRight, Zap, Users, Star, Check, Globe, AlertCircle, CheckCircle2, Clock } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -71,7 +71,8 @@ function mergeByDate(views: DayClick[], compares: DayClick[], clickouts: DayClic
 }
 
 type ClearMode = "all" | "keepClickOut" | "clicks";
-type Tab = "analytics" | "grupe" | "recenzije";
+type Tab = "analytics" | "grupe" | "recenzije" | "domeni";
+type Market = "sve" | "rs" | "hr";
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
@@ -86,9 +87,10 @@ export default function AdminPage() {
           <h1 className="text-2xl font-black text-[#1B2B4B] mb-4">Admin Panel</h1>
           <div className="flex gap-1">
             {([
-              { id: "analytics",  label: "Analytics",  icon: <Users className="w-4 h-4" /> },
-              { id: "grupe",      label: "Grupe",      icon: <Zap  className="w-4 h-4" /> },
-              { id: "recenzije",  label: "Recenzije",  icon: <Star className="w-4 h-4" /> },
+              { id: "analytics",  label: "Analytics",  icon: <Users  className="w-4 h-4" /> },
+              { id: "domeni",     label: "Domeni",     icon: <Globe  className="w-4 h-4" /> },
+              { id: "grupe",      label: "Grupe",      icon: <Zap    className="w-4 h-4" /> },
+              { id: "recenzije",  label: "Recenzije",  icon: <Star   className="w-4 h-4" /> },
             ] as { id: Tab; label: string; icon: React.ReactNode }[]).map(t => (
               <button
                 key={t.id}
@@ -108,6 +110,7 @@ export default function AdminPage() {
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         {tab === "analytics"  && <AnalyticsTab />}
+        {tab === "domeni"     && <DomeniTab />}
         {tab === "grupe"      && <GrupeTab />}
         {tab === "recenzije"  && <RecenzijeTab />}
       </div>
@@ -469,11 +472,13 @@ function AnalyticsTab() {
   const [error, setError]                     = useState(false);
   const [confirm, setConfirm]                 = useState<ClearMode | null>(null);
   const [clearing, setClearing]               = useState(false);
+  const [market, setMarket]                   = useState<Market>("sve");
 
-  const fetchStats = () => {
+  const fetchStats = (m: Market = market) => {
     setLoading(true);
+    const qs = m !== "sve" ? `?market=${m}` : "";
     Promise.all([
-      fetch("/api/admin/stats").then(r => { if (!r.ok) throw new Error(); return r.json(); }),
+      fetch(`/api/admin/stats${qs}`).then(r => { if (!r.ok) throw new Error(); return r.json(); }),
       fetch("/api/admin/calculator-stats").then(r => r.ok ? r.json() : null).catch(() => null),
       fetch("/api/admin/alert-metrics").then(r => r.ok ? r.json() : null).catch(() => null),
       fetch("/api/admin/alert-subscribers").then(r => r.ok ? r.json() : null).catch(() => null),
@@ -488,7 +493,13 @@ function AnalyticsTab() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { fetchStats(); }, []);
+  useEffect(() => { fetchStats("sve"); }, []);
+
+  const handleMarketChange = (m: Market) => {
+    setMarket(m);
+    setError(false);
+    fetchStats(m);
+  };
 
   const clearTracking = async (mode: ClearMode) => {
     setClearing(true);
@@ -534,13 +545,41 @@ function AnalyticsTab() {
       )}
 
       <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
-        <p className="text-slate-400 text-sm">Praćenje klikova i konverzija</p>
+        <div className="flex items-center gap-3">
+          <p className="text-slate-400 text-sm">Praćenje klikova i konverzija</p>
+          <div className="flex gap-1 bg-slate-100 rounded-xl p-1">
+            {(["sve", "rs", "hr"] as Market[]).map(m => (
+              <button
+                key={m}
+                onClick={() => handleMarketChange(m)}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${
+                  market === m
+                    ? m === "rs" ? "bg-[#1B2B4B] text-white"
+                    : m === "hr" ? "bg-red-600 text-white"
+                    : "bg-white text-slate-700 shadow-sm"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                {m === "sve" ? "Sve" : m === "rs" ? ".rs" : ".hr"}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="flex gap-2 flex-wrap">
           <button onClick={() => setConfirm("clicks")} className="px-4 py-2 rounded-xl border border-orange-200 text-orange-600 hover:bg-orange-50 text-xs font-semibold transition-colors">Resetuj Kupi</button>
           <button onClick={() => setConfirm("keepClickOut")} className="px-4 py-2 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold transition-colors">Resetuj (zadrži Kupi)</button>
           <button onClick={() => setConfirm("all")} className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-colors">Obriši sve</button>
         </div>
       </div>
+
+      {market !== "sve" && (
+        <div className={`mb-4 px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 ${
+          market === "rs" ? "bg-[#1B2B4B]/10 text-[#1B2B4B]" : "bg-red-50 text-red-700"
+        }`}>
+          <Globe className="w-3.5 h-3.5" />
+          Prikazujem podatke samo za <span className="font-black">{market === "rs" ? "proteinoteka.rs" : "proteinoteka.com.hr"}</span>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <StatCard label="Pregledi"    value={stats.totalViews}     color="#3b82f6" />
@@ -866,6 +905,125 @@ function AlertSection({ metrics, subscribers }: { metrics: AlertMetrics; subscri
           </div>
         )}
       </Section>
+    </div>
+  );
+}
+
+// ── Domeni tab ─────────────────────────────────────────────────────────────────
+
+interface PageResult { path: string; status: number | null; ok: boolean; ms: number; }
+interface DomainResult { domain: string; market: string; reachable: boolean; responseMs: number | null; pages: PageResult[]; }
+interface HealthData { rs: DomainResult; hr: DomainResult; checkedAt: string; }
+
+function DomeniTab() {
+  const [data, setData]       = useState<HealthData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState(false);
+
+  const check = async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const res = await fetch("/api/admin/domain-health");
+      if (!res.ok) throw new Error();
+      setData(await res.json());
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { check(); }, []);
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h2 className="text-base font-bold text-slate-900">Health check — oba domena</h2>
+            <p className="text-sm text-slate-400 mt-0.5">Proverava da li ključne stranice ispravno odgovaraju</p>
+          </div>
+          <button
+            onClick={check}
+            disabled={loading}
+            className="flex items-center gap-2 px-5 py-2.5 bg-[#1B2B4B] hover:bg-[#243860] disabled:opacity-50 text-white text-sm font-bold rounded-xl transition-colors"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+            {loading ? "Proveravam..." : "Proveri ponovo"}
+          </button>
+        </div>
+        {data && (
+          <p className="text-[10px] text-slate-400 mt-3">
+            Poslednja provera: {new Date(data.checkedAt).toLocaleTimeString("sr-Latn")}
+          </p>
+        )}
+      </div>
+
+      {loading && !data && (
+        <div className="text-center py-16 text-slate-400 text-sm">Proveravam domene...</div>
+      )}
+      {error && (
+        <div className="text-center py-16 text-red-400 text-sm">Greška pri health checku.</div>
+      )}
+
+      {data && (
+        <div className="grid md:grid-cols-2 gap-6">
+          <DomainCard result={data.rs} flagEmoji="🇷🇸" />
+          <DomainCard result={data.hr} flagEmoji="🇭🇷" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DomainCard({ result, flagEmoji }: { result: DomainResult; flagEmoji: string }) {
+  const allOk = result.reachable && result.pages.every(p => p.ok);
+  const hasIssues = !result.reachable || result.pages.some(p => !p.ok);
+
+  return (
+    <div className={`bg-white rounded-2xl border shadow-sm overflow-hidden ${
+      allOk ? "border-green-200" : hasIssues ? "border-red-200" : "border-slate-200"
+    }`}>
+      <div className={`px-6 py-4 flex items-center justify-between ${
+        allOk ? "bg-green-50" : hasIssues ? "bg-red-50" : "bg-slate-50"
+      }`}>
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">{flagEmoji}</span>
+          <div>
+            <p className="text-sm font-bold text-slate-800">{result.domain}</p>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {result.reachable
+                ? `Dostupan · ${result.responseMs}ms`
+                : "Nedostupan"}
+            </p>
+          </div>
+        </div>
+        {allOk
+          ? <CheckCircle2 className="w-5 h-5 text-green-600" />
+          : <AlertCircle className="w-5 h-5 text-red-500" />}
+      </div>
+
+      <div className="divide-y divide-slate-100">
+        {result.pages.map((p) => (
+          <div key={p.path} className="px-6 py-3 flex items-center gap-3">
+            <span className={`w-2 h-2 rounded-full shrink-0 ${p.ok ? "bg-green-500" : "bg-red-500"}`} />
+            <span className="text-xs font-mono text-slate-600 flex-1 truncate">{p.path}</span>
+            <div className="flex items-center gap-2 shrink-0">
+              {p.status != null && (
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                  p.ok ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                }`}>
+                  {p.status}
+                </span>
+              )}
+              <span className="flex items-center gap-1 text-[10px] text-slate-400">
+                <Clock className="w-3 h-3" />{p.ms}ms
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

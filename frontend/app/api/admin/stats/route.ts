@@ -6,8 +6,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   try {
+    const market = req.nextUrl.searchParams.get("market");
+    const qs = market ? `?market=${encodeURIComponent(market)}` : "";
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/clicks/stats`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/clicks/stats${qs}`,
       { headers: { "X-Admin-Token": process.env.ADMIN_TOKEN ?? "" } },
     );
     return NextResponse.json(await res.json(), { status: res.status });
