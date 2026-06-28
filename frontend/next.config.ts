@@ -37,6 +37,11 @@ const nextConfig: NextConfig = {
       '/kazein-protein-hrvatska',
       '/whey-protein-do-20-eura',
       '/whey-protein-do-40-eura',
+      '/najjeftiniji-whey-protein-hrvatska-do-500g',
+      '/najjeftiniji-whey-protein-hrvatska-1500g-2500g',
+      '/najjeftiniji-whey-protein-hrvatska-2500g-3500g',
+      '/najjeftiniji-whey-protein-hrvatska-3500g-4500g',
+      '/najjeftiniji-whey-protein-hrvatska-4500g-plus',
     ].map((source) => ({
       source,
       has: [{ type: 'host' as const, value: 'proteinoteka.rs' }],
@@ -57,6 +62,10 @@ const nextConfig: NextConfig = {
       '/biljni-protein-srbija',
       '/hidrolizat-protein-srbija',
       '/gold-standard-whey-cena',
+      '/optimum-nutrition-proteini',
+      '/scitec-nutrition-proteini',
+      '/dymatize-proteini',
+      '/biotech-usa-proteini',
       '/ogistrashop-proteini',
       '/supplementshop-proteini',
       '/pansport-proteini',
@@ -67,6 +76,11 @@ const nextConfig: NextConfig = {
       '/shopbuilder-proteini',
       '/supplement-store-proteini',
       '/xsport-proteini',
+      '/najjeftiniji-whey-protein-do-500g',
+      '/najjeftiniji-whey-protein-1500g-2500g',
+      '/najjeftiniji-whey-protein-2500g-3500g',
+      '/najjeftiniji-whey-protein-3500g-4500g',
+      '/najjeftiniji-whey-protein-4500g-plus',
     ].map((source) => ({
       source,
       has: [{ type: 'host' as const, value: 'proteinoteka.com.hr' }],
@@ -91,6 +105,32 @@ const nextConfig: NextConfig = {
       // Cross-market redirects — prevent wrong-market pages from being indexed
       ...hrPagesOnRs,
       ...rsPagesOnHr,
+      // Serbian guides accessed on HR domain → RS (wildcard, covers all /vodici/*)
+      {
+        source: '/vodici',
+        has: [{ type: 'host' as const, value: 'proteinoteka.com.hr' }],
+        destination: 'https://proteinoteka.rs/vodici',
+        permanent: true,
+      },
+      {
+        source: '/vodici/:path*',
+        has: [{ type: 'host' as const, value: 'proteinoteka.com.hr' }],
+        destination: 'https://proteinoteka.rs/vodici/:path*',
+        permanent: true,
+      },
+      // Croatian guides accessed on RS domain → HR (wildcard, covers all /hr-vodici/*)
+      {
+        source: '/hr-vodici',
+        has: [{ type: 'host' as const, value: 'proteinoteka.rs' }],
+        destination: 'https://proteinoteka.com.hr/hr-vodici',
+        permanent: true,
+      },
+      {
+        source: '/hr-vodici/:path*',
+        has: [{ type: 'host' as const, value: 'proteinoteka.rs' }],
+        destination: 'https://proteinoteka.com.hr/hr-vodici/:path*',
+        permanent: true,
+      },
       // Legacy redirects
       { source: '/kako-racunamo', destination: '/kako-racunamo-value-score', permanent: true },
       { source: '/brendovi',      destination: '/',                           permanent: true },

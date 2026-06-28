@@ -103,7 +103,7 @@ export const metadata: Metadata = {
     },
   },
   verification: {
-    google: "KG3Xm4xm-dKMX6kadJDsoEYZKUx8a_0LqrF98S-Cl4g",
+    google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION ?? "KG3Xm4xm-dKMX6kadJDsoEYZKUx8a_0LqrF98S-Cl4g",
   },
 };
 
