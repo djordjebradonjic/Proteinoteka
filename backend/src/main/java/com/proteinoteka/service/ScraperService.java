@@ -700,7 +700,9 @@ public class ScraperService {
                 existing.setFatPer100g(scraped.getFatPer100g());
             if (existing.getSugarPer100g() == null && scraped.getSugarPer100g() != null)
                 existing.setSugarPer100g(scraped.getSugarPer100g());
-            if (existing.getCaloriePer100g() == null && scraped.getCaloriePer100g() != null)
+            boolean kcalSuspect = existing.getCaloriePer100g() != null && existing.getCaloriePer100g() < 200;
+            if ((existing.getCaloriePer100g() == null || kcalSuspect) && scraped.getCaloriePer100g() != null
+                    && scraped.getCaloriePer100g() >= 200)
                 existing.setCaloriePer100g(scraped.getCaloriePer100g());
             if (existing.getProteinSource() == null && scraped.getProteinSource() != null)
                 existing.setProteinSource(scraped.getProteinSource());
@@ -932,7 +934,13 @@ public class ScraperService {
         if (p.getPrimaryWeightGrams() != null && p.getPrimaryWeightGrams() > 0) {
             return p.getPrimaryWeightGrams();
         }
-        if (p.getPackage_weight() == null || p.getPackage_weight().isEmpty()) return 0;
+        boolean isEmpty;
+        try {
+            isEmpty = p.getPackage_weight() == null || p.getPackage_weight().isEmpty();
+        } catch (org.hibernate.LazyInitializationException e) {
+            return 0;
+        }
+        if (isEmpty) return 0;
 
         for (String raw : p.getPackage_weight()) {
             String weight = raw.toLowerCase().replaceAll("\\s+", "");
