@@ -226,13 +226,6 @@ public class NutritionShopHrScraper implements StoreScraper {
     }
 
     private void enrichProduct(Document doc, Product p) {
-        // Brand: WooCommerce Perfect Brands plugin marks the active brand in the nav
-        // as li.pwb-brand.current_page_parent; its anchor text is the brand name.
-        Element brandEl = doc.selectFirst("li.pwb-brand.current_page_parent a");
-        if (brandEl != null && !brandEl.text().isBlank()) {
-            p.setBrand(brandEl.text().trim());
-        }
-
         // Package weight from name (set during listing parse, but verify/refine here)
         if (p.getPackage_weight() == null || p.getPackage_weight().isEmpty()) {
             Double weight = extractWeightFromName(p.getName());
@@ -261,11 +254,18 @@ public class NutritionShopHrScraper implements StoreScraper {
     }
 
     /**
-     * Parses the 3-column nutrition table used on nutrition-shop.hr:
-     *   col1 = label | col2 = per-serving | col3 = per-100g  ← we always want col3
+     * Parses the nutrition table on nutrition-shop.hr. Three layouts exist:
      *
-     * Header row contains "100 g" in the third column, confirming the layout.
-     * Falls back to any table with protein + energy keywords if the standard one is absent.
+     *   A) 3-col: label | per-serving | per-100g
+     *      e.g. "Prosječne hranjive vrijednosti u preporučenoj dnevnoj dozi: | 30,4 g | 100 g"
+     *
+     *   B) 4-col: label | per-serving | %DRI | per-100g
+     *      e.g. "Prosječne hranjive vrijednosti na | 35 g | PU* | 100 g"
+     *      The scraper must find the column index of "100 g" in the header, NOT assume col 2.
+     *
+     *   C) 2-col: label | per-serving (no 100g column)
+     *      e.g. "Nutritivne vrijednosti | 1 porcija (33 g)"
+     *      Serving size is extracted from the header; values are scaled to per-100g.
      */
     private void extractNutritionFromTable(Document doc, Product p) {
         Element table = findNutritionTable(doc);
@@ -274,25 +274,56 @@ public class NutritionShopHrScraper implements StoreScraper {
             return;
         }
 
-        // Detect column count from the header row to decide which td to read
-        boolean has100gColumn = false;
+        int valueColIndex = -1;     // index of column to read (0-based among <td>s)
+        double scaleTo100g = 1.0;
+
         Element headerRow = table.selectFirst("tr");
         if (headerRow != null) {
-            String headerText = headerRow.text().toLowerCase();
-            has100gColumn = headerText.contains("100g") || headerText.contains("100 g");
+            Elements headerCells = headerRow.select("td, th");
+            // Find which header cell contains "100 g" — works for 3-col AND 4-col tables
+            for (int i = 1; i < headerCells.size(); i++) {
+                String cellText = headerCells.get(i).text().toLowerCase();
+                if (cellText.contains("100g") || cellText.contains("100 g")) {
+                    valueColIndex = i;
+                    scaleTo100g = 1.0;
+                    break;
+                }
+            }
+            // No 100g column — serving-only table; extract serving size to scale
+            if (valueColIndex < 0 && headerCells.size() >= 2) {
+                String valueHeader = headerCells.get(1).text();
+                Matcher sm = Pattern.compile("(\\d+(?:[.,]\\d+)?)\\s*g").matcher(valueHeader);
+                if (sm.find()) {
+                    try {
+                        double serving = Double.parseDouble(sm.group(1).replace(",", "."));
+                        if (serving > 0) {
+                            valueColIndex = 1;
+                            scaleTo100g = 100.0 / serving;
+                        }
+                    } catch (NumberFormatException ignored) {}
+                }
+            }
         }
 
+        if (valueColIndex < 0) {
+            log.debug("[{}] '{}' — cannot determine value column in nutrition table, skipping",
+                    STORE_NAME, p.getName());
+            return;
+        }
+
+        log.debug("[{}] '{}' — nutrition col={}, scale={}", STORE_NAME, p.getName(),
+                valueColIndex, scaleTo100g == 1.0 ? "1.0 (100g col)" : String.format("%.2f (serving)", scaleTo100g));
+
+        final int colIdx = valueColIndex;
+        final double scale = scaleTo100g;
         for (Element row : table.select("tr")) {
             Elements tds = row.select("td");
-            if (tds.size() < 2) continue;
+            if (tds.size() < 2 || tds.size() <= colIdx) continue;
 
             String label = tds.get(0).text().toLowerCase().trim();
-            // Use col3 (100g) when present; otherwise col2 (per-serving)
-            String value = has100gColumn && tds.size() >= 3
-                    ? tds.get(2).text().trim()
-                    : tds.get(1).text().trim();
+            String value = tds.get(colIdx).text().trim();
 
-            applyNutritionField(label, value, p);
+            applyNutritionField(label, value, scale, p);
         }
     }
 
@@ -320,31 +351,34 @@ public class NutritionShopHrScraper implements StoreScraper {
         return null;
     }
 
-    private void applyNutritionField(String label, String value, Product p) {
+    private void applyNutritionField(String label, String value, double scale, Product p) {
         if (label.isBlank() || value.isBlank()) return;
 
         if (label.contains("energet") || label.contains("kalorij")) {
-            // "113 kcal/ 474 kJ" or "372 kcal" — extract kcal
             Double kcal = parseKcal(value);
-            if (kcal != null && kcal > 0 && p.getCaloriePer100g() == null)
-                p.setCaloriePer100g(round1(kcal));
+            if (kcal != null && kcal > 0 && p.getCaloriePer100g() == null) {
+                double scaled = round1(kcal * scale);
+                if (scaled >= 200 && scaled <= 900) p.setCaloriePer100g(scaled);
+            }
 
         } else if (label.contains("bjelančevine") || label.equals("proteini")
                 || label.contains("protein")) {
             Double v = parseFirstNumber(value);
-            if (v != null && v > 0 && v <= 100 && p.getProteinPer100g() == null)
-                p.setProteinPer100g(round1(v));
+            if (v != null && v > 0 && p.getProteinPer100g() == null) {
+                double scaled = round1(v * scale);
+                if (scaled > 0 && scaled <= 100) p.setProteinPer100g(scaled);
+            }
 
         } else if ((label.contains("šećer") || label.contains("secer") || label.contains("šeće"))
                 && !label.contains("ugljik")) {
             Double v = parseFirstNumber(value);
             if (v != null && v >= 0 && p.getSugarPer100g() == null)
-                p.setSugarPer100g(round1(v));
+                p.setSugarPer100g(round1(v * scale));
 
         } else if (label.contains("mast") && !label.contains("zasić") && !label.contains("zasic")) {
             Double v = parseFirstNumber(value);
             if (v != null && v >= 0 && p.getFatPer100g() == null)
-                p.setFatPer100g(round1(v));
+                p.setFatPer100g(round1(v * scale));
         }
     }
 
