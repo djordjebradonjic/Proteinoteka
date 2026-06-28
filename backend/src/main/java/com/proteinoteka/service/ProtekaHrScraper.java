@@ -267,17 +267,22 @@ public class ProtekaHrScraper implements StoreScraper {
     }
 
     /**
-     * Parses the "Deklaracija proizvoda" nutrition table.
+     * Parses the nutrition table on Proteka product pages.
      *
-     * Proteka uses a 3-column table: label | 100g | per-serving.
-     * Some rows have multiple {@code <p>} elements in each cell (e.g. Masti / zasićene,
-     * Ugljikohidrati / šećeri). We pair label paragraphs with value paragraphs so that
-     * "šećeri" maps to the correct value and not the total carbohydrate value.
+     * Two table formats exist on proteka.hr:
      *
-     * Energy is rendered as "1613 kJ/383 kcal" — we extract the kcal part specifically.
+     *   A) 3-column "Deklaracija proizvoda": label | per-100g | per-serving
+     *      → use column 2 (td:nth-child(2)) as the 100g value.
+     *
+     *   B) 2-column "Sastav": label | per-serving-only (no 100g column)
+     *      → detect via header text; convert values using the serving size (e.g. 35g).
+     *      If serving size cannot be determined, skip the value so AI can fill it.
+     *
+     * Both formats may use {@code <p>} elements inside cells (e.g. Masti / zasićene).
+     * Energy is rendered as "1613 kJ/383 kcal"; we always extract the kcal part.
      */
     private void extractNutritionFromTable(Document doc, Product p) {
-        // Primary: find the table inside the div that follows h4 "Deklaracija proizvoda"
+        // Primary: find the table inside the div after h4 "Deklaracija proizvoda"
         Element declTable = null;
         for (Element heading : doc.select("h4, h3, h2")) {
             if (heading.text().toLowerCase().contains("deklaracija")) {
@@ -297,7 +302,39 @@ public class ProtekaHrScraper implements StoreScraper {
             }
         }
         if (declTable == null) {
-            log.debug("[{}] No nutrition table found on detail page for '{}'", STORE_NAME, p.getName());
+            log.debug("[{}] No nutrition table found for '{}'", STORE_NAME, p.getName());
+            return;
+        }
+
+        // Inspect the header row to determine whether a 100g column exists and the serving size
+        boolean has100gColumn = false;
+        Double servingSizeG   = null;
+
+        Element headerRow = declTable.selectFirst("tr");
+        if (headerRow != null) {
+            String headerText = headerRow.text().toLowerCase();
+            has100gColumn = headerText.contains("100g") || headerText.contains("100 g");
+            if (!has100gColumn) {
+                // Try to read serving size from the only value column header (e.g. "jedna mjerica 35g")
+                Matcher sm = Pattern.compile("(\\d+)\\s*g").matcher(headerText);
+                if (sm.find()) {
+                    try { servingSizeG = Double.parseDouble(sm.group(1)); }
+                    catch (NumberFormatException ignored) {}
+                }
+            }
+        }
+
+        // Scale factor: 1.0 when table has a 100g column; 100/servingG when per-serving-only
+        final double scaleTo100g;
+        if (has100gColumn) {
+            scaleTo100g = 1.0;
+            log.debug("[{}] '{}' — 3-col table (100g column present)", STORE_NAME, p.getName());
+        } else if (servingSizeG != null && servingSizeG > 0) {
+            scaleTo100g = 100.0 / servingSizeG;
+            log.debug("[{}] '{}' — 2-col table (per {}g serving), scale ×{}", STORE_NAME, p.getName(), servingSizeG.intValue(), String.format("%.2f", scaleTo100g));
+        } else {
+            // Can't determine serving size — skip numeric nutrition, let AI fill
+            log.debug("[{}] '{}' — serving-only table but no serving size found, skipping numerics", STORE_NAME, p.getName());
             return;
         }
 
@@ -310,22 +347,20 @@ public class ProtekaHrScraper implements StoreScraper {
             Elements valueParagraphs = valueCell.select("p");
 
             if (!labelParagraphs.isEmpty() && !valueParagraphs.isEmpty()) {
-                // Multi-paragraph row — iterate pairs (Masti/zasićene, Ugljikohidrati/šećeri)
                 for (int i = 0; i < labelParagraphs.size() && i < valueParagraphs.size(); i++) {
                     String label = labelParagraphs.get(i).text().toLowerCase().trim();
                     String value = valueParagraphs.get(i).text().trim();
-                    applyNutritionField(label, value, p);
+                    applyNutritionField(label, value, scaleTo100g, p);
                 }
             } else {
-                // Single-value row
                 String label = labelCell.text().toLowerCase().trim();
                 String value = valueCell.text().trim();
-                applyNutritionField(label, value, p);
+                applyNutritionField(label, value, scaleTo100g, p);
             }
         }
     }
 
-    private void applyNutritionField(String label, String value, Product p) {
+    private void applyNutritionField(String label, String value, double scaleTo100g, Product p) {
         if (label.isBlank() || value.isBlank()) return;
 
         if ((label.contains("energet") || label.contains("kalorij"))
@@ -333,29 +368,34 @@ public class ProtekaHrScraper implements StoreScraper {
             // "1613 kJ/383 kcal" — always use kcal, not kJ
             Double kcal = parseKcal(value);
             if (kcal != null && kcal > 0 && p.getCaloriePer100g() == null) {
-                p.setCaloriePer100g(kcal);
+                p.setCaloriePer100g(round1(kcal * scaleTo100g));
             }
 
         } else if (label.contains("protein") || label.equals("bjelančevine")
                 || label.contains("bjelancevine")) {
             Double v = parseNutritionNumber(value);
-            if (v != null && v > 0 && v <= 100 && p.getProteinPer100g() == null) {
-                p.setProteinPer100g(v);
+            if (v != null && v > 0 && p.getProteinPer100g() == null) {
+                double scaled = round1(v * scaleTo100g);
+                if (scaled <= 100) p.setProteinPer100g(scaled);
             }
 
         } else if (label.contains("šećer") || label.contains("secer") || label.contains("šeće")) {
             Double v = parseNutritionNumber(value);
             if (v != null && v >= 0 && p.getSugarPer100g() == null) {
-                p.setSugarPer100g(v);
+                p.setSugarPer100g(round1(v * scaleTo100g));
             }
 
         } else if (label.contains("mast") && !label.contains("zasić")
                 && !label.contains("zasic")) {
             Double v = parseNutritionNumber(value);
             if (v != null && v >= 0 && p.getFatPer100g() == null) {
-                p.setFatPer100g(v);
+                p.setFatPer100g(round1(v * scaleTo100g));
             }
         }
+    }
+
+    private static double round1(double v) {
+        return Math.round(v * 10.0) / 10.0;
     }
 
     // ── Parsers ────────────────────────────────────────────────────────────────
