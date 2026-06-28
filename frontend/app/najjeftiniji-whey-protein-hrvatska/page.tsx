@@ -1,17 +1,18 @@
 import { Metadata } from "next";
 import { fetchTopProducts } from "@/lib/seo-data";
 import { SEOLandingPage } from "@/components/seo/SEOLandingPage";
+import { WeightRangeTabsHR } from "@/components/seo/WeightRangeTabsHR";
 
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: { absolute: "Najjeftiniji Whey Protein u Hrvatskoj 2026 | Proteinoteka" },
+  title: { absolute: "Najjeftiniji Whey Protein 500g–1.5kg u Hrvatskoj | Proteinoteka" },
   description:
-    "Automatski uspoređujemo cijene whey proteina iz hrvatskih trgovina. Vidi koji košta najmanje po gramu proteina — ažurirano tjedno, bez ručnog pretraživanja.",
+    "Najjeftinije pakiranje whey proteina od 500g do 1.5kg u Hrvatskoj. Uspoređujemo cijene iz svih trgovina i prikazujemo cijenu po gramu proteina — ažurirano tjedno.",
   alternates: { canonical: "https://proteinoteka.com.hr/najjeftiniji-whey-protein-hrvatska" },
   openGraph: {
-    title: "Najjeftiniji Whey Protein u Hrvatskoj | Proteinoteka",
-    description: "Aktualne cijene whey proteina iz svih hrvatskih trgovina. Sortirano od najjeftinijeg.",
+    title: "Najjeftiniji Whey Protein 500g–1.5kg u Hrvatskoj | Proteinoteka",
+    description: "Aktualne cijene whey proteina u pakiranju 500g–1.5kg iz svih hrvatskih trgovina. Sortirano od najjeftinijeg.",
     url: "https://proteinoteka.com.hr/najjeftiniji-whey-protein-hrvatska",
     siteName: "Proteinoteka",
     locale: "hr_HR",
@@ -19,8 +20,8 @@ export const metadata: Metadata = {
     images: [{ url: "https://proteinoteka.com.hr/opengraph-image", width: 1200, height: 630, alt: "Proteinoteka" }],
   },
   twitter: {
-    title: "Najjeftiniji Whey Protein u Hrvatskoj 2026 | Proteinoteka",
-    description: "Usporedi cijene whey proteina iz svih hrvatskih trgovina. Sortirano od najjeftinije cijene.",
+    card: "summary_large_image",
+    images: ["https://proteinoteka.com.hr/opengraph-image"],
   },
 };
 
@@ -28,9 +29,11 @@ export default async function Page() {
   const raw = await fetchTopProducts({
     category: "whey_concentrate",
     sortBy: "price",
-    limit: 15,
+    limit: 200,
   });
-  const products = raw.filter(p => p.primaryWeightGrams != null && p.primaryWeightGrams >= 500);
+  const products = raw.filter(
+    p => p.primaryWeightGrams != null && p.primaryWeightGrams >= 500 && p.primaryWeightGrams < 1500
+  );
 
   const top = products[0];
   const bestValue = products.length > 0
@@ -38,18 +41,19 @@ export default async function Page() {
     : null;
 
   const quickAnswer = top
-    ? `Najjeftiniji whey concentrate u Hrvatskoj trenutno je ${top.name} za ${top.price} (${top.storeName}). Ako tražiš jeftino ali i kvalitetno, ${bestValue?.name ?? top.name} nudi najbolji odnos cijene i kvalitete sa value score ${bestValue?.valueScore?.toFixed(1) ?? "N/A"}/10.`
+    ? `Najjeftiniji whey concentrate u pakiranju 500g–1.5kg u Hrvatskoj trenutno je ${top.name} za ${top.price} (${top.storeName}). Ako tražiš jeftino ali i kvalitetno, ${bestValue?.name ?? top.name} nudi najbolji omjer cijene i kvalitete sa value score ${bestValue?.valueScore?.toFixed(1) ?? "N/A"}/10.`
     : "";
 
   return (
     <SEOLandingPage
       h1="Najjeftiniji Whey Protein u Hrvatskoj"
-      intro="Svakodnevno pratimo cijene whey proteina iz svih hrvatskih trgovina. Ova lista sortirana je od najniže cijene — bez kompromisa na kvalitetu koji možeš pratiti kroz nutritivne vrijednosti svakog proizvoda."
+      intro="Svakodnevno pratimo cijene whey proteina iz svih hrvatskih trgovina. Odaberi veličinu pakiranja koja te zanima — lista je sortirana od najniže cijene po pakiranju."
       quickAnswer={quickAnswer}
       products={products}
-      listHeading="Whey proteini sortirani od najjeftinije cijene"
-      tableCaption="Najjeftiniji whey proteini u Hrvatskoj — aktualne cijene"
+      listHeading="Whey proteini 500g–1.5kg sortirani od najjeftinije cijene"
+      tableCaption="Najjeftiniji whey proteini 500g–1.5kg u Hrvatskoj — aktualne cijene"
       currentSlug="najjeftiniji-whey-protein-hrvatska"
+      headerSection={<WeightRangeTabsHR currentSlug="najjeftiniji-whey-protein-hrvatska" />}
       faqs={[
         {
           q: "Koliko otprilike košta whey protein u Hrvatskoj?",

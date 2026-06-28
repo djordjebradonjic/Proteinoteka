@@ -23,7 +23,7 @@ const RS_SEO_PAGES = [
 
 const HR_SEO_PAGES = [
   { slug: "najbolji-whey-protein-hrvatska",    label: "🥇 Najbolji Whey"       },
-  { slug: "najjeftiniji-whey-protein-hrvatska", label: "💰 Najjeftiniji Whey"  },
+  { slug: "najjeftiniji-whey-protein-hrvatska", label: "💰 Najjeftiniji Whey (po kg)" },
   { slug: "whey-protein-cijena",               label: "📊 Whey Protein Cijena" },
   { slug: "whey-isolate-hrvatska",             label: "✨ Whey Izolat"         },
   { slug: "biljni-protein-hrvatska",           label: "🌿 Biljni Protein"      },
