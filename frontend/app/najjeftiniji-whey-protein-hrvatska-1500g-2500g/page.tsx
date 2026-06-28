@@ -6,7 +6,7 @@ import { WeightRangeTabsHR } from "@/components/seo/WeightRangeTabsHR";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: { absolute: "Najjeftiniji Whey Protein 1.5kg–2.5kg Hrvatska | Proteinoteka" },
+  title: { absolute: "Najjeftiniji Whey Protein 1.5–2.5kg Hrvatska | Proteinoteka" },
   description:
     "Najjeftinije pakiranje whey proteina od 1.5kg do 2.5kg u Hrvatskoj. Aktualne cijene iz svih trgovina sortirane od najjeftinijeg — ažurirano tjedno.",
   alternates: { canonical: "https://proteinoteka.com.hr/najjeftiniji-whey-protein-hrvatska-1500g-2500g" },
