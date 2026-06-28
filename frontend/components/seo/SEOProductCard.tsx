@@ -78,7 +78,9 @@ export function SEOProductCard({ product, rank, priority = false }: { product: P
             </span>
           )}
           {product.proteinPer100g != null && (
-            <span className="text-[10px] text-slate-500">🥩 {product.proteinPer100g}g/100g</span>
+            <span className="inline-flex items-center text-[10px] font-medium text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded-full">
+              {product.proteinPer100g}g proteina / 100g
+            </span>
           )}
           {pricePerProteinLabel && (
             <span className="text-[10px] text-slate-400">{pricePerProteinLabel}</span>
