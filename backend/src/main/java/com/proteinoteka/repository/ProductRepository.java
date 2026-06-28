@@ -89,8 +89,9 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     void deleteByUrlIn(@Param("urls") Collection<String> urls);
 
     @Query("SELECT p FROM products p WHERE LOWER(TRIM(p.name)) = :name " +
-           "AND (:brand IS NULL OR LOWER(TRIM(p.brand)) = :brand)")
-    List<Product> findSameProductAcrossStores(@Param("name") String name, @Param("brand") String brand);
+           "AND (:brand IS NULL OR LOWER(TRIM(p.brand)) = :brand) " +
+           "AND (:market IS NULL OR p.market = :market)")
+    List<Product> findSameProductAcrossStores(@Param("name") String name, @Param("brand") String brand, @Param("market") String market);
 
     @Query("SELECT p FROM products p WHERE p.store.name = :storeName AND LOWER(TRIM(p.name)) = :name")
     Optional<Product> findByStoreNameAndNormalizedName(@Param("storeName") String storeName, @Param("name") String name);

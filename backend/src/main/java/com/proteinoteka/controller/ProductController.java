@@ -211,7 +211,7 @@ public class ProductController {
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(required = false) String market) {
 
-        int safeLimit = Math.min(limit, 30);
+        int safeLimit = Math.min(limit, 500);
 
         Specification<Product> spec = ((Specification<Product>) (root, query, cb) -> cb.and(
                 cb.isNotNull(root.get("valueScore")),
@@ -315,9 +315,10 @@ public class ProductController {
     @GetMapping("/by-name")
     public List<StorePriceDTO> getByName(
             @RequestParam String name,
-            @RequestParam(required = false) String brand) {
+            @RequestParam(required = false) String brand,
+            @RequestParam(required = false) String market) {
 
-        return productRepository.findSameProductAcrossStores(name.trim().toLowerCase(), brand != null ? brand.trim().toLowerCase() : null)
+        return productRepository.findSameProductAcrossStores(name.trim().toLowerCase(), brand != null ? brand.trim().toLowerCase() : null, market)
                 .stream()
                 .map(p -> new StorePriceDTO(
                         p.getId(),

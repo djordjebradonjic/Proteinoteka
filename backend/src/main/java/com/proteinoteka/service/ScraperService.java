@@ -718,7 +718,7 @@ public class ScraperService {
             double slugWeight = weightGrams > 0 ? weightGrams
                     : (existing.getPrimaryWeightGrams() != null ? existing.getPrimaryWeightGrams() : 0);
             if (existing.getCanonicalSlug() == null || existing.getCanonicalSlug().isBlank()) {
-                existing.setCanonicalSlug(slugifyWithWeight(existing.getName(), slugWeight > 0 ? slugWeight : null));
+                existing.setCanonicalSlug(slugifyWithWeight(existing.getName(), slugWeight > 0 ? slugWeight : null, store.getMarket()));
             }
             productRepository.save(existing);
             productGroupService.tryAutoAssign(existing);
@@ -734,7 +734,7 @@ public class ScraperService {
             if (weightGrams > 0) scraped.setPrimaryWeightGrams(weightGrams);
             scraped.setProteinPerRsd(computeProteinPerRsd(numericPrice, scraped));
             scraped.setProteinPerCurrency(computeProteinPerRsd(numericPrice, scraped));
-            scraped.setCanonicalSlug(slugifyWithWeight(scraped.getName(), weightGrams > 0 ? weightGrams : null));
+            scraped.setCanonicalSlug(slugifyWithWeight(scraped.getName(), weightGrams > 0 ? weightGrams : null, store.getMarket()));
             productRepository.save(scraped);
             productGroupService.tryAutoAssign(scraped);
             log.info("[{}] New product saved: '{}'", store.getName(), scraped.getName());
@@ -978,11 +978,24 @@ public class ScraperService {
     }
 
     static String slugifyWithWeight(String name, Double weightGrams) {
+        return slugifyWithWeight(name, weightGrams, null);
+    }
+
+    static String slugifyWithWeight(String name, Double weightGrams, String market) {
         String base = slugify(name);
-        if (weightGrams == null || weightGrams <= 0) return base;
-        long grams = Math.round(weightGrams);
-        if (grams % 1000 == 0) return base + "-" + (grams / 1000) + "kg";
-        return base + "-" + grams + "g";
+        String withWeight;
+        if (weightGrams == null || weightGrams <= 0) {
+            withWeight = base;
+        } else {
+            long grams = Math.round(weightGrams);
+            withWeight = (grams % 1000 == 0)
+                    ? base + "-" + (grams / 1000) + "kg"
+                    : base + "-" + grams + "g";
+        }
+        // RS is the default market — no suffix needed for backward compatibility.
+        // Every other market gets a "-{market}" suffix to prevent cross-market slug collisions.
+        if (market == null || market.isBlank() || "rs".equalsIgnoreCase(market)) return withWeight;
+        return withWeight + "-" + market.toLowerCase();
     }
 
     // ── Price drop detection ──────────────────────────────────────────────────────
