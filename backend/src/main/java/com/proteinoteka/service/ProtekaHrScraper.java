@@ -1,5 +1,7 @@
 package com.proteinoteka.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.playwright.Page;
 import com.proteinoteka.model.Product;
 import com.proteinoteka.util.ProductNameCleaner;
@@ -19,36 +21,56 @@ import java.util.regex.Pattern;
 
 /**
  * Scrapes proteka.hr (custom "kanuni.hr" e-commerce, Alpine.js frontend, fully SSR).
- * All protein products are rendered server-side on a single category page — no pagination.
- * Product data is embedded in div[data-filterable-item] attributes; no JS execution needed.
+ *
+ * Strategy for minimising iProyal proxy credits:
+ *   1. Listing page is fetched via plain JSoup (usePlaywrightForListing=false → no proxy).
+ *      The SSR HTML already embeds brand, weight, image, flavours and price inside
+ *      div[data-filterable-item] — no JS evaluation needed.
+ *   2. Detail pages are fetched through JSoup only when nutrition data is incomplete.
+ *      Products whose URLs appear in skipUrls (nutrition already complete in DB) are
+ *      added to the result immediately without any network request.
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class ProtekaHrScraper implements StoreScraper {
 
-    private static final String STORE_NAME = "Proteka";
-    private static final String BASE_URL = "https://www.proteka.hr/c/proteini";
+    private static final String STORE_NAME  = "Proteka";
+    private static final String BASE_URL    = "https://www.proteka.hr/c/proteini";
     private static final String SITE_ORIGIN = "https://www.proteka.hr";
+
     private static final int MAX_DETAIL_FETCH_RETRIES = 3;
     private static final int MAX_CONSECUTIVE_FAILURES = 5;
 
-    // Matches price strings like "69,90" or "69.90" — European decimal comma/dot
-    private static final Pattern PRICE_PATTERN = Pattern.compile("[\\d]+[,.]?[\\d]*");
+    // Matches a decimal number such as "69.9" or "69,90"
+    private static final Pattern PRICE_PATTERN  = Pattern.compile("[\\d]+[,.]?[\\d]*");
+    // Matches weight in product name: "2kg", "2.27kg", "500g"
+    private static final Pattern WEIGHT_PATTERN =
+            Pattern.compile("(\\d+[.,]?\\d*)\\s*kg|([1-9]\\d{2,4})\\s*g", Pattern.CASE_INSENSITIVE);
+    // Matches weight in "data-pakiranje" attribute: "2.27 kg", "500g", "2 kg"
+    private static final Pattern PAKIRANJE_PATTERN =
+            Pattern.compile("(\\d+[.,]?\\d*)\\s*kg|(\\d+[.,]?\\d*)\\s*g", Pattern.CASE_INSENSITIVE);
+    // Extracts kcal specifically from "1613 kJ/383 kcal" — avoids picking up kJ value
+    private static final Pattern KCAL_PATTERN =
+            Pattern.compile("(\\d+(?:[.,]\\d+)?)\\s*kcal", Pattern.CASE_INSENSITIVE);
+    // Generic numeric extractor for nutrition values like "73g", "5 g"
+    private static final Pattern NUTRITION_NUM =
+            Pattern.compile("(\\d+(?:[.,]\\d+)?)");
+    // Extracts JSON from Alpine.js x-data attribute: Product({ product: {...} })
+    private static final Pattern PRODUCT_JSON_PATTERN =
+            Pattern.compile("Product\\(\\{\\s*product:\\s*(\\{.*?\\})\\s*\\}\\)", Pattern.DOTALL);
 
-    private final NutritionParserService nutritionParser;
     private final BaseScraperEnricher baseEnricher;
     private final ProxyAwareHttpClient httpClient;
+    private final ObjectMapper objectMapper;
 
-    @Override public String getStoreName() { return STORE_NAME; }
-    @Override public String getBaseUrl() { return BASE_URL; }
-    @Override public String getMarket() { return "hr"; }
-    @Override public String getCurrency() { return "EUR"; }
+    @Override public String getStoreName()             { return STORE_NAME; }
+    @Override public String getBaseUrl()               { return BASE_URL; }
+    @Override public String getMarket()                { return "hr"; }
+    @Override public String getCurrency()              { return "EUR"; }
     @Override public boolean usePlaywrightForListing() { return false; }
-
-    // All products on one page — no pagination
     @Override public boolean hasNextPage(Document doc) { return false; }
-    @Override public String buildPageUrl(int page) { return BASE_URL; }
+    @Override public String buildPageUrl(int page)     { return BASE_URL; }
 
     @Override
     public List<Product> scrape(Page page, Document doc) {
@@ -67,43 +89,95 @@ public class ProtekaHrScraper implements StoreScraper {
             if (p != null) stubs.add(p);
         }
 
+        log.info("[{}] {} cards parsed, {} in skipUrls (nutrition complete — no detail fetch)",
+                STORE_NAME, stubs.size(),
+                stubs.stream().filter(s -> skipUrls.contains(s.getUrl())).count());
+
         return enrichWithDetails(stubs, skipUrls);
     }
 
-    // -------------------- Listing parsing --------------------
+    // ── Listing page parsing ───────────────────────────────────────────────────
 
     private Product parseCard(Element card) {
         try {
-            // Product name: h5.product-title > a
-            Element nameEl = card.selectFirst("h5.product-title a, .product-title a");
-            if (nameEl == null) return null;
-            String name = nameEl.text().trim();
+            // Name and URL from the product-title anchor
+            Element nameAnchor = card.selectFirst("h5.product-title a, .product-title a");
+            if (nameAnchor == null) return null;
+            String name = nameAnchor.text().trim();
             if (name.isBlank()) return null;
 
-            // Product URL: anchor inside the card
-            Element anchor = card.selectFirst("a[href]");
-            if (anchor == null) return null;
-            String href = anchor.attr("href");
+            String href = nameAnchor.attr("href");
+            if (href.isBlank()) href = card.attr("data-link");
             if (href.isBlank()) return null;
             String url = href.startsWith("http") ? href : SITE_ORIGIN + href;
 
-            // Price: data-price attribute on the outer filterable div (clean decimal string)
-            String priceAttr = card.attr("data-price").trim();
-            Double price = parsePrice(priceAttr);
+            // Early category filter — avoids detail page fetch for non-protein products
+            String category = card.attr("data-category").trim().toLowerCase();
+            if (isNonProteinCategory(category)) {
+                log.debug("[{}] Skipping '{}' — category '{}'", STORE_NAME, name, category);
+                return null;
+            }
 
-            // Image: img.lazyload[data-src]
-            String imageUrl = null;
-            Element img = card.selectFirst("img[data-src], img[src]");
-            if (img != null) {
-                imageUrl = img.attr("data-src");
-                if (imageUrl.isBlank()) imageUrl = img.attr("src");
+            // Price from data-price attribute (already a clean decimal)
+            Double price = parsePrice(card.attr("data-price").trim());
+
+            // Brand from data-brand attribute (no detail page needed)
+            String brand = card.attr("data-brand").trim();
+
+            // Package weight from data-pakiranje attribute (may be blank)
+            Double weightGrams = parsePakiranje(card.attr("data-pakiranje").trim());
+            if (weightGrams == null) weightGrams = extractWeightFromName(name);
+
+            // Image and flavours from Alpine.js JSON embedded in the inner product div
+            String imageUrl  = null;
+            List<String> flavours = new ArrayList<>();
+            Element productDiv = card.selectFirst("[x-data]");
+            if (productDiv != null) {
+                String xData = productDiv.attr("x-data");
+                JsonNode json = parseProductJson(xData);
+                if (json != null) {
+                    JsonNode imgNode = json.get("image");
+                    if (imgNode != null && !imgNode.isNull()) {
+                        String img = imgNode.asText().trim();
+                        if (!img.isBlank()) {
+                            imageUrl = img.startsWith("http") ? img : SITE_ORIGIN + img;
+                        }
+                    }
+                    JsonNode options = json.get("options");
+                    if (options != null && options.isArray()) {
+                        for (JsonNode opt : options) {
+                            JsonNode available = opt.get("available");
+                            if (available != null && available.asBoolean()) {
+                                JsonNode flName = opt.get("name");
+                                if (flName != null && !flName.isNull()) {
+                                    String fl = flName.asText().trim();
+                                    if (!fl.isBlank()) flavours.add(fl);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Fallback image from img tag
+            if (imageUrl == null) {
+                Element img = card.selectFirst("img[data-src], img[src]");
+                if (img != null) {
+                    imageUrl = img.attr("data-src");
+                    if (imageUrl.isBlank()) imageUrl = img.attr("src");
+                    if (imageUrl != null && !imageUrl.startsWith("http"))
+                        imageUrl = SITE_ORIGIN + imageUrl;
+                }
             }
 
             Product p = new Product();
             p.setName(ProductNameCleaner.clean(name));
             p.setUrl(url);
             if (price != null) p.setPrice(String.valueOf(price));
+            if (!brand.isBlank()) p.setBrand(brand);
+            if (weightGrams != null && weightGrams > 0) p.setPrimaryWeightGrams(weightGrams);
             if (imageUrl != null && !imageUrl.isBlank()) p.setImageUrl(imageUrl);
+            if (!flavours.isEmpty()) p.setFlavours(flavours);
 
             return p;
         } catch (Exception e) {
@@ -112,23 +186,13 @@ public class ProtekaHrScraper implements StoreScraper {
         }
     }
 
-    private Double parsePrice(String raw) {
-        if (raw == null || raw.isBlank()) return null;
-        try {
-            // data-price is already a clean decimal (e.g. "69.90")
-            return Double.parseDouble(raw.replace(",", "."));
-        } catch (NumberFormatException e) {
-            // Fallback: extract first number from string
-            Matcher m = PRICE_PATTERN.matcher(raw);
-            if (m.find()) {
-                try { return Double.parseDouble(m.group().replace(",", ".")); }
-                catch (NumberFormatException ignored) {}
-            }
-            return null;
-        }
+    private boolean isNonProteinCategory(String cat) {
+        return cat.contains("gainer") || cat.contains("masa") || cat.contains("bar")
+                || cat.contains("kreatin") || cat.contains("vitamin") || cat.contains("omega")
+                || cat.contains("kolagen") || cat.contains("collag");
     }
 
-    // -------------------- Detail page enrichment --------------------
+    // ── Detail page enrichment ─────────────────────────────────────────────────
 
     private List<Product> enrichWithDetails(List<Product> stubs, Set<String> skipUrls) {
         List<Product> result = new ArrayList<>();
@@ -138,6 +202,13 @@ public class ProtekaHrScraper implements StoreScraper {
             if (stub.getUrl() == null || stub.getUrl().isBlank()) continue;
             if (baseEnricher.isNonProteinProduct(stub.getName())) {
                 log.info("[{}] Skipping '{}' — not a protein product", STORE_NAME, stub.getName());
+                continue;
+            }
+
+            // Nutrition already complete in DB — no need to hit the detail page at all
+            if (skipUrls.contains(stub.getUrl())) {
+                log.debug("[{}] '{}' — nutrition complete, skipping detail fetch", STORE_NAME, stub.getName());
+                result.add(stub);
                 continue;
             }
 
@@ -153,9 +224,9 @@ public class ProtekaHrScraper implements StoreScraper {
             consecutiveFailures = 0;
 
             try {
-                enrichProduct(doc, stub, skipUrls.contains(stub.getUrl()));
+                enrichProduct(doc, stub);
                 result.add(stub);
-                log.info("[{}] Enriched '{}'", STORE_NAME, stub.getName());
+                log.info("[{}] Enriched '{}' protein={}g/100g", STORE_NAME, stub.getName(), stub.getProteinPer100g());
             } catch (Exception e) {
                 log.error("[{}] Error enriching '{}': {}", STORE_NAME, stub.getName(), e.getMessage());
             }
@@ -166,78 +237,159 @@ public class ProtekaHrScraper implements StoreScraper {
         return result;
     }
 
-    private void enrichProduct(Document doc, Product p, boolean skipNutrition) {
-        // Brand — look for brand link or meta
-        Element brandEl = doc.selectFirst("[itemprop=brand] [itemprop=name], .product-brand a, .brand-name");
-        if (brandEl != null) p.setBrand(brandEl.text().trim());
-
-        // Package weight — extract from product name via regex
-        if (p.getPackage_weight() == null || p.getPackage_weight().isEmpty()) {
-            Double weight = extractWeightFromName(p.getName());
-            if (weight != null) p.setPrimaryWeightGrams(weight);
-        }
-
-        // Description — look for description block
-        Element descEl = doc.selectFirst(".product-description, [itemprop=description], .description");
-        if (descEl != null) {
-            String desc = descEl.text().trim();
-            if (!desc.isBlank()) p.setDescription(desc);
-        }
-
-        // Nutrition table (standard HTML table with per-100g values)
-        if (!skipNutrition) {
-            extractNutritionFromTable(doc, p);
-            baseEnricher.enrichWithAiIfNeeded(doc, p, STORE_NAME);
-        }
-    }
-
-    private void extractNutritionFromTable(Document doc, Product p) {
-        // Proteka uses standard HTML nutrition tables
-        for (Element row : doc.select("table tr, .nutrition-table tr")) {
-            String label = row.select("td:first-child, th:first-child").text().toLowerCase();
-            String value = row.select("td:last-child, td:nth-child(2)").text();
-
-            if (label.contains("proteini") || label.contains("protein")) {
-                Double v = parseNutritionValue(value);
-                if (v != null && v > 0 && v <= 100) p.setProteinPer100g(v);
-            } else if (label.contains("šeće") || label.contains("sece") || label.contains("šećer") || label.contains("ugljikohid")) {
-                if (label.contains("šeće") || label.contains("sece") || label.contains("šećer")) {
-                    Double v = parseNutritionValue(value);
-                    if (v != null && v >= 0) p.setSugarPer100g(v);
+    private void enrichProduct(Document doc, Product p) {
+        // Brand fallback from the "Proizvođač" info table if not set from listing
+        if (p.getBrand() == null || p.getBrand().isBlank()) {
+            for (Element row : doc.select("table.table tr")) {
+                String label = row.selectFirst("td:first-child") != null
+                        ? row.selectFirst("td:first-child").text().toLowerCase() : "";
+                if (label.contains("proizvođač") || label.contains("brand")) {
+                    Element link = row.selectFirst("td:last-child a");
+                    if (link != null && !link.text().isBlank()) {
+                        p.setBrand(link.text().trim());
+                        break;
+                    }
                 }
-            } else if (label.contains("masti") || label.contains("masnoće") || label.contains("ukupne masti")) {
-                Double v = parseNutritionValue(value);
-                if (v != null && v >= 0) p.setFatPer100g(v);
-            } else if (label.contains("energij") || label.contains("kalorij") || label.contains("kcal")) {
-                Double v = parseNutritionValue(value);
-                if (v != null && v > 0) p.setCaloriePer100g(v);
+            }
+        }
+
+        // Description from the "Opis proizvoda" section (class="story")
+        Element storyEl = doc.selectFirst(".story");
+        if (storyEl != null) {
+            String desc = storyEl.text().trim();
+            if (!desc.isBlank() && (p.getDescription() == null || p.getDescription().isBlank())) {
+                p.setDescription(desc.length() > 3000 ? desc.substring(0, 3000) : desc);
+            }
+        }
+
+        extractNutritionFromTable(doc, p);
+        baseEnricher.enrichWithAiIfNeeded(doc, p, STORE_NAME);
+    }
+
+    /**
+     * Parses the "Deklaracija proizvoda" nutrition table.
+     *
+     * Proteka uses a 3-column table: label | 100g | per-serving.
+     * Some rows have multiple {@code <p>} elements in each cell (e.g. Masti / zasićene,
+     * Ugljikohidrati / šećeri). We pair label paragraphs with value paragraphs so that
+     * "šećeri" maps to the correct value and not the total carbohydrate value.
+     *
+     * Energy is rendered as "1613 kJ/383 kcal" — we extract the kcal part specifically.
+     */
+    private void extractNutritionFromTable(Document doc, Product p) {
+        // Primary: find the table inside the div that follows h4 "Deklaracija proizvoda"
+        Element declTable = null;
+        for (Element heading : doc.select("h4, h3, h2")) {
+            if (heading.text().toLowerCase().contains("deklaracija")) {
+                Element next = heading.nextElementSibling();
+                if (next != null) declTable = next.selectFirst("table");
+                break;
+            }
+        }
+        // Fallback: any table whose text contains both a protein keyword and an energy keyword
+        if (declTable == null) {
+            for (Element table : doc.select("table")) {
+                String text = table.text().toLowerCase();
+                boolean hasProtein = text.contains("proteini") || text.contains("protein")
+                        || text.contains("bjelančevine");
+                boolean hasEnergy  = text.contains("kcal") || text.contains("kj");
+                if (hasProtein && hasEnergy) { declTable = table; break; }
+            }
+        }
+        if (declTable == null) {
+            log.debug("[{}] No nutrition table found on detail page for '{}'", STORE_NAME, p.getName());
+            return;
+        }
+
+        for (Element row : declTable.select("tr")) {
+            Element labelCell = row.selectFirst("td:nth-child(1), th:nth-child(1)");
+            Element valueCell = row.selectFirst("td:nth-child(2), th:nth-child(2)");
+            if (labelCell == null || valueCell == null) continue;
+
+            Elements labelParagraphs = labelCell.select("p");
+            Elements valueParagraphs = valueCell.select("p");
+
+            if (!labelParagraphs.isEmpty() && !valueParagraphs.isEmpty()) {
+                // Multi-paragraph row — iterate pairs (Masti/zasićene, Ugljikohidrati/šećeri)
+                for (int i = 0; i < labelParagraphs.size() && i < valueParagraphs.size(); i++) {
+                    String label = labelParagraphs.get(i).text().toLowerCase().trim();
+                    String value = valueParagraphs.get(i).text().trim();
+                    applyNutritionField(label, value, p);
+                }
+            } else {
+                // Single-value row
+                String label = labelCell.text().toLowerCase().trim();
+                String value = valueCell.text().trim();
+                applyNutritionField(label, value, p);
             }
         }
     }
 
-    private Double parseNutritionValue(String raw) {
+    private void applyNutritionField(String label, String value, Product p) {
+        if (label.isBlank() || value.isBlank()) return;
+
+        if ((label.contains("energet") || label.contains("kalorij"))
+                && !label.contains("zasić")) {
+            // "1613 kJ/383 kcal" — always use kcal, not kJ
+            Double kcal = parseKcal(value);
+            if (kcal != null && kcal > 0 && p.getCaloriePer100g() == null) {
+                p.setCaloriePer100g(kcal);
+            }
+
+        } else if (label.contains("protein") || label.equals("bjelančevine")
+                || label.contains("bjelancevine")) {
+            Double v = parseNutritionNumber(value);
+            if (v != null && v > 0 && v <= 100 && p.getProteinPer100g() == null) {
+                p.setProteinPer100g(v);
+            }
+
+        } else if (label.contains("šećer") || label.contains("secer") || label.contains("šeće")) {
+            Double v = parseNutritionNumber(value);
+            if (v != null && v >= 0 && p.getSugarPer100g() == null) {
+                p.setSugarPer100g(v);
+            }
+
+        } else if (label.contains("mast") && !label.contains("zasić")
+                && !label.contains("zasic")) {
+            Double v = parseNutritionNumber(value);
+            if (v != null && v >= 0 && p.getFatPer100g() == null) {
+                p.setFatPer100g(v);
+            }
+        }
+    }
+
+    // ── Parsers ────────────────────────────────────────────────────────────────
+
+    private Double parsePrice(String raw) {
         if (raw == null || raw.isBlank()) return null;
-        Matcher m = Pattern.compile("[\\d]+[,.]?[\\d]*").matcher(raw);
-        if (!m.find()) return null;
-        try { return Double.parseDouble(m.group().replace(",", ".")); }
-        catch (NumberFormatException e) { return null; }
+        try {
+            return Double.parseDouble(raw.replace(",", "."));
+        } catch (NumberFormatException e) {
+            Matcher m = PRICE_PATTERN.matcher(raw);
+            if (m.find()) {
+                try { return Double.parseDouble(m.group().replace(",", ".")); }
+                catch (NumberFormatException ignored) {}
+            }
+            return null;
+        }
     }
 
-    private Document fetchDetailPage(String url) {
-        for (int attempt = 1; attempt <= MAX_DETAIL_FETCH_RETRIES; attempt++) {
-            try {
-                return httpClient.connection(url)
-                        .header("Accept-Language", "hr-HR,hr;q=0.9,en;q=0.8")
-                        .get();
-            } catch (Exception e) {
-                log.warn("[{}] Detail fetch attempt {}/{} failed for {}: {}", STORE_NAME, attempt, MAX_DETAIL_FETCH_RETRIES, url, e.getMessage());
-                safeSleep(3000L * attempt);
+    private Double parsePakiranje(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        Matcher m = PAKIRANJE_PATTERN.matcher(raw);
+        if (!m.find()) return null;
+        try {
+            if (m.group(1) != null) {
+                double kg = Double.parseDouble(m.group(1).replace(",", "."));
+                return kg * 1000;
             }
-        }
+            if (m.group(2) != null) {
+                double g = Double.parseDouble(m.group(2).replace(",", "."));
+                if (g >= 50) return g;
+            }
+        } catch (NumberFormatException ignored) {}
         return null;
     }
-
-    private static final Pattern WEIGHT_PATTERN = Pattern.compile("(\\d+[.,]?\\d*)\\s*kg|([1-9]\\d{2,4})\\s*g", Pattern.CASE_INSENSITIVE);
 
     private Double extractWeightFromName(String name) {
         if (name == null) return null;
@@ -250,6 +402,59 @@ public class ProtekaHrScraper implements StoreScraper {
                     if (g >= 100) return g;
                 }
             } catch (NumberFormatException ignored) {}
+        }
+        return null;
+    }
+
+    /** Extracts kcal from strings like "1613 kJ/383 kcal" or "383 kcal". */
+    private Double parseKcal(String raw) {
+        if (raw == null) return null;
+        Matcher m = KCAL_PATTERN.matcher(raw);
+        if (m.find()) {
+            try { return Double.parseDouble(m.group(1).replace(",", ".")); }
+            catch (NumberFormatException ignored) {}
+        }
+        return null;
+    }
+
+    /** Extracts the first numeric value from strings like "73g", "5 g", "7,5g". */
+    private Double parseNutritionNumber(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        Matcher m = NUTRITION_NUM.matcher(raw);
+        if (!m.find()) return null;
+        try { return Double.parseDouble(m.group(1).replace(",", ".")); }
+        catch (NumberFormatException e) { return null; }
+    }
+
+    /**
+     * Parses the Alpine.js {@code x-data} attribute to extract the embedded product JSON.
+     * Format: {@code Product({ product: {...} })}
+     */
+    private JsonNode parseProductJson(String xData) {
+        if (xData == null || xData.isBlank()) return null;
+        try {
+            Matcher m = PRODUCT_JSON_PATTERN.matcher(xData);
+            if (!m.find()) return null;
+            return objectMapper.readTree(m.group(1));
+        } catch (Exception e) {
+            log.debug("[{}] Could not parse product JSON from x-data: {}", STORE_NAME, e.getMessage());
+            return null;
+        }
+    }
+
+    // ── HTTP ───────────────────────────────────────────────────────────────────
+
+    private Document fetchDetailPage(String url) {
+        for (int attempt = 1; attempt <= MAX_DETAIL_FETCH_RETRIES; attempt++) {
+            try {
+                return httpClient.connection(url)
+                        .header("Accept-Language", "hr-HR,hr;q=0.9,en;q=0.8")
+                        .get();
+            } catch (Exception e) {
+                log.warn("[{}] Detail fetch attempt {}/{} failed for {}: {}",
+                        STORE_NAME, attempt, MAX_DETAIL_FETCH_RETRIES, url, e.getMessage());
+                safeSleep(3000L * attempt);
+            }
         }
         return null;
     }

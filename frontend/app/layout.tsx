@@ -30,7 +30,7 @@ const MARKET_SEO = {
   rs: {
     title: "Proteinoteka | Uporedi cene proteina i suplemenata u Srbiji",
     description:
-      "Pronađi najjeftiniji whey protein, izolat i kreatin u Srbiji. Upoređujemo aktuelne cene suplemenata i računamo isplativost u RSD po gramu proteina.",
+      "Pronađi najjeftiniji whey protein, izolat i blend protein u Srbiji. Upoređujemo aktuelne cene suplemenata i računamo isplativost u RSD po gramu proteina.",
     keywords: ["proteini srbija", "whey protein cena", "najbolji protein", "jeftini suplementi", "pansport", "proteini.si", "cena proteina po gramu"],
     ogTitle: "Gde je najjeftiniji protein u Srbiji? | Proteinoteka",
     ogDescription: "Uštedi na suplementaciji. Uporedi cene svih brendova i saznaj koji whey protein nudi najviše za tvoj novac.",
@@ -42,7 +42,7 @@ const MARKET_SEO = {
   hr: {
     title: "Proteinoteka | Usporedi cijene proteina i suplemenata u Hrvatskoj",
     description:
-      "Pronađi najjeftiniji whey protein, izolat i kreatin u Hrvatskoj. Uspoređujemo aktualne cijene suplemenata i računamo isplativost u EUR po gramu proteina.",
+      "Pronađi najjeftiniji whey protein, izolat i blend protein u Hrvatskoj. Uspoređujemo aktualne cijene suplemenata i računamo isplativost u EUR po gramu proteina.",
     keywords: ["proteini hrvatska", "whey protein cijena", "najbolji protein hrvatska", "jeftini suplementi hrvatska", "gymbeam hrvatska", "polleo sport", "cijena proteina po gramu"],
     ogTitle: "Gdje je najjeftiniji protein u Hrvatskoj? | Proteinoteka",
     ogDescription: "Uštedi na suplementaciji. Usporedi cijene svih brendova i saznaj koji whey protein nudi najviše za tvoj novac.",
