@@ -245,6 +245,7 @@ export interface SEOLandingPageProps {
   faqs?: PageFAQ[];
   extraLinks?: { href: string; label: string }[];
   disclaimer?: string;
+  headerSection?: React.ReactNode;
   middleSection?: React.ReactNode;
 }
 
@@ -252,7 +253,7 @@ const BASE_URL = BASE_URL_CONST;
 
 export function SEOLandingPage({
   h1, intro, quickAnswer, products, tableCaption, listHeading, currentSlug,
-  faqs, extraLinks, disclaimer, middleSection,
+  faqs, extraLinks, disclaimer, headerSection, middleSection,
 }: SEOLandingPageProps) {
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
@@ -322,6 +323,9 @@ export function SEOLandingPage({
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+
+        {/* Header section (e.g. filter tabs) — shown above quick answer */}
+        {headerSection}
 
         {/* Quick Answer */}
         {quickAnswer && <QuickAnswer text={quickAnswer} />}

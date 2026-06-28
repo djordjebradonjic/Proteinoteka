@@ -1,17 +1,18 @@
 import { Metadata } from "next";
 import { fetchTopProducts } from "@/lib/seo-data";
 import { SEOLandingPage } from "@/components/seo/SEOLandingPage";
+import { WeightRangeTabs } from "@/components/seo/WeightRangeTabs";
 
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: { absolute: "Najjeftiniji Whey Protein u Srbiji 2026 | Proteinoteka" },
+  title: { absolute: "Najjeftiniji Whey Protein 500g–1.5kg u Srbiji | Proteinoteka" },
   description:
-    "Automatski poredimo cene whey proteina iz 8 srpskih prodavnica. Vidi koji košta najmanje po gramu proteina — ažurirano nedeljno, bez ručnog pretraživanja.",
+    "Najjeftinije pakovanje whey proteina od 500g do 1.5kg u Srbiji. Poredimo cene iz svih prodavnica i prikazujemo cenu po gramu proteina — ažurirano nedeljno.",
   alternates: { canonical: "https://proteinoteka.rs/najjeftiniji-whey-protein" },
   openGraph: {
-    title: "Najjeftiniji Whey Protein u Srbiji | Proteinoteka",
-    description: "Aktuelne cene whey proteina iz svih srpskih prodavnica. Sortirano od najjeftinije.",
+    title: "Najjeftiniji Whey Protein 500g–1.5kg u Srbiji | Proteinoteka",
+    description: "Aktuelne cene whey proteina u pakovanju 500g–1.5kg iz svih srpskih prodavnica. Sortirano od najjeftinije.",
     url: "https://proteinoteka.rs/najjeftiniji-whey-protein",
     siteName: "Proteinoteka",
     locale: "sr_RS",
@@ -19,8 +20,8 @@ export const metadata: Metadata = {
     images: [{ url: "https://proteinoteka.rs/opengraph-image", width: 1200, height: 630, alt: "Proteinoteka" }],
   },
   twitter: {
-    title: "Najjeftiniji Whey Protein u Srbiji 2026 | Proteinoteka",
-    description: "Uporedi cene whey proteina iz svih srpskih prodavnica. Sortirano od najjeftinije cene.",
+    card: "summary_large_image",
+    images: ["https://proteinoteka.rs/opengraph-image"],
   },
 };
 
@@ -28,9 +29,11 @@ export default async function Page() {
   const raw = await fetchTopProducts({
     category: "whey_concentrate",
     sortBy: "price",
-    limit: 15,
+    limit: 200,
   });
-  const products = raw.filter(p => p.primaryWeightGrams != null && p.primaryWeightGrams >= 500);
+  const products = raw.filter(
+    p => p.primaryWeightGrams != null && p.primaryWeightGrams >= 500 && p.primaryWeightGrams < 1500
+  );
 
   const top = products[0];
   const bestValue = products.length > 0
@@ -38,18 +41,19 @@ export default async function Page() {
     : null;
 
   const quickAnswer = top
-    ? `Najjeftiniji whey concentrate u Srbiji trenutno je ${top.name} za ${top.price} (${top.storeName}). Ako tražiš jeftino ali i kvalitetno, ${bestValue?.name ?? top.name} nudi najbolji odnos cene i kvaliteta sa value score ${bestValue?.valueScore?.toFixed(1) ?? "N/A"}/10.`
+    ? `Najjeftiniji whey concentrate u pakovanju 500g–1.5kg trenutno je ${top.name} za ${top.price} (${top.storeName}). Ako tražiš jeftino ali i kvalitetno, ${bestValue?.name ?? top.name} nudi najbolji odnos cene i kvaliteta sa value score ${bestValue?.valueScore?.toFixed(1) ?? "N/A"}/10.`
     : "";
 
   return (
     <SEOLandingPage
       h1="Najjeftiniji Whey Protein u Srbiji"
-      intro="Svakodnevno pratimo cene whey proteina iz svih srpskih prodavnica. Ova lista je sortirana od najniže cene — bez kompromisa na kvalitet koji možeš pratiti kroz nutritivne vrednosti svakog proizvoda."
+      intro="Svakodnevno pratimo cene whey proteina iz svih srpskih prodavnica. Odaberi veličinu pakovanja koja te zanima — lista je sortirana od najniže cene po pakovanju."
       quickAnswer={quickAnswer}
       products={products}
-      listHeading="Whey proteini sortirani od najjeftinije cene"
-      tableCaption="Najjeftiniji whey proteini u Srbiji — aktuelne cene"
+      listHeading="Whey proteini 500g–1.5kg sortirani od najjeftinije cene"
+      tableCaption="Najjeftiniji whey proteini 500g–1.5kg u Srbiji — aktuelne cene"
       currentSlug="najjeftiniji-whey-protein"
+      headerSection={<WeightRangeTabs currentSlug="najjeftiniji-whey-protein" />}
       faqs={[
         {
           q: "Koliko otprilike košta whey protein u Srbiji?",
