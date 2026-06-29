@@ -11,6 +11,10 @@ import { ArrowLeft, Package, ShoppingCart, X } from "lucide-react";
 import { productUrl } from "@/lib/productUrl";
 import { getScoreColor } from "@/lib/scoreColor";
 import Image from "next/image";
+import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
+
+const IS_HR = CURRENT_MARKET === "hr";
+const MARKET = MARKET_CONFIG[CURRENT_MARKET];
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -62,7 +66,7 @@ function worstIdx(values: (number | null)[], higherIsBetter: boolean): number {
 
 function fmt(n: number | null, decimals = 0): string {
   if (n == null) return "N/A";
-  return n.toLocaleString("sr-RS", { maximumFractionDigits: decimals, minimumFractionDigits: decimals });
+  return n.toLocaleString(MARKET.locale, { maximumFractionDigits: decimals, minimumFractionDigits: decimals });
 }
 
 function short(name: string, max = 28): string {
@@ -90,7 +94,9 @@ function generateInsights(products: CompareProduct[]): string[] {
 
   const bestPppIdx = bestIdx(ppps, false);
   if (bestPppIdx >= 0 && ppps[bestPppIdx] != null) {
-    insights.push(`🥇 ${short(products[bestPppIdx].name)} nudi najjeftiniji protein — ${fmt(ppps[bestPppIdx], 2)} RSD/g proteina.`);
+    insights.push(IS_HR
+      ? `🥇 ${short(products[bestPppIdx].name)} nudi najjeftiniji protein — ${fmt(ppps[bestPppIdx]! * 100, 2)} EUR/100g proteina.`
+      : `🥇 ${short(products[bestPppIdx].name)} nudi najjeftiniji protein — ${fmt(ppps[bestPppIdx], 2)} RSD/g proteina.`);
   }
 
   const bestProtIdx  = bestIdx(proteins, true);
@@ -109,7 +115,7 @@ function generateInsights(products: CompareProduct[]): string[] {
       && prices[cheapIdx] != null && prices[expIdx] != null) {
     const diff = Math.round(prices[expIdx]! - prices[cheapIdx]!);
     if (diff > 0) {
-      insights.push(`💰 ${short(products[cheapIdx].name)} je jeftiniji za ${fmt(diff)} RSD od ${short(products[expIdx].name)}.`);
+      insights.push(`💰 ${short(products[cheapIdx].name)} je jeftiniji za ${fmt(diff)} ${MARKET.currency} od ${short(products[expIdx].name)}.`);
     }
   }
 
@@ -269,14 +275,16 @@ function ComparePage() {
   const insights = useMemo(() => generateInsights(products), [products]);
 
   const rows: RowDef[] = useMemo(() => [
-    { label: "Cena",            values: prices,   higher: false, unit: " RSD", decimals: 0 },
-    { label: "Value Score",     values: scores,   higher: true,  unit: "",     decimals: 1, isScore: true },
-    { label: "Proteini/100g",   values: proteins, higher: true,  unit: "g",    decimals: 1 },
-    { label: "Masti/100g",      values: fats,     higher: false, unit: "g",    decimals: 1 },
-    { label: "Šećeri/100g",     values: sugars,   higher: false, unit: "g",    decimals: 1 },
-    { label: "Kalorije/100g",   values: cals,     higher: false, unit: " kcal",decimals: 0 },
-    { label: "Cena/kg",         values: ppks,     higher: false, unit: " RSD", decimals: 0 },
-    { label: "Cena/g proteina", values: ppps,     higher: false, unit: " RSD", decimals: 2 },
+    { label: IS_HR ? "Cijena" : "Cena",                         values: prices,   higher: false, unit: ` ${MARKET.currency}`, decimals: 0 },
+    { label: "Value Score",                                      values: scores,   higher: true,  unit: "",                    decimals: 1, isScore: true },
+    { label: "Proteini/100g",                                    values: proteins, higher: true,  unit: "g",                   decimals: 1 },
+    { label: "Masti/100g",                                       values: fats,     higher: false, unit: "g",                   decimals: 1 },
+    { label: "Šećeri/100g",                                      values: sugars,   higher: false, unit: "g",                   decimals: 1 },
+    { label: "Kalorije/100g",                                    values: cals,     higher: false, unit: " kcal",               decimals: 0 },
+    { label: IS_HR ? "Cijena/kg" : "Cena/kg",                   values: ppks,     higher: false, unit: ` ${MARKET.currency}`, decimals: 0 },
+    { label: IS_HR ? "Cijena/100g proteina" : "Cena/g proteina",
+      values: IS_HR ? ppps.map(v => v != null ? v * 100 : null) : ppps,
+      higher: false, unit: IS_HR ? " EUR" : " RSD", decimals: 2 },
   ], [prices, scores, proteins, fats, sugars, cals, ppks, ppps]);
 
   if (loading) return <Skeleton />;
@@ -336,9 +344,11 @@ function ComparePage() {
             />
           )}
           {bestValueIdx >= 0 && ppps[bestValueIdx] != null && (
-            <WinnerCard emoji="⭐" title="Najbolja vrednost" accent="#3b82f6"
+            <WinnerCard emoji="⭐" title={IS_HR ? "Najbolja vrijednost" : "Najbolja vrednost"} accent="#3b82f6"
               name={products[bestValueIdx].name}
-              detail={`${fmt(ppps[bestValueIdx], 2)} RSD/g proteina`}
+              detail={IS_HR
+                ? `${fmt(ppps[bestValueIdx]! * 100, 2)} EUR/100g proteina`
+                : `${fmt(ppps[bestValueIdx], 2)} RSD/g proteina`}
             />
           )}
         </div>

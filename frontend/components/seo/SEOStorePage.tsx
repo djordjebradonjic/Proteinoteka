@@ -59,7 +59,7 @@ function DecisionSummary({ products }: { products: Product[] }) {
     },
     {
       icon: "⚡",
-      label: "Najviše proteina/RSD",
+      label: IS_HR ? "Najviše proteina/EUR" : "Najviše proteina/RSD",
       product: bestRatio ?? null,
       extra: bestRatio?.proteinPer100g != null ? `${bestRatio.proteinPer100g}g/100g` : undefined,
     },

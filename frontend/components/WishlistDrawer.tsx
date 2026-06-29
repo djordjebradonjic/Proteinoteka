@@ -34,6 +34,9 @@ import {
 import PriceAlertModal from "@/components/PriceAlertModal";
 import PriceTag from "@/components/PriceTag";
 import { getScoreColor, getScoreBg, getScoreLabel } from "@/lib/scoreColor";
+import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
+
+const MARKET = MARKET_CONFIG[CURRENT_MARKET];
 
 function ValueBadge({ score }: { score: number }) {
   const color = getScoreColor(score);
@@ -257,7 +260,7 @@ export default function WishlistDrawer() {
                               <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-600">
                                 <Bell className="w-3 h-3" fill="#16a34a" />
                                 {alert.targetPrice
-                                  ? `Ispod ${new Intl.NumberFormat("sr-RS").format(Math.round(alert.targetPrice))} RSD`
+                                  ? `Ispod ${new Intl.NumberFormat(MARKET.locale).format(Math.round(alert.targetPrice))} ${MARKET.currency}`
                                   : "Alert aktivan"}
                               </span>
                               <button

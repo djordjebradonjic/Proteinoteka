@@ -70,7 +70,7 @@ function DecisionSummary({ products }: { products: Product[] }) {
   const cards: { icon: string; label: string; product: Product | null; extra?: string }[] = [
     { icon: "⭐", label: "Najbolji value score", product: bestValue, extra: bestValue?.valueScore != null ? `Score: ${bestValue.valueScore.toFixed(1)}/10` : undefined },
     { icon: "💰", label: "Najjeftiniji",         product: cheapest,  extra: undefined },
-    { icon: "⚡", label: "Najviše proteina/RSD", product: bestRatio ?? null, extra: bestRatio?.proteinPer100g != null ? `${bestRatio.proteinPer100g}g/100g` : undefined },
+    { icon: "⚡", label: IS_HR ? "Najviše proteina/EUR" : "Najviše proteina/RSD", product: bestRatio ?? null, extra: bestRatio?.proteinPer100g != null ? `${bestRatio.proteinPer100g}g/100g` : undefined },
   ];
 
   return (
