@@ -153,6 +153,8 @@ function KontaktForma() {
 }
 
 export default function KontaktSekcija() {
+  if (IS_HR) return null;
+
   return (
     <section id="kontakt" className="bg-[#f8f9fa] py-10 px-4 mt-6">
       <div className="max-w-3xl mx-auto">

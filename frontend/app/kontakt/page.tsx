@@ -110,20 +110,31 @@ export default function KontaktPage() {
 
           {/* Forma */}
           <div className="md:col-span-2 bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-            {status === "success" ? (
+            {isHR ? (
+              <div className="flex flex-col items-center justify-center h-full py-12 text-center">
+                <Mail className="w-12 h-12 text-[#FF9900] mb-4" />
+                <h2 className="text-xl font-bold text-slate-800 mb-2">Pišite nam direktno</h2>
+                <p className="text-slate-500 text-sm mb-6">
+                  Za sva pitanja, prijedloge ili prijave grešaka — pišite nam na email. Odgovaramo obično unutar 24 sata.
+                </p>
+                <a
+                  href={`mailto:${contactEmail}`}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-[#FF9900] hover:bg-[#e68a00] text-[#131921] font-bold rounded-xl text-sm transition-colors"
+                >
+                  <Mail className="w-4 h-4" />
+                  {contactEmail}
+                </a>
+              </div>
+            ) : status === "success" ? (
               <div className="flex flex-col items-center justify-center h-full py-12 text-center">
                 <CheckCircle className="w-14 h-14 text-green-500 mb-4" />
-                <h2 className="text-xl font-bold text-slate-800 mb-2">
-                  {isHR ? "Poruka poslana!" : "Poruka poslata!"}
-                </h2>
-                <p className="text-slate-500 text-sm mb-6">
-                  {isHR ? "Hvala na poruci. Odgovorit ćemo ti što prije." : "Hvala na poruci. Odgovorićemo ti što pre."}
-                </p>
+                <h2 className="text-xl font-bold text-slate-800 mb-2">Poruka poslata!</h2>
+                <p className="text-slate-500 text-sm mb-6">Hvala na poruci. Odgovorićemo ti što pre.</p>
                 <button
                   onClick={() => setStatus("idle")}
                   className="px-5 py-2 bg-[#FF9900] hover:bg-[#e68a00] text-[#131921] font-semibold rounded-lg text-sm transition-colors"
                 >
-                  {isHR ? "Pošalji novu poruku" : "Pošalji novu poruku"}
+                  Pošalji novu poruku
                 </button>
               </div>
             ) : (
