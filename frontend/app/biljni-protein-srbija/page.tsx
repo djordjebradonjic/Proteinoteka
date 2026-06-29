@@ -16,7 +16,8 @@ export const metadata: Metadata = {
     url: "https://proteinoteka.rs/biljni-protein-srbija",
     siteName: "Proteinoteka",
     locale: "sr_RS",
-    type: "article",
+    type: "website",
+    images: [{ url: "https://proteinoteka.rs/opengraph-image", width: 1200, height: 630, alt: "Proteinoteka" }],
   },
 };
 

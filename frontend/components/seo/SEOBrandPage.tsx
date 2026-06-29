@@ -33,13 +33,20 @@ const CATEGORY_LINKS = [
   { label: "Blend",            href: "/kategorija/blend"            },
 ];
 
-const GUIDE_LINKS = [
+const GUIDE_LINKS = IS_HR ? [
+  { label: "Koliko proteina dnevno?", href: "/hr-vodici/koliko-proteina-dnevno-hrvatska" },
+  { label: "Da li protein goji?",     href: "/hr-vodici/da-li-protein-goji-hrvatska"     },
+] : [
   { label: "Koliko proteina dnevno?",     href: "/vodici/koliko-proteina-dnevno"      },
   { label: "Kada piti protein?",          href: "/vodici/kada-piti-protein"           },
   { label: "Whey isolate vs concentrate", href: "/vodici/whey-isolate-vs-concentrate" },
 ];
 
-const SEO_LANDING_LINKS = [
+const SEO_LANDING_LINKS = IS_HR ? [
+  { label: "🥇 Najbolji Whey",     href: "/najbolji-whey-protein-hrvatska" },
+  { label: "💰 Najjeftiniji Whey", href: "/najjeftiniji-whey-protein-hrvatska" },
+  { label: "📊 Whey Protein Cijena", href: "/whey-protein-cijena" },
+] : [
   { label: "🥇 Najbolji Whey",         href: "/najbolji-whey-protein-srbija" },
   { label: "💰 Najjeftiniji Whey",     href: "/najjeftiniji-whey-protein"    },
   { label: "📊 Whey Protein Cena",     href: "/whey-protein-cena"            },
@@ -345,6 +352,7 @@ export function SEOBrandPage({
             "@type": "Offer",
             price: p.numericPrice,
             priceCurrency: IS_HR ? "EUR" : "RSD",
+            availability: "https://schema.org/InStock",
             url: p.productUrl,
           },
         } : {}),

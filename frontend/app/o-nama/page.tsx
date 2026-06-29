@@ -23,6 +23,7 @@ export const metadata: Metadata = isHR
         siteName: "Proteinoteka",
         locale: "hr_HR",
         type: "website",
+        images: [{ url: `${domain}/opengraph-image`, width: 1200, height: 630, alt: "Proteinoteka" }],
       },
     }
   : {
@@ -38,6 +39,7 @@ export const metadata: Metadata = isHR
         siteName: "Proteinoteka",
         locale: "sr_RS",
         type: "website",
+        images: [{ url: `${domain}/opengraph-image`, width: 1200, height: 630, alt: "Proteinoteka" }],
       },
     };
 

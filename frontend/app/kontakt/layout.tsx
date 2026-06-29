@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
+import { hreflangAlternates } from "@/lib/hreflang";
 
 const isHR = CURRENT_MARKET === "hr";
 const domain = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
@@ -9,7 +10,10 @@ export const metadata: Metadata = {
   description: isHR
     ? "Kontaktiraj tim Proteinoteke — pitanja, prijedlozi ili prijave grešaka. Odgovaramo obično unutar 24 sata."
     : "Kontaktiraj tim Proteinoteke — pitanja, sugestije ili prijave grešaka. Odgovorimo obično unutar 24 sata.",
-  alternates: { canonical: `${domain}/kontakt` },
+  alternates: {
+    canonical: `${domain}/kontakt`,
+    languages: hreflangAlternates("/kontakt"),
+  },
   openGraph: {
     title: "Kontakt | Proteinoteka",
     description: isHR
@@ -19,6 +23,7 @@ export const metadata: Metadata = {
     siteName: "Proteinoteka",
     locale: isHR ? "hr_HR" : "sr_RS",
     type: "website",
+    images: [{ url: `${domain}/opengraph-image`, width: 1200, height: 630, alt: "Proteinoteka" }],
   },
 };
 

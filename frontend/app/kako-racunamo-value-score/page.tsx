@@ -1,4 +1,5 @@
 import { CURRENT_MARKET, MARKET_CONFIG } from '@/lib/marketConfig';
+import { hreflangAlternates } from "@/lib/hreflang";
 import { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
@@ -9,7 +10,10 @@ export const metadata: Metadata = {
   title: { absolute: "Kako računamo Value Score | Proteinoteka" },
   description:
     "Saznaj kako Proteinoteka računa Value Score i kako upoređujemo odnos cene i kvaliteta whey proteina u Srbiji.",
-  alternates: { canonical: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/kako-racunamo-value-score` },
+  alternates: {
+    canonical: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/kako-racunamo-value-score`,
+    languages: hreflangAlternates("/kako-racunamo-value-score"),
+  },
   openGraph: {
     title: "Kako računamo Value Score | Proteinoteka",
     description:
@@ -17,7 +21,8 @@ export const metadata: Metadata = {
     url: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/kako-racunamo-value-score`,
     siteName: "Proteinoteka",
     locale: MARKET_CONFIG[CURRENT_MARKET].ogLocale,
-    type: "article",
+    type: "website",
+    images: [{ url: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/opengraph-image`, width: 1200, height: 630, alt: "Proteinoteka" }],
   },
 };
 

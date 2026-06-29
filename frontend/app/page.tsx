@@ -44,10 +44,7 @@ const seo = PAGE_SEO[CURRENT_MARKET];
 const marketDomain = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
 
 export const metadata: Metadata = {
-  title: {
-    default: seo.title,
-    template: "%s | Proteinoteka",
-  },
+  title: seo.title,
   description: seo.description,
   keywords: [...seo.keywords],
   authors: [{ name: "Proteinoteka", url: marketDomain }],

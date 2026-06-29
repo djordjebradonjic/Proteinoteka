@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
 import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
+import { hreflangAlternates } from "@/lib/hreflang";
 
 const isHR = CURRENT_MARKET === "hr";
 const domain = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
@@ -12,7 +13,21 @@ export const metadata: Metadata = {
     ? "Politika privatnosti platforme Proteinoteka — kako prikupljamo, koristimo i štitimo vaše podatke u skladu s GDPR-om."
     : "Politika privatnosti platforme Proteinoteka — kako prikupljamo, koristimo i štitimo vaše podatke.",
   robots: { index: true, follow: true },
-  alternates: { canonical: `${domain}/privacy-policy` },
+  alternates: {
+    canonical: `${domain}/privacy-policy`,
+    languages: hreflangAlternates("/privacy-policy"),
+  },
+  openGraph: {
+    title: isHR ? "Politika privatnosti | Proteinoteka HR" : "Politika privatnosti | Proteinoteka",
+    description: isHR
+      ? "Politika privatnosti platforme Proteinoteka — kako prikupljamo, koristimo i štitimo vaše podatke u skladu s GDPR-om."
+      : "Politika privatnosti platforme Proteinoteka — kako prikupljamo, koristimo i štitimo vaše podatke.",
+    url: `${domain}/privacy-policy`,
+    siteName: "Proteinoteka",
+    locale: isHR ? "hr_HR" : "sr_RS",
+    type: "website",
+    images: [{ url: `${domain}/opengraph-image`, width: 1200, height: 630, alt: "Proteinoteka" }],
+  },
 };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {

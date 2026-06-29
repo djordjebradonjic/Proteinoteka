@@ -1,12 +1,33 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
+import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
+import { hreflangAlternates } from "@/lib/hreflang";
+
+const isHR = CURRENT_MARKET === "hr";
+const domain = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
 
 export const metadata: Metadata = {
-  title: "Uslovi korišćenja",
-  description: "Uslovi korišćenja platforme Proteinoteka — pravila i ograničenja korišćenja servisa.",
+  title: isHR ? "Uvjeti korištenja" : "Uslovi korišćenja",
+  description: isHR
+    ? "Uvjeti korištenja platforme Proteinoteka — pravila i ograničenja korištenja servisa."
+    : "Uslovi korišćenja platforme Proteinoteka — pravila i ograničenja korišćenja servisa.",
   robots: { index: true, follow: true },
-  alternates: { canonical: "/terms-of-use" },
+  alternates: {
+    canonical: `${domain}/terms-of-use`,
+    languages: hreflangAlternates("/terms-of-use"),
+  },
+  openGraph: {
+    title: isHR ? "Uvjeti korištenja | Proteinoteka" : "Uslovi korišćenja | Proteinoteka",
+    description: isHR
+      ? "Uvjeti korištenja platforme Proteinoteka — pravila i ograničenja korištenja servisa."
+      : "Uslovi korišćenja platforme Proteinoteka — pravila i ograničenja korišćenja servisa.",
+    url: `${domain}/terms-of-use`,
+    siteName: "Proteinoteka",
+    locale: isHR ? "hr_HR" : "sr_RS",
+    type: "website",
+    images: [{ url: `${domain}/opengraph-image`, width: 1200, height: 630, alt: "Proteinoteka" }],
+  },
 };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {

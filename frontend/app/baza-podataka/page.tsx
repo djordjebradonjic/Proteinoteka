@@ -1,4 +1,5 @@
 import { CURRENT_MARKET, MARKET_CONFIG } from '@/lib/marketConfig';
+import { hreflangAlternates } from "@/lib/hreflang";
 import { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
@@ -18,7 +19,10 @@ export const metadata: Metadata = {
     "baza podataka whey protein srbija",
     "cene suplemenata api",
   ],
-  alternates: { canonical: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/baza-podataka` },
+  alternates: {
+    canonical: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/baza-podataka`,
+    languages: hreflangAlternates("/baza-podataka"),
+  },
   openGraph: {
     title: "B2B Baza Podataka Proteina i Suplemenata | Proteinoteka",
     description:
@@ -27,6 +31,7 @@ export const metadata: Metadata = {
     siteName: "Proteinoteka",
     locale: MARKET_CONFIG[CURRENT_MARKET].ogLocale,
     type: "website",
+    images: [{ url: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/opengraph-image`, width: 1200, height: 630, alt: "Proteinoteka" }],
   },
 };
 

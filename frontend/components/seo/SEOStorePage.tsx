@@ -21,11 +21,14 @@ const CATEGORY_LINKS = [
   { label: "Blend",            href: "/kategorija/blend"            },
 ];
 
-const GUIDE_LINKS = [
-  { label: "Koliko proteina dnevno?",       href: "/vodici/koliko-proteina-dnevno"       },
-  { label: "Da li protein goji?",           href: "/vodici/da-li-protein-goji"           },
-  { label: "Kada piti protein?",            href: "/vodici/kada-piti-protein"            },
-  { label: "Whey isolate vs concentrate",   href: "/vodici/whey-isolate-vs-concentrate"  },
+const GUIDE_LINKS = IS_HR ? [
+  { label: "Koliko proteina dnevno?", href: "/hr-vodici/koliko-proteina-dnevno-hrvatska" },
+  { label: "Da li protein goji?",     href: "/hr-vodici/da-li-protein-goji-hrvatska"     },
+] : [
+  { label: "Koliko proteina dnevno?",     href: "/vodici/koliko-proteina-dnevno"      },
+  { label: "Da li protein goji?",         href: "/vodici/da-li-protein-goji"          },
+  { label: "Kada piti protein?",          href: "/vodici/kada-piti-protein"           },
+  { label: "Whey isolate vs concentrate", href: "/vodici/whey-isolate-vs-concentrate" },
 ];
 
 function DecisionSummary({ products }: { products: Product[] }) {
@@ -283,6 +286,7 @@ export function SEOStorePage({
             "@type": "Offer",
             price: p.numericPrice,
             priceCurrency: IS_HR ? "EUR" : "RSD",
+            availability: "https://schema.org/InStock",
             url: p.productUrl,
           },
         } : {}),
