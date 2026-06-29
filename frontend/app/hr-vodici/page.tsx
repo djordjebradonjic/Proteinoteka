@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
 import { Metadata } from "next";
 import Link from "next/link";
@@ -126,6 +127,7 @@ const HR_GUIDES = [
 ];
 
 export default function Page() {
+  if (CURRENT_MARKET !== 'hr') notFound();
   return (
     <div className="min-h-screen bg-slate-50">
       <Header />

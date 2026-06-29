@@ -1,3 +1,5 @@
+import { notFound } from "next/navigation";
+import { CURRENT_MARKET } from "@/lib/marketConfig";
 import { Metadata } from "next";
 import { fetchBrandProducts } from "@/lib/seo-data";
 import { SEOBrandPage } from "@/components/seo/SEOBrandPage";
@@ -26,6 +28,7 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
+  if (CURRENT_MARKET !== 'rs') notFound();
   // Oba moguća normalizovana naziva iz baze (BioTech USA i Biotech alias)
   const [primary, alias] = await Promise.all([
     fetchBrandProducts({ brand: "BioTech USA", limit: 50 }),

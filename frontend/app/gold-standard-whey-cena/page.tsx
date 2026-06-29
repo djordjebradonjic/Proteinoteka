@@ -1,3 +1,5 @@
+import { notFound } from "next/navigation";
+import { CURRENT_MARKET } from "@/lib/marketConfig";
 import { Metadata } from "next";
 import { fetchProductsByQuery } from "@/lib/seo-data";
 import { SEOBrandPage } from "@/components/seo/SEOBrandPage";
@@ -26,6 +28,7 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
+  if (CURRENT_MARKET !== 'rs') notFound();
   const products = await fetchProductsByQuery({ name: "gold standard", brand: "Optimum Nutrition", limit: 30 });
 
   return (

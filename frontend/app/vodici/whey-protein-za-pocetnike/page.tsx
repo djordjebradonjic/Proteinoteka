@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { CURRENT_MARKET, MARKET_CONFIG } from '@/lib/marketConfig';
 import { Metadata } from "next";
 import Link from "next/link";
@@ -75,6 +76,7 @@ const SLUG = "/vodici/whey-protein-za-pocetnike";
 const MONTHLY_PROTEIN_G = 900; // 30g/day × 30 days
 
 export default async function Page() {
+  if (CURRENT_MARKET !== 'rs') notFound();
   const concentrates = await fetchTopProducts({
     category: "whey_concentrate",
     sortBy: "valueScore",

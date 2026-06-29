@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
 import { Metadata } from "next";
 import Link from "next/link";
@@ -59,6 +60,7 @@ const BASE = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
 const SLUG = "/hr-vodici/da-li-protein-goji-hrvatska";
 
 export default function Page() {
+  if (CURRENT_MARKET !== 'hr') notFound();
   const dateModified = new Date().toISOString().split("T")[0];
 
   const jsonLd = [

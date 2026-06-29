@@ -1,3 +1,5 @@
+import { notFound } from "next/navigation";
+import { CURRENT_MARKET } from "@/lib/marketConfig";
 import { Metadata } from "next";
 import { fetchTopProducts } from "@/lib/seo-data";
 import { SEOLandingPage } from "@/components/seo/SEOLandingPage";
@@ -151,6 +153,7 @@ const middleSection = (
 );
 
 export default async function Page() {
+  if (CURRENT_MARKET !== 'rs') notFound();
   const products = await fetchTopProducts({ category: "vegan", sortBy: "valueScore", limit: 20 });
 
   const top = products[0];

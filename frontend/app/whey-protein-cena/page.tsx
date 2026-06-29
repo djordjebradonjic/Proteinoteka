@@ -1,3 +1,5 @@
+import { notFound } from "next/navigation";
+import { CURRENT_MARKET } from "@/lib/marketConfig";
 import { Metadata } from "next";
 import { fetchTopProducts } from "@/lib/seo-data";
 import { SEOLandingPage } from "@/components/seo/SEOLandingPage";
@@ -163,6 +165,7 @@ function PriceByTypeTable() {
 }
 
 export default async function Page() {
+  if (CURRENT_MARKET !== 'rs') notFound();
   const products = await fetchTopProducts({ sortBy: "price", limit: 20 });
 
   const cheapest = products[0];

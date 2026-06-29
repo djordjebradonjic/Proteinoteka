@@ -11,13 +11,6 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { addToCompare, removeFromCompare } from "@/store/compareSlice";
 import { GUIDES, CATEGORY_GUIDES } from "@/lib/guides";
 
-const BRAND_PAGE_SLUGS: Record<string, string> = {
-  "Optimum Nutrition": "/optimum-nutrition-proteini",
-  "Scitec Nutrition":  "/scitec-nutrition-proteini",
-  "Dymatize Nutrition": "/dymatize-proteini",
-  "BioTech USA":       "/biotech-usa-proteini",
-  "Biotech":           "/biotech-usa-proteini",
-};
 import ScrollableRow from "@/components/ScrollableRow";
 import Image from "next/image";
 import { analytics } from "@/lib/analytics";
@@ -35,6 +28,14 @@ import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
 
 const IS_HR = CURRENT_MARKET === "hr";
 const MARKET = MARKET_CONFIG[CURRENT_MARKET];
+
+const BRAND_PAGE_SLUGS: Record<string, string> = IS_HR ? {} : {
+  "Optimum Nutrition":  "/optimum-nutrition-proteini",
+  "Scitec Nutrition":   "/scitec-nutrition-proteini",
+  "Dymatize Nutrition": "/dymatize-proteini",
+  "BioTech USA":        "/biotech-usa-proteini",
+  "Biotech":            "/biotech-usa-proteini",
+};
 
 const PriceHistoryChart = dynamic(() => import("@/components/PriceHistoryChart"), { ssr: false });
 

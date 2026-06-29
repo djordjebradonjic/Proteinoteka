@@ -1,3 +1,5 @@
+import { notFound } from "next/navigation";
+import { CURRENT_MARKET } from "@/lib/marketConfig";
 import { Metadata } from "next";
 import { fetchTopProducts } from "@/lib/seo-data";
 import { SEOLandingPage } from "@/components/seo/SEOLandingPage";
@@ -26,6 +28,7 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
+  if (CURRENT_MARKET !== 'rs') notFound();
   const products = await fetchTopProducts({ category: "casein", sortBy: "valueScore", limit: 20 });
 
   const cheapest = [...products].sort((a, b) => (a.numericPrice ?? 0) - (b.numericPrice ?? 0))[0];

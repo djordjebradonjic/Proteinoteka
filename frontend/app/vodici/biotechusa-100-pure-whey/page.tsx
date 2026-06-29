@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { CURRENT_MARKET, MARKET_CONFIG } from '@/lib/marketConfig';
 import { Metadata } from "next";
 import Link from "next/link";
@@ -80,6 +81,7 @@ const BASE = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
 const SLUG = "/vodici/biotechusa-100-pure-whey";
 
 export default async function Page() {
+  if (CURRENT_MARKET !== 'rs') notFound();
   const [primary, alias, wpcTop] = await Promise.all([
     fetchBrandProducts({ brand: "BioTech USA", limit: 50 }),
     fetchBrandProducts({ brand: "Biotech", limit: 50 }),

@@ -1,5 +1,7 @@
 import { CURRENT_MARKET, MARKET_CONFIG } from '@/lib/marketConfig';
 import { hreflangAlternates } from "@/lib/hreflang";
+
+const IS_HR = CURRENT_MARKET === "hr";
 import { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
@@ -8,9 +10,18 @@ export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: { absolute: "B2B Baza Podataka Proteina | Proteinoteka" },
-  description:
-    "Strukturisana baza podataka proteina i suplemenata u Srbiji. API pristup i CSV/SQL dump za developere i e-commerce prodavnice. Aktuelne cene, nutritivne vrednosti i istorija cena.",
-  keywords: [
+  description: IS_HR
+    ? "Strukturirana baza podataka proteina i suplemenata u Hrvatskoj. API pristup i CSV/SQL dump za developere i e-commerce trgovine. Aktualne cijene, nutritivne vrijednosti i povijest cijena."
+    : "Strukturisana baza podataka proteina i suplemenata u Srbiji. API pristup i CSV/SQL dump za developere i e-commerce prodavnice. Aktuelne cene, nutritivne vrednosti i istorija cena.",
+  keywords: IS_HR ? [
+    "baza proteina u hrvatskoj",
+    "baza podataka suplemenata hrvatska",
+    "api za cijene proteina hrvatska",
+    "supplement database croatia",
+    "protein api hrvatska",
+    "baza podataka whey protein hrvatska",
+    "cijene suplemenata api",
+  ] : [
     "baza proteina u srbiji",
     "baza podataka suplemenata",
     "api za cene proteina srbija",
@@ -37,7 +48,38 @@ export const metadata: Metadata = {
 
 const BASE = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
 
-const FEATURES = [
+const FEATURES = IS_HR ? [
+  {
+    icon: "🛒",
+    title: "Katalog proizvoda",
+    desc: "Više od 400 suplemenata iz hrvatskih i regionalnih trgovina, s imenima, brendovima i slikama.",
+  },
+  {
+    icon: "💰",
+    title: "Aktualne cijene u EUR",
+    desc: "Cijene se automatski ažuriraju svaki tjedan. Uz tekuću cijenu dostupna je i povijest promjena.",
+  },
+  {
+    icon: "🧬",
+    title: "Nutritivne vrijednosti",
+    desc: "Proteini, masti, šećeri i kalorije na 100g, tip proteina (whey, izolat, vegan, kazein) i veličina pakiranja.",
+  },
+  {
+    icon: "📊",
+    title: "Value Score i percentil",
+    desc: "Naš izračunati indeks isplativosti i percentilni rang koji pokazuje gdje se proizvod kotira u odnosu na cjelokupnu ponudu.",
+  },
+  {
+    icon: "🔗",
+    title: "Izravne veze",
+    desc: "Svaki proizvod ima vezu prema originalnoj stranici u trgovini — bez posrednika.",
+  },
+  {
+    icon: "🏪",
+    title: "Više trgovina",
+    desc: "GymBeam HR, MyProtein HR, Polleo Sport, Proteka, Nutrition Shop i još.",
+  },
+] : [
   {
     icon: "🛒",
     title: "Katalog proizvoda",
@@ -70,7 +112,27 @@ const FEATURES = [
   },
 ];
 
-const SAMPLE_JSON = `{
+const SAMPLE_JSON = IS_HR ? `{
+  "id": 142,
+  "name": "Optimum Nutrition Gold Standard 100% Whey",
+  "brand": "Optimum Nutrition",
+  "storeName": "GymBeam HR",
+  "productUrl": "https://gymbeam.hr/...",
+  "imageUrl": "https://gymbeam.hr/images/...",
+  "numericPrice": 74.90,
+  "proteinPer100g": 79.5,
+  "fatPer100g": 3.7,
+  "sugarPer100g": 3.4,
+  "caloriePer100g": 383.0,
+  "proteinSource": "whey_concentrate",
+  "primaryWeightGrams": 908.0,
+  "valueScore": 8.42,
+  "percentileRank": 91,
+  "flavours": ["Čokolada", "Vanilija", "Jagoda"],
+  "weights": ["908g", "2270g"],
+  "canonicalSlug": "optimum-nutrition-gold-standard-100-whey",
+  "lastUpdated": "2026-05-26T03:00:00"
+}` : `{
   "id": 142,
   "name": "Optimum Nutrition Gold Standard 100% Whey",
   "brand": "Optimum Nutrition",
@@ -136,13 +198,14 @@ export default function Page() {
                 Za developere i e-commerce
               </span>
               <h1 className="text-3xl sm:text-5xl font-extrabold leading-tight mb-5">
-                Strukturisana baza podataka proteina i suplemenata u Srbiji
+                {IS_HR
+                  ? "Strukturirana baza podataka proteina i suplemenata u Hrvatskoj"
+                  : "Strukturisana baza podataka proteina i suplemenata u Srbiji"}
               </h1>
               <p className="text-lg text-slate-300 leading-relaxed mb-8 max-w-2xl">
-                Gradite fitnes aplikaciju ili otvarate online prodavnicu? Pristupite
-                čistoj, ažurnoj bazi sa više od 400 suplemenata — cenama, nutritivnim
-                vrednostima i istorijom promena — putem REST API-ja ili jednokratnog CSV/SQL
-                dumpa.
+                {IS_HR
+                  ? "Gradite fitness aplikaciju ili otvarate online trgovinu? Pristupite čistoj, ažurnoj bazi s više od 400 suplemenata — cijenama, nutritivnim vrijednostima i poviješću promjena — putem REST API-ja ili jednokratnog CSV/SQL dumpa."
+                  : "Gradite fitnes aplikaciju ili otvarate online prodavnicu? Pristupite čistoj, ažurnoj bazi sa više od 400 suplemenata — cenama, nutritivnim vrednostima i istorijom promena — putem REST API-ja ili jednokratnog CSV/SQL dumpa."}
               </p>
 
               {/* Stats */}
@@ -167,9 +230,11 @@ export default function Page() {
 
           {/* Šta sadrži baza */}
           <section className="mb-16">
-            <h2 className="text-2xl font-extrabold text-slate-900 mb-2">Šta sve sadrži baza</h2>
+            <h2 className="text-2xl font-extrabold text-slate-900 mb-2">{IS_HR ? "Što sve sadrži baza" : "Šta sve sadrži baza"}</h2>
             <p className="text-slate-500 mb-8 text-[15px]">
-              Svaki zapis je prošao kroz parser i AI enrichment pipeline — podaci su čisti i konzistentni.
+              {IS_HR
+                ? "Svaki zapis prošao je kroz parser i AI enrichment pipeline — podaci su čisti i konzistentni."
+                : "Svaki zapis je prošao kroz parser i AI enrichment pipeline — podaci su čisti i konzistentni."}
             </p>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {FEATURES.map(({ icon, title, desc }) => (

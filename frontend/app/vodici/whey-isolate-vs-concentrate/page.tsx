@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { CURRENT_MARKET, MARKET_CONFIG } from '@/lib/marketConfig';
 import { Metadata } from "next";
 import Link from "next/link";
@@ -74,6 +75,7 @@ const BASE = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
 const SLUG = "/vodici/whey-isolate-vs-concentrate";
 
 export default async function Page() {
+  if (CURRENT_MARKET !== 'rs') notFound();
   const [concentrates, isolates] = await Promise.all([
     fetchTopProducts({ category: "whey_concentrate", sortBy: "valueScore", limit: 3 }),
     fetchTopProducts({ category: "whey_isolate", sortBy: "valueScore", limit: 3 }),

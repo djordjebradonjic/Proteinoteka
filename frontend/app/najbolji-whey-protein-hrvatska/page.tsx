@@ -1,3 +1,5 @@
+import { notFound } from "next/navigation";
+import { CURRENT_MARKET } from "@/lib/marketConfig";
 import { Metadata } from "next";
 import { fetchTopProducts } from "@/lib/seo-data";
 import { SEOLandingPage } from "@/components/seo/SEOLandingPage";
@@ -115,6 +117,7 @@ function UseCaseSection() {
 }
 
 export default async function Page() {
+  if (CURRENT_MARKET !== 'hr') notFound();
   const products = await fetchTopProducts({ sortBy: "valueScore", limit: 15 });
 
   const top = products[0];

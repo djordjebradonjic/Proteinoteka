@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { CURRENT_MARKET, MARKET_CONFIG } from '@/lib/marketConfig';
 import { Metadata } from "next";
 import Link from "next/link";
@@ -63,6 +64,7 @@ const BASE = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
 const SLUG = "/vodici/da-li-protein-goji";
 
 export default function Page() {
+  if (CURRENT_MARKET !== 'rs') notFound();
   const jsonLd = [
     {
       "@context": "https://schema.org",

@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { CURRENT_MARKET, MARKET_CONFIG } from '@/lib/marketConfig';
 import { Metadata } from "next";
 import Link from "next/link";
@@ -99,6 +100,7 @@ const tocSections: TocSection[] = [
 ];
 
 export default async function Page() {
+  if (CURRENT_MARKET !== 'rs') notFound();
   const [concentrates, isolates, vegans] = await Promise.all([
     fetchTopProducts({ category: "whey_concentrate", sortBy: "valueScore", limit: 20 }),
     fetchTopProducts({ category: "whey_isolate",     sortBy: "valueScore", limit: 20 }),

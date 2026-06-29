@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { CURRENT_MARKET, MARKET_CONFIG } from '@/lib/marketConfig';
 import { Metadata } from "next";
 import Link from "next/link";
@@ -66,6 +67,7 @@ const WORDS = 1300;
 const READ_MIN = Math.ceil(WORDS / 200);
 
 export default function Page() {
+  if (CURRENT_MARKET !== 'rs') notFound();
   const dateModified = new Date().toISOString().split("T")[0];
 
   const jsonLd = [

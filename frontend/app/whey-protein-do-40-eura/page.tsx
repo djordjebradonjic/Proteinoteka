@@ -1,3 +1,5 @@
+import { notFound } from "next/navigation";
+import { CURRENT_MARKET } from "@/lib/marketConfig";
 import { Metadata } from "next";
 import { fetchPriceRangeProducts } from "@/lib/seo-data";
 import { SEOLandingPage } from "@/components/seo/SEOLandingPage";
@@ -25,6 +27,7 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
+  if (CURRENT_MARKET !== 'hr') notFound();
   const products = await fetchPriceRangeProducts({ maxPrice: 40, limit: 40 });
 
   const top = products[0];

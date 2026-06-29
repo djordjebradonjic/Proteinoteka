@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { CURRENT_MARKET, MARKET_CONFIG } from '@/lib/marketConfig';
 import { Metadata } from "next";
 import Link from "next/link";
@@ -195,6 +196,7 @@ const jsonLd = [
 ];
 
 export default function VodiciPage() {
+  if (CURRENT_MARKET !== 'rs') notFound();
   return (
     <div className="min-h-screen bg-slate-50">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />

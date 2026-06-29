@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { CURRENT_MARKET, MARKET_CONFIG } from '@/lib/marketConfig';
 import { Metadata } from "next";
 import Link from "next/link";
@@ -80,6 +81,7 @@ const BASE = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
 const SLUG = "/vodici/gold-standard-whey-recenzija";
 
 export default async function Page() {
+  if (CURRENT_MARKET !== 'rs') notFound();
   const [gsProducts, wpcTop] = await Promise.all([
     fetchProductsByQuery({ name: "gold standard", brand: "Optimum Nutrition", limit: 20 }),
     fetchTopProducts({ category: "whey_concentrate", sortBy: "valueScore", limit: 3 }),

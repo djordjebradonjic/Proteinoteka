@@ -1,6 +1,8 @@
 import { CURRENT_MARKET, MARKET_CONFIG } from '@/lib/marketConfig';
 import { hreflangAlternates } from "@/lib/hreflang";
 import { Metadata } from "next";
+
+const IS_HR = CURRENT_MARKET === "hr";
 import Link from "next/link";
 import Header from "@/components/Header";
 
@@ -8,8 +10,9 @@ export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: { absolute: "Kako računamo Value Score | Proteinoteka" },
-  description:
-    "Saznaj kako Proteinoteka računa Value Score i kako upoređujemo odnos cene i kvaliteta whey proteina u Srbiji.",
+  description: IS_HR
+    ? "Saznaj kako Proteinoteka računa Value Score i kako uspoređujemo odnos cijene i kvalitete whey proteina u Hrvatskoj."
+    : "Saznaj kako Proteinoteka računa Value Score i kako upoređujemo odnos cene i kvaliteta whey proteina u Srbiji.",
   alternates: {
     canonical: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/kako-racunamo-value-score`,
     languages: hreflangAlternates("/kako-racunamo-value-score"),
@@ -29,7 +32,13 @@ export const metadata: Metadata = {
 const BASE = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
 const SLUG = "/kako-racunamo-value-score";
 
-const factors = [
+const factors = IS_HR ? [
+  { icon: "⚖️", label: "Cijena po gramu proteina", desc: "Koliko EUR plaćaš za svaki gram čistog proteina u pakiranju." },
+  { icon: "📊", label: "Postotak proteina", desc: "Koliki je udio proteina u ukupnoj masi proizvoda (npr. 80% vs 70%)." },
+  { icon: "📦", label: "Ukupna količina proteina", desc: "Koliko grama proteina dobivaš u cijelom pakiranju." },
+  { icon: "🍬", label: "Sadržaj šećera", desc: "Manje šećera znači čišći protein i bolji skor." },
+  { icon: "💰", label: "Odnos cijene i količine", desc: "Znači li veće pakiranje proporcionalno nižu cijenu?" },
+] : [
   { icon: "⚖️", label: "Cena po gramu proteina", desc: "Koliko RSD plaćaš za svaki gram čistog proteina u pakovanju." },
   { icon: "📊", label: "Procenat proteina", desc: "Koliki je udio proteina u ukupnoj masi proizvoda (npr. 80% vs 70%)." },
   { icon: "📦", label: "Ukupna količina proteina", desc: "Koliko grama proteina dobijaš u celom pakovanju." },
@@ -45,12 +54,17 @@ const improvers = [
   "Čistiji nutritivni profil bez nepotrebnih aditiva",
 ];
 
-const INTERNAL_LINKS = [
-  { label: "Najbolji whey protein u Srbiji",   href: "/najbolji-whey-protein-srbija" },
-  { label: "Najjeftiniji whey protein",        href: "/najjeftiniji-whey-protein"    },
-  { label: "Whey protein cena",               href: "/whey-protein-cena"            },
-  { label: "Protein za masu",                  href: "/protein-za-masu"              },
-  { label: "Vodiči",                           href: "/vodici"                       },
+const INTERNAL_LINKS = IS_HR ? [
+  { label: "Najbolji whey protein u Hrvatskoj", href: "/najbolji-whey-protein-hrvatska" },
+  { label: "Najjeftiniji whey protein",         href: "/najjeftiniji-whey-protein-hrvatska" },
+  { label: "Whey protein cijena",               href: "/whey-protein-cijena" },
+  { label: "Vodiči",                            href: "/hr-vodici" },
+] : [
+  { label: "Najbolji whey protein u Srbiji", href: "/najbolji-whey-protein-srbija" },
+  { label: "Najjeftiniji whey protein",      href: "/najjeftiniji-whey-protein"    },
+  { label: "Whey protein cena",              href: "/whey-protein-cena"            },
+  { label: "Protein za masu",                href: "/protein-za-masu"              },
+  { label: "Vodiči",                         href: "/vodici"                       },
 ];
 
 export default function Page() {
@@ -69,7 +83,7 @@ export default function Page() {
       "@type": "BreadcrumbList",
       itemListElement: [
         { "@type": "ListItem", position: 1, name: "Početna", item: BASE },
-        { "@type": "ListItem", position: 2, name: "Vodiči",  item: `${BASE}/vodici` },
+        { "@type": "ListItem", position: 2, name: IS_HR ? "Vodiči" : "Vodiči", item: IS_HR ? `${BASE}/hr-vodici` : `${BASE}/vodici` },
         { "@type": "ListItem", position: 3, name: "Kako računamo Value Score", item: `${BASE}${SLUG}` },
       ],
     },
@@ -86,7 +100,7 @@ export default function Page() {
           <nav className="flex items-center gap-1.5 text-xs text-slate-400 mb-8 flex-wrap">
             <Link href="/" className="hover:text-[#FF9900] transition-colors">Početna</Link>
             <span>/</span>
-            <Link href="/vodici" className="hover:text-[#FF9900] transition-colors">Vodiči</Link>
+            <Link href={IS_HR ? "/hr-vodici" : "/vodici"} className="hover:text-[#FF9900] transition-colors">Vodiči</Link>
             <span>/</span>
             <span className="text-slate-600">Kako računamo Value Score</span>
           </nav>
@@ -116,7 +130,7 @@ export default function Page() {
             <h2 className="text-xl font-bold text-slate-900 mb-2">Šta ulazi u Value Score</h2>
             <p className="text-[15px] text-slate-500 mb-5">
               Ne postoji jedna magična formula. Value Score kombinuje nekoliko faktora koji zajedno
-              oslikavaju koliko vredi svaki dinar koji uložiš u protein.
+              oslikavaju koliko vrijedi svaki {IS_HR ? "euro" : "dinar"} koji uložiš u protein.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
@@ -137,8 +151,8 @@ export default function Page() {
                 ⚡ Ključna metrika
               </p>
               <p className="text-[15px] text-slate-800 leading-relaxed">
-                Osnova skora je <strong>cena po gramu proteina</strong> — koliko RSD plaćaš za svaki gram
-                čistog proteina koji dobijaš u pakovanju. Što je niži ovaj broj, to je viši Value Score.
+                Osnova skora je <strong>{IS_HR ? "cijena po gramu proteina" : "cena po gramu proteina"}</strong> — koliko {IS_HR ? "EUR" : "RSD"} plaćaš za svaki gram
+                čistog proteina koji dobijaš u {IS_HR ? "pakiranju" : "pakovanju"}. Što je niži ovaj broj, to je viši Value Score.
               </p>
               <p className="text-xs text-slate-500 mt-2">
                 Viši score = bolji odnos cene i kvaliteta. Score je relativan unutar kategorije.
@@ -150,27 +164,27 @@ export default function Page() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="bg-white rounded-xl border border-red-100 p-4 shadow-sm">
                 <p className="text-xs font-bold text-red-500 uppercase tracking-wide mb-2">Niži Value Score</p>
-                <p className="text-sm font-semibold text-slate-900 mb-2">Protein A — 1.800 RSD</p>
+                <p className="text-sm font-semibold text-slate-900 mb-2">{IS_HR ? "Protein A — 18,00 EUR" : "Protein A — 1.800 RSD"}</p>
                 <ul className="text-[13px] text-slate-600 space-y-1">
-                  <li>Pakovanje: 500g</li>
+                  <li>{IS_HR ? "Pakiranje: 500g" : "Pakovanje: 500g"}</li>
                   <li>Proteina na 100g: 75g</li>
                   <li>Ukupno proteina: 375g</li>
-                  <li className="font-semibold text-red-600">Cena/g proteina: 4,80 RSD</li>
+                  <li className="font-semibold text-red-600">{IS_HR ? "Cijena/g proteina: 0,048 EUR" : "Cena/g proteina: 4,80 RSD"}</li>
                 </ul>
               </div>
               <div className="bg-white rounded-xl border border-green-100 p-4 shadow-sm">
                 <p className="text-xs font-bold text-green-600 uppercase tracking-wide mb-2">Viši Value Score</p>
-                <p className="text-sm font-semibold text-slate-900 mb-2">Protein B — 2.500 RSD</p>
+                <p className="text-sm font-semibold text-slate-900 mb-2">{IS_HR ? "Protein B — 25,00 EUR" : "Protein B — 2.500 RSD"}</p>
                 <ul className="text-[13px] text-slate-600 space-y-1">
-                  <li>Pakovanje: 1.000g</li>
+                  <li>{IS_HR ? "Pakiranje: 1.000g" : "Pakovanje: 1.000g"}</li>
                   <li>Proteina na 100g: 80g</li>
                   <li>Ukupno proteina: 800g</li>
-                  <li className="font-semibold text-green-600">Cena/g proteina: 3,13 RSD</li>
+                  <li className="font-semibold text-green-600">{IS_HR ? "Cijena/g proteina: 0,031 EUR" : "Cena/g proteina: 3,13 RSD"}</li>
                 </ul>
               </div>
             </div>
             <p className="text-[13px] text-slate-500 mt-3">
-              Protein B je skuplji u apsolutnom iznosu, ali nudi značajno više proteina po dinaru.
+              Protein B je skuplji u apsolutnom iznosu, ali nudi značajno više proteina po {IS_HR ? "euru" : "dinaru"}.
               Zbog toga ima viši Value Score — i realno je isplativiji izbor.
             </p>
           </section>
