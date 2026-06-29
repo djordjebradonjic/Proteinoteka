@@ -286,7 +286,6 @@ export function SEOStorePage({
             "@type": "Offer",
             price: p.numericPrice,
             priceCurrency: IS_HR ? "EUR" : "RSD",
-            availability: "https://schema.org/InStock",
             url: p.productUrl,
           },
         } : {}),
