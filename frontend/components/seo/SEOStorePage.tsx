@@ -207,6 +207,19 @@ function StoreDisclaimer({ storeName }: { storeName: string }) {
   );
 }
 
+function buildProductDescription(p: Product): string | undefined {
+  if (p.aiDescription) return p.aiDescription.slice(0, 200);
+  const parts: string[] = [];
+  if (p.brand) parts.push(p.brand);
+  if (p.proteinPer100g) parts.push(`${p.proteinPer100g}g proteina/100g`);
+  if (p.primaryWeightGrams) {
+    parts.push(p.primaryWeightGrams >= 1000
+      ? `${(p.primaryWeightGrams / 1000).toFixed(1)}kg`
+      : `${p.primaryWeightGrams}g`);
+  }
+  return parts.length > 0 ? parts.join(" · ") : undefined;
+}
+
 // ── Main template ─────────────────────────────────────────────────────────────
 
 export interface SEOStorePageProps {
@@ -263,6 +276,7 @@ export function SEOStorePage({
         name: p.name,
         url: `${BASE_URL}${productUrl(p)}`,
         ...(p.imageUrl ? { image: p.imageUrl } : {}),
+        ...(buildProductDescription(p) ? { description: buildProductDescription(p) } : {}),
         ...(p.brand ? { brand: { "@type": "Brand", name: p.brand } } : {}),
         ...(p.numericPrice ? {
           offers: {
