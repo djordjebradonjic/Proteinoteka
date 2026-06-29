@@ -262,7 +262,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
         </div>
         <div className="h-4">
           {product.proteinPer100g && (
-            <span className="inline-flex items-center text-[10px] font-medium text-[#5A6478] bg-[#F0F0F0] px-2 py-0.5 rounded-full">
+            <span className="inline-flex items-center text-[11px] font-semibold text-[#374151] bg-[#E5E7EB] px-2 py-0.5 rounded-full">
               {product.proteinPer100g}g proteina / 100g
             </span>
           )}
