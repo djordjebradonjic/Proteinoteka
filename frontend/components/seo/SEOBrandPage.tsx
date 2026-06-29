@@ -324,6 +324,7 @@ export function SEOBrandPage({
         "@type": "Product",
         name: p.name,
         url: `${BASE_URL}${productUrl(p)}`,
+        ...(p.imageUrl ? { image: p.imageUrl } : {}),
         brand: { "@type": "Brand", name: brandName },
         ...(p.numericPrice ? {
           offers: {

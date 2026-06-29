@@ -262,6 +262,7 @@ export function SEOStorePage({
         "@type": "Product",
         name: p.name,
         url: `${BASE_URL}${productUrl(p)}`,
+        ...(p.imageUrl ? { image: p.imageUrl } : {}),
         ...(p.brand ? { brand: { "@type": "Brand", name: p.brand } } : {}),
         ...(p.numericPrice ? {
           offers: {
