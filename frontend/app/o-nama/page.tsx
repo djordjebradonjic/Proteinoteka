@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
 import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
+import { hreflangAlternates } from "@/lib/hreflang";
 
 export const revalidate = 86400;
 
@@ -13,7 +14,7 @@ export const metadata: Metadata = isHR
       title: "O Proteinoteci | Usporedba cijena proteina u Hrvatskoj",
       description:
         "Saznaj zašto je nastala Proteinoteka i kako pokušavamo olakšati usporedbu cijena whey proteina i suplemenata u Hrvatskoj.",
-      alternates: { canonical: `${domain}/o-nama` },
+      alternates: { canonical: `${domain}/o-nama`, languages: hreflangAlternates("/o-nama") },
       openGraph: {
         title: "O Proteinoteci | Usporedba cijena proteina u Hrvatskoj",
         description:
@@ -28,7 +29,7 @@ export const metadata: Metadata = isHR
       title: "O Proteinoteci | Poređenje cena proteina u Srbiji",
       description:
         "Saznaj zašto je nastala Proteinoteka i kako pokušavamo da olakšamo poređenje cena whey proteina i suplemenata u Srbiji.",
-      alternates: { canonical: `${domain}/o-nama` },
+      alternates: { canonical: `${domain}/o-nama`, languages: hreflangAlternates("/o-nama") },
       openGraph: {
         title: "O Proteinoteci | Poređenje cena proteina u Srbiji",
         description:

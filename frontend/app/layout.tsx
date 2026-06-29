@@ -120,11 +120,6 @@ export default async function RootLayout({
       lang={locale}
       className={`${dmSans.variable} h-full antialiased font-[family-name:var(--font-dm-sans)]`}
     >
-      <head>
-        <link rel="alternate" hrefLang="sr" href="https://proteinoteka.rs" />
-        <link rel="alternate" hrefLang="hr" href="https://proteinoteka.com.hr" />
-        <link rel="alternate" hrefLang="x-default" href="https://proteinoteka.rs" />
-      </head>
       <body className="min-h-full flex flex-col [overflow-x:clip]">
         <NextIntlClientProvider locale={locale} messages={messages}>
           <Providers>

@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { fetchTopProducts, fetchTopValueProducts, fetchPriceDropProducts } from "@/lib/seo-data";
 import { productUrl } from "@/lib/productUrl";
 import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
+import { hreflangAlternates } from "@/lib/hreflang";
 
 // useSearchParams() now lives only inside ProductSection (wrapped in its own Suspense)
 // and inside mini SearchSync/CategorySync components (each in their own Suspense).
@@ -54,6 +55,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(marketDomain),
   alternates: {
     canonical: seo.canonical,
+    languages: hreflangAlternates("/"),
   },
   openGraph: {
     type: "website",
