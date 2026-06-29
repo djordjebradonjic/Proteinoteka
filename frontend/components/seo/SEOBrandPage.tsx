@@ -330,7 +330,7 @@ export function SEOBrandPage({
           offers: {
             "@type": "Offer",
             price: p.numericPrice,
-            priceCurrency: "RSD",
+            priceCurrency: IS_HR ? "EUR" : "RSD",
             url: p.productUrl,
           },
         } : {}),
