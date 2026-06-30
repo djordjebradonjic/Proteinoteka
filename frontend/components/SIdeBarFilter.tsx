@@ -344,6 +344,7 @@ const STORES_BY_MARKET: Record<string, string[]> = {
     "Proteka",
     "Nutrition Shop HR",
     "Proteini.si HR",
+    "Proteini Outlet",
   ],
 };
 

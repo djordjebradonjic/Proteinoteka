@@ -49,7 +49,7 @@ const FEATURES_HR = [
     emoji: "🏪",
     title: "Isti protein, sve trgovine",
     description:
-      "Pronađi u kojoj trgovini je isti protein najjeftiniji. Uspoređujemo 6 trgovina odjednom — bez Googleanja.",
+      "Pronađi u kojoj trgovini je isti protein najjeftiniji. Uspoređujemo 7 trgovina odjednom — bez Googleanja.",
     href: null,
     linkLabel: null,
   },
