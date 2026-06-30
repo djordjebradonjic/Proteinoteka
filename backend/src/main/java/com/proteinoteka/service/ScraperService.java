@@ -151,11 +151,16 @@ public class ScraperService {
         // URLs whose nutrition AND description are already complete — skip detail page visit.
         // Protein products need protein+fat+sugar+calorie+proteinSource+description all filled;
         // non-protein products never get proteinSource from AI, so protein+fat+description is enough.
+        // Exception: scrapers that declare skipDetailIfDescriptionExists()=true (nutrition in images)
+        // skip detail fetches for any product that already has brand + description in DB.
+        boolean skipByDescription = scraper.skipDetailIfDescriptionExists();
         Set<String> completeNutritionUrls = productRepository.findNutritionStatusByStoreName(store.getName())
                 .stream()
                 .filter(p -> {
                     boolean hasDescription = p.getDescription() != null && !p.getDescription().isBlank();
                     if (!hasDescription) return false;
+                    if (skipByDescription)
+                        return p.getBrand() != null && !p.getBrand().isBlank();
                     return baseEnricher.isNonProteinProduct(p.getName())
                             || (p.getSugarPer100g() != null
                                 && p.getCaloriePer100g() != null && p.getCaloriePer100g() >= 200

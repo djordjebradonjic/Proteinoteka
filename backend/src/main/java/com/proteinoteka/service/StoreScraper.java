@@ -32,4 +32,9 @@ public interface StoreScraper {
 
     // Override in scrapers where the product grid is rendered by JS after DOMContentLoaded
     default void waitForListing(Page page) {}
+
+    // Return true for scrapers where nutrition is in images (not HTML tables).
+    // ScraperService will skip detail page fetches for products that already
+    // have brand + description in DB, even if nutrition fields are incomplete.
+    default boolean skipDetailIfDescriptionExists() { return false; }
 }

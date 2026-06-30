@@ -60,11 +60,12 @@ public class ProteiniOutletHrScraper implements StoreScraper {
     private final BaseScraperEnricher baseEnricher;
     private final ProxyAwareHttpClient httpClient;
 
-    @Override public String getStoreName()             { return STORE_NAME; }
-    @Override public String getBaseUrl()               { return BASE_URL; }
-    @Override public String getMarket()                { return "hr"; }
-    @Override public String getCurrency()              { return "EUR"; }
-    @Override public boolean usePlaywrightForListing() { return false; }
+    @Override public String getStoreName()                  { return STORE_NAME; }
+    @Override public String getBaseUrl()                    { return BASE_URL; }
+    @Override public String getMarket()                     { return "hr"; }
+    @Override public String getCurrency()                   { return "EUR"; }
+    @Override public boolean usePlaywrightForListing()      { return false; }
+    @Override public boolean skipDetailIfDescriptionExists(){ return true; }
 
     @Override
     public String buildPageUrl(int page) {
