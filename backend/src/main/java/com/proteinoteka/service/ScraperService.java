@@ -148,19 +148,22 @@ public class ScraperService {
             log.info("[{}] Stale detection: {} existing products tracked", scraper.getStoreName(), existingUrlSet.size());
         }
 
-        // URLs whose nutrition is already complete (nothing left to enrich) — skip detail page visit.
-        // Protein products need protein+fat+sugar+calorie+proteinSource all filled; non-protein
-        // products (gainers, vitamins, bars...) never get a proteinSource from AI, so protein+fat
-        // filled is as complete as they'll ever get.
+        // URLs whose nutrition AND description are already complete — skip detail page visit.
+        // Protein products need protein+fat+sugar+calorie+proteinSource+description all filled;
+        // non-protein products never get proteinSource from AI, so protein+fat+description is enough.
         Set<String> completeNutritionUrls = productRepository.findNutritionStatusByStoreName(store.getName())
                 .stream()
-                .filter(p -> baseEnricher.isNonProteinProduct(p.getName())
-                        || (p.getSugarPer100g() != null
-                            && p.getCaloriePer100g() != null && p.getCaloriePer100g() >= 200
-                            && p.getProteinSource() != null))
+                .filter(p -> {
+                    boolean hasDescription = p.getDescription() != null && !p.getDescription().isBlank();
+                    if (!hasDescription) return false;
+                    return baseEnricher.isNonProteinProduct(p.getName())
+                            || (p.getSugarPer100g() != null
+                                && p.getCaloriePer100g() != null && p.getCaloriePer100g() >= 200
+                                && p.getProteinSource() != null);
+                })
                 .map(Product::getUrl)
                 .collect(Collectors.toSet());
-        log.info("[{}] {} products already have complete nutrition — detail page will be skipped",
+        log.info("[{}] {} products already have complete nutrition+description — detail page will be skipped",
                 scraper.getStoreName(), completeNutritionUrls.size());
 
         Set<String> foundUrls = new HashSet<>();
