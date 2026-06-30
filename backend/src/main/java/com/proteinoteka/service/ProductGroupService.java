@@ -186,7 +186,11 @@ public class ProductGroupService {
     }
 
     private boolean hasWordOverlap(Set<String> a, Set<String> b) {
-        if (a.isEmpty() || b.isEmpty()) return true; // can't distinguish → assume same line
+        // Both empty → both are fully generic names (e.g. "Vegan Blend") → assume same line
+        if (a.isEmpty() && b.isEmpty()) return true;
+        // One side has distinguishing words, the other doesn't → different products (e.g.
+        // "Protein boba" has "boba" but "Vegan Blend" reduces to empty → not the same line)
+        if (a.isEmpty() || b.isEmpty()) return false;
         Set<String> intersection = new HashSet<>(a);
         intersection.retainAll(b);
         return !intersection.isEmpty();
