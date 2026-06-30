@@ -1,25 +1,26 @@
 package com.proteinoteka.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.playwright.Page;
-import com.microsoft.playwright.options.WaitUntilState;
 import com.proteinoteka.model.Product;
 import com.proteinoteka.util.HtmlCleaner;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+// proteini.si is a custom PHP e-commerce platform (not WooCommerce).
+// Product listing: a.product-box, itemprop=name, itemprop=price, img.list_image
+// Detail pages are server-rendered — JSoup via httpClient, no Playwright needed.
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -27,120 +28,48 @@ public class ProteiniSiHrScraper implements StoreScraper {
 
     private final BaseScraperEnricher baseEnricher;
     private final NutritionParserService nutritionParser;
-
-    // Normalized Croatian/Serbian flavor slugs → human-readable HR label
-    private static final Map<String, String> FLAVOUR_MAP = Map.ofEntries(
-            Map.entry("chocolate", "Čokolada"),
-            Map.entry("vanilla", "Vanilija"),
-            Map.entry("strawberry", "Jagoda"),
-            Map.entry("banana", "Banana"),
-            Map.entry("cookies-cream", "Kolačić i krema"),
-            Map.entry("cookies", "Kolačić"),
-            Map.entry("chocolate-hazelnut-2", "Čokolada - lješnjak"),
-            Map.entry("chocolate-hazelnut-3", "Čokolada - lješnjak"),
-            Map.entry("chocolate-coconut", "Čokolada - kokos"),
-            Map.entry("chocolate-banana", "Čokolada - banana"),
-            Map.entry("white-chocolate", "Bijela čokolada"),
-            Map.entry("white-choc-straw", "Bijela čokolada - jagoda"),
-            Map.entry("white-choc-cocon", "Bijela čokolada - kokos"),
-            Map.entry("milk-chocolate", "Mliječna čokolada"),
-            Map.entry("french-vanilla", "Vanilija"),
-            Map.entry("creamy-vanilla", "Vanilija"),
-            Map.entry("raspberry", "Malina"),
-            Map.entry("natural", "Bez okusa"),
-            Map.entry("neutral", "Bez okusa"),
-            Map.entry("mixed-berries", "Mješano voće"),
-            Map.entry("stracciatella-coconut", "Stracciatella - kokos"),
-            Map.entry("blueberry-muffin", "Borovnica muffin"),
-            Map.entry("cherry-yoghurt", "Trešnja - jogurt"),
-            Map.entry("banana-yoghurt", "Banana - jogurt"),
-            Map.entry("dark-equ-chocolate", "Tamna čokolada"),
-            Map.entry("pistachio-coconut", "Pistacio - kokos"),
-            Map.entry("dubai-chocolate", "Dubai čokolada"),
-            Map.entry("wheytella", "Wheytella"),
-            Map.entry("chocolate-brownies", "Čokoladni brownie"),
-            Map.entry("chocolate-cookie", "Čokolada kolačić"),
-            Map.entry("apple-cinnamon", "Jabuka - cimet"),
-            Map.entry("banana-pancake", "Banana palačinka"),
-            Map.entry("chocolate-cake", "Čokoladna torta"),
-            Map.entry("chocolate-caramel", "Čokolada - karamel"),
-            Map.entry("chocolate-cocoa", "Čokolada"),
-            Map.entry("double-rich-chocolate", "Čokolada"),
-            Map.entry("extreme-milk-chocolate", "Mliječna čokolada"),
-            Map.entry("french-vanilla-cream", "Vanilija krema"),
-            Map.entry("ice-coffee", "Ledena kava"),
-            Map.entry("kokos", "Kokos"),
-            Map.entry("coconut", "Kokos"),
-            Map.entry("strawberry-cream", "Jagoda krema"),
-            Map.entry("strawberry-white-chocolate", "Jagoda - bijela čokolada"),
-            Map.entry("vanilla-ice-cream", "Vanilija sladoled"),
-            Map.entry("white-chocolate-coconut", "Bijela čokolada - kokos"),
-            Map.entry("caramel", "Karamel"),
-            Map.entry("hazelnut", "Lješnjak"),
-            Map.entry("peanut-butter", "Maslac od kikirikija"),
-            Map.entry("lemon-cheesecake", "Limun - cheesecake"),
-            Map.entry("blueberry-cheesecake", "Borovnica - cheesecake"),
-            Map.entry("raspberry-cheesecake", "Malina cheesecake"),
-            Map.entry("tiramisu", "Tiramisu"),
-            Map.entry("pistachio", "Pistacio"),
-            Map.entry("salted-caramel", "Slani karamel"),
-            Map.entry("cokolada-kokos", "Čokolada - kokos")
-    );
+    private final ProxyAwareHttpClient httpClient;
 
     private static final String STORE_NAME = "Proteini.si HR";
     private static final String BASE_URL = "https://www.proteini.si/hr/proteini/";
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private static final String SITE_ORIGIN = "https://www.proteini.si";
+    private static final int PRODUCTS_PER_PAGE = 20;
 
-    @Override
-    public String getStoreName() { return STORE_NAME; }
-
-    @Override
-    public String getBaseUrl() { return BASE_URL; }
-
-    @Override
-    public String getMarket() { return "hr"; }
-
-    @Override
-    public String getCurrency() { return "EUR"; }
-
-    // Listing pages are server-rendered WooCommerce HTML — no JS needed
-    @Override
-    public boolean usePlaywrightForListing() { return false; }
+    @Override public String getStoreName() { return STORE_NAME; }
+    @Override public String getBaseUrl()   { return BASE_URL; }
+    @Override public String getMarket()    { return "hr"; }
+    @Override public String getCurrency()  { return "EUR"; }
+    @Override public boolean usePlaywrightForListing() { return false; }
 
     @Override
     public boolean hasNextPage(Document doc) {
-        return doc.selectFirst("a.next.page-numbers") != null;
+        return doc.select("a.product-box").size() >= PRODUCTS_PER_PAGE;
     }
 
     @Override
     public String buildPageUrl(int page) {
-        return page == 0 ? BASE_URL : BASE_URL + "page/" + page + "/";
+        return page == 0 ? BASE_URL : BASE_URL + "?page=" + (page + 1);
     }
 
     @Override
     public List<Product> scrape(Page page, Document doc) {
-        return scrape(page, doc, java.util.Collections.emptySet());
+        return scrape(page, doc, Collections.emptySet());
     }
 
     @Override
     public List<Product> scrape(Page page, Document doc, Set<String> skipUrls) {
         List<Product> products = new ArrayList<>();
 
-        Elements elements = doc.select("div.wd-product");
-        log.info("[{}] Found {} products on page", STORE_NAME, elements.size());
+        Elements elements = doc.select("a.product-box");
+        log.info("[{}] Found {} product elements on page", STORE_NAME, elements.size());
 
         for (Element el : elements) {
+            if (el.hasClass("block-disabled")) continue;  // out of stock
             Product p = parseElement(el);
             if (p != null) products.add(p);
-            else log.warn("[{}] Failed to parse element, skipping", STORE_NAME);
         }
 
-        if (page != null && !products.isEmpty()) {
-            enrichWithDetails(page, products, skipUrls);
-        } else {
-            log.info("[{}] Skipping enrichment (page is null)", STORE_NAME);
-        }
-
+        enrichWithDetails(products, skipUrls);
         return products;
     }
 
@@ -148,29 +77,36 @@ public class ProteiniSiHrScraper implements StoreScraper {
 
     private Product parseElement(Element el) {
         try {
+            String href = el.attr("href");
+            if (href.isBlank()) return null;
+
+            Element nameEl = el.selectFirst("[itemprop=name]");
+            if (nameEl == null) return null;
+            String name = nameEl.text().trim();
+            if (name.isBlank()) return null;
+
             Product p = new Product();
+            p.setName(name);
+            p.setUrl(SITE_ORIGIN + href);
 
-            Element title = el.selectFirst("h3.wd-entities-title a");
-            if (title == null) return null;
-
-            p.setName(title.text().trim());
-            p.setUrl(title.attr("href"));
-
-            Element img = el.selectFirst("div.product-element-top img");
-            if (img != null) {
-                String imgUrl = img.attr("src");
-                if (imgUrl.isBlank()) imgUrl = img.attr("data-src");
-                p.setImageUrl(imgUrl);
+            // Display price like "28,53 €" — PriceParser handles comma-decimal
+            Element priceEl = el.selectFirst("[itemprop=price]");
+            if (priceEl != null) {
+                p.setPrice(priceEl.text().replace("€", "").replace(" ", "").trim());
             }
 
-            // EUR price: "25,99 €" — PriceParser handles comma-decimal and strips €
-            Element price = el.selectFirst("span.woocommerce-Price-amount bdi");
-            if (price != null) {
-                p.setPrice(price.text().replace(" ", "").replace("€", "").trim());
+            Element img = el.selectFirst("img.list_image");
+            if (img != null) {
+                String src = img.attr("src");
+                if (!src.isBlank()) p.setImageUrl(SITE_ORIGIN + src);
+            }
+
+            Element brandEl = el.selectFirst("span.cat");
+            if (brandEl != null && !brandEl.text().isBlank()) {
+                p.setBrand(brandEl.text().trim());
             }
 
             extractPackageWeightFromName(p);
-            extractBrandFromName(p);
 
             return p;
         } catch (Exception e) {
@@ -180,73 +116,39 @@ public class ProteiniSiHrScraper implements StoreScraper {
     }
 
     private void extractPackageWeightFromName(Product p) {
-        if (p.getName() == null || p.getName().isBlank()) return;
-        java.util.regex.Matcher matcher = java.util.regex.Pattern
-                .compile("(\\d+[.,]?\\d*\\s?(kg|g))", java.util.regex.Pattern.CASE_INSENSITIVE)
+        if (p.getName() == null) return;
+        Matcher m = Pattern.compile("(\\d+[.,]?\\d*\\s?(kg|g))", Pattern.CASE_INSENSITIVE)
                 .matcher(p.getName());
-        while (matcher.find()) {
-            String weight = matcher.group().trim().replaceAll("\\s+", "");
-            if (!p.getPackage_weight().contains(weight)) p.getPackage_weight().add(weight);
+        while (m.find()) {
+            String w = m.group().trim().replaceAll("\\s+", "");
+            if (!p.getPackage_weight().contains(w)) p.getPackage_weight().add(w);
         }
     }
 
-    private void extractBrandFromName(Product p) {
-        if (p.getName() == null || p.getName().isBlank()) return;
-        String[] parts = p.getName().split("\\s+");
-        if (parts.length > 0) p.setBrand(parts[0].trim());
-    }
+    // -------------------- Detail page enrichment (JSoup only, no Playwright) --------------------
 
-    // -------------------- Detail page enrichment --------------------
-
-    private void enrichWithDetails(Page page, List<Product> products, Set<String> skipUrls) {
+    private void enrichWithDetails(List<Product> products, Set<String> skipUrls) {
         int count = 0;
-
         for (Product p : products) {
             if (p.getUrl() == null || p.getUrl().isBlank()) continue;
             if (baseEnricher.isNonProteinProduct(p.getName())) {
-                log.info("[{}] Skipping '{}' - not a protein product", STORE_NAME, p.getName());
+                log.info("[{}] Skipping '{}' — not a protein product", STORE_NAME, p.getName());
                 continue;
             }
             if (skipUrls.contains(p.getUrl())) {
-                log.debug("[{}] Skipping detail page for '{}' — nutrition already complete", STORE_NAME, p.getName());
+                log.debug("[{}] Skipping '{}' — nutrition already complete", STORE_NAME, p.getName());
                 continue;
             }
 
             try {
-                long sleep = 4000 + ThreadLocalRandom.current().nextLong(6000);
+                long sleep = 3000 + ThreadLocalRandom.current().nextLong(4000);
                 log.info("[{}] Sleeping {}s before '{}'...", STORE_NAME, sleep / 1000, p.getName());
                 Thread.sleep(sleep);
 
-                boolean success = navigateWithRetry(page, p.getUrl(), 3);
-                if (!success) {
-                    log.error("[{}] Failed to load {} after retries, skipping", STORE_NAME, p.getUrl());
-                    continue;
-                }
+                Document doc = fetchDetailPage(p.getUrl());
+                if (doc == null) continue;
 
-                if (isBlockedByFirewall(page)) {
-                    log.error("[{}] FIREWALL DETECTED! Stopping scraper.", STORE_NAME);
-                    return;
-                }
-
-                simulateHumanBehavior(page);
-
-                try {
-                    page.click("li.description_tab a", new Page.ClickOptions().setTimeout(3000));
-                    page.waitForSelector("div#tab-description", new Page.WaitForSelectorOptions().setTimeout(5000));
-                } catch (Exception e) {
-                    log.warn("[{}] Description tab not found for {}", STORE_NAME, p.getName());
-                }
-
-                try {
-                    page.click("li.hranljive_tab_tab a", new Page.ClickOptions().setTimeout(3000));
-                    page.waitForSelector("div#tab-hranljive_tab", new Page.WaitForSelectorOptions().setTimeout(5000));
-                } catch (Exception e) {
-                    log.debug("[{}] No nutrition tab for {}", STORE_NAME, p.getName());
-                }
-
-                Document doc = Jsoup.parse(page.content());
-
-                enrichVariations(doc, p);
+                enrichFlavours(doc, p);
                 enrichDescription(doc, p);
                 enrichNutrition(doc, p);
 
@@ -256,18 +158,30 @@ public class ProteiniSiHrScraper implements StoreScraper {
                         p.getSugarPer100g(), p.getCaloriePer100g());
 
                 count++;
-
                 if (count % 10 == 0) {
-                    long batchSleep = 40000 + ThreadLocalRandom.current().nextLong(20000);
+                    long batchSleep = 30000 + ThreadLocalRandom.current().nextLong(15000);
                     log.info("[{}] Batch pause after {} products: {}s...", STORE_NAME, count, batchSleep / 1000);
                     Thread.sleep(batchSleep);
                 }
 
             } catch (Exception e) {
-                log.error("[{}] Failed to enrich {}: {}", STORE_NAME, p.getName(), e.getMessage());
+                log.error("[{}] Failed to enrich '{}': {}", STORE_NAME, p.getName(), e.getMessage());
                 safeSleep(5000);
             }
         }
+    }
+
+    private Document fetchDetailPage(String url) {
+        for (int attempt = 1; attempt <= 3; attempt++) {
+            try {
+                return httpClient.connection(url).get();
+            } catch (Exception e) {
+                log.warn("[{}] Detail fetch attempt {}/3 failed for {}: {}", STORE_NAME, attempt, url, e.getMessage());
+                safeSleep(2000L * attempt);
+            }
+        }
+        log.error("[{}] Failed to fetch {} after 3 attempts", STORE_NAME, url);
+        return null;
     }
 
     // -------------------- Nutrition extraction --------------------
@@ -276,197 +190,134 @@ public class ProteiniSiHrScraper implements StoreScraper {
         extractNutritionFromTable(doc, p);
 
         if (p.getProteinPer100g() == null) {
-            log.warn("[{}] '{}' -> protein not found in table", STORE_NAME, p.getName());
+            log.warn("[{}] '{}' — protein not found in table", STORE_NAME, p.getName());
         }
 
         baseEnricher.enrichWithAiIfNeeded(doc, p, STORE_NAME);
-
-        log.info("[{}] '{}' -> protein: {}, sugar: {}, fat: {}, cal: {}",
-                STORE_NAME, p.getName(),
-                p.getProteinPer100g(), p.getSugarPer100g(),
-                p.getFatPer100g(), p.getCaloriePer100g());
     }
 
     private void extractNutritionFromTable(Document doc, Product p) {
         try {
-            Element nutritionTab = doc.selectFirst("div#tab-hranljive_tab");
-            if (nutritionTab == null) return;
-
-            if (p.getDescription() == null || p.getDescription().isBlank()) {
-                Element descTab = doc.selectFirst("div#tab-description div.ckeditor");
-                if (descTab == null) descTab = doc.selectFirst("div#tab-description");
-                if (descTab != null) p.setDescription(descTab.text().trim());
-            }
-
-            Elements tables = nutritionTab.select("table");
-            if (tables.isEmpty()) return;
-
-            for (Element table : tables) {
-                String tableText = table.text().toLowerCase();
-                if (!tableText.contains("proteini") && !tableText.contains("protein")) continue;
+            for (Element table : doc.select("table")) {
+                String text = table.text().toLowerCase();
+                if (!text.contains("bjelančevine") && !text.contains("proteini")
+                        && !text.contains("protein")) continue;
 
                 Elements rows = table.select("tr");
                 if (rows.isEmpty()) continue;
 
-                int per100gCol = -1;
-                Elements headerCells = rows.get(0).select("td, th");
-                for (int i = 0; i < headerCells.size(); i++) {
-                    String cellText = headerCells.get(i).text().toLowerCase().replaceAll("\\s+", "");
-                    if (cellText.contains("100g") || cellText.contains("100gr")
-                            || cellText.contains("na100") || cellText.contains("per100")) {
-                        per100gCol = i;
-                        break;
+                // Header: [Sastojci, doza, PU%*, 100 g] — find the "100 g" column
+                int col100g = -1;
+                for (Element row : rows) {
+                    Elements cells = row.select("td, th");
+                    for (int i = 0; i < cells.size(); i++) {
+                        String ct = cells.get(i).text().toLowerCase().replaceAll("\\s+", "");
+                        if (ct.contains("100g") || ct.equals("100") ) {
+                            col100g = i;
+                            break;
+                        }
                     }
+                    if (col100g >= 0) break;
                 }
-
-                if (per100gCol < 1) continue;
+                if (col100g < 0) continue;
 
                 for (Element row : rows) {
                     Elements cells = row.select("td");
-                    if (cells.size() <= per100gCol) continue;
+                    if (cells.size() <= col100g) continue;
 
-                    String label = cells.get(0).text().trim().toLowerCase()
-                            .replaceAll("\\*", "")
-                            .trim();
+                    String label = cells.get(0).text()
+                            .replace(" ", " ")
+                            .replaceAll("\\*+", "")
+                            .trim().toLowerCase();
 
-                    // "1716 kJ / 405 kcal" format — extract kcal before generic numeric parsing
-                    if (label.contains("energetska") || label.contains("kalorij")
-                            || label.contains("energy") || label.contains("energ")) {
-                        String rawCell = cells.get(per100gCol).text();
-                        java.util.regex.Matcher m = java.util.regex.Pattern
-                                .compile("(\\d+[.,]?\\d*)\\s*kcal",
-                                        java.util.regex.Pattern.CASE_INSENSITIVE)
-                                .matcher(rawCell);
+                    // Energy: "1623 kJ/387 kcal" — extract kcal
+                    if (label.contains("energetska") || label.contains("energ")) {
+                        String raw = cells.get(col100g).text();
+                        Matcher m = Pattern.compile("(\\d+[.,]?\\d*)\\s*kcal", Pattern.CASE_INSENSITIVE).matcher(raw);
                         if (m.find()) {
-                            try {
-                                p.setCaloriePer100g(Double.parseDouble(m.group(1).replace(",", ".")));
-                            } catch (Exception ignored) {}
+                            try { p.setCaloriePer100g(Double.parseDouble(m.group(1).replace(",", "."))); }
+                            catch (Exception ignored) {}
                         }
                         continue;
                     }
 
-                    String rawValue = cells.get(per100gCol).text()
+                    String rawVal = cells.get(col100g).text()
                             .replaceAll("[^0-9,.]", "").replace(",", ".").trim();
+                    if (rawVal.isBlank()) continue;
 
-                    if (rawValue.isBlank()) continue;
-
-                    double value;
-                    try { value = Double.parseDouble(rawValue); }
+                    double val;
+                    try { val = Double.parseDouble(rawVal); }
                     catch (Exception e) { continue; }
+                    if (val < 0 || val > 10000) continue;
 
-                    if (value < 0 || value > 10000) continue;
-
-                    // Protein — Croatian: "Proteini", skip ingredient rows
-                    if ((label.contains("proteini") || label.contains("protein")
-                            || label.contains("belančevine"))
-                            && !label.contains("koncentrat") && !label.contains("graška")
-                            && !label.contains("pirinča") && !label.contains("izvor")
-                            && !label.contains("sirutk")) {
-                        if (value > 0 && value <= 95) p.setProteinPer100g(value);
+                    // Protein — "bjelančevine" (Croatian) or "proteini"
+                    if ((label.equals("bjelančevine") || label.equals("proteini") || label.equals("protein"))
+                            && val > 0 && val <= 95) {
+                        p.setProteinPer100g(val);
                     }
-                    // Fat — "Masti" only, not "zasićene" sub-rows
-                    else if ((label.equals("masti") || label.equals("fat") || label.equals("ukupne masti"))
-                            && !label.contains("zasić") && !label.contains("kojih")) {
-                        if (value <= 100) p.setFatPer100g(value);
+                    // Fat — "masti" only, skip "zasićene" sub-row
+                    else if (label.equals("masti") && val <= 100) {
+                        p.setFatPer100g(val);
                     }
-                    // Sugar — "od kojih šećeri" or "od toga šećeri"
-                    else if ((label.contains("šećeri") || label.contains("seceri")
-                            || label.contains("šeceri") || label.contains("sugar"))
-                            && !label.contains("bez")) {
-                        if (value <= 100) p.setSugarPer100g(value);
+                    // Sugar — "od kojih šećeri"
+                    else if ((label.contains("šećeri") || label.contains("šeceri") || label.contains("sugars"))
+                            && val <= 100) {
+                        p.setSugarPer100g(val);
                     }
                 }
 
                 if (p.getProteinPer100g() != null) break;
             }
-
         } catch (Exception e) {
-            log.warn("[{}] Failed to extract nutrition from table: {}", STORE_NAME, e.getMessage());
+            log.warn("[{}] Nutrition extraction failed: {}", STORE_NAME, e.getMessage());
         }
     }
 
-    // -------------------- Other enrichment --------------------
+    // -------------------- Flavour & description enrichment --------------------
 
-    private void enrichVariations(Document doc, Product p) {
+    private void enrichFlavours(Document doc, Product p) {
         try {
-            Element form = doc.selectFirst("form.variations_form");
-            if (form == null) return;
-
-            String json = form.attr("data-product_variations");
-            if (json == null || json.isBlank()) return;
-
-            JsonNode variations = objectMapper.readTree(json);
-            for (JsonNode variation : variations) {
-                JsonNode attrs = variation.path("attributes");
-
-                // HR uses "okus" (Croatian), RS uses "ukus" (Serbian) — try both
-                String flavour = attrs.path("attribute_pa_izaberi-okus").asText("");
-                if (flavour.isBlank()) flavour = attrs.path("attribute_pa_okus").asText("");
-                if (flavour.isBlank()) flavour = attrs.path("attribute_pa_izaberi-ukus").asText("");
-
-                if (!flavour.isBlank()) {
-                    String normalized = normalizeFlavour(flavour);
-                    if (!p.getFlavours().contains(normalized)) p.getFlavours().add(normalized);
+            // Flavour buttons: <button data-val="18" ...>Banana</button>
+            Elements buttons = doc.select("button[data-val]");
+            for (Element btn : buttons) {
+                String flavour = btn.text().trim();
+                if (!flavour.isBlank() && !flavour.equals("Odaberite okus")
+                        && !p.getFlavours().contains(flavour)) {
+                    p.getFlavours().add(flavour);
                 }
             }
         } catch (Exception e) {
-            log.warn("[{}] Failed to parse variations for {}: {}", STORE_NAME, p.getName(), e.getMessage());
+            log.warn("[{}] Flavour extraction failed for '{}': {}", STORE_NAME, p.getName(), e.getMessage());
         }
     }
 
     private void enrichDescription(Document doc, Product p) {
         try {
-            Element descriptionEl = doc.selectFirst("div#tab-description div.ckeditor");
-            if (descriptionEl == null) descriptionEl = doc.selectFirst("div#tab-description");
-            if (descriptionEl != null) {
-                String cleanDescription = HtmlCleaner.cleanDescription(descriptionEl.html());
-                if (!cleanDescription.isBlank()) p.setDescription(cleanDescription);
+            // Try itemprop=description first
+            Element descEl = doc.selectFirst("[itemprop=description]");
+            if (descEl == null) descEl = doc.selectFirst(".product-description");
+            if (descEl == null) descEl = doc.selectFirst(".desc_long");
+
+            if (descEl != null) {
+                String cleaned = HtmlCleaner.cleanDescription(descEl.html());
+                if (!cleaned.isBlank()) {
+                    p.setDescription(cleaned);
+                    return;
+                }
+            }
+
+            // Fallback: text content after the nutrition table
+            Elements tables = doc.select("table");
+            if (!tables.isEmpty()) {
+                Element lastTable = tables.last();
+                Element next = lastTable.nextElementSibling();
+                if (next != null && !next.text().isBlank()) {
+                    p.setDescription(HtmlCleaner.cleanDescription(next.html()));
+                }
             }
         } catch (Exception e) {
-            log.warn("[{}] Failed to extract description for {}: {}", STORE_NAME, p.getName(), e.getMessage());
+            log.warn("[{}] Description extraction failed for '{}': {}", STORE_NAME, p.getName(), e.getMessage());
         }
-    }
-
-    private boolean navigateWithRetry(Page page, String url, int maxRetries) {
-        for (int i = 0; i < maxRetries; i++) {
-            try {
-                page.navigate(url, new Page.NavigateOptions()
-                        .setWaitUntil(WaitUntilState.DOMCONTENTLOADED)
-                        .setTimeout(25000));
-                page.waitForTimeout(500 + ThreadLocalRandom.current().nextInt(1000));
-                return true;
-            } catch (Exception e) {
-                log.warn("[{}] Navigate retry {}/{} for {}: {}", STORE_NAME, i + 1, maxRetries, url, e.getMessage());
-                if (i < maxRetries - 1) safeSleep(2000 * (i + 1));
-            }
-        }
-        return false;
-    }
-
-    private boolean isBlockedByFirewall(Page page) {
-        try {
-            String title = page.title();
-            String bodyText = page.textContent("body");
-            return title.contains("Cloudflare") || title.contains("Just a moment")
-                    || title.contains("Attention Required") || bodyText.contains("Access denied");
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    private void simulateHumanBehavior(Page page) {
-        try {
-            page.mouse().wheel(0, 200 + ThreadLocalRandom.current().nextInt(300));
-            Thread.sleep(300 + ThreadLocalRandom.current().nextInt(400));
-            page.mouse().wheel(0, 300 + ThreadLocalRandom.current().nextInt(200));
-            Thread.sleep(200 + ThreadLocalRandom.current().nextInt(300));
-            page.mouse().wheel(0, -150 - ThreadLocalRandom.current().nextInt(100));
-            Thread.sleep(200 + ThreadLocalRandom.current().nextInt(200));
-        } catch (Exception ignored) {}
-    }
-
-    private String normalizeFlavour(String flavour) {
-        return FLAVOUR_MAP.getOrDefault(flavour.toLowerCase(), flavour);
     }
 
     private void safeSleep(long ms) {
