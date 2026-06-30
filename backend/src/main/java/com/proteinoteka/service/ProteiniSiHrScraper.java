@@ -19,8 +19,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 // proteini.si is a custom PHP e-commerce platform (not WooCommerce).
-// Product listing: a.product-box, itemprop=name, itemprop=price, img.list_image
-// Detail pages are server-rendered — JSoup via httpClient, no Playwright needed.
+// Listing: a.product-box | Detail pages: server-rendered, JSoup only — no Playwright needed.
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -34,6 +33,24 @@ public class ProteiniSiHrScraper implements StoreScraper {
     private static final String BASE_URL = "https://www.proteini.si/hr/proteini/";
     private static final String SITE_ORIGIN = "https://www.proteini.si";
     private static final int PRODUCTS_PER_PAGE = 20;
+
+    // URL path segments that indicate non-supplement product categories
+    private static final Set<String> SKIP_URL_SEGMENTS = Set.of(
+            "/grickalice/", "/namazi/", "/gotovi-napitci/", "/pudinzi/", "/muesli/"
+    );
+
+    // Name/URL fragments that indicate bundle kits (no meaningful per-unit nutrition)
+    private static final Pattern BUNDLE_PATTERN = Pattern.compile(
+            "-bundle|-duo\\b|-starter\\b|-recovery-pro\\b|-mass-up\\b|-fit-start\\b",
+            Pattern.CASE_INSENSITIVE
+    );
+
+    // "24x35g" → total 840g; "12x30g" → total 360g
+    private static final Pattern MULTIPACK_PATTERN =
+            Pattern.compile("(\\d+)[xX×](\\d+[.,]?\\d*)\\s*(kg|g)", Pattern.CASE_INSENSITIVE);
+
+    // "48 doza" with no gram weight — resolved from nutrition table serving size
+    private static final Pattern DOZA_PATTERN = Pattern.compile("(\\d+)\\s*doza", Pattern.CASE_INSENSITIVE);
 
     @Override public String getStoreName() { return STORE_NAME; }
     @Override public String getBaseUrl()   { return BASE_URL; }
@@ -64,7 +81,7 @@ public class ProteiniSiHrScraper implements StoreScraper {
         log.info("[{}] Found {} product elements on page", STORE_NAME, elements.size());
 
         for (Element el : elements) {
-            if (el.hasClass("block-disabled")) continue;  // out of stock
+            if (el.hasClass("block-disabled")) continue;
             Product p = parseElement(el);
             if (p != null) products.add(p);
         }
@@ -80,6 +97,12 @@ public class ProteiniSiHrScraper implements StoreScraper {
             String href = el.attr("href");
             if (href.isBlank()) return null;
 
+            // Skip non-supplement categories and bundle kits
+            if (isSkippedUrl(href)) {
+                log.debug("[{}] Skipping non-supplement URL: {}", STORE_NAME, href);
+                return null;
+            }
+
             Element nameEl = el.selectFirst("[itemprop=name]");
             if (nameEl == null) return null;
             String name = nameEl.text().trim();
@@ -89,10 +112,10 @@ public class ProteiniSiHrScraper implements StoreScraper {
             p.setName(name);
             p.setUrl(SITE_ORIGIN + href);
 
-            // Display price like "28,53 €" — PriceParser handles comma-decimal
             Element priceEl = el.selectFirst("[itemprop=price]");
             if (priceEl != null) {
-                p.setPrice(priceEl.text().replace("€", "").replace(" ", "").trim());
+                // Display text "28,53 €" — strip € and non-breaking spaces
+                p.setPrice(priceEl.text().replace("€", "").replace(" ", "").replace(" ", "").trim());
             }
 
             Element img = el.selectFirst("img.list_image");
@@ -107,7 +130,6 @@ public class ProteiniSiHrScraper implements StoreScraper {
             }
 
             extractPackageWeightFromName(p);
-
             return p;
         } catch (Exception e) {
             log.error("[{}] Error parsing element: {}", STORE_NAME, e.getMessage());
@@ -115,17 +137,47 @@ public class ProteiniSiHrScraper implements StoreScraper {
         }
     }
 
+    private boolean isSkippedUrl(String href) {
+        for (String seg : SKIP_URL_SEGMENTS) {
+            if (href.contains(seg)) return true;
+        }
+        return BUNDLE_PATTERN.matcher(href).find();
+    }
+
+    // Handles three weight formats found on this store:
+    //   "24x35g"  → 840g total
+    //   "1800g"   → 1800g
+    //   "2.27kg"  → 2270g
+    // "48 doza" products have no gram weight in the name — handled later from nutrition table.
     private void extractPackageWeightFromName(Product p) {
         if (p.getName() == null) return;
-        Matcher m = Pattern.compile("(\\d+[.,]?\\d*\\s?(kg|g))", Pattern.CASE_INSENSITIVE)
-                .matcher(p.getName());
-        while (m.find()) {
-            String w = m.group().trim().replaceAll("\\s+", "");
+        String name = p.getName();
+
+        // Multi-pack: "24x35g" → 24 × 35 = 840g
+        Matcher mp = MULTIPACK_PATTERN.matcher(name);
+        if (mp.find()) {
+            try {
+                double count = Double.parseDouble(mp.group(1));
+                double unit = Double.parseDouble(mp.group(2).replace(",", "."));
+                boolean isKg = mp.group(3).equalsIgnoreCase("kg");
+                double total = count * unit * (isKg ? 1000 : 1);
+                String label = total % 1000 == 0
+                        ? ((int)(total / 1000)) + "kg"
+                        : ((int) total) + "g";
+                if (!p.getPackage_weight().contains(label)) p.getPackage_weight().add(label);
+                return;
+            } catch (Exception ignored) {}
+        }
+
+        // Single weight: "1800g", "2.27kg"
+        Matcher ms = Pattern.compile("(\\d+[.,]?\\d*)\\s*(kg|g)\\b", Pattern.CASE_INSENSITIVE).matcher(name);
+        while (ms.find()) {
+            String w = ms.group().trim().replaceAll("\\s+", "");
             if (!p.getPackage_weight().contains(w)) p.getPackage_weight().add(w);
         }
     }
 
-    // -------------------- Detail page enrichment (JSoup only, no Playwright) --------------------
+    // -------------------- Detail page enrichment (JSoup only) --------------------
 
     private void enrichWithDetails(List<Product> products, Set<String> skipUrls) {
         int count = 0;
@@ -152,6 +204,11 @@ public class ProteiniSiHrScraper implements StoreScraper {
                 enrichDescription(doc, p);
                 enrichNutrition(doc, p);
 
+                // Resolve "48 doza" weight from nutrition table serving size
+                if (p.getPackage_weight().isEmpty()) {
+                    resolveDozeWeight(p);
+                }
+
                 log.info("[{}] Enriched '{}' -> flavours={}, protein={}, fat={}, sugar={}, cal={}",
                         STORE_NAME, p.getName(), p.getFlavours().size(),
                         p.getProteinPer100g(), p.getFatPer100g(),
@@ -167,6 +224,32 @@ public class ProteiniSiHrScraper implements StoreScraper {
             } catch (Exception e) {
                 log.error("[{}] Failed to enrich '{}': {}", STORE_NAME, p.getName(), e.getMessage());
                 safeSleep(5000);
+            }
+        }
+    }
+
+    // "48 doza" with doza size from nutrition table header (e.g. "doza (39 g)") → 48 × 39 = 1872g
+    private void resolveDozeWeight(Product p) {
+        Matcher dm = DOZA_PATTERN.matcher(p.getName());
+        if (!dm.find()) return;
+        int doseCount = Integer.parseInt(dm.group(1));
+
+        // dozaServingGrams is set during nutrition extraction from the header cell
+        if (p.getPrimaryWeightGrams() != null && p.getPrimaryWeightGrams() > 0) return;
+
+        // Try to read the doza size stored temporarily in package_weight during nutrition parsing
+        for (String w : p.getPackage_weight()) {
+            if (w.endsWith("g_per_doza")) {
+                try {
+                    double gPerDoza = Double.parseDouble(w.replace("g_per_doza", ""));
+                    double total = doseCount * gPerDoza;
+                    p.getPackage_weight().clear();
+                    String label = total % 1000 == 0 ? ((int)(total/1000)) + "kg" : ((int) total) + "g";
+                    p.getPackage_weight().add(label);
+                    log.info("[{}] '{}' weight resolved: {} doza × {}g = {}g",
+                            STORE_NAME, p.getName(), doseCount, (int) gPerDoza, (int) total);
+                } catch (Exception ignored) {}
+                break;
             }
         }
     }
@@ -198,7 +281,11 @@ public class ProteiniSiHrScraper implements StoreScraper {
 
     private void extractNutritionFromTable(Document doc, Product p) {
         try {
-            for (Element table : doc.select("table")) {
+            // Nutrition section: #product-sec-hranilne-vrednosti
+            Element nutSection = doc.selectFirst("#product-sec-hranilne-vrednosti");
+            Elements tables = nutSection != null ? nutSection.select("table") : doc.select("table");
+
+            for (Element table : tables) {
                 String text = table.text().toLowerCase();
                 if (!text.contains("bjelančevine") && !text.contains("proteini")
                         && !text.contains("protein")) continue;
@@ -206,20 +293,33 @@ public class ProteiniSiHrScraper implements StoreScraper {
                 Elements rows = table.select("tr");
                 if (rows.isEmpty()) continue;
 
-                // Header: [Sastojci, doza, PU%*, 100 g] — find the "100 g" column
+                // Header format: [label_col, "100 g", "doza (39 g) (%*)"]
+                // OR: [&nbsp;, "100 g", "doza (39 g)(%*)"] — 100g is always col index 1 here
                 int col100g = -1;
+                double gPerDoza = 0;
                 for (Element row : rows) {
                     Elements cells = row.select("td, th");
                     for (int i = 0; i < cells.size(); i++) {
                         String ct = cells.get(i).text().toLowerCase().replaceAll("\\s+", "");
-                        if (ct.contains("100g") || ct.equals("100") ) {
+                        if (ct.contains("100g") || ct.equals("100")) {
                             col100g = i;
-                            break;
+                        }
+                        // Extract "doza (39 g)" serving size for "N doza" products
+                        Matcher dm = Pattern.compile("doza\\s*\\(?(\\d+[.,]?\\d*)\\s*g\\)?").matcher(
+                                cells.get(i).text().toLowerCase());
+                        if (dm.find() && gPerDoza == 0) {
+                            try { gPerDoza = Double.parseDouble(dm.group(1).replace(",", ".")); }
+                            catch (Exception ignored) {}
                         }
                     }
                     if (col100g >= 0) break;
                 }
                 if (col100g < 0) continue;
+
+                // Store doza size as temp marker for resolveDozeWeight()
+                if (gPerDoza > 0 && p.getPackage_weight().isEmpty()) {
+                    p.getPackage_weight().add((int) gPerDoza + "g_per_doza");
+                }
 
                 for (Element row : rows) {
                     Elements cells = row.select("td");
@@ -230,7 +330,7 @@ public class ProteiniSiHrScraper implements StoreScraper {
                             .replaceAll("\\*+", "")
                             .trim().toLowerCase();
 
-                    // Energy: "1623 kJ/387 kcal" — extract kcal
+                    // Energy: "1623 kJ/387 kcal"
                     if (label.contains("energetska") || label.contains("energ")) {
                         String raw = cells.get(col100g).text();
                         Matcher m = Pattern.compile("(\\d+[.,]?\\d*)\\s*kcal", Pattern.CASE_INSENSITIVE).matcher(raw);
@@ -250,17 +350,12 @@ public class ProteiniSiHrScraper implements StoreScraper {
                     catch (Exception e) { continue; }
                     if (val < 0 || val > 10000) continue;
 
-                    // Protein — "bjelančevine" (Croatian) or "proteini"
                     if ((label.equals("bjelančevine") || label.equals("proteini") || label.equals("protein"))
                             && val > 0 && val <= 95) {
                         p.setProteinPer100g(val);
-                    }
-                    // Fat — "masti" only, skip "zasićene" sub-row
-                    else if (label.equals("masti") && val <= 100) {
+                    } else if (label.equals("masti") && val <= 100) {
                         p.setFatPer100g(val);
-                    }
-                    // Sugar — "od kojih šećeri"
-                    else if ((label.contains("šećeri") || label.contains("šeceri") || label.contains("sugars"))
+                    } else if ((label.contains("šećeri") || label.contains("šeceri") || label.contains("sugars"))
                             && val <= 100) {
                         p.setSugarPer100g(val);
                     }
@@ -277,11 +372,10 @@ public class ProteiniSiHrScraper implements StoreScraper {
 
     private void enrichFlavours(Document doc, Product p) {
         try {
-            // Flavour buttons: <button data-val="18" ...>Banana</button>
-            Elements buttons = doc.select("button[data-val]");
-            for (Element btn : buttons) {
+            // Flavour picker: <button data-val="18">Banana</button>
+            for (Element btn : doc.select("button[data-val]")) {
                 String flavour = btn.text().trim();
-                if (!flavour.isBlank() && !flavour.equals("Odaberite okus")
+                if (!flavour.isBlank() && !flavour.equalsIgnoreCase("Odaberite okus")
                         && !p.getFlavours().contains(flavour)) {
                     p.getFlavours().add(flavour);
                 }
@@ -293,27 +387,23 @@ public class ProteiniSiHrScraper implements StoreScraper {
 
     private void enrichDescription(Document doc, Product p) {
         try {
-            // Try itemprop=description first
-            Element descEl = doc.selectFirst("[itemprop=description]");
-            if (descEl == null) descEl = doc.selectFirst(".product-description");
-            if (descEl == null) descEl = doc.selectFirst(".desc_long");
-
-            if (descEl != null) {
-                String cleaned = HtmlCleaner.cleanDescription(descEl.html());
+            // Description section: #product-sec-opis .c-content
+            Element section = doc.selectFirst("#product-sec-opis .c-content");
+            if (section != null) {
+                String cleaned = HtmlCleaner.cleanDescription(section.html());
                 if (!cleaned.isBlank()) {
                     p.setDescription(cleaned);
                     return;
                 }
             }
-
-            // Fallback: text content after the nutrition table
-            Elements tables = doc.select("table");
-            if (!tables.isEmpty()) {
-                Element lastTable = tables.last();
-                Element next = lastTable.nextElementSibling();
-                if (next != null && !next.text().isBlank()) {
-                    p.setDescription(HtmlCleaner.cleanDescription(next.html()));
-                }
+            // Fallback: full #product-sec-opis div text
+            Element opis = doc.selectFirst("#product-sec-opis");
+            if (opis != null) {
+                // Remove the h2/button "Opis" header
+                Element h2 = opis.selectFirst("h2");
+                if (h2 != null) h2.remove();
+                String cleaned = HtmlCleaner.cleanDescription(opis.html());
+                if (!cleaned.isBlank()) p.setDescription(cleaned);
             }
         } catch (Exception e) {
             log.warn("[{}] Description extraction failed for '{}': {}", STORE_NAME, p.getName(), e.getMessage());
