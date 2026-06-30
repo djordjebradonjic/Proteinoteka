@@ -150,7 +150,7 @@ public class BaseScraperEnricher {
                 lower.contains("cashew butter") || lower.contains("almond butter") || lower.contains("nut butter") ||
                 lower.contains("lava cookie") || lower.contains("baked cookie") ||
                 lower.contains("woppers") ||
-                lower.contains("meal replacement") ||
+                lower.contains("meal replacement") || lower.contains("low calorie meal") ||
                 lower.contains("fit&slim") || lower.contains("fit & slim") || lower.contains("fit slim") ||
                 lower.contains("waffle") || lower.contains("vafla") ||
                 lower.contains("trail mix") || lower.contains("nutty mix") || lower.contains("fruity") ||
