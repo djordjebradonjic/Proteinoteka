@@ -62,6 +62,7 @@ const HR_FOOTER_STORES: NavLink[] = [
   { label: "Proteka",           href: "/?store=Proteka"             },
   { label: "Nutrition Shop HR", href: "/?store=Nutrition+Shop+HR"   },
   { label: "Proteini.si HR",    href: "/proteini-si-hrvatska"       },
+  { label: "Proteini Outlet",   href: "/?store=Proteini+Outlet"     },
 ];
 
 export const FOOTER_STORES =

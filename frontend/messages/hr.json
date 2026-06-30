@@ -10,7 +10,7 @@
   "hero": {
     "tagline": "Pronađi. Usporedi. Kupi.",
     "h1Start": "Proteini iz",
-    "h1Count": "6",
+    "h1Count": "7",
     "h1Middle": "najvećih trgovina u",
     "h1Country": "Hrvatskoj",
     "h1End": "na jednom mjestu.",
@@ -19,7 +19,7 @@
     "badge1Label": "Objektivna ocjena 0–10 za svaki protein",
     "badge2Value": "EUR/100g proteina",
     "badge2Label": "Prava mjera isplativosti, ne cijena kutije",
-    "badge3Value": "6 trgovina",
+    "badge3Value": "7 trgovina",
     "badge3Label": "Isti protein, sve cijene, jedan pregled"
   },
   "sort": {
