@@ -324,8 +324,8 @@ public class FitLabScraper implements StoreScraper {
                                 .matcher(kcalRaw);
                         if (m.find()) {
                             try {
-                                p.setCaloriePer100g(Double.parseDouble(
-                                        m.group(1).replace(",", ".")));
+                                double cal = Double.parseDouble(m.group(1).replace(",", "."));
+                                if (cal >= 200) p.setCaloriePer100g(cal);
                             } catch (Exception ignored) {}
                         }
                     }

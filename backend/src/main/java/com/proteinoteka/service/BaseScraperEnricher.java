@@ -59,8 +59,15 @@ public class BaseScraperEnricher {
             if (p.getFatPer100g() == null && data.getFatPer100g() != null)
                 p.setFatPer100g(data.getFatPer100g());
 
-            if (p.getCaloriePer100g() == null && data.getCaloriePer100g() != null)
-                p.setCaloriePer100g(data.getCaloriePer100g());
+            if (p.getCaloriePer100g() == null && data.getCaloriePer100g() != null) {
+                Double cal = data.getCaloriePer100g();
+                // Reject per-serving values mistakenly returned as per-100g:
+                // if protein alone (×4 kcal/g) already exceeds the stated calories, it's impossible.
+                boolean impossible = p.getProteinPer100g() != null && cal < p.getProteinPer100g() * 4;
+                if (!impossible) p.setCaloriePer100g(cal);
+                else log.warn("[{}] '{}' → AI calorie {}kcal/100g impossible for protein {}g/100g — rejected",
+                        storeName, p.getName(), cal, p.getProteinPer100g());
+            }
 
             if (p.getProteinSource() == null && data.getProteinSource() != null)
                 p.setProteinSource(data.getProteinSource());

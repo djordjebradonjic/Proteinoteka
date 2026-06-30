@@ -356,7 +356,9 @@ public class XSportScraper implements StoreScraper {
                                 Pattern.CASE_INSENSITIVE).matcher(rawCell);
                         if (kcalM.find()) {
                             try {
-                                p.setCaloriePer100g(Double.parseDouble(kcalM.group(1).replace(",", ".")));
+                                double cal = Double.parseDouble(kcalM.group(1).replace(",", "."));
+                                // Guard against per-serving values: realistic per-100g calorie ≥ 200
+                                if (cal >= 200) p.setCaloriePer100g(cal);
                             } catch (Exception ignored) {}
                         }
                         continue;

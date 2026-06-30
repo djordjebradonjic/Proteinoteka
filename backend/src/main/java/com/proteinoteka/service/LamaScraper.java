@@ -264,7 +264,7 @@ public class LamaScraper implements StoreScraper {
             } else if (label.contains("energetska") || label.contains("energij")
                     || label.contains("kalorij") || label.contains("energy")) {
                 Double kcal = extractKcal(rawCell);
-                if (kcal != null && kcal <= 900) p.setCaloriePer100g(kcal);
+                if (kcal != null && kcal >= 200 && kcal <= 900) p.setCaloriePer100g(kcal);
             }
         }
     }
