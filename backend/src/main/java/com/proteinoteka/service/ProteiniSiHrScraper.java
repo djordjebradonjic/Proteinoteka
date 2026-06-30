@@ -36,7 +36,7 @@ public class ProteiniSiHrScraper implements StoreScraper {
 
     // URL path segments that indicate non-supplement product categories
     private static final Set<String> SKIP_URL_SEGMENTS = Set.of(
-            "/grickalice/", "/namazi/", "/gotovi-napitci/", "/pudinzi/", "/muesli/"
+            "/grickalice/", "/namazi/", "/gotovi-napitci/", "/pudinzi/", "/muesli/", "/kreatin/"
     );
 
     // Name/URL fragments that indicate bundle kits (no meaningful per-unit nutrition)
