@@ -77,7 +77,7 @@ const FEATURES = IS_HR ? [
   {
     icon: "🏪",
     title: "Više trgovina",
-    desc: "GymBeam HR, MyProtein HR, Polleo Sport, Proteka, Nutrition Shop i još.",
+    desc: "GymBeam HR, MyProtein HR, Polleo Sport, Proteka, Nutrition Shop, Proteini.si HR i još.",
   },
 ] : [
   {

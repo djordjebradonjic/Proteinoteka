@@ -58,7 +58,7 @@ const faqItems = [
   },
   {
     q: "Gdje je najjeftinije kupiti protein u Hrvatskoj?",
-    a: "Cijene se mijenjaju tjedno, pa je teško dati statičan odgovor. Proteinoteka.com.hr prati sve HR webshopove (GymBeam, MyProtein, Polleo Sport, Proteka, Nutrition Shop HR) i uvijek prikazuje aktualne cijene. Koristite sortiranje po Value Score za najbolji omjer.",
+    a: "Cijene se mijenjaju tjedno, pa je teško dati statičan odgovor. Proteinoteka.com.hr prati sve HR webshopove (GymBeam, MyProtein, Polleo Sport, Proteka, Nutrition Shop HR, Proteini.si HR) i uvijek prikazuje aktualne cijene. Koristite sortiranje po Value Score za najbolji omjer.",
   },
   {
     q: "Koliko košta prosječan mjesec whey proteina u Hrvatskoj?",
@@ -319,6 +319,7 @@ export default async function Page() {
                 { store: "Polleo Sport", desc: "Hrvatski webshop i maloprodajne lokacije. Dobre cijene, lokalna podrška i brza dostava." },
                 { store: "Proteka", desc: "Specijaliziran webshop za proteine i suplemente s konkurentnim cijenama." },
                 { store: "Nutrition Shop HR", desc: "Dobar izbor brendova i redovite promotivne cijene." },
+                { store: "Proteini.si HR", desc: "Slovenački specijalizirani webshop s dugom tradicijom. EU dostava bez carine, konkurentne cijene za Battery, Nutrend i IronMaxx brendove." },
               ].map(({ store, desc }) => (
                 <div key={store} className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
                   <p className="font-semibold text-slate-900 text-[15px] mb-1">{store}</p>

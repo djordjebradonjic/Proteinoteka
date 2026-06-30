@@ -104,7 +104,7 @@ export default function Page() {
               <div className="space-y-4 text-[15px] leading-relaxed text-slate-700">
                 <p>
                   Svaki put kad smo htjeli kupiti whey protein, završavali smo s osam otvorenih
-                  kartica. GymBeam, MyProtein, Polleo Sport, Proteka, Nutrition Shop — i svaki ima
+                  kartica. GymBeam, MyProtein, Polleo Sport, Proteka, Nutrition Shop, Proteini.si — i svaki ima
                   drugačiju cijenu, drugačiju veličinu pakiranja, drugačije akcije koje možda nisu
                   ni prave akcije. Jedna trgovina prikaže "–20%" ali od cijene koja je već bila
                   napuhana. Drugdje nema popusta, ali je puna cijena jeftinija od svugdje.

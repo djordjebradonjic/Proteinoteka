@@ -97,6 +97,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/biljni-protein-hrvatska`,            changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/whey-protein-do-20-eura`,            changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/whey-protein-do-40-eura`,            changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
+    { url: `${BASE}/proteini-si-hrvatska`,               changeFrequency: "weekly" as const, priority: 0.8,  lastModified: now },
     // Price-range subpages
     { url: `${BASE}/najjeftiniji-whey-protein-hrvatska-do-500g`,       changeFrequency: "weekly" as const, priority: 0.8, lastModified: now },
     { url: `${BASE}/najjeftiniji-whey-protein-hrvatska-1500g-2500g`,   changeFrequency: "weekly" as const, priority: 0.8, lastModified: now },

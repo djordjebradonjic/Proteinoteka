@@ -56,11 +56,12 @@ const RS_FOOTER_STORES: NavLink[] = [
 ];
 
 const HR_FOOTER_STORES: NavLink[] = [
-  { label: "GymBeam HR",        href: "/?store=GymBeam+HR"        },
-  { label: "MyProtein HR",      href: "/?store=MyProtein+HR"      },
-  { label: "Polleo Sport",      href: "/?store=Polleo+Sport"      },
-  { label: "Proteka",           href: "/?store=Proteka"           },
-  { label: "Nutrition Shop HR", href: "/?store=Nutrition+Shop+HR" },
+  { label: "GymBeam HR",        href: "/?store=GymBeam+HR"          },
+  { label: "MyProtein HR",      href: "/?store=MyProtein+HR"        },
+  { label: "Polleo Sport",      href: "/?store=Polleo+Sport"        },
+  { label: "Proteka",           href: "/?store=Proteka"             },
+  { label: "Nutrition Shop HR", href: "/?store=Nutrition+Shop+HR"   },
+  { label: "Proteini.si HR",    href: "/proteini-si-hrvatska"       },
 ];
 
 export const FOOTER_STORES =

@@ -343,6 +343,7 @@ const STORES_BY_MARKET: Record<string, string[]> = {
     "Polleo Sport",
     "Proteka",
     "Nutrition Shop HR",
+    "Proteini.si HR",
   ],
 };
 
