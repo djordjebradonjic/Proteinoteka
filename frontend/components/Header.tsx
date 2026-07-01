@@ -190,12 +190,20 @@ export default function Header({ hasHero = false }: { hasHero?: boolean }) {
   useEffect(() => {
     const hero = document.getElementById("hero-section");
     if (!hero) return;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
     const obs = new IntersectionObserver(
-      ([entry]) => setHeroVisible(entry.isIntersecting),
-      { threshold: 0 },
+      ([entry]) => {
+        if (timeoutId) clearTimeout(timeoutId);
+        const isIntersecting = entry.isIntersecting;
+        timeoutId = setTimeout(() => setHeroVisible(isIntersecting), 100);
+      },
+      { threshold: 0, rootMargin: "-32px 0px 0px 0px" },
     );
     obs.observe(hero);
-    return () => obs.disconnect();
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      obs.disconnect();
+    };
   }, []);
 
   // Sync search input from URL on mount and on any URL change
