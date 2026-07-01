@@ -288,7 +288,7 @@ export default function Header({ hasHero = false }: { hasHero?: boolean }) {
       </div>
 
       {!heroVisible && (
-        <div className="md:hidden px-4 pb-3" style={{ backgroundColor: "#131921" }}>
+        <div className="md:hidden absolute top-full left-0 right-0 px-4 pb-3 z-[60]" style={{ backgroundColor: "#131921" }}>
           <SearchAutocomplete value={localSearch} onChange={handleSearch} />
         </div>
       )}
