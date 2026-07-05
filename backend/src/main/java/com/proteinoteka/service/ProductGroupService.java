@@ -310,6 +310,19 @@ public class ProductGroupService {
                     return members.stream().noneMatch(m ->
                             m.getStore() != null && m.getStore().getId().equals(product.getStore().getId()));
                 })
+                .filter(g -> {
+                    // Same guard autoGenerateGroups uses: brand+weight+source alone can't tell
+                    // apart distinct product lines sold under a generic/house brand (e.g. store
+                    // name used as "brand" for private-label SKUs — "Rice Protein" vs "Vegan
+                    // Blend" vs "Pumpkin Protein" all share brand/weight/source but are different
+                    // products). Require the name to share a distinguishing word with an existing
+                    // member, unless both reduce to no distinguishing words at all.
+                    List<Product> members = productRepository.findByGroupId(g.getId());
+                    if (members.isEmpty()) return true;
+                    Set<String> pWords = productLineWords(product.getName(), product.getBrand());
+                    return members.stream().anyMatch(m ->
+                            hasWordOverlap(pWords, productLineWords(m.getName(), m.getBrand())));
+                })
                 .toList();
 
         if (matches.size() == 1) {
