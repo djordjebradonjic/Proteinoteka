@@ -30,39 +30,52 @@ public class ScrapingSchedulerService {
     private static final LocalDate CYCLE_EPOCH = LocalDate.of(2025, 1, 1);
 
     /**
-     * 14-day rolling schedule — RS stores (days 1–7) + HR stores (days 8–14).
+     * 7-day rolling schedule — every store (RS + HR) scraped exactly once per week.
      *
      * Store types:
-     *   Playwright (browser, heavy): Proteinbox, SupplementStore, Proteini.si, Supplementshop, Shopbuilder
+     *   Playwright (browser, heavy): Proteinbox, SupplementStore, Proteini.si, Supplementshop,
+     *                                Shopbuilder, XSport, Polleo Sport, Proteka, Nutrition Shop HR,
+     *                                Proteini Outlet HR, Proteini.si HR
      *   HTTP/API   (light):          FitLab, GymBeam, MyProtein, Pansport, Lama, Ogistrashop,
      *                                GymBeam HR, MyProtein HR
      *
-     * Rules: max 1 heavy Playwright scraper per day; heavy scrapers run alone or
-     * paired only with a light scraper in a separate time window.
+     * Rules: max 2 heavy Playwright scrapers per day, each in its own time window
+     * (never concurrent); light scrapers are paired freely alongside them.
      */
     record ScrapeWindow(List<String> stores, int fromHour, int toHour) {}
 
     private static final Map<Integer, List<ScrapeWindow>> SCHEDULE;
     static {
         Map<Integer, List<ScrapeWindow>> m = new java.util.HashMap<>();
-        // ── RS stores (days 1–7) ─────────────────────────────────────────────
-        m.put(1,  List.of(new ScrapeWindow(List.of("Proteinbox"),                   9, 13)));
-        m.put(2,  List.of(new ScrapeWindow(List.of("FitLab", "Lama"),              10, 14)));
-        m.put(3,  List.of(new ScrapeWindow(List.of("SupplementStore"),             10, 14)));
-        m.put(4,  List.of(new ScrapeWindow(List.of("GymBeam", "Ogistrashop"),       9, 13)));
-        m.put(5,  List.of(new ScrapeWindow(List.of("Proteini.si"),                 10, 14)));
-        m.put(6,  List.of(new ScrapeWindow(List.of("MyProtein", "Pansport"),        9, 13)));
-        m.put(7,  List.of(
-            new ScrapeWindow(List.of("Supplementshop"),                            10, 12),
-            new ScrapeWindow(List.of("Shopbuilder"),                               13, 15)
+        m.put(1, List.of(
+            new ScrapeWindow(List.of("Proteinbox"),                    9, 12),
+            new ScrapeWindow(List.of("SupplementStore"),               13, 16)
         ));
-        // ── HR stores (days 8–14) ────────────────────────────────────────────
-        m.put(8,  List.of(new ScrapeWindow(List.of("GymBeam HR"),                   9, 13)));
-        m.put(9,  List.of(new ScrapeWindow(List.of("MyProtein HR"),                 9, 13)));
-        m.put(10, List.of(new ScrapeWindow(List.of("Polleo Sport"),                 9, 13)));
-        m.put(11, List.of(new ScrapeWindow(List.of("Proteka"),                      9, 12)));
-        m.put(12, List.of(new ScrapeWindow(List.of("Nutrition Shop HR"),            9, 13)));
-        // Days 13–14: rest
+        m.put(2, List.of(
+            new ScrapeWindow(List.of("Proteini.si"),                   9, 12),
+            new ScrapeWindow(List.of("FitLab", "Lama"),                 13, 16)
+        ));
+        m.put(3, List.of(
+            new ScrapeWindow(List.of("Supplementshop"),                9, 11),
+            new ScrapeWindow(List.of("Shopbuilder"),                   12, 14)
+        ));
+        m.put(4, List.of(
+            new ScrapeWindow(List.of("XSport"),                        9, 13),
+            new ScrapeWindow(List.of("GymBeam", "Ogistrashop"),         14, 17)
+        ));
+        m.put(5, List.of(
+            new ScrapeWindow(List.of("Polleo Sport"),                  9, 12),
+            new ScrapeWindow(List.of("Proteka"),                       13, 16)
+        ));
+        m.put(6, List.of(
+            new ScrapeWindow(List.of("Nutrition Shop HR"),             9, 12),
+            new ScrapeWindow(List.of("Proteini Outlet HR"),            13, 16)
+        ));
+        m.put(7, List.of(
+            new ScrapeWindow(List.of("Proteini.si HR"),                9, 13),
+            new ScrapeWindow(List.of("MyProtein", "Pansport"),         14, 16),
+            new ScrapeWindow(List.of("GymBeam HR", "MyProtein HR"),    17, 19)
+        ));
         SCHEDULE = java.util.Collections.unmodifiableMap(m);
     }
 
@@ -248,7 +261,7 @@ public class ScrapingSchedulerService {
 
     public int currentCycleDay() {
         long days = ChronoUnit.DAYS.between(CYCLE_EPOCH, LocalDate.now(BELGRADE));
-        return (int)(days % 14) + 1; // 1–14
+        return (int)(days % 7) + 1; // 1–7
     }
 
     private LocalTime randomTimeInWindow(int fromHour, int toHour) {
@@ -258,8 +271,8 @@ public class ScrapingSchedulerService {
     }
 
     private String computeNextScheduledTime(String storeName, int todayCycleDay) {
-        for (int offset = 0; offset < 14; offset++) {
-            int checkDay = (todayCycleDay - 1 + offset) % 14 + 1;
+        for (int offset = 0; offset < 7; offset++) {
+            int checkDay = (todayCycleDay - 1 + offset) % 7 + 1;
             List<ScrapeWindow> windows = SCHEDULE.getOrDefault(checkDay, List.of());
             for (ScrapeWindow w : windows) {
                 if (w.stores().stream().anyMatch(s -> s.equalsIgnoreCase(storeName))) {

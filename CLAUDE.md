@@ -80,7 +80,7 @@ Filtering is implemented via JPA `Specification` chaining in `ProductSpecificati
 
 ### Scrapers
 
-`ScraperService` orchestrates individual store scrapers (one class per store). Sites with JavaScript rendering use Playwright; static sites use JSoup. Scraping is scheduled weekly (Monday 3 AM, cron `0 0 3 * * MON`) via `ScrapingScheduler`.
+`ScraperService` orchestrates individual store scrapers (one class per store). Sites with JavaScript rendering use Playwright; static sites use JSoup. `ScrapingScheduler` runs a daily check (06:50 Europe/Belgrade) that dispatches scrapers via a 7-day rolling cycle in `ScrapingSchedulerService.SCHEDULE` — every store is scraped exactly once per week, with a randomized time within its assigned window and at most 2 heavy Playwright scrapers per day (each in its own non-overlapping window).
 
 ### Data enrichment pipeline
 
