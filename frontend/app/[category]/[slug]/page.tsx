@@ -180,7 +180,7 @@ export default async function ProductSlugPage({ params }: Params) {
     ? product.aiDescription.slice(0, 500)
     : product.description
     ? product.description.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 500)
-    : undefined;
+    : [product.brand, product.name, catLabel].filter(Boolean).join(" – ");
 
   const breadcrumbItems: object[] = [
     { "@type": "ListItem", position: 1, name: "Početna", item: BASE_URL },
