@@ -5,9 +5,24 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface TrackingEventRepository extends JpaRepository<TrackingEvent, Long> {
+
+    @Query(value = """
+            SELECT COUNT(*) FROM tracking_events
+            WHERE event_type = :eventType
+              AND ip_address = :ip
+              AND COALESCE(product_id, -1) = COALESCE(:productId, -1)
+              AND COALESCE(query, '') = COALESCE(:query, '')
+              AND created_at >= :since
+            """, nativeQuery = true)
+    long countRecentByTypeIpAndTarget(@Param("eventType") String eventType,
+                                       @Param("ip") String ip,
+                                       @Param("productId") Long productId,
+                                       @Param("query") String query,
+                                       @Param("since") LocalDateTime since);
 
     @Query(value = """
             SELECT DATE(created_at) AS day, COUNT(*) AS count
@@ -78,4 +93,9 @@ public interface TrackingEventRepository extends JpaRepository<TrackingEvent, Lo
     @org.springframework.transaction.annotation.Transactional
     @Query(value = "DELETE FROM tracking_events WHERE event_type != 'CLICK_OUT'", nativeQuery = true)
     void deleteAllExceptClickOut();
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    @Query(value = "DELETE FROM tracking_events WHERE created_at < :cutoff", nativeQuery = true)
+    int deleteByCreatedAtBefore(@Param("cutoff") LocalDateTime cutoff);
 }

@@ -89,4 +89,9 @@ public interface ClickEventRepository extends JpaRepository<ClickEvent, Long> {
             WHERE (:market IS NULL OR p.market = :market)
             """, nativeQuery = true)
     long countByMarket(@Param("market") String market);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    @Query(value = "DELETE FROM click_events WHERE created_at < :cutoff", nativeQuery = true)
+    int deleteByCreatedAtBefore(@Param("cutoff") LocalDateTime cutoff);
 }

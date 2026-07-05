@@ -2,6 +2,7 @@
 // All tracking calls go through here. Do NOT call gtag or track() directly.
 
 import { track } from "@vercel/analytics";
+import { hasAnalyticsConsent } from "./consent";
 
 declare global {
   interface Window {
@@ -92,7 +93,7 @@ type InternalEvent = "PRODUCT_VIEW" | "COMPARE_CLICK" | "SEARCH";
 const _API = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 function _internal(eventType: InternalEvent, productId: number, store: string): void {
-  if (!_API) return;
+  if (!_API || !hasAnalyticsConsent()) return;
   fetch(`${_API}/api/track`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

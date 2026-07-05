@@ -14,6 +14,7 @@ import com.proteinoteka.repository.ClickEventRepository;
 import com.proteinoteka.repository.PriceHistoryRepository;
 import com.proteinoteka.repository.ProductRepository;
 import com.proteinoteka.service.ProductGroupService;
+import com.proteinoteka.util.BotDetector;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -144,12 +145,6 @@ public class ProductController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    private static final java.util.regex.Pattern BOT_UA = java.util.regex.Pattern.compile(
-        "(?i)bot|crawler|spider|slurp|bingpreview|facebookexternalhit|twitterbot|" +
-        "linkedinbot|whatsapp|telegrambot|googlebot|baiduspider|yandex|semrush|ahrefs|" +
-        "mj12bot|dotbot|rogerbot|screaming frog|wget|curl|python-requests|java/"
-    );
-
     @GetMapping("/{id}/buy")
     public ResponseEntity<Void> buyProduct(
             @PathVariable Long id,
@@ -165,7 +160,7 @@ public class ProductController {
         String ua = request.getHeader("User-Agent");
         String ip = getClientIp(request);
 
-        boolean isBot = ua == null || BOT_UA.matcher(ua).find();
+        boolean isBot = BotDetector.isBot(ua);
         boolean isDuplicate = !isBot && clickEventRepository
             .countRecentByProductAndIp(id, ip, LocalDateTime.now().minusSeconds(30)) > 0;
 

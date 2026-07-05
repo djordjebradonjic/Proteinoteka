@@ -72,6 +72,9 @@ export default function PrivacyPolicyPage() {
               <strong>Podatci o korištenju stranice:</strong> Koristimo Google Analytics za anonimnu analitiku posjeta (broj posjetitelja, najpregledanije stranice, uređaji). Ovi podatci ne sadrže osobne informacije.
             </p>
             <p>
+              <strong>Vlastita evidencija korištenja:</strong> Osim Google Analyticsa, naš poslužitelj samostalno bilježi IP adresu, user agent preglednika i pregledani/kliknuti proizvod za svaki pregled proizvoda, pretragu i klik na &quot;Kupi&quot; prema partnerskoj trgovini. Ovi podatci koriste se isključivo za statistiku korištenja i zaštitu od automatiziranog (bot) prometa te se čuvaju najdulje 90 dana, nakon čega se automatski i trajno brišu. Bilježenje pregleda, pretraga i klikova na &quot;Usporedi&quot; odvija se samo uz vašu privolu za analitičke kolačiće; bilježenje klika na &quot;Kupi&quot; nužno je za samu uslugu (preusmjeravanje prema trgovini) i provodi se neovisno o toj privoli.
+            </p>
+            <p>
               <strong>Kontakt obrazac:</strong> Kada nam pošaljete poruku putem kontakt obrasca, prikupljamo vaše ime, email adresu i tekst poruke isključivo radi odgovora na vaš upit. Ovi podatci ne dijele se s trećim stranama.
             </p>
             <p>
@@ -87,7 +90,8 @@ export default function PrivacyPolicyPage() {
               Budući da je Hrvatska članica Europske unije, na obradu vaših osobnih podataka primjenjuje se Uredba (EU) 2016/679 (GDPR).
             </p>
             <ul className="list-disc pl-5 space-y-1">
-              <li><strong>Analitika:</strong> privola (članak 6. stavak 1. točka a GDPR-a)</li>
+              <li><strong>Analitika (Google Analytics i vlastita evidencija pregleda/pretraga/usporedbi):</strong> privola (članak 6. stavak 1. točka a GDPR-a)</li>
+              <li><strong>Evidencija klikova na &quot;Kupi&quot;:</strong> legitimni interes i izvršenje usluge preusmjeravanja prema trgovini (članak 6. stavak 1. točke b i f)</li>
               <li><strong>Kontakt upiti:</strong> legitimni interes ili izvršenje ugovora (članak 6. stavak 1. točke b i f)</li>
               <li><strong>localStorage:</strong> tehnički nužno za funkcioniranje usluge — privola nije potrebna</li>
             </ul>
@@ -213,6 +217,9 @@ export default function PrivacyPolicyPage() {
         <Section title="2. Podaci koje prikupljamo">
           <p>
             <strong>Podaci o korišćenju sajta:</strong> Koristimo Google Analytics za anonimnu analitiku poseta (broj posetilaca, najpregledanije stranice, uređaji). Ovi podaci ne sadrže lične informacije.
+          </p>
+          <p>
+            <strong>Sopstvena evidencija korišćenja:</strong> Pored Google Analytics-a, naš server samostalno beleži IP adresu, user agent pregledača i pregledani/kliknuti proizvod za svaki pregled proizvoda, pretragu i klik na &quot;Kupi&quot; ka partnerskoj prodavnici. Ovi podaci se koriste isključivo radi statistike korišćenja i zaštite od automatizovanog (bot) saobraćaja, i čuvaju se najduže 90 dana, nakon čega se automatski i trajno brišu. Beleženje pregleda, pretraga i klikova na &quot;Uporedi&quot; odvija se samo uz vašu saglasnost za analitičke kolačiće; beleženje klika na &quot;Kupi&quot; neophodno je za samu uslugu (preusmeravanje ka prodavnici) i sprovodi se nezavisno od te saglasnosti.
           </p>
           <p>
             <strong>Kontakt forma:</strong> Kada nam pošaljete poruku putem kontakt forme, prikupljamo vaše ime, email adresu i tekst poruke isključivo radi odgovora na vaš upit. Ovi podaci se ne dele sa trećim stranama.
