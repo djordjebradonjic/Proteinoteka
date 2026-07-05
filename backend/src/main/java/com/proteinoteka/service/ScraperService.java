@@ -41,6 +41,10 @@ import java.util.stream.Collectors;
 public class ScraperService {
 
     // Category median sugar (g/100g) derived from measured products in the catalogue.
+    // Minimum FuzzySearch.tokenSetRatio score to treat a same-store/same-weight product as the
+    // same physical item when both its URL and listing name changed in the same scrape pass.
+    private static final int FUZZY_MATCH_THRESHOLD = 80;
+
     // Used to impute missing sugar values so the ingredients penalty is applied fairly
     // even when a product page omits nutrition details.
     private static final Map<String, Double> SUGAR_MEDIAN_BY_SOURCE = Map.of(
@@ -587,6 +591,30 @@ public class ScraperService {
                         byWeight.get().getUrl(), scraped.getUrl());
                 byWeight.get().setUrl(scraped.getUrl());
                 existingOpt = byWeight;
+            } else {
+                // Fallback: i URL i ime su se promenili istovremeno (re-platforming prodavnice) —
+                // traži najbliži fuzzy match po imenu među proizvodima iste prodavnice/gramaze,
+                // umesto da se tretira kao potpuno nov proizvod (što bi ostavilo stari kanonski
+                // URL da postane 404 kad ga sledeći scrape obriše kao "stale").
+                List<Product> candidates = productRepository.findByStoreAndWeight(store, scraped.getPrimaryWeightGrams());
+                Product bestMatch = null;
+                int bestScore = 0;
+                for (Product candidate : candidates) {
+                    int score = me.xdrop.fuzzywuzzy.FuzzySearch.tokenSetRatio(
+                            scraped.getName().toLowerCase(), candidate.getName().toLowerCase());
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestMatch = candidate;
+                    }
+                }
+                if (bestMatch != null && bestScore >= FUZZY_MATCH_THRESHOLD) {
+                    log.info("[{}] SKU i ime promenjeni za '{}' {}g — fuzzy match na '{}' (score: {}), stari URL: {}, novi URL: {}",
+                            store.getName(), scraped.getName(), Math.round(scraped.getPrimaryWeightGrams()),
+                            bestMatch.getName(), bestScore, bestMatch.getUrl(), scraped.getUrl());
+                    bestMatch.setUrl(scraped.getUrl());
+                    bestMatch.setName(scraped.getName());
+                    existingOpt = Optional.of(bestMatch);
+                }
             }
         }
 

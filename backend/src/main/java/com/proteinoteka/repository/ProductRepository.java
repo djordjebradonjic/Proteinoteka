@@ -108,4 +108,11 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     Optional<Product> findByNameAndStoreAndWeight(@Param("name") String name,
                                                   @Param("store") Store store,
                                                   @Param("weight") Double weight);
+
+    // Broader candidate pool for fuzzy name matching when both URL and exact name changed at once
+    // (e.g. a store re-platforms and rewrites its listing copy in the same pass).
+    @Query("SELECT p FROM products p WHERE p.store = :store " +
+           "AND p.primaryWeightGrams IS NOT NULL " +
+           "AND ABS(p.primaryWeightGrams - :weight) < 10")
+    List<Product> findByStoreAndWeight(@Param("store") Store store, @Param("weight") Double weight);
 }
