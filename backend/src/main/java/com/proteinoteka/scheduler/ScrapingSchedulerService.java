@@ -69,7 +69,7 @@ public class ScrapingSchedulerService {
         ));
         m.put(6, List.of(
             new ScrapeWindow(List.of("Nutrition Shop HR"),             9, 12),
-            new ScrapeWindow(List.of("Proteini Outlet HR"),            13, 16)
+            new ScrapeWindow(List.of("Proteini Outlet"),               13, 16)
         ));
         m.put(7, List.of(
             new ScrapeWindow(List.of("Proteini.si HR"),                9, 13),
