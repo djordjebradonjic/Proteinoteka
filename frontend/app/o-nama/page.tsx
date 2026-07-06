@@ -197,6 +197,29 @@ export default function Page() {
             </section>
 
             <section className="mb-10">
+              <h2 className="text-xl font-bold text-slate-900 mb-4">Autor</h2>
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 text-[15px] leading-relaxed text-slate-700">
+                <p>
+                  Proteinoteku vodi Đorđe Bradonjić, samostalno. Za pitanja, prijedloge ili poslovnu
+                  suradnju, javi se putem{" "}
+                  <Link href="/kontakt" className="font-semibold text-[#FF9900] hover:underline">
+                    kontakt stranice
+                  </Link>{" "}
+                  ili preko{" "}
+                  <a
+                    href="https://www.linkedin.com/in/djordje-bradonjic-894701144"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold text-[#FF9900] hover:underline"
+                  >
+                    LinkedIn-a
+                  </a>
+                  .
+                </p>
+              </div>
+            </section>
+
+            <section className="mb-10">
               <h2 className="text-xl font-bold text-slate-900 mb-4">Pogledaj i</h2>
               <div className="flex flex-wrap gap-3">
                 {RELATED_LINKS.map(({ label, href }) => (
@@ -345,6 +368,29 @@ export default function Page() {
               <p>
                 Hteo sam nešto što zaista funkcioniše. Još uvek nisam zadovoljan svim aspektima —
                 sajt je u razvoju i podaci nisu uvek savršeni — ali pravac je jasan.
+              </p>
+            </div>
+          </section>
+
+          <section className="mb-10">
+            <h2 className="text-xl font-bold text-slate-900 mb-4">Autor</h2>
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 text-[15px] leading-relaxed text-slate-700">
+              <p>
+                Proteinoteku vodim ja, Đorđe Bradonjić, samostalno. Za pitanja, predloge ili poslovnu
+                saradnju, javi se preko{" "}
+                <Link href="/kontakt" className="font-semibold text-[#FF9900] hover:underline">
+                  kontakt stranice
+                </Link>{" "}
+                ili preko{" "}
+                <a
+                  href="https://www.linkedin.com/in/djordje-bradonjic-894701144"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-[#FF9900] hover:underline"
+                >
+                  LinkedIn-a
+                </a>
+                .
               </p>
             </div>
           </section>

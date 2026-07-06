@@ -8,11 +8,23 @@ import {
   Mail,
   MapPin,
   Clock,
+  Phone,
 } from "lucide-react";
 import { CURRENT_MARKET } from "@/lib/marketConfig";
 
+function LinkedinIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 1 1 0-4.124 2.062 2.062 0 0 1 0 4.124zM7.114 20.452H3.558V9h3.556v11.452z" />
+    </svg>
+  );
+}
+
 const isHR = CURRENT_MARKET === "hr";
 const contactEmail = isHR ? "kontakt@proteinoteka.com.hr" : "kontakt@proteinoteka.rs";
+const contactPhone = "069 2838960";
+const contactPhoneHref = "tel:+381692838960";
+const linkedinUrl = "https://www.linkedin.com/in/djordje-bradonjic-894701144";
 
 export default function KontaktPage() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
@@ -86,6 +98,20 @@ export default function KontaktPage() {
             <div className="bg-white rounded-xl p-5 border border-slate-100 shadow-sm">
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-9 h-9 rounded-lg bg-[#FF9900]/10 flex items-center justify-center">
+                  <Phone className="w-4 h-4 text-[#FF9900]" />
+                </div>
+                <span className="font-semibold text-sm text-slate-700">
+                  {isHR ? "Telefon" : "Telefon"}
+                </span>
+              </div>
+              <a href={contactPhoneHref} className="text-sm text-slate-500 hover:text-[#FF9900] transition-colors">
+                {contactPhone}
+              </a>
+            </div>
+
+            <div className="bg-white rounded-xl p-5 border border-slate-100 shadow-sm">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-9 h-9 rounded-lg bg-[#FF9900]/10 flex items-center justify-center">
                   <Clock className="w-4 h-4 text-[#FF9900]" />
                 </div>
                 <span className="font-semibold text-sm text-slate-700">
@@ -105,6 +131,25 @@ export default function KontaktPage() {
                 </span>
               </div>
               <p className="text-sm text-slate-500">{isHR ? "Hrvatska" : "Srbija"}</p>
+            </div>
+
+            <div className="bg-white rounded-xl p-5 border border-slate-100 shadow-sm">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-9 h-9 rounded-lg bg-[#FF9900]/10 flex items-center justify-center">
+                  <LinkedinIcon className="w-4 h-4 text-[#FF9900]" />
+                </div>
+                <span className="font-semibold text-sm text-slate-700">
+                  LinkedIn
+                </span>
+              </div>
+              <a
+                href={linkedinUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-slate-500 hover:text-[#FF9900] transition-colors"
+              >
+                Đorđe Bradonjić
+              </a>
             </div>
           </div>
 
