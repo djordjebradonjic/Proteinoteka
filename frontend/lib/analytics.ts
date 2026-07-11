@@ -2,7 +2,6 @@
 // All tracking calls go through here. Do NOT call gtag or track() directly.
 
 import { track } from "@vercel/analytics";
-import { hasAnalyticsConsent } from "./consent";
 
 declare global {
   interface Window {
@@ -87,13 +86,15 @@ function _ga4(event: AnalyticsEventName, params: EventParams): void {
 // ── Internal backend ──────────────────────────────────────────────────────────
 // Feeds the admin panel. Only PRODUCT_VIEW and COMPARE_CLICK are needed here;
 // buy-click counts come automatically from the backend /buy redirect endpoint.
+// Sent unconditionally, same legal basis (legitimate interest) as the buy-click
+// count — not gated on cookie consent, so admin usage stats stay accurate.
 
 type InternalEvent = "PRODUCT_VIEW" | "COMPARE_CLICK" | "SEARCH";
 
 const _API = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 function _internal(eventType: InternalEvent, productId: number, store: string): void {
-  if (!_API || !hasAnalyticsConsent()) return;
+  if (!_API) return;
   fetch(`${_API}/api/track`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
