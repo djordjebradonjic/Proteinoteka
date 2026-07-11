@@ -199,11 +199,11 @@ public class ScrapingSchedulerService {
             List<com.proteinoteka.model.Product> products = scraperService.scrapeStore(scraper);
 
             entry.setProductsFound(products.size());
-            entry.setStatus(products.isEmpty() ? ScrapeStatus.BLOCKED : ScrapeStatus.SUCCESS);
+            entry.setStatus(classifyStatus(scraper.getStoreName(), products.size()));
             log.info("[Scheduler] Finished scrape: {} — {} products ({})",
                     scraper.getStoreName(), products.size(), entry.getStatus());
 
-            if (entry.getStatus() == ScrapeStatus.SUCCESS) {
+            if (entry.getStatus() == ScrapeStatus.SUCCESS || entry.getStatus() == ScrapeStatus.PARTIAL) {
                 evictProductCaches();
                 aiDescriptionJob.enrichAllMissingDescriptions();
                 triggerFrontendRevalidation();
@@ -222,6 +222,26 @@ public class ScrapingSchedulerService {
         }
 
         return entry;
+    }
+
+    // A scrape that finishes without throwing (so isn't FAILED) can still be a silent
+    // partial run — e.g. one listing page timing out truncates every page after it,
+    // as happened for Polleo Sport (54 found vs. 195 in its last successful run) while
+    // logging cleanly as SUCCESS. Compare against the store's last successful count so
+    // a big shortfall shows up as PARTIAL instead of being indistinguishable from a
+    // real, complete run.
+    private static final double PARTIAL_RUN_THRESHOLD = 0.5;
+
+    private ScrapeStatus classifyStatus(String storeName, int productsFound) {
+        if (productsFound == 0) return ScrapeStatus.BLOCKED;
+
+        return scrapeLogRepository.findFirstByStoreNameAndStatusOrderByStartedAtDesc(storeName, ScrapeStatus.SUCCESS)
+                .map(ScrapeLog::getProductsFound)
+                .filter(lastCount -> lastCount != null && lastCount > 0)
+                .map(lastCount -> productsFound < lastCount * PARTIAL_RUN_THRESHOLD
+                        ? ScrapeStatus.PARTIAL
+                        : ScrapeStatus.SUCCESS)
+                .orElse(ScrapeStatus.SUCCESS);
     }
 
     private void triggerFrontendRevalidation() {

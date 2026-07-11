@@ -190,6 +190,22 @@ public class ProteiniSiScraper implements StoreScraper {
         if (parts.length > 0) p.setBrand(parts[0].trim());
     }
 
+    /**
+     * The listing page has no manufacturer info, so {@link #extractBrandFromName}
+     * guesses from the first word of the title — wrong whenever the title leads with
+     * a product line name instead of the brand (e.g. "ISO Pro" is a Nutriversum line,
+     * not a brand called "ISO"). The detail page's WooCommerce {@code product:brand}
+     * meta tag (backed by structured Product/Brand JSON-LD) gives the real manufacturer,
+     * so it overrides the listing-page guess once available.
+     */
+    private void enrichBrandFromMeta(Document doc, Product p) {
+        Element meta = doc.selectFirst("meta[property=product:brand]");
+        if (meta != null) {
+            String brand = meta.attr("content").trim();
+            if (!brand.isBlank()) p.setBrand(brand);
+        }
+    }
+
     // -------------------- Detail page enrichment --------------------
 
     private void enrichWithDetails(Page page, List<Product> products, java.util.Set<String> skipUrls) {
@@ -241,6 +257,7 @@ public class ProteiniSiScraper implements StoreScraper {
 
                 Document doc = Jsoup.parse(page.content());
 
+                enrichBrandFromMeta(doc, p);
                 enrichVariations(doc, p);
                 enrichDescription(doc, p);
                 enrichNutrition(doc, p);

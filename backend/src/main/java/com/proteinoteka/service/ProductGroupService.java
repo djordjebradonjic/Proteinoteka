@@ -5,6 +5,7 @@ import com.proteinoteka.model.Product;
 import com.proteinoteka.model.ProductGroup;
 import com.proteinoteka.repository.ProductGroupRepository;
 import com.proteinoteka.repository.ProductRepository;
+import com.proteinoteka.util.ProductLineMatcher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -163,37 +164,12 @@ public class ProductGroupService {
         return lines;
     }
 
-    private static final Set<String> NAME_STOPWORDS = Set.of(
-            "whey", "protein", "proteini", "isolate", "izolat", "kazein", "casein",
-            "concentrate", "koncentrat", "hydrolysate", "hidrolizat", "vegan", "plant",
-            "100", "pure", "natural", "ukus", "flavor", "flavour", "vanilla", "vanila",
-            "chocolate", "cokolada", "sport", "nutrition", "the", "and", "with", "pro",
-            "ultra", "gold", "lean", "diet", "basic", "complete", "premium", "iso",
-            "zero", "raw", "blend", "fusion", "powder", "instant", "formula"
-    );
-
     private Set<String> productLineWords(String name, String brand) {
-        if (name == null) return Collections.emptySet();
-        String lower = name.toLowerCase();
-        if (brand != null) lower = lower.replace(brand.toLowerCase().trim(), "");
-        lower = lower.replaceAll("\\d+[.,]?\\d*\\s*(kg|g|gr\\b|lb\\b)", "");
-        lower = lower.replaceAll("[^a-zčćšđž\\s]", " ");
-        Set<String> words = new HashSet<>();
-        for (String w : lower.split("\\s+")) {
-            if (w.length() > 2 && !NAME_STOPWORDS.contains(w)) words.add(w);
-        }
-        return words;
+        return ProductLineMatcher.productLineWords(name, brand);
     }
 
     private boolean hasWordOverlap(Set<String> a, Set<String> b) {
-        // Both empty → both are fully generic names (e.g. "Vegan Blend") → assume same line
-        if (a.isEmpty() && b.isEmpty()) return true;
-        // One side has distinguishing words, the other doesn't → different products (e.g.
-        // "Protein boba" has "boba" but "Vegan Blend" reduces to empty → not the same line)
-        if (a.isEmpty() || b.isEmpty()) return false;
-        Set<String> intersection = new HashSet<>(a);
-        intersection.retainAll(b);
-        return !intersection.isEmpty();
+        return ProductLineMatcher.hasWordOverlap(a, b);
     }
 
     // ── Admin: list all groups with their products ────────────────────────────

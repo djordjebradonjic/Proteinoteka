@@ -14,6 +14,7 @@ import com.proteinoteka.repository.ProductRepository;
 import com.proteinoteka.repository.ScrapeLogRepository;
 import com.proteinoteka.repository.StoreRepository;
 import com.proteinoteka.util.PriceParser;
+import com.proteinoteka.util.ProductLineMatcher;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +45,12 @@ public class ScraperService {
     // Minimum FuzzySearch.tokenSetRatio score to treat a same-store/same-weight product as the
     // same physical item when both its URL and listing name changed in the same scrape pass.
     private static final int FUZZY_MATCH_THRESHOLD = 80;
+
+    // A single listing page failing to load (Playwright timeout + JSoup fallback both
+    // failing) is skipped rather than aborting the whole store run. Only this many
+    // *consecutive* page failures — a much stronger signal of a real site block — stops
+    // the scraper early.
+    private static final int MAX_CONSECUTIVE_PAGE_FAILURES = 3;
 
     // Used to impute missing sugar values so the ingredients penalty is applied fairly
     // even when a product page omits nutrition details.
@@ -313,6 +320,7 @@ public class ScraperService {
                     Page page = context.newPage();
                     try {
                         int currentPage = 0;
+                        int consecutivePageFailures = 0;
 
                     while (true) {
                         long delay = testMode ? 500 : humanDelay();
@@ -322,6 +330,7 @@ public class ScraperService {
                         String url = scraper.buildPageUrl(currentPage);
                         log.info("[{}] Scraping page {}: {}", scraper.getStoreName(), currentPage, url);
 
+                        boolean pageLoadFailed = false;
                         if (!scraper.usePlaywrightForListing()) {
                             // Server-rendered stores (PrestaShop, Drupal, Next.js SSR) — JSoup is enough for listing.
                             // Avoids loading images/JS/tracking through proxy on listing pages.
@@ -330,9 +339,9 @@ public class ScraperService {
                                 page.setContent(html);
                                 log.info("[{}] JSoup listing fetch succeeded for {}", scraper.getStoreName(), url);
                             } catch (Exception jsoupEx) {
-                                log.error("[{}] JSoup listing fetch failed: {} — stopping scraper",
-                                        scraper.getStoreName(), jsoupEx.getMessage());
-                                break;
+                                log.error("[{}] JSoup listing fetch failed for page {}: {}",
+                                        scraper.getStoreName(), currentPage, jsoupEx.getMessage());
+                                pageLoadFailed = true;
                             }
                         } else if (!navigateWithRetry(page, url, 3)) {
                             log.warn("[{}] Playwright navigation failed — trying JSoup direct fetch for {}",
@@ -342,11 +351,29 @@ public class ScraperService {
                                 page.setContent(html);
                                 log.info("[{}] JSoup direct fetch succeeded for {}", scraper.getStoreName(), url);
                             } catch (Exception jsoupEx) {
-                                log.error("[{}] JSoup fallback also failed: {} — stopping scraper",
-                                        scraper.getStoreName(), jsoupEx.getMessage());
-                                break;
+                                log.error("[{}] JSoup fallback also failed for page {}: {}",
+                                        scraper.getStoreName(), currentPage, jsoupEx.getMessage());
+                                pageLoadFailed = true;
                             }
                         }
+
+                        // A single page failing to load (site hiccup, transient timeout) shouldn't
+                        // abort the whole run and silently truncate every page after it — that's
+                        // what produced a "SUCCESS" scrape with only 54/195 products for Polleo
+                        // Sport when page 5 alone timed out. Skip the bad page and keep going;
+                        // only give up once several pages *in a row* fail, which is a much
+                        // stronger signal of an actual site block rather than one flaky request.
+                        if (pageLoadFailed) {
+                            consecutivePageFailures++;
+                            if (consecutivePageFailures >= MAX_CONSECUTIVE_PAGE_FAILURES) {
+                                log.error("[{}] {} consecutive page failures — stopping scraper",
+                                        scraper.getStoreName(), consecutivePageFailures);
+                                break;
+                            }
+                            currentPage++;
+                            continue;
+                        }
+                        consecutivePageFailures = 0;
 
                         if (isBlockedByFirewall(page)) {
                             log.warn("[{}] FIREWALL DETECTED on listing page — giving scraper waitForListing a chance to recover.", scraper.getStoreName());
@@ -607,7 +634,17 @@ public class ScraperService {
                         bestMatch = candidate;
                     }
                 }
-                if (bestMatch != null && bestScore >= FUZZY_MATCH_THRESHOLD) {
+                // A high tokenSetRatio score alone can't tell apart two distinct product
+                // lines that share a store/weight/brand and mostly-generic vocabulary
+                // (e.g. "Whey Gold" vs. "Iso Cool" — both reduce to near-empty distinguishing
+                // words). Require the scraped name to share a distinguishing word with the
+                // candidate, same guard ProductGroupService uses for grouping — otherwise this
+                // fallback can silently re-point an unrelated product's row (and its old price)
+                // at the scraped item, poisoning price_history with a fake "drop".
+                if (bestMatch != null && bestScore >= FUZZY_MATCH_THRESHOLD
+                        && ProductLineMatcher.hasWordOverlap(
+                                ProductLineMatcher.productLineWords(scraped.getName(), bestMatch.getBrand()),
+                                ProductLineMatcher.productLineWords(bestMatch.getName(), bestMatch.getBrand()))) {
                     log.info("[{}] SKU i ime promenjeni za '{}' {}g — fuzzy match na '{}' (score: {}), stari URL: {}, novi URL: {}",
                             store.getName(), scraped.getName(), Math.round(scraped.getPrimaryWeightGrams()),
                             bestMatch.getName(), bestScore, bestMatch.getUrl(), scraped.getUrl());
