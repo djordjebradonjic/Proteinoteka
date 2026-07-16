@@ -4,6 +4,7 @@ import com.proteinoteka.model.Product;
 import com.proteinoteka.service.BaseScraperEnricher;
 import com.proteinoteka.service.NutritionParserService;
 import com.proteinoteka.service.PansportScraper;
+import com.proteinoteka.util.WeightParser;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,7 +34,7 @@ public class PansportScraperTest {
 
     @BeforeEach
     void setUp() throws IOException {
-        pansportScraper = new PansportScraper(nutritionParser, baseEnricher, null, null);
+        pansportScraper = new PansportScraper(nutritionParser, baseEnricher, null, null, new WeightParser());
         File htmlFile = new File("src/test/resources/html/pansport_test.html");
         mockDoc = Jsoup.parse(htmlFile, StandardCharsets.UTF_8.name());
     }
