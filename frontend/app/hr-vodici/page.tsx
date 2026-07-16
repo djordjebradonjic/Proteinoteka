@@ -95,6 +95,12 @@ const HR_SEO_PAGES = [
 
 const HR_GUIDES = [
   {
+    href: "/hr-vodici/najbolji-protein-za-pocetnike-hrvatska",
+    title: "Najbolji protein za početnike — top izbori i cijene",
+    desc: "Najbolji ukupno, proračun, vrijednost za novac, probavljivost i biljni izbor — s aktualnim cijenama.",
+    readMin: 6,
+  },
+  {
     href: "/hr-vodici/whey-protein-za-pocetnike-hrvatska",
     title: "Whey protein za početnike — što, koliko i odakle?",
     desc: "WPC, WPI ili biljni? Koliko uzimati i koliko košta mjesec dana u Hrvatskoj.",

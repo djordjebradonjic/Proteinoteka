@@ -31,9 +31,9 @@ export const metadata: Metadata = {
 const USE_CASE_ROWS = [
   {
     goal: "Početnik / rekreativac",
-    type: "Whey Concentrate",
-    href: "/kategorija/whey-concentrate",
-    reason: "Odlična vrijednost za novac, visokih 70–80g proteina/100g, lako se nađe u akciji.",
+    type: "Vodič: najbolji izbori za početnike",
+    href: "/hr-vodici/najbolji-protein-za-pocetnike-hrvatska",
+    reason: "Odlična vrijednost za novac, visokih 70–80g proteina/100g, lako se nađe u akciji — pogledajte pažljivo odabrane top izbore po proračunu i vrijednosti.",
   },
   {
     goal: "Mršavljenje",

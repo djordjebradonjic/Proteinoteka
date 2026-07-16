@@ -83,6 +83,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const hrOnlyPages: MetadataRoute.Sitemap = CURRENT_MARKET === "hr" ? [
     // Guides
     { url: `${BASE}/hr-vodici`,                                         changeFrequency: "monthly" as const, priority: 0.7,  lastModified: now },
+    { url: `${BASE}/hr-vodici/najbolji-protein-za-pocetnike-hrvatska`,  changeFrequency: "weekly"  as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/hr-vodici/whey-protein-za-pocetnike-hrvatska`,      changeFrequency: "monthly" as const, priority: 0.75, lastModified: now },
     { url: `${BASE}/hr-vodici/koliko-kosta-protein-hrvatska`,           changeFrequency: "weekly"  as const, priority: 0.8,  lastModified: now },
     { url: `${BASE}/hr-vodici/koliko-proteina-dnevno-hrvatska`,        changeFrequency: "monthly" as const, priority: 0.75, lastModified: now },
