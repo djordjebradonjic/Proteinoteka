@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.WaitUntilState;
 import com.proteinoteka.model.Product;
+import com.proteinoteka.util.WeightParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -31,6 +32,7 @@ public class ProteinboxScraper implements StoreScraper {
 
     private final NutritionParserService nutritionParser;
     private final BaseScraperEnricher baseEnricher;
+    private final WeightParser weightParser;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @org.springframework.beans.factory.annotation.Value("${playwright.proxy.enabled:false}")
@@ -329,14 +331,9 @@ public class ProteinboxScraper implements StoreScraper {
         return variants;
     }
 
-    private static double parseWeightToGrams(String text) {
-        if (text == null) return 0;
-        try {
-            String w = text.trim().toLowerCase().replace(",", ".").replaceAll("\\s+", "");
-            if (w.contains("kg")) return Double.parseDouble(w.replace("kg", "")) * 1000;
-            if (w.contains("g"))  return Double.parseDouble(w.replace("g", ""));
-        } catch (Exception ignored) {}
-        return 0;
+    private double parseWeightToGrams(String text) {
+        Double parsed = weightParser.parse(text);
+        return parsed != null ? parsed : 0;
     }
 
     private static String formatPrice(double price) {

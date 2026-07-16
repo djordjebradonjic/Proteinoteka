@@ -3,6 +3,7 @@ package com.proteinoteka.service;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.WaitUntilState;
 import com.proteinoteka.model.Product;
+import com.proteinoteka.util.WeightParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -27,6 +28,7 @@ public class LamaScraper implements StoreScraper {
 
     private final NutritionParserService nutritionParser;
     private final BaseScraperEnricher    baseEnricher;
+    private final WeightParser           weightParser;
 
     @Override public String  getStoreName()            { return STORE_NAME; }
     @Override public String  getBaseUrl()              { return LISTING_URL; }
@@ -305,13 +307,7 @@ public class LamaScraper implements StoreScraper {
     }
 
     private Double parseWeightToGrams(String text) {
-        if (text == null) return null;
-        String t = text.toLowerCase().replaceAll("\\s+", "").replace(",", ".");
-        try {
-            if (t.contains("kg")) return Double.parseDouble(t.replace("kg", "")) * 1000;
-            if (t.contains("g"))  return Double.parseDouble(t.replace("g", ""));
-        } catch (Exception ignored) {}
-        return null;
+        return weightParser.parse(text);
     }
 
     // ── Playwright helpers ────────────────────────────────────────────────────────

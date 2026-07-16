@@ -5,6 +5,7 @@ import com.microsoft.playwright.options.WaitUntilState;
 import com.proteinoteka.model.Product;
 import com.proteinoteka.repository.ProductRepository;
 import com.proteinoteka.util.PriceParser;
+import com.proteinoteka.util.WeightParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -40,6 +41,7 @@ public class XSportScraper implements StoreScraper {
     private final BaseScraperEnricher    baseEnricher;
     private final ProductRepository      productRepository;
     private final PriceParser            priceParser;
+    private final WeightParser           weightParser;
 
     @Override public String  getStoreName()            { return STORE_NAME; }
     @Override public String  getBaseUrl()              { return LISTING_URL; }
@@ -415,13 +417,7 @@ public class XSportScraper implements StoreScraper {
     }
 
     private Double parseWeightToGrams(String weight) {
-        if (weight == null) return null;
-        try {
-            String w = weight.toLowerCase().replace(",", ".").replaceAll("\\s+", "");
-            if (w.contains("kg")) return Double.parseDouble(w.replace("kg", "")) * 1000;
-            if (w.contains("g"))  return Double.parseDouble(w.replace("g", ""));
-        } catch (Exception ignored) {}
-        return null;
+        return weightParser.parse(weight);
     }
 
     private boolean navigateWithRetry(Page page, String url, int maxRetries) {

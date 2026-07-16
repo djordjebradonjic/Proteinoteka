@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,6 +17,10 @@ import java.util.List;
 public class DataQualityService {
 
     private final DataQualityRepository repo;
+
+    // Full store rotation is weekly (see ScrapingSchedulerService); a product untouched
+    // for 2x that is a sign the scraper is silently failing for it specifically.
+    private static final int STALE_DAYS = 14;
 
     public DataQualityReport generateReport() {
         log.info("Generating Data Quality Report...");
@@ -217,6 +222,21 @@ public class DataQualityService {
         for (Object[] row : repo.findHighSugarOutliers()) {
             String msg = String.format("SUGAR_TOO_HIGH — id=%s [%s] '%s' sugar=%.1fg/100g (max expected: 30g)",
                     row[0], row[1], row[2], ((Number) row[3]).doubleValue());
+            issues.add(msg);
+            log.warn("[DataQuality] {}", msg);
+        }
+
+        for (Object[] row : repo.findImplausiblyLowWeightOutliers()) {
+            String msg = String.format("WEIGHT_IMPLAUSIBLE — id=%s [%s] '%s' primaryWeightGrams=%.2fg (likely a kg typo on the store site)",
+                    row[0], row[1], row[2], ((Number) row[3]).doubleValue());
+            issues.add(msg);
+            log.warn("[DataQuality] {}", msg);
+        }
+
+        LocalDateTime staleCutoff = LocalDateTime.now().minusDays(STALE_DAYS);
+        for (Object[] row : repo.findStaleProducts(staleCutoff)) {
+            String msg = String.format("STALE_PRODUCT — id=%s [%s] '%s' lastUpdated=%s (not refreshed in %d+ days)",
+                    row[0], row[1], row[2], row[3], STALE_DAYS);
             issues.add(msg);
             log.warn("[DataQuality] {}", msg);
         }

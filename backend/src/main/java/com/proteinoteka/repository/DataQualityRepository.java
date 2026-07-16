@@ -3,6 +3,7 @@ package com.proteinoteka.repository;
 import com.proteinoteka.model.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -135,4 +136,24 @@ public interface DataQualityRepository extends JpaRepository<Product, Long> {
         ORDER BY p.sugar_per_100g DESC
         """, nativeQuery = true)
     List<Object[]> findHighSugarOutliers();
+
+    // Whey/casein/gainer packages don't come in fractional-gram sizes below 150g —
+    // a decimal weight this low almost always means a site typo ("2,3g" meant "2,3kg").
+    @Query(value = """
+        SELECT p.id, s.name AS store, p.name, p.primary_weight_grams
+        FROM products p JOIN stores s ON p.store_id = s.id
+        WHERE p.primary_weight_grams IS NOT NULL AND p.primary_weight_grams < 150
+        ORDER BY p.primary_weight_grams
+        """, nativeQuery = true)
+    List<Object[]> findImplausiblyLowWeightOutliers();
+
+    // Products whose scraper hasn't touched them in a while — the scrape may be
+    // silently failing for this product/variant while the rest of the store updates fine.
+    @Query(value = """
+        SELECT p.id, s.name AS store, p.name, p.last_updated
+        FROM products p JOIN stores s ON p.store_id = s.id
+        WHERE p.last_updated < :cutoff
+        ORDER BY p.last_updated
+        """, nativeQuery = true)
+    List<Object[]> findStaleProducts(@Param("cutoff") java.time.LocalDateTime cutoff);
 }
