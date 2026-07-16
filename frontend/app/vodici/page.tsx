@@ -22,6 +22,12 @@ export const metadata: Metadata = {
 
 const ARTICLES = [
   {
+    href: "/vodici/najbolji-protein-za-pocetnike",
+    title: "Najbolji protein za početnike — top izbori i cene",
+    excerpt: "Najbolji ukupno, najjeftiniji, najbolja vrednost za novac, najlakši za varenje i najbolji biljni izbor — sa aktuelnim cenama.",
+    readMin: 6,
+  },
+  {
     href: "/vodici/whey-protein-za-pocetnike",
     title: "Whey protein za početnike — šta, koliko i odakle?",
     excerpt: "WPC je sve što trebaš kao početnik. Koji tip uzeti, koliko dnevno, i koliko košta mesec dana — sa aktuelnim cenama iz Srbije.",

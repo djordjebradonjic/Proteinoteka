@@ -31,9 +31,9 @@ export const metadata: Metadata = {
 const USE_CASE_ROWS = [
   {
     goal: "Početnik / rekreativac",
-    type: "Whey Concentrate",
-    href: "/kategorija/whey-concentrate",
-    reason: "Odlična vrednost za novac, visokih 70–80g proteina/100g, lako se nađe u akciji.",
+    type: "Vodič: najbolji izbori za početnike",
+    href: "/vodici/najbolji-protein-za-pocetnike",
+    reason: "Odlična vrednost za novac, visokih 70–80g proteina/100g, lako se nađe u akciji — pogledaj pažljivo odabrane top izbore po budžetu i vrednosti.",
   },
   {
     goal: "Mršavljenje",
@@ -74,7 +74,7 @@ function UseCaseSection() {
         Kome koji whey protein odgovara?
       </h2>
       <p className="text-sm text-slate-500 mb-4">
-        Nema jednog "najboljeg" proteina za sve — zavisi od cilja, budžeta i tolerancije na laktozu.
+        Nema jednog &ldquo;najboljeg&rdquo; proteina za sve — zavisi od cilja, budžeta i tolerancije na laktozu.
       </p>
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">

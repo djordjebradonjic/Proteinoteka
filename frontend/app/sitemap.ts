@@ -37,6 +37,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/vodici/whey-isolate-vs-concentrate`,      changeFrequency: "monthly" as const, priority: 0.7, lastModified: d("2025-04-01") },
     { url: `${BASE}/vodici/da-li-protein-goji`,               changeFrequency: "monthly" as const, priority: 0.7, lastModified: d("2025-05-01") },
     { url: `${BASE}/vodici/protein-za-mrsavljenje`,           changeFrequency: "monthly" as const, priority: 0.7, lastModified: d("2025-05-01") },
+    { url: `${BASE}/vodici/najbolji-protein-za-pocetnike`,    changeFrequency: "weekly"  as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/vodici/whey-protein-za-pocetnike`,        changeFrequency: "monthly" as const, priority: 0.7, lastModified: d("2025-05-01") },
     { url: `${BASE}/vodici/koliko-novca-mesecno-za-proteine`, changeFrequency: "weekly"  as const, priority: 0.8, lastModified: now },
     { url: `${BASE}/vodici/scitec-nutrition-whey`,            changeFrequency: "monthly" as const, priority: 0.7, lastModified: d("2026-06-19") },
