@@ -17,4 +17,7 @@ public interface CalculatorSubscriberRepository extends JpaRepository<Calculator
 
     @Query("SELECT s.goal, COUNT(s) FROM CalculatorSubscriber s WHERE s.goal IS NOT NULL GROUP BY s.goal ORDER BY COUNT(s) DESC")
     List<Object[]> countByGoalGrouped();
+
+    @Query("SELECT s.market, COUNT(s) FROM CalculatorSubscriber s GROUP BY s.market ORDER BY COUNT(s) DESC")
+    List<Object[]> countByMarketGrouped();
 }

@@ -32,6 +32,7 @@ public class CalculatorController {
         }
 
         String email = req.email().toLowerCase().trim();
+        String market = (req.market() == null || req.market().isEmpty()) ? "rs" : req.market();
 
         repo.findByEmail(email).ifPresentOrElse(existing -> {
             existing.setName(req.name());
@@ -51,6 +52,7 @@ public class CalculatorController {
             sub.setCalories(req.calories());
             sub.setCarbs(req.carbs());
             sub.setFat(req.fat());
+            sub.setMarket(market);
             repo.save(sub);
         });
 
@@ -69,12 +71,20 @@ public class CalculatorController {
                         LinkedHashMap::new
                 ));
 
+        Map<String, Long> byMarket = repo.countByMarketGrouped().stream()
+                .collect(Collectors.toMap(
+                        row -> (String) row[0],
+                        row -> (Long) row[1],
+                        (a, b) -> a,
+                        LinkedHashMap::new
+                ));
+
         List<CalculatorStatsDTO.RecentSubscriber> recent = repo.findTop10ByOrderByCreatedAtDesc()
                 .stream()
                 .map(s -> new CalculatorStatsDTO.RecentSubscriber(
-                        s.getEmail(), s.getName(), s.getGoal(), s.getCreatedAt()))
+                        s.getEmail(), s.getName(), s.getGoal(), s.getMarket(), s.getCreatedAt()))
                 .toList();
 
-        return ResponseEntity.ok(new CalculatorStatsDTO(total, byGoal, recent));
+        return ResponseEntity.ok(new CalculatorStatsDTO(total, byGoal, byMarket, recent));
     }
 }

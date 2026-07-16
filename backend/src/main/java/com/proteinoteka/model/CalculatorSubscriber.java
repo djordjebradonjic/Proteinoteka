@@ -26,6 +26,9 @@ public class CalculatorSubscriber {
     private Integer carbs;
     private Integer fat;
 
+    @Column(nullable = false)
+    private String market = "rs";
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 

@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -29,6 +30,13 @@ public class UnsubscribeController {
     @Value("${app.frontend-url:https://proteinoteka.rs}")
     private String frontendUrl;
 
+    // Same two storefront domains as frontend/lib/marketConfig.ts — used so the
+    // unsubscribe redirect lands on the market the user actually signed up on.
+    private static final Map<String, String> MARKET_FRONTEND_URLS = Map.of(
+            "rs", "https://proteinoteka.rs",
+            "hr", "https://proteinoteka.com.hr"
+    );
+
     /**
      * One-click unsubscribe from price alerts for a specific product.
      * No login required — the UUID token is secure enough for this purpose.
@@ -37,23 +45,30 @@ public class UnsubscribeController {
     @GetMapping("/unsubscribe")
     @Transactional
     public ResponseEntity<Void> unsubscribe(@RequestParam UUID token) {
-        wishlistItemRepo.findByUnsubscribeToken(token).ifPresentOrElse(
-                item -> {
-                    // Append to unsubscribe log before deleting the item
-                    AlertUnsubscribe record = new AlertUnsubscribe();
-                    record.setEmail(item.getEmail());
-                    record.setProductId(item.getProductId());
-                    unsubscribeRepo.save(record);
+        String redirectBase = frontendUrl;
 
-                    wishlistItemRepo.delete(item);
-                    log.info("[Unsubscribe] Removed wishlist item for {} / product {}",
-                            item.getEmail(), item.getProductId());
-                },
-                () -> log.warn("[Unsubscribe] Unknown token: {}", token)
-        );
+        var itemOpt = wishlistItemRepo.findByUnsubscribeToken(token);
+        if (itemOpt.isPresent()) {
+            var item = itemOpt.get();
+
+            // Append to unsubscribe log before deleting the item
+            AlertUnsubscribe record = new AlertUnsubscribe();
+            record.setEmail(item.getEmail());
+            record.setProductId(item.getProductId());
+            record.setMarket(item.getMarket());
+            unsubscribeRepo.save(record);
+
+            wishlistItemRepo.delete(item);
+            log.info("[Unsubscribe] Removed wishlist item for {} / product {}",
+                    item.getEmail(), item.getProductId());
+
+            redirectBase = MARKET_FRONTEND_URLS.getOrDefault(item.getMarket(), frontendUrl);
+        } else {
+            log.warn("[Unsubscribe] Unknown token: {}", token);
+        }
 
         return ResponseEntity.status(HttpStatus.FOUND)
-                .location(URI.create(frontendUrl + "/odjava"))
+                .location(URI.create(redirectBase + "/odjava"))
                 .build();
     }
 }

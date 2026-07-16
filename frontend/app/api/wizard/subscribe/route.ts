@@ -1,7 +1,10 @@
 import { Resend } from "resend";
 import { NextRequest, NextResponse } from "next/server";
+import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+const DOMAIN = MARKET_CONFIG[CURRENT_MARKET].domain;
+const SITE_URL = `https://${DOMAIN}`;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const GOAL_LABEL: Record<string, string> = {
@@ -43,17 +46,17 @@ export async function POST(req: NextRequest) {
   fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/calculator/subscribe`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, name, goal, protein, calories, carbs, fat }),
+    body: JSON.stringify({ email, name, goal, protein, calories, carbs, fat, market: CURRENT_MARKET }),
   }).catch(err => console.error("[wizard] Failed to save subscriber:", err));
 
   try {
     await resend.emails.send({
-      from: "plan@proteinoteka.rs",
+      from: `plan@${DOMAIN}`,
       to: email,
       subject: "Tvoj personalizovani protein plan — Proteinoteka",
       html: `
 <!DOCTYPE html>
-<html lang="sr">
+<html lang="${MARKET_CONFIG[CURRENT_MARKET].lang}">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f8fafc;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;padding:40px 16px">
@@ -127,7 +130,7 @@ export async function POST(req: NextRequest) {
         <!-- CTA -->
         <tr>
           <td style="padding:0 36px 32px">
-            <a href="https://proteinoteka.rs" style="display:block;background:linear-gradient(135deg,#FF9900,#e68a00);color:#131921;font-weight:900;font-size:15px;text-align:center;text-decoration:none;padding:16px;border-radius:12px">
+            <a href="${SITE_URL}" style="display:block;background:linear-gradient(135deg,#FF9900,#e68a00);color:#131921;font-weight:900;font-size:15px;text-align:center;text-decoration:none;padding:16px;border-radius:12px">
               Pronađi najjeftiniji protein za tvoj cilj →
             </a>
           </td>
@@ -137,8 +140,8 @@ export async function POST(req: NextRequest) {
         <tr>
           <td style="background:#f8fafc;padding:20px 36px;border-top:1px solid #e2e8f0">
             <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;line-height:1.6">
-              Ovaj email si primio jer si koristio Protein kalkulator na proteinoteka.rs.<br>
-              <a href="https://proteinoteka.rs" style="color:#FF9900;text-decoration:none">proteinoteka.rs</a>
+              Ovaj email si primio jer si koristio Protein kalkulator na ${DOMAIN}.<br>
+              <a href="${SITE_URL}" style="color:#FF9900;text-decoration:none">${DOMAIN}</a>
             </p>
           </td>
         </tr>

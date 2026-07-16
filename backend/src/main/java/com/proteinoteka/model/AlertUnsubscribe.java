@@ -22,6 +22,9 @@ public class AlertUnsubscribe {
     @Column(name = "product_id", nullable = false)
     private Long productId;
 
+    @Column(nullable = false)
+    private String market = "rs";
+
     @Column(name = "job_id")
     private Long jobId;
 

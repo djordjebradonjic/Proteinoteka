@@ -25,11 +25,12 @@ interface Stats {
   totalCompares:     number;
 }
 
-interface RecentSubscriber { email: string; name: string | null; goal: string | null; createdAt: string; }
+interface RecentSubscriber { email: string; name: string | null; goal: string | null; market: string | null; createdAt: string; }
 interface CalcStats {
-  total:  number;
-  byGoal: Record<string, number>;
-  recent: RecentSubscriber[];
+  total:    number;
+  byGoal:   Record<string, number>;
+  byMarket: Record<string, number>;
+  recent:   RecentSubscriber[];
 }
 
 interface DecisionRule {
@@ -758,6 +759,13 @@ function CalculatorSection({ stats }: { stats: CalcStats }) {
             <div>
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Ukupno</p>
               <p className="text-4xl font-black text-[#1B2B4B]">{stats.total.toLocaleString()}</p>
+              <div className="flex gap-2 mt-1">
+                {Object.entries(stats.byMarket).map(([market, count]) => (
+                  <span key={market} className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 uppercase">
+                    {market}: {count}
+                  </span>
+                ))}
+              </div>
             </div>
             <div className="space-y-2">
               {goalData.map(({ name, count, color }) => {
@@ -782,7 +790,7 @@ function CalculatorSection({ stats }: { stats: CalcStats }) {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-100">
-                    {["Email","Ime","Cilj","Datum"].map(h => (
+                    {["Email","Ime","Cilj","Market","Datum"].map(h => (
                       <th key={h} className="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest pb-2 pr-4">{h}</th>
                     ))}
                   </tr>
@@ -799,6 +807,7 @@ function CalculatorSection({ stats }: { stats: CalcStats }) {
                           {meta ? <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ color: meta.color, background: `${meta.color}18` }}>{meta.label}</span>
                             : <span className="text-xs text-slate-400">{s.goal ?? "—"}</span>}
                         </td>
+                        <td className="py-2.5 pr-4 text-[10px] font-bold text-slate-500 uppercase">{s.market ?? "rs"}</td>
                         <td className="py-2.5 text-xs text-slate-400">{date}</td>
                       </tr>
                     );

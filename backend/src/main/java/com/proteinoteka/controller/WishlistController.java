@@ -77,17 +77,21 @@ public class WishlistController {
                 .filter(id -> !existingIds.contains(id))
                 .toList();
         if (!toAdd.isEmpty()) {
-            Map<Long, Double> priceByProductId = productRepo.findAllById(toAdd).stream()
-                    .filter(p -> p.getNumericPrice() != null && p.getNumericPrice() > 0)
-                    .collect(Collectors.toMap(Product::getId, Product::getNumericPrice));
+            Map<Long, Product> productById = productRepo.findAllById(toAdd).stream()
+                    .collect(Collectors.toMap(Product::getId, p -> p));
 
             List<WishlistItem> newItems = toAdd.stream().map(pid -> {
                 WishlistItem item = new WishlistItem();
                 item.setEmail(email);
                 item.setProductId(pid);
-                Double price = priceByProductId.get(pid);
-                if (price != null) {
-                    item.setPriceAtSubscription(BigDecimal.valueOf(price));
+                Product product = productById.get(pid);
+                if (product != null) {
+                    if (product.getNumericPrice() != null && product.getNumericPrice() > 0) {
+                        item.setPriceAtSubscription(BigDecimal.valueOf(product.getNumericPrice()));
+                    }
+                    if (product.getMarket() != null) {
+                        item.setMarket(product.getMarket());
+                    }
                 }
                 return item;
             }).toList();
@@ -126,6 +130,9 @@ public class WishlistController {
                     productRepo.findById(req.productId()).ifPresent(p -> {
                         if (p.getNumericPrice() != null && p.getNumericPrice() > 0) {
                             item.setPriceAtSubscription(BigDecimal.valueOf(p.getNumericPrice()));
+                        }
+                        if (p.getMarket() != null) {
+                            item.setMarket(p.getMarket());
                         }
                     });
                     wishlistRepo.save(item);

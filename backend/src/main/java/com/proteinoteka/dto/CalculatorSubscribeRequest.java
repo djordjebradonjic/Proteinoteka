@@ -7,5 +7,6 @@ public record CalculatorSubscribeRequest(
         Integer protein,
         Integer calories,
         Integer carbs,
-        Integer fat
+        Integer fat,
+        String market
 ) {}

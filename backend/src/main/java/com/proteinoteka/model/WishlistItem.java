@@ -24,6 +24,9 @@ public class WishlistItem {
     @Column(name = "product_id", nullable = false)
     private Long productId;
 
+    @Column(nullable = false)
+    private String market = "rs";
+
     @Column(name = "added_at", updatable = false)
     private LocalDateTime addedAt = LocalDateTime.now();
 
