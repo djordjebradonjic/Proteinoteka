@@ -11,10 +11,6 @@ interface ProductGridProps {
   onPageChange: (page: number) => void;
 }
 
-// Position of the inline newsletter banner within the grid — only on the
-// first page, where visitors are actively comparing prices (highest intent).
-const NEWSLETTER_BANNER_INDEX = 8;
-
 export default function ProductGrid({
   products,
   loading,
@@ -53,18 +49,20 @@ export default function ProductGrid({
       {/* Dim existing products during page-change fetch — no height change, no jump */}
       <div className={`flex flex-wrap gap-3 md:gap-4 transition-opacity duration-150 ${loading ? "opacity-40 pointer-events-none" : "opacity-100"}`}>
         {products.map((p, index) => (
-          <div key={p.id} className="contents">
-            {currentPage === 0 && index === NEWSLETTER_BANNER_INDEX && (
-              <div className="w-full">
-                <NewsletterListingBanner />
-              </div>
-            )}
-            <div className="w-[calc(50%-6px)] md:w-[calc(50%-8px)] lg:w-[calc(33.333%-11px)] xl:w-[calc(25%-12px)]">
-              <ProductCard product={p} priority={index < 4} />
-            </div>
+          <div
+            key={p.id}
+            className="w-[calc(50%-6px)] md:w-[calc(50%-8px)] lg:w-[calc(33.333%-11px)] xl:w-[calc(25%-12px)]"
+          >
+            <ProductCard product={p} priority={index < 4} />
           </div>
         ))}
       </div>
+
+      {currentPage === 0 && (
+        <div className="mt-6">
+          <NewsletterListingBanner />
+        </div>
+      )}
 
       <div className="flex items-center justify-center gap-1 py-8 border-t border-slate-100 flex-wrap mt-6">
         <button
