@@ -15,6 +15,7 @@ const VALID_SOURCES = new Set([
   "inline_banner",
   "alert_crosssell",
   "landing_page",
+  "kontakt_page",
 ]);
 
 export async function POST(req: NextRequest) {

@@ -842,6 +842,7 @@ const SOURCE_META: Record<string, { label: string; color: string }> = {
   inline_banner:     { label: "Inline traka",  color: "#FF9900" },
   alert_crosssell:   { label: "Alert cross-sell", color: "#22c55e" },
   landing_page:      { label: "Landing stranica", color: "#ef4444" },
+  kontakt_page:      { label: "Kontakt stranica", color: "#06b6d4" },
 };
 
 function NewsletterSection({ stats }: { stats: NewsletterStats }) {

@@ -11,6 +11,7 @@ import {
   Phone,
 } from "lucide-react";
 import { CURRENT_MARKET } from "@/lib/marketConfig";
+import NewsletterInlineForm from "@/components/NewsletterInlineForm";
 
 function LinkedinIcon({ className }: { className?: string }) {
   return (
@@ -70,91 +71,71 @@ export default function KontaktPage() {
   return (
     <main className="min-h-screen bg-[#f8f9fa] py-12 px-4">
       <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-black text-[#131921] mb-2">Kontakt</h1>
-          <p className="text-slate-500 text-sm">
+
+        {/* Newsletter — primarni fokus stranice */}
+        <div className="rounded-2xl bg-gradient-to-br from-[#131921] to-[#1B2B4B] py-10 px-6 sm:px-10 mb-10">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-[#FF9900] mb-3">
+            Newsletter
+          </p>
+          <h1 className="text-2xl sm:text-3xl font-black text-white mb-2 max-w-md">
+            {isHR ? "Uštedi i do 20% na proteinima" : "Uštedi i do 20% na proteinima"}
+          </h1>
+          <p className="text-sm text-white/70 mb-6 max-w-md">
+            {isHR
+              ? "2x mjesečno biramo proizvode s najvećim padom cijene i šaljemo ih direktno u inbox."
+              : "2x mesečno biramo proizvode sa najvećim padom cene i šaljemo ih direktno u inbox."}
+          </p>
+          <div className="sm:max-w-md">
+            <NewsletterInlineForm source="kontakt_page" variant="dark" />
+          </div>
+        </div>
+
+        {/* Header — kontakt (sekundarno) */}
+        <div className="mb-5">
+          <h2 className="text-lg font-bold text-[#131921] mb-1">Kontakt</h2>
+          <p className="text-slate-500 text-xs">
             {isHR
               ? "Imaš pitanje, prijedlog ili prijavu greške? Piši nam."
               : "Imaš pitanje, sugestiju ili prijavu greške? Piši nam."}
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          {/* Info kartice */}
-          <div className="space-y-4">
-            <div className="bg-white rounded-xl p-5 border border-slate-100 shadow-sm">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-9 h-9 rounded-lg bg-[#FF9900]/10 flex items-center justify-center">
-                  <Mail className="w-4 h-4 text-[#FF9900]" />
-                </div>
-                <span className="font-semibold text-sm text-slate-700">
-                  Email
-                </span>
-              </div>
-              <p className="text-sm text-slate-500">{contactEmail}</p>
+        <div className="grid md:grid-cols-3 gap-4">
+          {/* Info lista */}
+          <div className="bg-white rounded-xl border border-slate-100 shadow-sm divide-y divide-slate-50">
+            <div className="flex items-center gap-2.5 px-3 py-2.5">
+              <Mail className="w-3.5 h-3.5 text-[#FF9900] shrink-0" />
+              <span className="text-xs text-slate-500 truncate">{contactEmail}</span>
             </div>
 
-            <div className="bg-white rounded-xl p-5 border border-slate-100 shadow-sm">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-9 h-9 rounded-lg bg-[#FF9900]/10 flex items-center justify-center">
-                  <Phone className="w-4 h-4 text-[#FF9900]" />
-                </div>
-                <span className="font-semibold text-sm text-slate-700">
-                  {isHR ? "Telefon" : "Telefon"}
-                </span>
-              </div>
-              <a href={contactPhoneHref} className="text-sm text-slate-500 hover:text-[#FF9900] transition-colors">
-                {contactPhone}
-              </a>
+            <a href={contactPhoneHref} className="flex items-center gap-2.5 px-3 py-2.5 hover:bg-slate-50 transition-colors">
+              <Phone className="w-3.5 h-3.5 text-[#FF9900] shrink-0" />
+              <span className="text-xs text-slate-500">{contactPhone}</span>
+            </a>
+
+            <div className="flex items-center gap-2.5 px-3 py-2.5">
+              <Clock className="w-3.5 h-3.5 text-[#FF9900] shrink-0" />
+              <span className="text-xs text-slate-500">{isHR ? "Obično unutar 24h" : "Obično unutar 24h"}</span>
             </div>
 
-            <div className="bg-white rounded-xl p-5 border border-slate-100 shadow-sm">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-9 h-9 rounded-lg bg-[#FF9900]/10 flex items-center justify-center">
-                  <Clock className="w-4 h-4 text-[#FF9900]" />
-                </div>
-                <span className="font-semibold text-sm text-slate-700">
-                  {isHR ? "Vrijeme odgovora" : "Vreme odgovora"}
-                </span>
-              </div>
-              <p className="text-sm text-slate-500">{isHR ? "Obično unutar 24h" : "Obično unutar 24h"}</p>
+            <div className="flex items-center gap-2.5 px-3 py-2.5">
+              <MapPin className="w-3.5 h-3.5 text-[#FF9900] shrink-0" />
+              <span className="text-xs text-slate-500">{isHR ? "Hrvatska" : "Srbija"}</span>
             </div>
 
-            <div className="bg-white rounded-xl p-5 border border-slate-100 shadow-sm">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-9 h-9 rounded-lg bg-[#FF9900]/10 flex items-center justify-center">
-                  <MapPin className="w-4 h-4 text-[#FF9900]" />
-                </div>
-                <span className="font-semibold text-sm text-slate-700">
-                  Lokacija
-                </span>
-              </div>
-              <p className="text-sm text-slate-500">{isHR ? "Hrvatska" : "Srbija"}</p>
-            </div>
-
-            <div className="bg-white rounded-xl p-5 border border-slate-100 shadow-sm">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-9 h-9 rounded-lg bg-[#FF9900]/10 flex items-center justify-center">
-                  <LinkedinIcon className="w-4 h-4 text-[#FF9900]" />
-                </div>
-                <span className="font-semibold text-sm text-slate-700">
-                  LinkedIn
-                </span>
-              </div>
-              <a
-                href={linkedinUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-slate-500 hover:text-[#FF9900] transition-colors"
-              >
-                Đorđe Bradonjić
-              </a>
-            </div>
+            <a
+              href={linkedinUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2.5 px-3 py-2.5 hover:bg-slate-50 transition-colors"
+            >
+              <LinkedinIcon className="w-3.5 h-3.5 text-[#FF9900] shrink-0" />
+              <span className="text-xs text-slate-500">Đorđe Bradonjić</span>
+            </a>
           </div>
 
           {/* Forma */}
-          <div className="md:col-span-2 bg-white rounded-xl border border-slate-100 shadow-sm p-6">
+          <div className="md:col-span-2 bg-white rounded-xl border border-slate-100 shadow-sm p-4 sm:p-5">
             {isHR ? (
               <div className="flex flex-col items-center justify-center h-full py-12 text-center">
                 <Mail className="w-12 h-12 text-[#FF9900] mb-4" />

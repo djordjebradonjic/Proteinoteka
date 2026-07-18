@@ -13,7 +13,8 @@ export type NewsletterSource =
   | "modal_exit_intent"
   | "inline_banner"
   | "alert_crosssell"
-  | "landing_page";
+  | "landing_page"
+  | "kontakt_page";
 
 type Status = "idle" | "loading" | "success" | "error";
 
