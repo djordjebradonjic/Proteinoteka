@@ -72,6 +72,7 @@ export const FOOTER_STORES =
 
 const RS_FOOTER_GUIDES: NavLink[] = [
   { label: "Protein za početnike",    href: "/vodici/whey-protein-za-pocetnike"   },
+  { label: "Kako uzimati whey protein", href: "/vodici/kako-uzimati-whey-protein" },
   { label: "Koliko proteina dnevno?", href: "/vodici/koliko-proteina-dnevno"      },
   { label: "Protein za mršavljenje",  href: "/vodici/protein-za-mrsavljenje"      },
   { label: "Da li protein goji?",     href: "/vodici/da-li-protein-goji"          },
@@ -82,6 +83,7 @@ const RS_FOOTER_GUIDES: NavLink[] = [
 
 const HR_FOOTER_GUIDES: NavLink[] = [
   { label: "Whey protein za početnike", href: "/hr-vodici/whey-protein-za-pocetnike-hrvatska" },
+  { label: "Kako uzimati whey protein", href: "/hr-vodici/kako-uzimati-whey-protein-hrvatska" },
   { label: "Koliko košta protein u HR?", href: "/hr-vodici/koliko-kosta-protein-hrvatska"      },
   { label: "Koliko proteina dnevno?",   href: "/hr-vodici/koliko-proteina-dnevno-hrvatska"    },
   { label: "Protein za mršavljenje",    href: "/hr-vodici/protein-za-mrsavljenje-hrvatska"    },

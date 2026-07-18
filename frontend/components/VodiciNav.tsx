@@ -16,6 +16,11 @@ const GUIDES = [
     readMin: 7,
   },
   {
+    slug: "kako-uzimati-whey-protein",
+    title: "Kako uzimati whey protein — doza, tajming i greške",
+    readMin: 9,
+  },
+  {
     slug: "protein-za-mrsavljenje",
     title: "Protein za mršavljenje — koji tip pomaže i koliko košta",
     readMin: 8,

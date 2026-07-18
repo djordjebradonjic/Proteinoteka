@@ -34,6 +34,12 @@ const ARTICLES = [
     readMin: 7,
   },
   {
+    href: "/vodici/kako-uzimati-whey-protein",
+    title: "Kako uzimati whey protein — doza, tajming, mešanje i greške",
+    excerpt: "Tačna doza po cilju, raspored kroz dan, pravilno mešanje bez grudvica, sa čim kombinovati i najčešće greške koje ga čine beskorisnim.",
+    readMin: 9,
+  },
+  {
     href: "/vodici/koliko-novca-mesecno-za-proteine",
     title: "Koliko novca mesečno treba za proteine u Srbiji?",
     excerpt: "Konkretna računica za 60–90 kg: WPC 3.900–6.000 din, isolate 5.700–8.300 din, biljni 4.200–7.300 din. Cene iz 8 prodavnica, ažurirane sedmično.",

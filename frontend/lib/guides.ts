@@ -4,6 +4,11 @@ export const GUIDES = {
     title: "Najbolji protein za početnike",
     description: "Top izbori po budžetu, vrednosti i svarljivosti",
   },
+  "kako-uzimati-whey-protein": {
+    path: "/vodici/kako-uzimati-whey-protein",
+    title: "Kako uzimati whey protein",
+    description: "Doza, tajming, mešanje i najčešće greške",
+  },
   "whey-isolate-vs-concentrate": {
     path: "/vodici/whey-isolate-vs-concentrate",
     title: "Whey Isolate vs Concentrate",
@@ -34,8 +39,8 @@ export const GUIDES = {
 export type GuideSlug = keyof typeof GUIDES;
 
 export const CATEGORY_GUIDES: Record<string, GuideSlug[]> = {
-  whey_isolate:     ["najbolji-protein-za-pocetnike", "whey-isolate-vs-concentrate", "protein-za-mrsavljenje"],
-  whey_concentrate: ["najbolji-protein-za-pocetnike", "whey-isolate-vs-concentrate", "kada-piti-protein"],
+  whey_isolate:     ["najbolji-protein-za-pocetnike", "whey-isolate-vs-concentrate", "kako-uzimati-whey-protein", "protein-za-mrsavljenje"],
+  whey_concentrate: ["najbolji-protein-za-pocetnike", "whey-isolate-vs-concentrate", "kako-uzimati-whey-protein", "kada-piti-protein"],
   vegan:            ["najbolji-protein-za-pocetnike", "koliko-proteina-dnevno",       "protein-za-mrsavljenje"],
   casein:           ["najbolji-protein-za-pocetnike", "kada-piti-protein",            "koliko-proteina-dnevno"],
   hydrolysate:      ["kada-piti-protein",            "protein-za-mrsavljenje", "koliko-proteina-dnevno"],

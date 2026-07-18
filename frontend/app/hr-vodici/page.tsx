@@ -107,6 +107,12 @@ const HR_GUIDES = [
     readMin: 7,
   },
   {
+    href: "/hr-vodici/kako-uzimati-whey-protein-hrvatska",
+    title: "Kako uzimati whey protein — doza, tajming, miješanje i pogreške",
+    desc: "Točna doza po cilju, raspored tijekom dana, pravilno miješanje bez grudica, s čime kombinirati i najčešće pogreške.",
+    readMin: 9,
+  },
+  {
     href: "/hr-vodici/koliko-kosta-protein-hrvatska",
     title: "Koliko košta whey protein u Hrvatskoj?",
     desc: "Usporedba cijena whey proteina u EUR po gramu proteina — s aktualnim podacima.",

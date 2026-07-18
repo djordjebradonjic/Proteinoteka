@@ -386,6 +386,9 @@ export default async function Page() {
               <Link href="/hr-vodici/koliko-kosta-protein-hrvatska" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
                 Koliko košta protein u Hrvatskoj?
               </Link>
+              <Link href="/hr-vodici/kako-uzimati-whey-protein-hrvatska" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm">
+                Kako uzimati whey protein — doza i tajming
+              </Link>
             </div>
           </section>
 
