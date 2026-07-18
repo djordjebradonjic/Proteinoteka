@@ -43,7 +43,10 @@ export default function NewsletterModal({ source, onClose, onSubscribed }: Props
     return () => cancelAnimationFrame(raf);
   }, []);
 
+  // Auto-focus only on desktop — on mobile this pops the keyboard open
+  // immediately on an unprompted popup, which feels jarring.
   useEffect(() => {
+    if (!window.matchMedia("(pointer: fine)").matches) return;
     const timer = setTimeout(() => emailRef.current?.focus(), 50);
     return () => clearTimeout(timer);
   }, []);
