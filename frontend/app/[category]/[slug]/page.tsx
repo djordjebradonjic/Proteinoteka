@@ -11,6 +11,7 @@ import {
   PRODUCT_CATEGORY_TO_KATEGORIJA,
 } from "@/lib/productUrl";
 import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
+import { formatPrice } from "@/lib/formatPrice";
 
 export const revalidate = 86400;
 
@@ -69,8 +70,18 @@ async function fetchAggregateRating(productId: number): Promise<AggregateRatingD
 // ── Metadata ───────────────────────────────────────────────────────────────────
 
 const MARKET_STRINGS = {
-  rs: { suffix: " – Cena u Srbiji | Proteinoteka", descSuffix: "— uporedi cene u srpskim prodavnicama. Najniža cena i value score na jednom mestu." },
-  hr: { suffix: " – Cijena u Hrvatskoj | Proteinoteka", descSuffix: "— usporedi cijene u hrvatskim trgovinama. Najniža cijena i value score na jednom mjestu." },
+  rs: {
+    suffix: " – Cena u Srbiji | Proteinoteka",
+    descSuffix: "— uporedi cene u srpskim prodavnicama. Najniža cena i value score na jednom mestu.",
+    priceHint: (count: number, low: string, high: string) =>
+      `Dostupno u ${count} prodavnica, od ${low} do ${high}.`,
+  },
+  hr: {
+    suffix: " – Cijena u Hrvatskoj | Proteinoteka",
+    descSuffix: "— usporedi cijene u hrvatskim trgovinama. Najniža cijena i value score na jednom mjestu.",
+    priceHint: (count: number, low: string, high: string) =>
+      `Dostupno u ${count} trgovina, od ${low} do ${high}.`,
+  },
 } as const;
 const SUFFIX = MARKET_STRINGS[CURRENT_MARKET].suffix;
 // Truncate product name at a word boundary so the full title stays under this limit.
@@ -105,7 +116,25 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       : `${product.primaryWeightGrams}g pakovanje`);
   }
   const nutritionHint = descParts.length > 0 ? ` (${descParts.join(", ")})` : "";
-  const description = `${product.name}${nutritionHint} ${MARKET_STRINGS[CURRENT_MARKET].descSuffix}`;
+
+  // Store count + price range makes the SERP snippet concrete ("6 prodavnica,
+  // od 2.100 do 3.400 RSD") instead of a generic "uporedi cene" line — this is
+  // what actually drives CTR, since Google usually renders the description
+  // verbatim rather than pulling numbers out of the AggregateOffer schema.
+  const storePrices = await fetchStorePrices(product.id);
+  const validStorePrices = storePrices.filter((sp) => sp.numericPrice != null && sp.numericPrice > 0);
+  const priceHint =
+    validStorePrices.length > 1
+      ? MARKET_STRINGS[CURRENT_MARKET].priceHint(
+          validStorePrices.length,
+          formatPrice(Math.min(...validStorePrices.map((sp) => sp.numericPrice!))),
+          formatPrice(Math.max(...validStorePrices.map((sp) => sp.numericPrice!))),
+        )
+      : null;
+
+  const description = priceHint
+    ? `${product.name}${nutritionHint} — ${priceHint} ${MARKET_STRINGS[CURRENT_MARKET].descSuffix}`
+    : `${product.name}${nutritionHint} ${MARKET_STRINGS[CURRENT_MARKET].descSuffix}`;
 
   return {
     title:       { absolute: title },
