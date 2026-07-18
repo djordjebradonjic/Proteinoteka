@@ -110,4 +110,7 @@ public class Product {
 
     @Column(name = "last_price_drop_pct")
     private Double lastPriceDropPct;
+
+    @Column(name = "last_price_increase_pct")
+    private Double lastPriceIncreasePct;
 }

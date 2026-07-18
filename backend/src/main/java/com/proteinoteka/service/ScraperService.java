@@ -733,8 +733,10 @@ public class ScraperService {
                 existing.setLastPriceChangeAt(history.getTimestamp());
                 if (numericPrice < oldNumericPrice) {
                     existing.setLastPriceDropPct((oldNumericPrice - numericPrice) / oldNumericPrice);
+                    existing.setLastPriceIncreasePct(null);
                 } else {
                     existing.setLastPriceDropPct(null);
+                    existing.setLastPriceIncreasePct((numericPrice - oldNumericPrice) / oldNumericPrice);
                 }
             }
 
