@@ -18,6 +18,7 @@ const SORT_VALUE_MAP = [
   { value: "random",             tKey: "all"          },
   { value: "id,desc",            tKey: "newest"       },
   { value: "lastPriceChangeAt,desc", tKey: "priceChanged" },
+  { value: "lastPriceDropPct,desc", tKey: "biggestDrop" },
   { value: "valueScore,desc",    tKey: "bestValue"    },
   { value: "proteinPerRsd,desc", tKey: "mostProtein"  },
   { value: "numericPrice,asc",   tKey: "priceAsc"     },

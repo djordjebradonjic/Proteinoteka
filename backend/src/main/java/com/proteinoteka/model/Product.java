@@ -107,4 +107,7 @@ public class Product {
 
     @Column(name = "last_price_change_at")
     private LocalDateTime lastPriceChangeAt;
+
+    @Column(name = "last_price_drop_pct")
+    private Double lastPriceDropPct;
 }

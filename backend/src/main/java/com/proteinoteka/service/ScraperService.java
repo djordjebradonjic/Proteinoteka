@@ -731,6 +731,11 @@ public class ScraperService {
                 history.setTimestamp(LocalDateTime.now());
                 priceHistoryRepository.save(history);
                 existing.setLastPriceChangeAt(history.getTimestamp());
+                if (numericPrice < oldNumericPrice) {
+                    existing.setLastPriceDropPct((oldNumericPrice - numericPrice) / oldNumericPrice);
+                } else {
+                    existing.setLastPriceDropPct(null);
+                }
             }
 
             // GROUP 1 — uvek ažuriraj

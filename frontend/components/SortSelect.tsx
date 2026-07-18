@@ -29,6 +29,7 @@ export default function SortSelect({ value, onSortChange }: SortSelectProps) {
           <SelectItem value="random">{t("all")}</SelectItem>
           <SelectItem value="id,desc">{t("newest")}</SelectItem>
           <SelectItem value="lastPriceChangeAt,desc">{t("priceChanged")}</SelectItem>
+          <SelectItem value="lastPriceDropPct,desc">{t("biggestDrop")}</SelectItem>
           <SelectItem value="valueScore,desc">{t("bestValue")}</SelectItem>
           <SelectItem value="proteinPerRsd,desc">{t("mostProtein")}</SelectItem>
           <SelectItem value="numericPrice,asc">{t("priceAsc")}</SelectItem>
