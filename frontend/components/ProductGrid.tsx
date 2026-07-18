@@ -1,6 +1,6 @@
 import { Product } from "@/types/product";
 import ProductCard from "./ProductCard";
-import NewsletterListingBanner from "./NewsletterListingBanner";
+import NewsletterSection from "./NewsletterSection";
 
 interface ProductGridProps {
   products: Product[];
@@ -58,12 +58,6 @@ export default function ProductGrid({
         ))}
       </div>
 
-      {currentPage === 0 && (
-        <div className="mt-6">
-          <NewsletterListingBanner />
-        </div>
-      )}
-
       <div className="flex items-center justify-center gap-1 py-8 border-t border-slate-100 flex-wrap mt-6">
         <button
           onClick={() => onPageChange(currentPage - 1)}
@@ -114,6 +108,9 @@ export default function ProductGrid({
           →
         </button>
       </div>
+
+      {/* Fixed section — always below the grid + pagination, on every page */}
+      <NewsletterSection source="inline_banner" className="mt-6" />
     </>
   );
 }

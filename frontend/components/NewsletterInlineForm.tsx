@@ -23,9 +23,11 @@ interface Props {
   /** "dark" for footer (dark background), "light" for everywhere else */
   variant?: "dark" | "light";
   className?: string;
+  /** Overrides the default "Prijavi se" button label */
+  ctaLabel?: string;
 }
 
-export default function NewsletterInlineForm({ source, variant = "light", className = "" }: Props) {
+export default function NewsletterInlineForm({ source, variant = "light", className = "", ctaLabel }: Props) {
   const [email, setEmail] = useState("");
   const [consent, setConsent] = useState(false);
   const [status, setStatus] = useState<Status>("idle");
@@ -103,7 +105,7 @@ export default function NewsletterInlineForm({ source, variant = "light", classN
           ) : (
             <>
               <Mail className="w-4 h-4" />
-              {IS_HR ? "Prijavi se" : "Prijavi se"}
+              {ctaLabel ?? "Prijavi se"}
             </>
           )}
         </button>

@@ -11,7 +11,7 @@ import {
   Phone,
 } from "lucide-react";
 import { CURRENT_MARKET } from "@/lib/marketConfig";
-import NewsletterInlineForm from "@/components/NewsletterInlineForm";
+import NewsletterSection from "@/components/NewsletterSection";
 
 function LinkedinIcon({ className }: { className?: string }) {
   return (
@@ -73,22 +73,7 @@ export default function KontaktPage() {
       <div className="max-w-5xl mx-auto">
 
         {/* Newsletter — primarni fokus stranice */}
-        <div className="rounded-2xl bg-gradient-to-br from-[#131921] to-[#1B2B4B] py-10 px-6 sm:px-10 mb-10">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-[#FF9900] mb-3">
-            Newsletter
-          </p>
-          <h1 className="text-2xl sm:text-3xl font-black text-white mb-2 max-w-md">
-            {isHR ? "Uštedi i do 20% na proteinima" : "Uštedi i do 20% na proteinima"}
-          </h1>
-          <p className="text-sm text-white/70 mb-6 max-w-md">
-            {isHR
-              ? "2x mjesečno biramo proizvode s najvećim padom cijene i šaljemo ih direktno u inbox."
-              : "2x mesečno biramo proizvode sa najvećim padom cene i šaljemo ih direktno u inbox."}
-          </p>
-          <div className="sm:max-w-md">
-            <NewsletterInlineForm source="kontakt_page" variant="dark" />
-          </div>
-        </div>
+        <NewsletterSection source="kontakt_page" headingLevel="h1" className="mb-10" />
 
         {/* Header — kontakt (sekundarno) */}
         <div className="mb-5">
