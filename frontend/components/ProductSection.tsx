@@ -12,6 +12,7 @@ import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
 import { useTranslations } from "next-intl";
 import RelatedGuides from "@/components/RelatedGuides";
 import ValueScoreBanner from "@/components/ValueScoreBanner";
+import NewsletterSection from "@/components/NewsletterSection";
 
 // Sort values mapped to translation keys — labels come from useTranslations("sort")
 const SORT_VALUE_MAP = [
@@ -424,6 +425,10 @@ export default function ProductSection({
           />
         </div>
       </div>
+
+      {/* Full-width, detached from the filter column — always visible below the grid */}
+      <NewsletterSection source="inline_banner" className="mt-6" />
+
       {/* Sentinel: when this scrolls above viewport the fixed bottom bar disappears */}
       <div id="product-grid-end" />
     </div>

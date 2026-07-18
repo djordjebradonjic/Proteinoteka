@@ -31,7 +31,6 @@ export default function NewsletterSection({ source, className = "", headingLevel
         <NewsletterInlineForm
           source={source}
           variant="dark"
-          ctaLabel={IS_HR ? "Počnem štedjeti" : "Počni da štedim"}
         />
       </div>
     </div>

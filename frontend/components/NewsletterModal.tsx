@@ -132,7 +132,7 @@ export default function NewsletterModal({ source, onClose, onSubscribed }: Props
               </div>
               <h3 className="text-lg font-bold text-slate-900 mb-2">Prijavljen si!</h3>
               <p className="text-sm text-slate-500 mb-6 leading-relaxed">
-                Poslaćemo email na <span className="font-semibold text-slate-700">{email}</span> dva puta mesečno sa najvećim uštedama.
+                Poslaćemo email na <span className="font-semibold text-slate-700">{email}</span> dva puta mesečno sa proizvodima čija je cena pala i do 20%.
               </p>
               <button
                 onClick={requestClose}
@@ -150,7 +150,7 @@ export default function NewsletterModal({ source, onClose, onSubscribed }: Props
                   <div className="w-8 h-8 rounded-full bg-[#FFF3DC] flex items-center justify-center">
                     <Mail className="w-4 h-4 text-[#FF9900]" />
                   </div>
-                  <span className="font-bold text-slate-900 text-sm">Newsletter ušteda</span>
+                  <span className="font-bold text-slate-900 text-sm">Uštedi do 20%</span>
                 </div>
                 <button
                   onClick={requestClose}
@@ -163,8 +163,8 @@ export default function NewsletterModal({ source, onClose, onSubscribed }: Props
               <div className="px-5 py-4 space-y-4">
                 <p className="text-sm text-slate-600 leading-relaxed">
                   {IS_HR
-                    ? "2x mjesečno — najveći padovi cijena i najbolje akcije, direktno u inbox. Bez spama."
-                    : "2x mesečno — najveći padovi cena i najbolje akcije, direktno u inbox. Bez spama."}
+                    ? "Dva puta mjesečno šaljemo ti popis proizvoda čija je cijena pala i do 20%. Bez pretraživanja po stranicama — mi pratimo, ti samo klikneš i uštediš."
+                    : "Dva puta mesečno šaljemo ti listu proizvoda čija je cena pala i do 20%. Bez pretrage po sajtovima — mi pratimo, ti samo klikneš i uštediš."}
                 </p>
 
                 <div>

@@ -1,6 +1,5 @@
 import { Product } from "@/types/product";
 import ProductCard from "./ProductCard";
-import NewsletterSection from "./NewsletterSection";
 
 interface ProductGridProps {
   products: Product[];
@@ -108,9 +107,6 @@ export default function ProductGrid({
           →
         </button>
       </div>
-
-      {/* Fixed section — always below the grid + pagination, on every page */}
-      <NewsletterSection source="inline_banner" className="mt-6" />
     </>
   );
 }
