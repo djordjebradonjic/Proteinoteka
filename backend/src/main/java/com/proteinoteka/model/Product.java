@@ -104,4 +104,7 @@ public class Product {
 
     @Column(name = "protein_per_currency")
     private Double proteinPerCurrency;
+
+    @Column(name = "last_price_change_at")
+    private LocalDateTime lastPriceChangeAt;
 }

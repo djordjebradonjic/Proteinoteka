@@ -52,7 +52,7 @@ public class ProductController {
     private final ProductGroupService productGroupService;
 
     private static final java.util.Set<String> NULLABLE_SORT_COLS =
-            java.util.Set.of("valueScore", "proteinPerRsd");
+            java.util.Set.of("valueScore", "proteinPerRsd", "lastPriceChangeAt");
 
     @GetMapping
     public Page<ProductDTO> getProducts(

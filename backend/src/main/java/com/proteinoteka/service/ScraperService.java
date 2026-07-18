@@ -730,6 +730,7 @@ public class ScraperService {
                 history.setNumericPrice(oldNumericPrice);
                 history.setTimestamp(LocalDateTime.now());
                 priceHistoryRepository.save(history);
+                existing.setLastPriceChangeAt(history.getTimestamp());
             }
 
             // GROUP 1 — uvek ažuriraj
