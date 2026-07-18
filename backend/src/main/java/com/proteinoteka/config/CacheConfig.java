@@ -30,6 +30,14 @@ public class CacheConfig {
                         .maximumSize(50)
                         .build()
         );
+        // Same rationale as price-drops: full scan + Java-side average/sort, changes
+        // only after a scrape.
+        manager.registerCustomCache("black-friday",
+                Caffeine.newBuilder()
+                        .expireAfterWrite(30, TimeUnit.MINUTES)
+                        .maximumSize(50)
+                        .build()
+        );
         return manager;
     }
 }

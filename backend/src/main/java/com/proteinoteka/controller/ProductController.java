@@ -302,6 +302,39 @@ public class ProductController {
                 .toList();
     }
 
+    @Cacheable(value = "black-friday", key = "'bf-' + #market + '-' + #limit")
+    @GetMapping("/black-friday")
+    public List<ProductDTO> getBlackFridayDeals(
+            @RequestParam(defaultValue = "20") int limit,
+            @RequestParam(required = false) String market) {
+
+        int safeLimit = Math.min(limit, 20);
+        String effectiveMarket = (market == null || market.isEmpty()) ? "rs" : market;
+        LocalDateTime since = LocalDateTime.now().minusDays(90);
+
+        // Discount vs. the 90-day average price (not just the previous scrape) — needs
+        // at least 2 entries in the window, otherwise "average" is just the current price.
+        return priceHistoryRepository.findProductsWithHistorySince(since).stream()
+                .filter(p -> p.getNumericPrice() != null && p.getNumericPrice() > 0)
+                .filter(p -> effectiveMarket.equals(p.getMarket()))
+                .map(p -> {
+                    List<Double> recentPrices = p.getPriceHistories().stream()
+                            .filter(h -> h.getTimestamp() != null && !h.getTimestamp().isBefore(since))
+                            .filter(h -> h.getNumericPrice() != null && h.getNumericPrice() > 0)
+                            .map(PriceHistory::getNumericPrice)
+                            .toList();
+                    if (recentPrices.size() < 2) return null;
+                    double avg90d = recentPrices.stream().mapToDouble(Double::doubleValue).average().orElse(0);
+                    if (avg90d <= 0 || p.getNumericPrice() >= avg90d) return null;
+                    return toProductDTO(p, avg90d);
+                })
+                .filter(java.util.Objects::nonNull)
+                .sorted(Comparator.comparingDouble(
+                        (ProductDTO dto) -> (dto.previousPrice() - dto.numericPrice()) / dto.previousPrice()).reversed())
+                .limit(safeLimit)
+                .toList();
+    }
+
     @GetMapping("/{id}/store-prices")
     public List<StorePriceDTO> getStorePrices(@PathVariable Long id) {
         return productGroupService.getStorePrices(id);
@@ -412,6 +445,10 @@ public class ProductController {
                 .findFirst()
                 .orElse(null);
 
+        return toProductDTO(product, prevPrice);
+    }
+
+    private ProductDTO toProductDTO(Product product, Double prevPrice) {
         return new ProductDTO(
                 product.getId(),
                 product.getName(),

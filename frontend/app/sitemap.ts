@@ -21,6 +21,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/kako-racunamo-value-score`, changeFrequency: "monthly" as const, priority: 0.6, lastModified: d("2025-03-01") },
     { url: `${BASE}/o-nama`,                    changeFrequency: "monthly" as const, priority: 0.5, lastModified: d("2025-01-01") },
     { url: `${BASE}/baza-podataka`,             changeFrequency: "monthly" as const, priority: 0.5, lastModified: d("2025-06-01") },
+    { url: `${BASE}/crni-petak`,                changeFrequency: "daily"   as const, priority: 0.9, lastModified: now },
     ...CATEGORIES.map((c) => ({
       url: `${BASE}/kategorija/${c.slug}`,
       changeFrequency: "weekly" as const,

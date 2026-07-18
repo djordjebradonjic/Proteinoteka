@@ -265,7 +265,7 @@ public class ScrapingSchedulerService {
     }
 
     private void evictProductCaches() {
-        java.util.List.of("products", "products-meta", "products-search", "price-drops").forEach(name -> {
+        java.util.List.of("products", "products-meta", "products-search", "price-drops", "black-friday").forEach(name -> {
             var cache = cacheManager.getCache(name);
             if (cache != null) cache.clear();
         });

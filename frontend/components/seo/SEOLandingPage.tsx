@@ -12,6 +12,7 @@ const IS_HR = CURRENT_MARKET === "hr";
 const BASE_URL_CONST = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
 
 const RS_SEO_PAGES = [
+  { slug: "crni-petak",                   label: "🔥 Crni petak"           },
   { slug: "najbolji-whey-protein-srbija",  label: "🥇 Najbolji Whey"        },
   { slug: "najjeftiniji-whey-protein",     label: "💰 Najjeftiniji Whey (po kg)" },
   { slug: "whey-protein-cena",             label: "📊 Whey Protein Cena"     },
@@ -22,6 +23,7 @@ const RS_SEO_PAGES = [
 ] as const;
 
 const HR_SEO_PAGES = [
+  { slug: "crni-petak",                                  label: "🔥 Black Friday"       },
   { slug: "najbolji-whey-protein-hrvatska",              label: "🥇 Najbolji Whey"       },
   { slug: "najjeftiniji-whey-protein-hrvatska",          label: "💰 Najjeftiniji Whey (po kg)" },
   { slug: "najjeftiniji-whey-protein-hrvatska-do-500g",    label: "📦 Whey do 500g"      },

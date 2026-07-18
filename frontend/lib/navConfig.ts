@@ -34,11 +34,13 @@ export const HEADER_NAV_LINKS: NavLink[] =
     ? [
         { label: "Cijene",          href: "/" },
         { label: "Top lista",       href: "/?sort=valueScore%2Cdesc" },
+        { label: "Black Friday",    href: "/crni-petak" },
       ]
     : [
         { label: "Cene",            href: "/whey-protein-cena" },
         { label: "Top lista",       href: "/najbolji-whey-protein-srbija" },
         { label: "Baza podataka",   href: "/baza-podataka" },
+        { label: "Crni petak",      href: "/crni-petak" },
       ];
 
 // ── Footer ──────────────────────────────────────────────────────────────────
@@ -95,6 +97,7 @@ const RS_FOOTER_POPULAR: NavLink[] = [
   { label: "Najjeftiniji whey protein", href: "/najjeftiniji-whey-protein"    },
   { label: "Najbolji whey protein",     href: "/najbolji-whey-protein-srbija" },
   { label: "Whey izolat Srbija",        href: "/whey-isolate-srbija"          },
+  { label: "Crni petak",                href: "/crni-petak"                   },
   { label: "Početna",                   href: "/"                             },
   { label: "O nama",                    href: "/o-nama"                       },
   { label: "Kontakt",                   href: "/#kontakt"                     },
@@ -105,6 +108,7 @@ const RS_FOOTER_POPULAR: NavLink[] = [
 
 const HR_FOOTER_POPULAR: NavLink[] = [
   { label: "Početna",              href: "/"               },
+  { label: "Black Friday",         href: "/crni-petak"     },
   { label: "O nama",               href: "/o-nama"         },
   { label: "Kontakt",              href: "/#kontakt"       },
   { label: "Politika privatnosti", href: "/privacy-policy" },
