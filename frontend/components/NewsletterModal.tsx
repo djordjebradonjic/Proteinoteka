@@ -10,6 +10,8 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type Phase = "form" | "loading" | "success" | "error";
 
+const EXIT_MS = 150;
+
 interface Props {
   source: Extract<NewsletterSource, "modal_scroll" | "modal_exit_intent">;
   onClose: () => void;
@@ -23,8 +25,23 @@ export default function NewsletterModal({ source, onClose, onSubscribed }: Props
   const [consent, setConsent] = useState(false);
   const [consentError, setConsentError] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const [entered, setEntered] = useState(false);
+  const [closing, setClosing] = useState(false);
 
   const emailRef = useRef<HTMLInputElement>(null);
+  const closingRef = useRef(false);
+
+  const requestClose = () => {
+    if (closingRef.current) return;
+    closingRef.current = true;
+    setClosing(true);
+    setTimeout(onClose, EXIT_MS);
+  };
+
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setEntered(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => emailRef.current?.focus(), 50);
@@ -33,11 +50,11 @@ export default function NewsletterModal({ source, onClose, onSubscribed }: Props
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") requestClose();
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, []);
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -47,9 +64,9 @@ export default function NewsletterModal({ source, onClose, onSubscribed }: Props
 
   useEffect(() => {
     if (phase !== "success") return;
-    const t = setTimeout(() => onClose(), 3000);
+    const t = setTimeout(() => requestClose(), 3000);
     return () => clearTimeout(t);
-  }, [phase, onClose]);
+  }, [phase]);
 
   const validate = (): boolean => {
     let ok = true;
@@ -88,15 +105,25 @@ export default function NewsletterModal({ source, onClose, onSubscribed }: Props
     }
   };
 
+  const visible = entered && !closing;
+
   return (
     <>
       <div
-        className="fixed inset-0 bg-black/50 z-[200] transition-opacity"
-        onClick={onClose}
+        className={`fixed inset-0 bg-black/50 z-[200] transition-opacity motion-reduce:transition-none ${
+          visible ? "opacity-100 duration-200" : "opacity-0 duration-150"
+        }`}
+        onClick={requestClose}
       />
 
-      <div className="fixed inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center z-[201]">
-        <div className="w-full sm:max-w-sm bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden">
+      <div className="fixed inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center z-[201] pointer-events-none">
+        <div
+          className={`w-full sm:max-w-sm bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden pointer-events-auto transition-all motion-reduce:transition-none motion-reduce:transform-none ${
+            visible
+              ? "translate-y-0 sm:scale-100 opacity-100 duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]"
+              : "translate-y-full sm:translate-y-0 sm:scale-95 opacity-0 duration-150 ease-in"
+          }`}
+        >
 
           {phase === "success" && (
             <div className="p-8 text-center">
@@ -108,7 +135,7 @@ export default function NewsletterModal({ source, onClose, onSubscribed }: Props
                 Poslaćemo email na <span className="font-semibold text-slate-700">{email}</span> dva puta mesečno sa najvećim uštedama.
               </p>
               <button
-                onClick={onClose}
+                onClick={requestClose}
                 className="w-full py-3 bg-[#1B2B4B] text-white font-bold rounded-xl hover:bg-[#243860] transition-colors"
               >
                 Odlično!
@@ -126,7 +153,7 @@ export default function NewsletterModal({ source, onClose, onSubscribed }: Props
                   <span className="font-bold text-slate-900 text-sm">Newsletter ušteda</span>
                 </div>
                 <button
-                  onClick={onClose}
+                  onClick={requestClose}
                   className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors"
                 >
                   <X className="w-4 h-4" />
