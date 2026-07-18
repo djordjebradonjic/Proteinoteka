@@ -68,6 +68,7 @@ export default function PriceAlertModal({ product, initialAlert, onClose }: Prop
   );
   const [targetError, setTargetError] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const [newsletterOptIn, setNewsletterOptIn] = useState(false);
 
   const emailRef = useRef<HTMLInputElement>(null);
   const targetRef = useRef<HTMLInputElement>(null);
@@ -144,6 +145,16 @@ export default function PriceAlertModal({ product, initialAlert, onClose }: Prop
       // Sync the full wishlist to backend under this email
       const allIds = new Set([...wishlistItems.map((p: any) => p.id), product.id]);
       await pushWishlistToBackend(normalizedEmail, Array.from(allIds));
+
+      if (!isEditMode && newsletterOptIn) {
+        fetch("/api/newsletter/subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: normalizedEmail, source: "alert_crosssell" }),
+        }).then(() => {
+          try { localStorage.setItem("newsletter_subscribed", "1"); } catch { /* ignore */ }
+        }).catch(() => {});
+      }
 
       const elapsed = Date.now() - openedAt.current;
 
@@ -320,6 +331,30 @@ export default function PriceAlertModal({ product, initialAlert, onClose }: Prop
                     </div>
                   )}
                 </div>
+
+                {/* Newsletter cross-sell */}
+                {!isEditMode && (
+                  <label className="flex items-start gap-2.5 cursor-pointer group select-none">
+                    <div className="relative mt-0.5 shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={newsletterOptIn}
+                        onChange={(e) => setNewsletterOptIn(e.target.checked)}
+                        className="sr-only"
+                      />
+                      <div className={`w-4 h-4 rounded border-2 transition-colors flex items-center justify-center ${
+                        newsletterOptIn ? "bg-[#FF9900] border-[#FF9900]" : "border-slate-300 group-hover:border-[#FF9900]"
+                      }`}>
+                        {newsletterOptIn && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
+                      </div>
+                    </div>
+                    <span className="text-sm text-slate-600 leading-snug">
+                      {IS_HR
+                        ? "Želim i dvotjedni pregled najvećih ušteda na email"
+                        : "Želim i dvonedeljni pregled najvećih ušteda na email"}
+                    </span>
+                  </label>
+                )}
 
                 {/* API error */}
                 {phase === "error" && errorMsg && (

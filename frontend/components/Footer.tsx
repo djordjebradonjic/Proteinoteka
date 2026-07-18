@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { FOOTER_STORES, FOOTER_GUIDES, FOOTER_POPULAR } from "@/lib/navConfig";
+import NewsletterInlineForm from "@/components/NewsletterInlineForm";
 
 const CATEGORIES = [
   { label: "Whey Concentrate", slug: "whey-concentrate" },
@@ -102,6 +103,17 @@ export default function Footer() {
             </ul>
           </div>
 
+        </div>
+
+        {/* ── Newsletter ── */}
+        <div className="py-6 border-b" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
+          <div className="max-w-md">
+            <ColHeading>{t("newsletterHeading")}</ColHeading>
+            <p className="text-[13px] mb-3" style={{ color: "rgba(255,255,255,0.55)" }}>
+              {t("newsletterText")}
+            </p>
+            <NewsletterInlineForm source="footer" variant="dark" />
+          </div>
         </div>
 
         {/* ── Bottom bar ── */}

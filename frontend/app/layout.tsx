@@ -7,6 +7,7 @@ import Providers from "@/components/Providers";
 import { DM_Sans } from "next/font/google";
 import Footer from "@/components/Footer";
 import CookieBanner from "@/components/CookieBanner";
+import NewsletterPrompt from "@/components/NewsletterPrompt";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
@@ -128,6 +129,7 @@ export default async function RootLayout({
           <Analytics />
           <SpeedInsights />
           <CookieBanner />
+          <NewsletterPrompt />
         </NextIntlClientProvider>
         <script
           type="application/ld+json"

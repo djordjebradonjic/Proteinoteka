@@ -33,6 +33,14 @@ interface CalcStats {
   recent:   RecentSubscriber[];
 }
 
+interface RecentNewsletterSubscriber { email: string; source: string | null; market: string | null; createdAt: string; }
+interface NewsletterStats {
+  total:    number;
+  bySource: Record<string, number>;
+  byMarket: Record<string, number>;
+  recent:   RecentNewsletterSubscriber[];
+}
+
 interface DecisionRule {
   flag:     string;
   severity: "WARNING" | "SUCCESS" | "INFO";
@@ -467,6 +475,7 @@ function RecenzijeTab() {
 function AnalyticsTab() {
   const [stats, setStats]                     = useState<Stats | null>(null);
   const [calcStats, setCalcStats]             = useState<CalcStats | null>(null);
+  const [newsletterStats, setNewsletterStats] = useState<NewsletterStats | null>(null);
   const [alertMetrics, setAlertMetrics]       = useState<AlertMetrics | null>(null);
   const [alertSubscribers, setAlertSubscribers] = useState<AlertSubscriber[]>([]);
   const [loading, setLoading]                 = useState(true);
@@ -483,12 +492,14 @@ function AnalyticsTab() {
       fetch("/api/admin/calculator-stats").then(r => r.ok ? r.json() : null).catch(() => null),
       fetch("/api/admin/alert-metrics").then(r => r.ok ? r.json() : null).catch(() => null),
       fetch("/api/admin/alert-subscribers").then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch("/api/admin/newsletter-stats").then(r => r.ok ? r.json() : null).catch(() => null),
     ])
-      .then(([analyticsData, calcData, alertData, subscribersData]) => {
+      .then(([analyticsData, calcData, alertData, subscribersData, newsletterData]) => {
         setStats(analyticsData);
         setCalcStats(calcData);
         setAlertMetrics(alertData);
         setAlertSubscribers(Array.isArray(subscribersData) ? subscribersData : []);
+        setNewsletterStats(newsletterData);
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false));
@@ -649,6 +660,8 @@ function AnalyticsTab() {
 
       {calcStats && <CalculatorSection stats={calcStats} />}
       {alertMetrics && <AlertSection metrics={alertMetrics} subscribers={alertSubscribers} />}
+      {newsletterStats && <NewsletterSection stats={newsletterStats} />}
+      <NewsletterCampaignSection />
     </>
   );
 }
@@ -817,6 +830,250 @@ function CalculatorSection({ stats }: { stats: CalcStats }) {
             )}
           </div>
         </div>
+      </Section>
+    </div>
+  );
+}
+
+const SOURCE_META: Record<string, { label: string; color: string }> = {
+  footer:            { label: "Footer",       color: "#94a3b8" },
+  modal_scroll:      { label: "Modal (scroll)", color: "#3b82f6" },
+  modal_exit_intent: { label: "Modal (exit)",  color: "#8b5cf6" },
+  inline_banner:     { label: "Inline traka",  color: "#FF9900" },
+  alert_crosssell:   { label: "Alert cross-sell", color: "#22c55e" },
+  landing_page:      { label: "Landing stranica", color: "#ef4444" },
+};
+
+function NewsletterSection({ stats }: { stats: NewsletterStats }) {
+  const sourceData = Object.entries(stats.bySource).map(([source, count]) => ({
+    name: SOURCE_META[source]?.label ?? source, count, color: SOURCE_META[source]?.color ?? "#94a3b8",
+  }));
+  return (
+    <div className="mt-6">
+      <Section title="Newsletter — Subscribers">
+        <div className="grid md:grid-cols-3 gap-6">
+          <div className="space-y-4">
+            <div>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Ukupno</p>
+              <p className="text-4xl font-black text-[#1B2B4B]">{stats.total.toLocaleString()}</p>
+              <div className="flex gap-2 mt-1">
+                {Object.entries(stats.byMarket).map(([market, count]) => (
+                  <span key={market} className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 uppercase">
+                    {market}: {count}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-2">
+              {sourceData.map(({ name, count, color }) => {
+                const pct = stats.total > 0 ? Math.round((count / stats.total) * 100) : 0;
+                return (
+                  <div key={name}>
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="font-semibold text-slate-600">{name}</span>
+                      <span className="font-black" style={{ color }}>{count} <span className="text-slate-400 font-normal">({pct}%)</span></span>
+                    </div>
+                    <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: color }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <div className="md:col-span-2 overflow-x-auto">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Poslednjih 10</p>
+            {stats.recent.length === 0 ? <p className="text-sm text-slate-400">Nema subscribera.</p> : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-100">
+                    {["Email","Izvor","Market","Datum"].map(h => (
+                      <th key={h} className="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest pb-2 pr-4">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.recent.map((s, i) => {
+                    const meta = s.source ? SOURCE_META[s.source] : null;
+                    const date = new Date(s.createdAt).toLocaleDateString("sr-Latn", { day: "2-digit", month: "2-digit", year: "numeric" });
+                    return (
+                      <tr key={i} className="border-b border-slate-50 hover:bg-slate-50">
+                        <td className="py-2.5 pr-4 text-slate-700 font-medium text-xs truncate max-w-[160px]">{s.email}</td>
+                        <td className="py-2.5 pr-4">
+                          {meta ? <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ color: meta.color, background: `${meta.color}18` }}>{meta.label}</span>
+                            : <span className="text-xs text-slate-400">{s.source ?? "—"}</span>}
+                        </td>
+                        <td className="py-2.5 pr-4 text-[10px] font-bold text-slate-500 uppercase">{s.market ?? "rs"}</td>
+                        <td className="py-2.5 text-xs text-slate-400">{date}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      </Section>
+    </div>
+  );
+}
+
+interface CampaignPick {
+  id: number;
+  name: string;
+  storeName: string;
+  numericPrice: number;
+  previousPrice: number | null;
+  currency: string;
+}
+interface CampaignPreview {
+  market: string;
+  picks: CampaignPick[];
+  recipientCount: number;
+  lastCampaign: { sentCount: number; sentAt: string } | null;
+  html: string;
+}
+
+function NewsletterCampaignSection() {
+  const [market, setMarket] = useState<"rs" | "hr">("rs");
+  const [preview, setPreview] = useState<CampaignPreview | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [showHtml, setShowHtml] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+
+  const loadPreview = (m: "rs" | "hr") => {
+    setLoading(true);
+    setResult(null);
+    setPreview(null);
+    fetch(`/api/admin/newsletter/campaign?market=${m}`)
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(setPreview)
+      .catch(() => setResult("Greška pri učitavanju pregleda."))
+      .finally(() => setLoading(false));
+  };
+
+  const handleSend = () => {
+    if (!preview) return;
+    const confirmed = window.confirm(
+      `Poslati newsletter kampanju na ${preview.recipientCount} aktivnih pretplatnika (${market.toUpperCase()})? Ova akcija se ne može poništiti.`,
+    );
+    if (!confirmed) return;
+
+    setSending(true);
+    setResult(null);
+    fetch("/api/admin/newsletter/campaign", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ market }),
+    })
+      .then(r => r.json().then(data => ({ ok: r.ok, data })))
+      .then(({ ok, data }) => {
+        setResult(ok ? `Poslato ${data.sentCount} email-ova.` : `Greška: ${data.error ?? "nepoznata"}`);
+        if (ok) loadPreview(market);
+      })
+      .catch(() => setResult("Greška pri slanju kampanje."))
+      .finally(() => setSending(false));
+  };
+
+  return (
+    <div className="mt-6">
+      <Section title="Newsletter — Kampanja (2x mesečno)">
+        <div className="flex items-center gap-2 mb-5">
+          {(["rs", "hr"] as const).map(m => (
+            <button
+              key={m}
+              onClick={() => { setMarket(m); loadPreview(m); }}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg uppercase transition-colors ${
+                market === m ? "bg-[#1B2B4B] text-white" : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+              }`}
+            >
+              {m}
+            </button>
+          ))}
+          <button
+            onClick={() => loadPreview(market)}
+            disabled={loading}
+            className="px-3 py-1.5 text-xs font-bold rounded-lg border border-slate-200 text-slate-600 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors disabled:opacity-50"
+          >
+            {loading ? "Učitavanje..." : "Prikaži pregled"}
+          </button>
+        </div>
+
+        {preview && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Primalaca</p>
+                <p className="text-2xl font-black text-[#1B2B4B]">{preview.recipientCount}</p>
+              </div>
+              <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Proizvoda u digestu</p>
+                <p className="text-2xl font-black text-[#1B2B4B]">{preview.picks.length}</p>
+              </div>
+              <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Poslednja kampanja</p>
+                <p className="text-sm font-bold text-slate-700">
+                  {preview.lastCampaign
+                    ? `${new Date(preview.lastCampaign.sentAt).toLocaleDateString("sr-Latn")} (${preview.lastCampaign.sentCount})`
+                    : "Nikad"}
+                </p>
+              </div>
+            </div>
+
+            {preview.picks.length === 0 && (
+              <p className="text-sm text-amber-600 bg-amber-50 rounded-lg px-3 py-2">Nema proizvoda sa padom cene trenutno — kampanja se ne može poslati.</p>
+            )}
+            {preview.recipientCount === 0 && (
+              <p className="text-sm text-amber-600 bg-amber-50 rounded-lg px-3 py-2">Nema aktivnih pretplatnika za ovo tržište.</p>
+            )}
+
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-100">
+                  {["Proizvod","Prodavnica","Cena","Pre"].map(h => (
+                    <th key={h} className="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest pb-2 pr-4">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {preview.picks.map(p => (
+                  <tr key={p.id} className="border-b border-slate-50">
+                    <td className="py-2 pr-4 text-slate-700 font-medium text-xs truncate max-w-[200px]">{p.name}</td>
+                    <td className="py-2 pr-4 text-slate-500 text-xs">{p.storeName}</td>
+                    <td className="py-2 pr-4 text-xs font-bold text-[#FF9900]">{Math.round(p.numericPrice)} {p.currency}</td>
+                    <td className="py-2 text-xs text-slate-400">{p.previousPrice ? `${Math.round(p.previousPrice)} ${p.currency}` : "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowHtml(v => !v)}
+                className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-600 hover:border-slate-300 transition-colors"
+              >
+                {showHtml ? "Sakrij HTML pregled" : "Prikaži HTML pregled"}
+              </button>
+              <button
+                onClick={handleSend}
+                disabled={sending || preview.picks.length === 0 || preview.recipientCount === 0}
+                className="px-4 py-1.5 text-xs font-bold rounded-lg bg-[#FF9900] hover:bg-[#e68a00] disabled:opacity-50 text-[#131921] transition-colors"
+              >
+                {sending ? "Slanje..." : `Pošalji ${preview.recipientCount} primalaca`}
+              </button>
+              {result && <span className="text-xs font-semibold text-slate-600">{result}</span>}
+            </div>
+
+            {showHtml && (
+              <iframe
+                title="Newsletter preview"
+                srcDoc={preview.html}
+                className="w-full h-[500px] border border-slate-200 rounded-xl"
+              />
+            )}
+          </div>
+        )}
       </Section>
     </div>
   );
