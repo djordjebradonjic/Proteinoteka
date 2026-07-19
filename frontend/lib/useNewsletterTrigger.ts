@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 const DISMISS_KEY = "newsletter_prompt_dismissed_at";
 const SUBSCRIBED_KEY = "newsletter_subscribed";
-const DISMISS_COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000; // 14 days
+const DISMISS_COOLDOWN_MS = 60 * 24 * 60 * 60 * 1000; // 60 days
 const SCROLL_THRESHOLD = 0.5;
 const TIME_THRESHOLD_MS = 25_000;
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { X, Mail, Check, Loader2 } from "lucide-react";
+import { X, Mail, Check, Loader2, TrendingDown } from "lucide-react";
 import { CURRENT_MARKET } from "@/lib/marketConfig";
 import type { NewsletterSource } from "@/components/NewsletterInlineForm";
 
@@ -113,7 +113,7 @@ export default function NewsletterModal({ source, onClose, onSubscribed }: Props
   return (
     <>
       <div
-        className={`fixed inset-0 bg-black/50 z-[200] transition-opacity motion-reduce:transition-none ${
+        className={`fixed inset-0 bg-black/60 z-[200] transition-opacity motion-reduce:transition-none ${
           visible ? "opacity-100 duration-200" : "opacity-0 duration-150"
         }`}
         onClick={requestClose}
@@ -121,103 +121,113 @@ export default function NewsletterModal({ source, onClose, onSubscribed }: Props
 
       <div className="fixed inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center z-[201] pointer-events-none">
         <div
-          className={`w-full sm:max-w-sm bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden pointer-events-auto transition-all motion-reduce:transition-none motion-reduce:transform-none ${
+          className={`relative w-full sm:max-w-sm bg-gradient-to-br from-[#131921] to-[#1B2B4B] rounded-t-3xl sm:rounded-3xl shadow-2xl shadow-black/50 overflow-hidden pointer-events-auto transition-all motion-reduce:transition-none motion-reduce:transform-none ${
             visible
               ? "translate-y-0 sm:scale-100 opacity-100 duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]"
               : "translate-y-full sm:translate-y-0 sm:scale-95 opacity-0 duration-150 ease-in"
           }`}
         >
+          {/* Ambient glow — subtle depth, matches the newsletter section's dark card language */}
+          <div className="absolute -top-16 -right-16 w-56 h-56 bg-[#FF9900]/20 rounded-full blur-3xl pointer-events-none" />
 
-          {phase === "success" && (
-            <div className="p-8 text-center">
-              <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
-                <Check className="w-8 h-8 text-emerald-600" strokeWidth={2.5} />
+          <button
+            onClick={requestClose}
+            className="absolute top-4 right-4 z-10 p-1.5 rounded-full text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+
+          {phase === "success" ? (
+            <div className="relative p-8 text-center">
+              <div className="w-16 h-16 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center mx-auto mb-4">
+                <Check className="w-8 h-8 text-emerald-400" strokeWidth={2.5} />
               </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-2">Prijavljen si!</h3>
-              <p className="text-sm text-slate-500 mb-6 leading-relaxed">
-                Poslaćemo email na <span className="font-semibold text-slate-700">{email}</span> dva puta mesečno sa proizvodima čija je cena pala i do 20%.
+              <h3 className="text-lg font-black text-white mb-2">Prijavljen si!</h3>
+              <p className="text-sm text-white/60 mb-6 leading-relaxed">
+                Poslaćemo email na <span className="font-semibold text-white/90">{email}</span> dva puta mesečno sa proizvodima čija je cena pala i do 20%.
               </p>
               <button
                 onClick={requestClose}
-                className="w-full py-3 bg-[#1B2B4B] text-white font-bold rounded-xl hover:bg-[#243860] transition-colors"
+                className="w-full py-3 bg-[#FF9900] hover:bg-[#e68a00] text-[#131921] font-bold rounded-xl transition-colors"
               >
                 Odlično!
               </button>
             </div>
-          )}
-
-          {phase !== "success" && (
-            <>
-              <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-slate-100">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-[#FFF3DC] flex items-center justify-center">
-                    <Mail className="w-4 h-4 text-[#FF9900]" />
-                  </div>
-                  <span className="font-bold text-slate-900 text-sm">Uštedi do 20%</span>
-                </div>
-                <button
-                  onClick={requestClose}
-                  className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+          ) : (
+            <div className="relative px-6 pt-8 pb-6 sm:px-7">
+              <div className="inline-flex items-center gap-1.5 bg-[#FF9900]/15 border border-[#FF9900]/30 rounded-full px-3 py-1 mb-4">
+                <TrendingDown className="w-3.5 h-3.5 text-[#FF9900]" />
+                <span className="text-[#FF9900] text-[11px] font-bold uppercase tracking-wide">Ušteda do 20%</span>
               </div>
 
-              <div className="px-5 py-4 space-y-4">
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  {IS_HR
-                    ? "Dva puta mjesečno šaljemo ti popis proizvoda čija je cijena pala i do 20%. Bez pretraživanja po stranicama — mi pratimo, ti samo klikneš i uštediš."
-                    : "Dva puta mesečno šaljemo ti listu proizvoda čija je cena pala i do 20%. Bez pretrage po sajtovima — mi pratimo, ti samo klikneš i uštediš."}
-                </p>
+              <h3 className="text-2xl font-black text-white mb-2 leading-tight">
+                {IS_HR
+                  ? "Mi pratimo cijene, ti samo štediš"
+                  : "Mi pratimo cene, ti samo štediš"}
+              </h3>
+              <p className="text-sm text-white/60 mb-6 leading-relaxed">
+                {IS_HR
+                  ? "Dva puta mjesečno šaljemo ti popis proizvoda čija je cijena pala i do 20%. Bez pretraživanja po stranicama."
+                  : "Dva puta mesečno šaljemo ti listu proizvoda čija je cena pala i do 20%. Bez pretrage po sajtovima."}
+              </p>
 
+              <div className="space-y-4">
                 <div>
-                  <input
-                    ref={emailRef}
-                    type="email"
-                    inputMode="email"
-                    value={email}
-                    onChange={(e) => { setEmail(e.target.value); setEmailError(""); }}
-                    onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-                    placeholder="tvoj@email.com"
-                    autoComplete="email"
-                    className={`w-full px-3 py-2.5 rounded-xl text-sm border-2 outline-none transition-colors bg-white text-slate-900 placeholder:text-slate-400 ${
-                      emailError ? "border-red-400" : "border-slate-200 focus:border-[#FF9900]"
-                    }`}
-                  />
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                    <input
+                      ref={emailRef}
+                      type="email"
+                      inputMode="email"
+                      value={email}
+                      onChange={(e) => { setEmail(e.target.value); setEmailError(""); }}
+                      onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+                      placeholder="tvoj@email.com"
+                      autoComplete="email"
+                      className={`w-full pl-9 pr-3 py-2.5 rounded-xl text-sm border-2 outline-none transition-colors bg-white/5 text-white placeholder:text-white/30 ${
+                        emailError ? "border-red-400/60" : "border-white/10 focus:border-[#FF9900]"
+                      }`}
+                    />
+                  </div>
                   {emailError && (
-                    <p className="text-xs text-red-500 mt-1 font-medium">{emailError}</p>
+                    <p className="text-xs text-red-400 mt-1.5 font-medium">{emailError}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="flex items-start gap-2.5 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={consent}
-                      onChange={(e) => { setConsent(e.target.checked); setConsentError(""); }}
-                      className="mt-0.5 shrink-0"
-                    />
-                    <span className="text-xs text-slate-500 leading-snug">
+                  <label className="flex items-start gap-2.5 cursor-pointer group select-none">
+                    <div className="relative mt-0.5 shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={consent}
+                        onChange={(e) => { setConsent(e.target.checked); setConsentError(""); }}
+                        className="sr-only"
+                      />
+                      <div className={`w-4 h-4 rounded border-2 transition-colors flex items-center justify-center ${
+                        consent ? "bg-[#FF9900] border-[#FF9900]" : "border-white/25 group-hover:border-[#FF9900]/60"
+                      }`}>
+                        {consent && <Check className="w-2.5 h-2.5 text-[#131921]" strokeWidth={3} />}
+                      </div>
+                    </div>
+                    <span className="text-xs text-white/50 leading-snug">
                       {IS_HR
                         ? "Slažem se da primam newsletter s najvećim uštedama. Odjava u jednom kliku."
                         : "Slažem se da primam newsletter sa najvećim uštedama. Odjava u jednom kliku."}
                     </span>
                   </label>
                   {consentError && (
-                    <p className="text-xs text-red-500 mt-1 font-medium">{consentError}</p>
+                    <p className="text-xs text-red-400 mt-1.5 font-medium">{consentError}</p>
                   )}
                 </div>
 
                 {phase === "error" && errorMsg && (
-                  <p className="text-sm text-red-500 font-medium">{errorMsg}</p>
+                  <p className="text-sm text-red-400 font-medium">{errorMsg}</p>
                 )}
-              </div>
 
-              <div className="px-5 pb-6 space-y-2">
                 <button
                   onClick={handleSubmit}
                   disabled={phase === "loading"}
-                  className="w-full flex items-center justify-center gap-2 py-3 bg-[#FF9900] hover:bg-[#e68a00] disabled:opacity-60 text-[#131921] font-bold text-sm rounded-xl transition-colors shadow-lg shadow-orange-200"
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-[#FF9900] hover:bg-[#e68a00] disabled:opacity-60 text-[#131921] font-bold text-sm rounded-xl transition-colors shadow-lg shadow-[#FF9900]/20"
                 >
                   {phase === "loading" ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -228,13 +238,12 @@ export default function NewsletterModal({ source, onClose, onSubscribed }: Props
                     </>
                   )}
                 </button>
-                <p className="text-center text-[11px] text-slate-400 pt-1">
+                <p className="text-center text-[11px] text-white/30">
                   Bez spama · Jedan klik za odjavu
                 </p>
               </div>
-            </>
+            </div>
           )}
-
         </div>
       </div>
     </>
