@@ -162,8 +162,8 @@ export default function NewsletterModal({ source, onClose, onSubscribed }: Props
 
               <h3 className="text-2xl font-black text-white mb-2 leading-tight">
                 {IS_HR
-                  ? "Mi pratimo cijene, ti samo štediš"
-                  : "Mi pratimo cene, ti samo štediš"}
+                  ? "Prati cijene i uštedi do 20% pri sljedećoj kupnji proteina"
+                  : "Prati cene i uštedi do 20% pri sledećoj kupovini proteina"}
               </h3>
               <p className="text-sm text-white/60 mb-6 leading-relaxed">
                 {IS_HR

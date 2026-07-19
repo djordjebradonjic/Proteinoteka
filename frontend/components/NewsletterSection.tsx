@@ -21,8 +21,8 @@ export default function NewsletterSection({ source, className = "", headingLevel
           </p>
           <Heading className="text-2xl sm:text-3xl font-black text-white mb-2">
             {IS_HR
-              ? "Uštedi do 20% — mi pratimo cijene, ti samo štediš"
-              : "Uštedi do 20% — mi pratimo cene, ti samo štediš"}
+              ? "Prati cijene i uštedi do 20% pri sljedećoj kupnji proteina"
+              : "Prati cene i uštedi do 20% pri sledećoj kupovini proteina"}
           </Heading>
           <p className="text-sm text-white/70">
             {IS_HR
