@@ -17,13 +17,17 @@ public final class ProductLineMatcher {
 
     private ProductLineMatcher() {}
 
+    // NOTE: isolate/izolat, casein/kazein, concentrate/koncentrat, hydrolysate/hidrolizat,
+    // vegan, and blend are deliberately NOT stopwords — they're exactly the words that
+    // distinguish different product lines at the same brand+weight (e.g. Maximalium's
+    // "100% Whey Protein" blend vs "Isolate Whey Protein" are different SKUs at the same
+    // weight; treating both as empty/generic previously merged them into one group).
     private static final Set<String> NAME_STOPWORDS = Set.of(
-            "whey", "protein", "proteini", "isolate", "izolat", "kazein", "casein",
-            "concentrate", "koncentrat", "hydrolysate", "hidrolizat", "vegan", "plant",
+            "whey", "protein", "proteini", "plant",
             "100", "pure", "natural", "ukus", "flavor", "flavour", "vanilla", "vanila",
             "chocolate", "cokolada", "sport", "nutrition", "the", "and", "with", "pro",
             "ultra", "gold", "lean", "diet", "basic", "complete", "premium", "iso",
-            "zero", "raw", "blend", "fusion", "powder", "instant", "formula"
+            "zero", "raw", "fusion", "powder", "instant", "formula"
     );
 
     public static Set<String> productLineWords(String name, String brand) {
