@@ -93,12 +93,12 @@ type InternalEvent = "PRODUCT_VIEW" | "COMPARE_CLICK" | "SEARCH";
 
 const _API = process.env.NEXT_PUBLIC_API_URL ?? "";
 
-function _internal(eventType: InternalEvent, productId: number, store: string): void {
+function _internal(eventType: InternalEvent, productId: number, store: string, query?: string): void {
   if (!_API) return;
   fetch(`${_API}/api/track`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ eventType, productId, store }),
+    body: JSON.stringify({ eventType, productId, store, query }),
     keepalive: true,
   }).catch(() => {});
 }
@@ -182,7 +182,7 @@ export const analytics = {
     const p = { search_term: query, product_id: productId, product_name: query, store: store ?? "" };
     _ga4("search", p as EventParams);
     track("search", { search_term: query });
-    _internal("SEARCH", productId ?? 0, store ?? "");
+    _internal("SEARCH", productId ?? 0, store ?? "", query);
     _log("search", p);
   },
 
