@@ -5,7 +5,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, Legend,
 } from "recharts";
-import { Trash2, RefreshCw, ChevronDown, ChevronRight, Zap, Users, Star, Check, Globe, AlertCircle, CheckCircle2, Clock } from "lucide-react";
+import { Trash2, RefreshCw, ChevronDown, ChevronRight, Zap, Users, Star, Check, Globe, AlertCircle, CheckCircle2, Clock, FileText, Download } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -80,7 +80,7 @@ function mergeByDate(views: DayClick[], compares: DayClick[], clickouts: DayClic
 }
 
 type ClearMode = "all" | "keepClickOut" | "clicks";
-type Tab = "analytics" | "grupe" | "recenzije" | "domeni";
+type Tab = "analytics" | "grupe" | "recenzije" | "domeni" | "izvestaji";
 type Market = "sve" | "rs" | "hr";
 
 // ── Main page ─────────────────────────────────────────────────────────────────
@@ -100,6 +100,7 @@ export default function AdminPage() {
               { id: "domeni",     label: "Domeni",     icon: <Globe  className="w-4 h-4" /> },
               { id: "grupe",      label: "Grupe",      icon: <Zap    className="w-4 h-4" /> },
               { id: "recenzije",  label: "Recenzije",  icon: <Star   className="w-4 h-4" /> },
+              { id: "izvestaji",  label: "Izveštaji",  icon: <FileText className="w-4 h-4" /> },
             ] as { id: Tab; label: string; icon: React.ReactNode }[]).map(t => (
               <button
                 key={t.id}
@@ -122,6 +123,7 @@ export default function AdminPage() {
         {tab === "domeni"     && <DomeniTab />}
         {tab === "grupe"      && <GrupeTab />}
         {tab === "recenzije"  && <RecenzijeTab />}
+        {tab === "izvestaji"  && <IzvestajiTab />}
       </div>
     </main>
   );
@@ -466,6 +468,215 @@ function RecenzijeTab() {
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+// ── Izveštaji tab ────────────────────────────────────────────────────────────
+
+interface StoreOption { name: string; market: string; }
+
+interface Engagement { productViews: number; buyClicks: number; compareClicks: number; }
+interface PricePositionSummary { groupedProductCount: number; cheapestCount: number; avgPctAboveCheapest: number; }
+interface ProductPricePosition {
+  productId: number; productName: string; yourPrice: number; cheapestPrice: number;
+  cheapestStore: string; yourRank: number; totalStoresInGroup: number; pctAboveCheapest: number;
+}
+interface PriceVelocity { productId: number; productName: string; changeCount: number; }
+interface RatingSummary { avgRating: number | null; reviewCount: number; }
+interface BrandScore { brand: string; score: number; tier: string; }
+interface SearchTerm { term: string; count: number; }
+interface LostClickDetail { productName: string; competitorStore: string; count: number; }
+interface LostClicksEstimate { estimatedCount: number; byCompetitor: LostClickDetail[]; }
+
+interface StoreReport {
+  storeName: string;
+  market: string;
+  periodStart: string;
+  periodEnd: string;
+  periodDays: number;
+  engagement: Engagement;
+  pricePositionSummary: PricePositionSummary;
+  pricePositions: ProductPricePosition[];
+  priceVelocity: PriceVelocity[];
+  ratingSummary: RatingSummary;
+  brandScores: BrandScore[];
+  topSearchTerms: SearchTerm[];
+  missedOpportunityBrands: string[];
+  lostClicksEstimate: LostClicksEstimate;
+}
+
+function IzvestajiTab() {
+  const [stores, setStores]           = useState<StoreOption[]>([]);
+  const [loadingStores, setLoadingStores] = useState(true);
+  const [selectedStore, setSelectedStore] = useState<string>("");
+  const [days, setDays]               = useState(30);
+  const [report, setReport]           = useState<StoreReport | null>(null);
+  const [loadingPreview, setLoadingPreview] = useState(false);
+  const [previewError, setPreviewError]     = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      setLoadingStores(true);
+      try {
+        const res = await fetch("/api/admin/store-report");
+        if (res.ok) {
+          const data: StoreOption[] = await res.json();
+          setStores(data);
+          if (data.length > 0) setSelectedStore(data[0].name);
+        }
+      } finally {
+        setLoadingStores(false);
+      }
+    })();
+  }, []);
+
+  const loadPreview = async () => {
+    if (!selectedStore) return;
+    setLoadingPreview(true);
+    setPreviewError(null);
+    setReport(null);
+    try {
+      const res = await fetch(`/api/admin/store-report/${encodeURIComponent(selectedStore)}?days=${days}`);
+      if (!res.ok) throw new Error();
+      setReport(await res.json());
+    } catch {
+      setPreviewError("Nije uspelo učitavanje izveštaja.");
+    } finally {
+      setLoadingPreview(false);
+    }
+  };
+
+  const downloadPdf = async () => {
+    if (!selectedStore) return;
+    setDownloading(true);
+    try {
+      const res = await fetch(`/api/admin/store-report/${encodeURIComponent(selectedStore)}/pdf?days=${days}`);
+      if (!res.ok) throw new Error();
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `proteinoteka-izvestaj-${selectedStore.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      setPreviewError("Nije uspelo generisanje PDF-a.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <h2 className="text-base font-bold text-slate-900">Izveštaj za prodavnicu</h2>
+        <p className="text-sm text-slate-400 mt-0.5 mb-4">
+          Poseban PDF izveštaj (cenovna pozicija, izgubljeni klikovi, potražnja, ocene) — jedinstven za svaku prodavnicu.
+        </p>
+
+        <div className="flex flex-wrap items-end gap-3">
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 mb-1">Prodavnica</label>
+            <select
+              value={selectedStore}
+              onChange={e => { setSelectedStore(e.target.value); setReport(null); }}
+              disabled={loadingStores || stores.length === 0}
+              className="px-3 py-2 text-sm border border-slate-200 rounded-xl bg-white min-w-[220px]"
+            >
+              {stores.map(s => (
+                <option key={s.name} value={s.name}>{s.name} ({s.market.toUpperCase()})</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 mb-1">Period (dana)</label>
+            <input
+              type="number"
+              min={1}
+              max={365}
+              value={days}
+              onChange={e => setDays(Math.max(1, Math.min(365, Number(e.target.value) || 30)))}
+              className="px-3 py-2 text-sm border border-slate-200 rounded-xl w-24"
+            />
+          </div>
+          <button
+            onClick={loadPreview}
+            disabled={!selectedStore || loadingPreview}
+            className="flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-700 text-sm font-bold rounded-xl transition-colors"
+          >
+            {loadingPreview ? <RefreshCw className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+            Prikaži pregled
+          </button>
+          <button
+            onClick={downloadPdf}
+            disabled={!selectedStore || downloading}
+            className="flex items-center gap-1.5 px-4 py-2 bg-[#FF9900] hover:bg-[#e68a00] disabled:opacity-50 text-white text-sm font-bold rounded-xl transition-colors"
+          >
+            {downloading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            Preuzmi PDF
+          </button>
+        </div>
+
+        {previewError && <p className="text-sm text-red-600 mt-3">{previewError}</p>}
+      </div>
+
+      {report && (
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
+          <div className="flex items-center justify-between">
+            <h3 className="text-base font-bold text-slate-900">
+              {report.storeName} <span className="text-slate-400 font-normal">— {report.periodStart} do {report.periodEnd}</span>
+            </h3>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-slate-50 rounded-xl p-4 text-center">
+              <div className="text-2xl font-black text-slate-900">{report.engagement.productViews}</div>
+              <div className="text-xs text-slate-400 mt-1">pregleda proizvoda</div>
+            </div>
+            <div className="bg-slate-50 rounded-xl p-4 text-center">
+              <div className="text-2xl font-black text-slate-900">{report.engagement.buyClicks}</div>
+              <div className="text-xs text-slate-400 mt-1">klikova &quot;kupi&quot;</div>
+            </div>
+            <div className="bg-slate-50 rounded-xl p-4 text-center">
+              <div className="text-2xl font-black text-slate-900">~{report.lostClicksEstimate.estimatedCount}</div>
+              <div className="text-xs text-slate-400 mt-1">procenjeno izgubljenih klikova</div>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-sm font-bold text-slate-700 mb-2">Cenovna pozicija</h4>
+            <p className="text-sm text-slate-600">
+              Od <b>{report.pricePositionSummary.groupedProductCount}</b> proizvoda sa konkurencijom, najjeftiniji si na{" "}
+              <b>{report.pricePositionSummary.cheapestCount}</b>. Prosečno <b>{report.pricePositionSummary.avgPctAboveCheapest.toFixed(1)}%</b> iznad najniže cene.
+            </p>
+          </div>
+
+          {report.ratingSummary.avgRating != null && (
+            <p className="text-sm text-slate-600">
+              Prosečna ocena: <b>{report.ratingSummary.avgRating.toFixed(2)}</b> ({report.ratingSummary.reviewCount} recenzija)
+            </p>
+          )}
+
+          {report.missedOpportunityBrands.length > 0 && (
+            <div>
+              <h4 className="text-sm font-bold text-slate-700 mb-2">Traženi brendovi koje ne prodaješ</h4>
+              <div className="flex flex-wrap gap-2">
+                {report.missedOpportunityBrands.map(b => (
+                  <span key={b} className="px-2.5 py-1 bg-orange-50 text-[#FF9900] text-xs font-semibold rounded-lg border border-orange-200">{b}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <p className="text-xs text-slate-400 pt-2 border-t border-slate-100">
+            Ovo je skraćen pregled — kompletan izveštaj (svi proizvodi, sve konkurencijske pozicije) je u PDF-u.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
