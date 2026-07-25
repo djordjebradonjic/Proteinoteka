@@ -453,11 +453,19 @@ public class ScraperService {
 
     // -------------------- Stale product cleanup --------------------
 
+    // A product is only deleted after this many *consecutive* scrapes in which its URL was
+    // expected but not found — one missed scrape alone (e.g. a transient bot-block or a
+    // store's temporary outage that still stays under maxRemovalPercent) no longer deletes
+    // a still-listed product.
+    private static final int STALE_MISS_THRESHOLD = 3;
+
     private void removeStaleProducts(String storeName, Set<String> existingUrlSet, Set<String> foundUrls) {
         if (foundUrls.isEmpty()) {
             log.warn("[{}] Stale removal skipped — scrape found 0 valid products (possible block or scrape error)", storeName);
             return;
         }
+
+        productRepository.resetMissedScrapes(foundUrls);
 
         Set<String> missingUrls = new HashSet<>(existingUrlSet);
         missingUrls.removeAll(foundUrls);
@@ -469,21 +477,30 @@ public class ScraperService {
 
         double removalPercent = (double) missingUrls.size() / existingUrlSet.size() * 100;
         if (removalPercent > maxRemovalPercent) {
-            log.warn("[{}] Safety check FAILED — skipping stale removal. Found: {}, Missing: {} ({}% would be removed, threshold {}%)",
+            log.warn("[{}] Safety check FAILED — skipping stale removal, not counting this as a miss either (likely a site-wide block, not real removals). Found: {}, Missing: {} ({}% would be removed, threshold {}%)",
                     storeName, foundUrls.size(), missingUrls.size(), (int) removalPercent, maxRemovalPercent);
             return;
         }
 
-        log.info("[{}] Removing {} stale products ({}% of existing): {}",
-                storeName, missingUrls.size(), (int) removalPercent, missingUrls);
-        productRepository.deleteByUrlIn(missingUrls);
+        productRepository.incrementMissedScrapes(missingUrls);
+
+        List<String> urlsToDelete = productRepository.findUrlsWithMissedScrapesAtLeast(missingUrls, STALE_MISS_THRESHOLD);
+        if (urlsToDelete.isEmpty()) {
+            log.info("[{}] {} product(s) missing this scrape but under the grace threshold ({} consecutive misses) — not deleted yet",
+                    storeName, missingUrls.size(), STALE_MISS_THRESHOLD);
+            return;
+        }
+
+        log.info("[{}] Removing {} stale products (missed {}+ consecutive scrapes): {}",
+                storeName, urlsToDelete.size(), STALE_MISS_THRESHOLD, urlsToDelete);
+        productRepository.deleteByUrlIn(urlsToDelete);
 
         scrapeLogRepository.findFirstByStoreNameOrderByStartedAtDesc(storeName).ifPresent(entry -> {
-            entry.setProductsRemoved(missingUrls.size());
+            entry.setProductsRemoved(urlsToDelete.size());
             scrapeLogRepository.save(entry);
         });
 
-        log.info("[{}] Stale removal complete — {} products removed", storeName, missingUrls.size());
+        log.info("[{}] Stale removal complete — {} products removed", storeName, urlsToDelete.size());
     }
 
     // -------------------- ANTI-BAN HELPERS --------------------

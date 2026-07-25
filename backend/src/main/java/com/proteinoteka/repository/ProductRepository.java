@@ -88,6 +88,19 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @Query("DELETE FROM products p WHERE p.url IN :urls")
     void deleteByUrlIn(@Param("urls") Collection<String> urls);
 
+    @Modifying
+    @Transactional
+    @Query("UPDATE products p SET p.missedScrapes = p.missedScrapes + 1 WHERE p.url IN :urls")
+    void incrementMissedScrapes(@Param("urls") Collection<String> urls);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE products p SET p.missedScrapes = 0 WHERE p.url IN :urls AND p.missedScrapes <> 0")
+    void resetMissedScrapes(@Param("urls") Collection<String> urls);
+
+    @Query("SELECT p.url FROM products p WHERE p.url IN :urls AND p.missedScrapes >= :threshold")
+    List<String> findUrlsWithMissedScrapesAtLeast(@Param("urls") Collection<String> urls, @Param("threshold") int threshold);
+
     @Query("SELECT p FROM products p WHERE LOWER(TRIM(p.name)) = :name " +
            "AND (:brand IS NULL OR LOWER(TRIM(p.brand)) = :brand) " +
            "AND (:market IS NULL OR p.market = :market)")

@@ -90,8 +90,17 @@ public class Product {
     @Column(name = "ai_description", columnDefinition = "TEXT")
     private String aiDescription;
 
+    // Frozen at creation, never updated afterward — enforced by the trg_protect_canonical_slug
+    // DB trigger (V56). Changing an already-indexed product's canonical_slug regenerates a
+    // fresh 301-redirect wave in Google Search Console.
     @Column(name = "canonical_slug")
     private String canonicalSlug;
+
+    // Consecutive scrapes in which this product's URL was expected but not found.
+    // Reset to 0 whenever the URL is seen again; the product is only deleted once this
+    // crosses ScraperService.STALE_MISS_THRESHOLD (see removeStaleProducts).
+    @Column(name = "missed_scrapes", nullable = false)
+    private Integer missedScrapes = 0;
 
     @Column(name = "group_id")
     private Long groupId;
