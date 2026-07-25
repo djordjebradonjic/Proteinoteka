@@ -25,6 +25,16 @@ public class ScrapingScheduler {
     }
 
     /**
+     * Runs hourly as a safety net for dailyCheck(). If a redeploy/restart happens between
+     * 06:50 and a store's scheduled scrape time, the in-memory scheduled task is lost silently
+     * (no log, no error) — this catches it and runs the missed scrape once its window has closed.
+     */
+    @Scheduled(cron = "0 10 * * * *", zone = "Europe/Belgrade")
+    public void catchUpCheck() {
+        schedulerService.runCatchUpCheck();
+    }
+
+    /**
      * Runs weekly, Sunday 04:00 Belgrade time — off-peak, before the daily scrape check.
      * Catches products whose detail page 404s even though they're still listed on the
      * store's category page (so the normal per-store stale-removal pass never sees them).

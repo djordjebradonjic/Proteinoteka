@@ -131,6 +131,50 @@ public class ScrapingSchedulerService {
         }
     }
 
+    /**
+     * Safety net for {@link #runDailyCheck()}. That method schedules each window's scrape
+     * as an in-memory {@code TaskScheduler} task for a random instant later the same day —
+     * if the JVM restarts (e.g. a Railway redeploy) between 06:50 and the scheduled instant,
+     * the task is silently lost with no log entry and no error. This runs hourly and, for any
+     * window that has already closed today, executes on the spot any store in it that has no
+     * scrape_log entry yet today.
+     */
+    public void runCatchUpCheck() {
+        if (!schedulingEnabled) {
+            return;
+        }
+
+        int cycleDay = currentCycleDay();
+        List<ScrapeWindow> windows = SCHEDULE.getOrDefault(cycleDay, List.of());
+        if (windows.isEmpty()) {
+            return;
+        }
+
+        LocalTime now = LocalTime.now(BELGRADE);
+        LocalDateTime todayStart = LocalDate.now(BELGRADE).atStartOfDay();
+
+        for (ScrapeWindow window : windows) {
+            if (now.getHour() < window.toHour()) {
+                continue; // window still open — the normal scheduled task may yet fire
+            }
+
+            for (String storeName : window.stores()) {
+                boolean alreadyRanToday = scrapeLogRepository.existsByStoreNameAndStartedAtAfter(storeName, todayStart);
+                if (alreadyRanToday) {
+                    continue;
+                }
+
+                log.warn("[Scheduler] Catch-up: {} missed its {}:00-{}:00 window today (likely a restart between the daily check and the scheduled time) — running now",
+                        storeName, window.fromHour(), window.toHour());
+                try {
+                    executeWithLogging(findScraper(storeName));
+                } catch (Exception e) {
+                    log.error("[Scheduler] Catch-up scrape failed for {}: {}", storeName, e.getMessage());
+                }
+            }
+        }
+    }
+
     // ── Public API: manual trigger from AdminController ──────────────────────
 
     public ScrapeLog scrapeStoreNow(String storeName) {
