@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.regex.Pattern;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -844,14 +845,13 @@ public class ScraperService {
 
         // Detect beef/collagen hydrolysate — nutritionally inferior to whey (no tryptophan, low BCAAs).
         // These products report high protein % by nitrogen assay but have poor DIAAS/PDCAAS scores.
-        boolean isBeefCollagen = false;
-        if (p.getName() != null) {
-            String nameLower = p.getName().toLowerCase();
-            isBeefCollagen = nameLower.contains("beef") || nameLower.contains("goveđ") ||
-                    nameLower.contains("govedi") || nameLower.contains("hovezi") ||
-                    nameLower.contains("collagen") || nameLower.contains("hydrobeef") ||
-                    nameLower.contains("hydro beef");
-        }
+        // Scraped names are sometimes truncated/mistranslated (e.g. "Anabolic Monster Beef" -> "Anabolic
+        // Masster"), so also check proteinSource and the AI-generated description, which reliably mention
+        // "beef"/"goveđi" even when the product name doesn't.
+        boolean isBeefCollagen = containsBeefKeyword(p.getName()) ||
+                containsBeefKeyword(p.getProteinSource()) ||
+                containsBeefProteinIngredient(p.getAiDescription()) ||
+                containsBeefProteinIngredient(p.getDescription());
 
         // 1. VALUE FOR MONEY (0-10) - weight 0.35
         double proteinTotalGrams = (p.getProteinPer100g() / 100.0) * packageGrams;
@@ -957,6 +957,31 @@ public class ScraperService {
         if (p.getProteinPer100g() == null || p.getPrimaryWeightGrams() == null
                 || p.getPrimaryWeightGrams() <= 0) return null;
         return (p.getProteinPer100g() / 100.0 * p.getPrimaryWeightGrams()) / numericPrice;
+    }
+
+    private boolean containsBeefKeyword(String text) {
+        if (text == null) return false;
+        String lower = text.toLowerCase();
+        return lower.contains("beef") || lower.contains("goveđ") ||
+                lower.contains("govedi") || lower.contains("hovezi") ||
+                lower.contains("collagen") || lower.contains("hydrobeef") ||
+                lower.contains("hydro beef");
+    }
+
+    // Free-text descriptions mention "goveđ*" (bovine) in harmless contexts too — e.g. "goveđe
+    // mleko" (cow's milk, the normal source of any whey/casein product) or "goveđi serumski
+    // albumin" (a naturally occurring minor whey fraction) — which must NOT trigger the beef/
+    // collagen quality penalty. Only a "goveđ*" mention directly adjacent to "protein"/"kolagen"/
+    // "belančevin(e)" denotes an actual added beef-protein filler ingredient.
+    private static final Pattern BEEF_PROTEIN_ADJACENCY = Pattern.compile(
+            "gov\\S*\\s+(protein\\S*|kolagen\\S*|bjelančevin\\S*|belančevin\\S*)",
+            Pattern.CASE_INSENSITIVE);
+
+    private boolean containsBeefProteinIngredient(String text) {
+        if (text == null) return false;
+        String lower = text.toLowerCase();
+        return lower.contains("beef") || lower.contains("hovezi") || lower.contains("collagen") ||
+                lower.contains("hydrobeef") || BEEF_PROTEIN_ADJACENCY.matcher(text).find();
     }
 
     private double getCategoryBenchmark(String proteinSource, String currency) {
