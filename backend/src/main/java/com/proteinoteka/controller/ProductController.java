@@ -478,7 +478,8 @@ public class ProductController {
                 product.getLastUpdated(),
                 product.getCanonicalSlug(),
                 product.getMarket(),
-                product.getCurrency()
+                product.getCurrency(),
+                product.getGroupId()
         );
     }
 }

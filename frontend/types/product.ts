@@ -31,4 +31,5 @@ export interface Product {
   canonicalSlug?: string | null;
   market?: string | null;
   currency?: string | null;
+  groupId?: number | null;
 }

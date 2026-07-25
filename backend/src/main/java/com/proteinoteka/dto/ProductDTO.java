@@ -28,6 +28,7 @@ public record ProductDTO(Long id,
                          LocalDateTime lastUpdated,
                          String canonicalSlug,
                          String market,
-                         String currency)
+                         String currency,
+                         Long groupId)
     {
 }

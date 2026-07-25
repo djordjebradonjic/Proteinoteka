@@ -105,7 +105,27 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const product = await fetchProduct(id);
   if (!product || (product.market && product.market !== CURRENT_MARKET)) return { title: { absolute: "Proizvod | Proteinoteka" } };
 
-  const canonical   = `${BASE_URL}${productUrl(product)}`;
+  // Store count + price range makes the SERP snippet concrete ("6 prodavnica,
+  // od 2.100 do 3.400 RSD") instead of a generic "uporedi cene" line — this is
+  // what actually drives CTR, since Google usually renders the description
+  // verbatim rather than pulling numbers out of the AggregateOffer schema.
+  const storePrices = await fetchStorePrices(product.id);
+
+  // Duplicate-content consolidation: when multiple stores sell the same physical
+  // product, every store's row is its own page with near-identical name/nutrition
+  // content — Google was flagging most of them "Crawled - currently not indexed".
+  // Only the oldest listing (lowest id, stable over time) in the group is declared
+  // canonical; every other member points its rel=canonical at that one instead of
+  // itself. The page itself still renders normally and is NOT redirected — a user
+  // (or a link) landing on a non-canonical store's page still sees that store's info.
+  const canonicalGroupMember = storePrices.reduce<StorePrice | null>(
+    (min, sp) => (min === null || sp.id < min.id ? sp : min),
+    null,
+  );
+  const canonical = canonicalGroupMember && canonicalGroupMember.id !== product.id
+    ? `${BASE_URL}${productUrl({ ...canonicalGroupMember, name: canonicalGroupMember.name ?? product.name })}`
+    : `${BASE_URL}${productUrl(product)}`;
+
   const title       = buildProductTitle(product.name);
 
   const descParts: string[] = [];
@@ -117,11 +137,6 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   }
   const nutritionHint = descParts.length > 0 ? ` (${descParts.join(", ")})` : "";
 
-  // Store count + price range makes the SERP snippet concrete ("6 prodavnica,
-  // od 2.100 do 3.400 RSD") instead of a generic "uporedi cene" line — this is
-  // what actually drives CTR, since Google usually renders the description
-  // verbatim rather than pulling numbers out of the AggregateOffer schema.
-  const storePrices = await fetchStorePrices(product.id);
   const validStorePrices = storePrices.filter((sp) => sp.numericPrice != null && sp.numericPrice > 0);
   const priceHint =
     validStorePrices.length > 1
