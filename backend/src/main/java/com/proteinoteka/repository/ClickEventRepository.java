@@ -6,9 +6,26 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 
 public interface ClickEventRepository extends JpaRepository<ClickEvent, Long> {
+
+    // Raw click rows for a set of products, used by StoreReportService to correlate a
+    // competitor's buy-click (by IP + time window) back to an earlier product view.
+    @Query(value = """
+            SELECT product_id, ip_address, created_at, store_name
+            FROM click_events
+            WHERE product_id IN (:productIds)
+              AND created_at >= :since
+            """, nativeQuery = true)
+    List<Object[]> clickRowsForProducts(@Param("productIds") Collection<Long> productIds, @Param("since") LocalDateTime since);
+
+    @Query(value = """
+            SELECT COUNT(*) FROM click_events
+            WHERE store_name = :storeName AND created_at >= :since
+            """, nativeQuery = true)
+    long countByStoreNameSince(@Param("storeName") String storeName, @Param("since") LocalDateTime since);
 
     @Query(value = """
             SELECT COUNT(*) FROM click_events

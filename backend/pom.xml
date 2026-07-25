@@ -85,6 +85,13 @@
 			<artifactId>fuzzywuzzy</artifactId>
 			<version>1.4.0</version>
 		</dependency>
+
+		<!-- HTML->PDF rendering for the store competitive-intelligence report (Apache 2.0 license). -->
+		<dependency>
+			<groupId>io.github.openhtmltopdf</groupId>
+			<artifactId>openhtmltopdf-pdfbox</artifactId>
+			<version>1.1.61</version>
+		</dependency>
 	</dependencies>
 
 	<build>

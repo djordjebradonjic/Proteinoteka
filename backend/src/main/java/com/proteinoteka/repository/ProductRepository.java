@@ -63,6 +63,15 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @Query(value = "SELECT DISTINCT flavour FROM product_flavours WHERE flavour IS NOT NULL ORDER BY flavour ASC", nativeQuery = true)
     List<String> findAllUniqueFlavours();
 
+    // Brands a specific store currently carries — used by the store competitive report to
+    // work out which trending-search brands the store is NOT stocking (missed opportunity).
+    @Query(value = """
+            SELECT DISTINCT p.brand FROM products p
+            JOIN stores s ON p.store_id = s.id
+            WHERE s.name = :storeName AND p.brand IS NOT NULL
+            """, nativeQuery = true)
+    List<String> findDistinctBrandsByStoreName(@Param("storeName") String storeName);
+
     @Query(value = """
             SELECT DISTINCT pf.flavour
             FROM product_flavours pf

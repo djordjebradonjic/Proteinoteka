@@ -6,9 +6,45 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 
 public interface TrackingEventRepository extends JpaRepository<TrackingEvent, Long> {
+
+    // Category-wide search demand — used by the store competitive report ("what people
+    // search for on Proteinoteka"). Not store-scoped: a store's own search rarely overlaps
+    // with the whole category, so this is shown as market context rather than filtered.
+    @Query(value = """
+            SELECT query, COUNT(*) AS cnt
+            FROM tracking_events
+            WHERE event_type = 'SEARCH'
+              AND query IS NOT NULL AND query <> ''
+              AND created_at >= :since
+            GROUP BY query
+            ORDER BY cnt DESC
+            LIMIT :limit
+            """, nativeQuery = true)
+    List<Object[]> topSearchQueriesSince(@Param("since") LocalDateTime since, @Param("limit") int limit);
+
+    // Raw PRODUCT_VIEW rows for a set of products, used to correlate (by IP + time window)
+    // a view on one store's listing with a later buy-click on a competitor's listing for
+    // the same product group. See StoreReportService for the correlation logic.
+    @Query(value = """
+            SELECT product_id, ip_address, created_at
+            FROM tracking_events
+            WHERE event_type = 'PRODUCT_VIEW'
+              AND product_id IN (:productIds)
+              AND created_at >= :since
+            """, nativeQuery = true)
+    List<Object[]> productViewRowsForProducts(@Param("productIds") Collection<Long> productIds, @Param("since") LocalDateTime since);
+
+    @Query(value = """
+            SELECT COUNT(*) FROM tracking_events
+            WHERE event_type = :eventType AND store = :storeName AND created_at >= :since
+            """, nativeQuery = true)
+    long countByEventTypeAndStoreSince(@Param("eventType") String eventType,
+                                        @Param("storeName") String storeName,
+                                        @Param("since") LocalDateTime since);
 
     @Query(value = """
             SELECT COUNT(*) FROM tracking_events

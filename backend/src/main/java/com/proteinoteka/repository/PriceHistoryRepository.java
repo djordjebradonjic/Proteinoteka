@@ -32,4 +32,21 @@ public interface PriceHistoryRepository extends JpaRepository<PriceHistory, Long
             @Param("productId") Long productId,
             @Param("since") LocalDateTime since
     );
+
+    // Price-change frequency per product for a store, used by the store competitive report
+    // ("how often do you reprice vs. the market"). Each PriceHistory row already represents
+    // an actual price change, not a scrape snapshot (see ScraperService — a row is only
+    // written when the numeric price differs from the last recorded one), so a plain count
+    // per product is exactly the number of repricing events in the period.
+    @Query(value = """
+            SELECT ph.product_id, p.name, COUNT(*) AS changes
+            FROM price_history ph
+            JOIN products p ON ph.product_id = p.id
+            JOIN stores s ON p.store_id = s.id
+            WHERE s.name = :storeName
+              AND ph.timestamp >= :since
+            GROUP BY ph.product_id, p.name
+            ORDER BY changes DESC
+            """, nativeQuery = true)
+    List<Object[]> priceChangeCountsByStoreName(@Param("storeName") String storeName, @Param("since") LocalDateTime since);
 }
