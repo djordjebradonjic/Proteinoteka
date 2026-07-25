@@ -134,6 +134,10 @@ public class PolleoSportScraper implements StoreScraper {
                 imageUrl = img.attr("src");
                 if (imageUrl.isBlank()) imageUrl = img.attr("data-src");
                 if (imageUrl.contains("?size=")) imageUrl = imageUrl.substring(0, imageUrl.indexOf("?size="));
+                // The site serves image src with literal (unencoded) spaces in the filename —
+                // e.g. ".../prowhey vanilla 2 kg.jpg" — which browsers silently percent-encode
+                // but strict HTTP clients (and Next.js Image) reject as a malformed URL.
+                imageUrl = imageUrl.replace(" ", "%20");
             }
 
             Product p = new Product();
