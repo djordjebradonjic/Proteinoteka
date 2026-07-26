@@ -35,6 +35,9 @@ const BRAND_PAGE_SLUGS: Record<string, string> = IS_HR ? {} : {
   "Dymatize Nutrition": "/dymatize-proteini",
   "BioTech USA":        "/biotech-usa-proteini",
   "Biotech":            "/biotech-usa-proteini",
+  "GymBeam":            "/gymbeam-proteini",
+  "MyProtein":          "/myprotein-proteini",
+  "Ultimate Nutrition": "/ultimate-nutrition-proteini",
 };
 
 const PriceHistoryChart = dynamic(() => import("@/components/PriceHistoryChart"), { ssr: false });

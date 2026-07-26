@@ -1,4 +1,5 @@
 import { Product } from "@/types/product";
+import { formatPrice } from "@/lib/formatPrice";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "";
 const MARKET = process.env.NEXT_PUBLIC_MARKET ?? "rs";
@@ -155,4 +156,45 @@ export async function fetchBrandProducts(params: {
   } catch {
     return [];
   }
+}
+
+export interface SeoCopyStats {
+  cheapest: Product;
+  priciest: Product;
+  bestValue: Product;
+  secondBestValue: Product | null;
+  highestProtein: Product;
+  minPriceLabel: string;
+  maxPriceLabel: string;
+}
+
+// Derives the numbers used in brand/store SEO page prose (intro + FAQ) directly from the
+// fetched product list, so editorial copy can't drift out of sync with the live price table
+// it sits next to — recomputed on every ISR revalidation instead of being hand-typed once.
+export function getSeoCopyStats(products: Product[]): SeoCopyStats | null {
+  const priced = products.filter((p) => p.numericPrice > 0);
+  if (priced.length === 0) return null;
+
+  const cheapest = [...priced].sort((a, b) => a.numericPrice - b.numericPrice)[0];
+  const priciest = [...priced].sort((a, b) => b.numericPrice - a.numericPrice)[0];
+
+  const byValue = [...products]
+    .filter((p) => p.valueScore != null)
+    .sort((a, b) => (b.valueScore ?? 0) - (a.valueScore ?? 0));
+
+  const byProtein = [...products]
+    .filter((p) => p.proteinPer100g != null)
+    .sort((a, b) => (b.proteinPer100g ?? 0) - (a.proteinPer100g ?? 0));
+
+  if (byValue.length === 0 || byProtein.length === 0) return null;
+
+  return {
+    cheapest,
+    priciest,
+    bestValue: byValue[0],
+    secondBestValue: byValue[1] ?? null,
+    highestProtein: byProtein[0],
+    minPriceLabel: formatPrice(cheapest.numericPrice),
+    maxPriceLabel: formatPrice(priciest.numericPrice),
+  };
 }

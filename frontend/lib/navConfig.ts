@@ -48,6 +48,8 @@ const RS_FOOTER_STORES: NavLink[] = [
   { label: "Supplementshop", href: "/supplementshop-proteini" },
   { label: "Pansport",       href: "/pansport-proteini"       },
   { label: "FitLab",         href: "/fitlab-proteini"         },
+  { label: "GymBeam",        href: "/gymbeam-proteini"        },
+  { label: "MyProtein",      href: "/myprotein-proteini"      },
   { label: "Proteinbox",     href: "/proteinbox-proteini"     },
   { label: "Proteini.si",    href: "/proteini-si-srbija"      },
   { label: "Lama",           href: "/lama-proteini"           },
