@@ -77,6 +77,11 @@ public class ProductSpecifications {
         };
     }
 
+    public static Specification<Product> hasProductType(String productType) {
+        return (root, query, cb) -> cb.equal(root.get("productType"),
+                productType == null || productType.isEmpty() ? "protein" : productType);
+    }
+
     public static Specification<Product> hasMarket(String market) {
         return (root, query, cb) -> market == null || market.isEmpty() ?
                 cb.equal(root.get("market"), "rs") : cb.equal(root.get("market"), market);

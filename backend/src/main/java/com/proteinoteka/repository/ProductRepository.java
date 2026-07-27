@@ -88,8 +88,17 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @Query("SELECT p.url FROM products p WHERE p.store.name = :storeName")
     List<String> findUrlsByStoreName(@Param("storeName") String storeName);
 
-    @Query("SELECT p FROM products p WHERE p.store.name = :storeName " +
-           "AND p.proteinPer100g IS NOT NULL AND p.fatPer100g IS NOT NULL")
+    // Scoped variant for stores that host more than one product family under the same
+    // `stores` row (e.g. GymBeam protein + GymBeam Kreatin) — stale-URL detection must not
+    // treat the other family's products as missing just because this scraper's listing never
+    // covers them.
+    @Query("SELECT p.url FROM products p WHERE p.store.name = :storeName AND p.productType = :productType")
+    List<String> findUrlsByStoreNameAndProductType(@Param("storeName") String storeName,
+                                                    @Param("productType") String productType);
+
+    @Query("SELECT p FROM products p WHERE p.store.name = :storeName AND " +
+           "((p.productType = 'protein' AND p.proteinPer100g IS NOT NULL AND p.fatPer100g IS NOT NULL) " +
+           " OR p.productType = 'creatine')")
     List<Product> findNutritionStatusByStoreName(@Param("storeName") String storeName);
 
     @Modifying

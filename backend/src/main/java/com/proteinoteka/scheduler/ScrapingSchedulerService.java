@@ -37,7 +37,9 @@ public class ScrapingSchedulerService {
      *                                Shopbuilder, XSport, Polleo Sport, Proteka, Nutrition Shop HR,
      *                                Proteini Outlet HR, Proteini.si HR
      *   HTTP/API   (light):          FitLab, GymBeam, MyProtein, Pansport, Lama, Ogistrashop,
-     *                                GymBeam HR, MyProtein HR
+     *                                GymBeam HR, MyProtein HR, GymBeam Kreatin (pilot: same
+     *                                physical store as GymBeam, separate /kreatin listing —
+     *                                see StoreScraper.getStoreRowName())
      *
      * Rules: max 2 heavy Playwright scrapers per day, each in its own time window
      * (never concurrent); light scrapers are paired freely alongside them.
@@ -61,7 +63,7 @@ public class ScrapingSchedulerService {
         ));
         m.put(4, List.of(
             new ScrapeWindow(List.of("XSport"),                        9, 13),
-            new ScrapeWindow(List.of("GymBeam", "Ogistrashop"),         14, 17)
+            new ScrapeWindow(List.of("GymBeam", "GymBeam Kreatin", "Ogistrashop"), 14, 17)
         ));
         m.put(5, List.of(
             new ScrapeWindow(List.of("Polleo Sport"),                  9, 12),

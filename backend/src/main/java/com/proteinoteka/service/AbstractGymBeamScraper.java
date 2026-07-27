@@ -32,6 +32,7 @@ public abstract class AbstractGymBeamScraper implements StoreScraper {
     static final int MAX_DETAIL_FETCH_RETRIES = 3;
     static final int MAX_CONSECUTIVE_FAILURES = 5;
     static final double MIN_PACKAGE_GRAMS = 500;
+    static final double MIN_PACKAGE_GRAMS_CREATINE = 60;
 
     protected final NutritionParserService nutritionParser;
     protected final BaseScraperEnricher baseEnricher;
@@ -44,6 +45,15 @@ public abstract class AbstractGymBeamScraper implements StoreScraper {
 
     // RS rounds to integer (RSD), HR keeps 2 decimals (EUR)
     protected abstract String formatPrice(double price);
+
+    // Override to true for a scraper covering this store's creatine listing instead of protein.
+    // Bypasses the protein-only isNonProteinProduct filter, lowers the minimum package size
+    // (creatine tubs are commonly 100-300g, well under protein's 500g floor), tags parsed
+    // products with productType="creatine", and routes nutrition extraction to the creatine
+    // regex/AI path instead of the protein one.
+    protected boolean isCreatineMode() { return false; }
+
+    private double minPackageGrams() { return isCreatineMode() ? MIN_PACKAGE_GRAMS_CREATINE : MIN_PACKAGE_GRAMS; }
 
     @Override
     public boolean usePlaywrightForListing() { return false; }
@@ -112,7 +122,7 @@ public abstract class AbstractGymBeamScraper implements StoreScraper {
 
         for (Product stub : stubs) {
             if (stub.getUrl() == null || stub.getUrl().isBlank()) continue;
-            if (baseEnricher.isNonProteinProduct(stub.getName())) {
+            if (!isCreatineMode() && baseEnricher.isNonProteinProduct(stub.getName())) {
                 log.info("[{}] Skipping '{}' - not a protein product", getStoreName(), stub.getName());
                 continue;
             }
@@ -156,12 +166,22 @@ public abstract class AbstractGymBeamScraper implements StoreScraper {
                 boolean anyNeedsNutrition = variants.stream()
                         .anyMatch(v -> !skipUrls.contains(v.getUrl()));
                 if (anyNeedsNutrition) {
-                    extractNutritionFromTable(descDoc, first);
-                    if (first.getProteinPer100g() == null && !first.getDescription().isBlank()) {
-                        Double protein = nutritionParser.extractProteinPer100g(first.getDescription());
-                        if (protein != null) first.setProteinPer100g(protein);
+                    if (isCreatineMode()) {
+                        if (!first.getDescription().isBlank()) {
+                            Double grams = nutritionParser.extractCreatineGramsPerServing(first.getDescription());
+                            if (grams != null) first.setCreatineGramsPerServing(grams);
+                            Integer servings = nutritionParser.extractServingsPerContainer(first.getDescription());
+                            if (servings != null) first.setServingsPerContainer(servings);
+                        }
+                        baseEnricher.enrichCreatineWithAiIfNeeded(descDoc, first, getStoreName());
+                    } else {
+                        extractNutritionFromTable(descDoc, first);
+                        if (first.getProteinPer100g() == null && !first.getDescription().isBlank()) {
+                            Double protein = nutritionParser.extractProteinPer100g(first.getDescription());
+                            if (protein != null) first.setProteinPer100g(protein);
+                        }
+                        baseEnricher.enrichWithAiIfNeeded(descDoc, first, getStoreName());
                     }
-                    baseEnricher.enrichWithAiIfNeeded(descDoc, first, getStoreName());
                 }
 
                 for (int i = 1; i < variants.size(); i++) {
@@ -277,7 +297,7 @@ public abstract class AbstractGymBeamScraper implements StoreScraper {
             for (Map.Entry<String, List<JsonNode>> entry : groups.entrySet()) {
                 String massLabel = entry.getKey();
                 double grams = parseWeightToGrams(massLabel);
-                if (grams < MIN_PACKAGE_GRAMS) {
+                if (grams < minPackageGrams()) {
                     log.debug("[{}] '{}' -> skipping {} (< 500g)", getStoreName(), cleanName, massLabel);
                     continue;
                 }
@@ -294,6 +314,7 @@ public abstract class AbstractGymBeamScraper implements StoreScraper {
 
                 Product variant = new Product();
                 variant.setName(cleanName);
+                variant.setProductType(isCreatineMode() ? "creatine" : "protein");
                 String weightSlug = massLabel.replaceAll("\\s+", "");
                 variant.setUrl(stub.getUrl() + (stub.getUrl().contains("?") ? "&" : "?") + "pakovanje=" + weightSlug);
                 variant.setPrice(formatPrice(firstProduct.path("price_range").path("minimum_price")
@@ -320,8 +341,8 @@ public abstract class AbstractGymBeamScraper implements StoreScraper {
         } else {
             double grams = parsePrimaryWeightFromName(cleanName);
             if (grams == 0) grams = parseWeightFromUrl(stub.getUrl());
-            if (grams > 0 && grams < MIN_PACKAGE_GRAMS) {
-                log.debug("[{}] '{}' -> skipping (< 500g)", getStoreName(), cleanName);
+            if (grams > 0 && grams < minPackageGrams()) {
+                log.debug("[{}] '{}' -> skipping (< {}g)", getStoreName(), cleanName, (int) minPackageGrams());
                 return variants;
             }
 
@@ -345,6 +366,7 @@ public abstract class AbstractGymBeamScraper implements StoreScraper {
 
             Product variant = new Product();
             variant.setName(cleanName);
+            variant.setProductType(isCreatineMode() ? "creatine" : "protein");
             variant.setUrl(stub.getUrl());
             variant.setPrice(formatPrice(price));
 
@@ -382,6 +404,9 @@ public abstract class AbstractGymBeamScraper implements StoreScraper {
         if (to.getSugarPer100g() == null) to.setSugarPer100g(from.getSugarPer100g());
         if (to.getCaloriePer100g() == null) to.setCaloriePer100g(from.getCaloriePer100g());
         if (to.getProteinSource() == null) to.setProteinSource(from.getProteinSource());
+        if (to.getCreatineGramsPerServing() == null) to.setCreatineGramsPerServing(from.getCreatineGramsPerServing());
+        if (to.getServingsPerContainer() == null) to.setServingsPerContainer(from.getServingsPerContainer());
+        if (to.getCreatineType() == null) to.setCreatineType(from.getCreatineType());
     }
 
     private static double parseWeightToGrams(String text) {

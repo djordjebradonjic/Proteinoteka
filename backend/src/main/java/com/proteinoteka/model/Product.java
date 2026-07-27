@@ -53,6 +53,19 @@ public class Product {
     @Column(name = "protein_source")
     private String proteinSource; // "whey_concentrate", "whey_isolate", "hydrolysate", "vegan", "casein"
 
+    // Product family: "protein" (default, existing rows) or "creatine"
+    @Column(name = "product_type", nullable = false)
+    private String productType = "protein";
+
+    @Column(name = "creatine_grams_per_serving")
+    private Double creatineGramsPerServing;
+
+    @Column(name = "servings_per_container")
+    private Integer servingsPerContainer;
+
+    @Column(name = "creatine_type")
+    private String creatineType; // "monohydrate", "hcl", "micronized", "buffered", "blend"
+
 
     @ElementCollection
     @CollectionTable(name = "product_package_weights", joinColumns = @JoinColumn(name = "product_id"))

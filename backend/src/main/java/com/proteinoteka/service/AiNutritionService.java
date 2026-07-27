@@ -27,11 +27,17 @@ public class AiNutritionService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public NutritionDataDTO extractNutritionData(String productName, String description, List<String> packageWeights) {
+        return callAi(productName, description, buildPrompt(productName, description, packageWeights));
+    }
+
+    public NutritionDataDTO extractCreatineNutritionData(String productName, String description, List<String> packageWeights) {
+        return callAi(productName, description, buildCreatinePrompt(productName, description, packageWeights));
+    }
+
+    private NutritionDataDTO callAi(String productName, String description, String prompt) {
         if (description == null || description.isBlank()) return null;
 
         try {
-            String prompt = buildPrompt(productName, description, packageWeights);
-
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("model", "claude-haiku-4-5-20251001");
             requestBody.put("max_tokens", 300);
@@ -104,6 +110,40 @@ public class AiNutritionService {
     - All values must be numbers, not strings
     - If no nutrition data exists at all, return null for all numeric fields
                 
+    Product: %s
+    Package weights available: %s
+    Description: %s
+    """.formatted(productName, weights, trimmed);
+    }
+
+    private String buildCreatinePrompt(String productName, String description, List<String> packageWeights) {
+        String trimmed = description.length() > 2000
+                ? description.substring(0, 2000)
+                : description;
+
+        String weights = packageWeights != null ? packageWeights.toString() : "unknown";
+
+        return """
+    Analyze this creatine supplement and extract dosing data.
+    Return ONLY a JSON object, no explanation, no markdown.
+
+    JSON format:
+    {
+      "creatineGramsPerServing": <number or null>,
+      "servingsPerContainer": <integer or null>,
+      "creatineType": <"monohydrate"|"hcl"|"micronized"|"buffered"|"blend"|null>,
+      "primaryWeightGrams": <total package weight in grams as number or null>
+    }
+
+    CRITICAL RULES — read carefully:
+    - creatineGramsPerServing is the amount of creatine per single serving/dose (typically 3-10g)
+    - servingsPerContainer is how many servings the whole package provides
+    - creatineType: best match from allowed values only; default to "monohydrate" if type is unclear
+      but the product is plainly plain creatine monohydrate powder
+    - primaryWeightGrams: total package weight in grams (e.g. 300g tub = 300, 1kg = 1000)
+    - All numeric values must be numbers, not strings
+    - If no dosing data exists at all, return null for all fields
+
     Product: %s
     Package weights available: %s
     Description: %s

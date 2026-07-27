@@ -12,4 +12,9 @@ public class NutritionDataDTO {
     private Double caloriePer100g;
     private String proteinSource;
     private Double primaryWeightGrams;
+
+    // Creatine-only fields, populated only by AiNutritionService.extractCreatineNutritionData
+    private Double creatineGramsPerServing;
+    private Integer servingsPerContainer;
+    private String creatineType;
 }

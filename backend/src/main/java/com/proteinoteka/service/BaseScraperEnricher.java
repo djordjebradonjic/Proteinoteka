@@ -80,6 +80,53 @@ public class BaseScraperEnricher {
         }
     }
 
+    /**
+     * Creatine counterpart to enrichWithAiIfNeeded — no isNonProteinProduct gate (that logic
+     * is protein-specific) and fills creatine dosing fields instead of protein nutrition fields.
+     */
+    public void enrichCreatineWithAiIfNeeded(Document doc, Product p, String storeName) {
+        if (p.getCreatineGramsPerServing() != null && p.getServingsPerContainer() != null
+                && p.getCreatineType() != null) {
+            return;
+        }
+
+        String context = buildContext(doc, p);
+        if (context.isBlank()) {
+            log.warn("[{}] '{}' -> No context for creatine AI enrichment", storeName, p.getName());
+            return;
+        }
+
+        log.info("[{}] '{}' -> Calling AI to fill missing creatine fields", storeName, p.getName());
+
+        try {
+            NutritionDataDTO data = aiNutritionService.extractCreatineNutritionData(
+                    p.getName(), context, p.getPackage_weight()
+            );
+
+            if (data == null) {
+                log.warn("[{}] '{}' -> AI returned null", storeName, p.getName());
+                return;
+            }
+
+            if (p.getCreatineGramsPerServing() == null && data.getCreatineGramsPerServing() != null
+                    && data.getCreatineGramsPerServing() > 0 && data.getCreatineGramsPerServing() <= 30)
+                p.setCreatineGramsPerServing(data.getCreatineGramsPerServing());
+
+            if (p.getServingsPerContainer() == null && data.getServingsPerContainer() != null
+                    && data.getServingsPerContainer() > 0 && data.getServingsPerContainer() <= 500)
+                p.setServingsPerContainer(data.getServingsPerContainer());
+
+            if (p.getCreatineType() == null && data.getCreatineType() != null)
+                p.setCreatineType(data.getCreatineType());
+
+            if (p.getPrimaryWeightGrams() == null && data.getPrimaryWeightGrams() != null)
+                p.setPrimaryWeightGrams(data.getPrimaryWeightGrams());
+
+        } catch (Exception e) {
+            log.error("[{}] '{}' -> Creatine AI enrichment failed: {}", storeName, p.getName(), e.getMessage());
+        }
+    }
+
     private boolean allNutritionFieldsFilled(Product p) {
         return p.getProteinPer100g() != null
                 && p.getSugarPer100g() != null
