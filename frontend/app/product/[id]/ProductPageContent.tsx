@@ -540,15 +540,24 @@ export default function ProductPageContent({ product, similar, storePrices, revi
   const chartCurrent   = chartData[chartData.length - 1]?.cena ?? 0;
   const chartChangePct = chartFirst > 0 ? ((chartCurrent - chartFirst) / chartFirst) * 100 : 0;
 
+  // Prefer the backend's authoritative breakdown (same formula that produced product.valueScore,
+  // including the beef/collagen-filler penalty) — fall back to a rough approximation only if it's
+  // missing (e.g. a cached response predating this field).
+  const breakdown = product.valueBreakdown;
   const proteinPct = product.proteinPer100g ?? 0;
-  const proteinPurityScore = Math.round(Math.min(10, Math.max(0, 10 * Math.pow(Math.max(0, (proteinPct - 60) / 40), 0.7))));
+  const valueForMoneyScore = breakdown?.valueForMoney ??
+    Math.round(Math.min(10, Math.max(0, 10 * Math.pow(Math.max(0, (proteinPct - 60) / 40), 0.7))));
+  const proteinPurityScore = breakdown?.proteinPurity ??
+    Math.round(Math.min(10, Math.max(0, 10 * Math.pow(Math.max(0, (proteinPct - 60) / 40), 0.7))));
 
   const digestMap: Record<string, number> = {
     hydrolysate: 10, whey_isolate: 9, casein: 8, whey_concentrate: 7, blend: 7, vegan: 6,
   };
-  const digestScore     = product.proteinSource ? (digestMap[product.proteinSource] ?? 7) : 7;
-  const sugarScore      = Math.round(Math.max(0, 10 - (product.sugarPer100g ?? 0) > 10 ? 0 : (product.sugarPer100g ?? 0) * 0.5));
-  const ingredientsScore = Math.max(0, 10 - (product.sugarPer100g != null && product.sugarPer100g > 10 ? 3 : product.sugarPer100g != null && product.sugarPer100g > 5 ? 1.5 : 0));
+  const digestScore = breakdown?.absorption ??
+    (product.proteinSource ? (digestMap[product.proteinSource] ?? 7) : 7);
+  const ingredientsScore = breakdown?.ingredients ??
+    Math.max(0, 10 - (product.sugarPer100g != null && product.sugarPer100g > 10 ? 3 : product.sugarPer100g != null && product.sugarPer100g > 5 ? 1.5 : 0));
+  const hasBeefCollagenFiller = breakdown?.beefCollagenFiller ?? false;
   const buyUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/products/${product.id}/buy`;
 
   return (
@@ -844,9 +853,11 @@ export default function ProductPageContent({ product, similar, storePrices, revi
           <ValueScoreCard
             score={score}
             product={product}
+            valueForMoneyScore={valueForMoneyScore}
             proteinPurityScore={proteinPurityScore}
             digestScore={digestScore}
             ingredientsScore={ingredientsScore}
+            hasBeefCollagenFiller={hasBeefCollagenFiller}
           />
         )}
 

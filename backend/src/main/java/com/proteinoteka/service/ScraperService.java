@@ -3,6 +3,7 @@ package com.proteinoteka.service;
 import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.Proxy;
 import com.microsoft.playwright.options.WaitUntilState;
+import com.proteinoteka.dto.ValueScoreBreakdown;
 import com.proteinoteka.event.PriceDropEvent;
 import com.proteinoteka.model.BrandReputation;
 import com.proteinoteka.model.PriceHistory;
@@ -150,12 +151,13 @@ public class ScraperService {
     }
 
     public List<Product> scrapeStore(StoreScraper scraper, boolean testMode) {
-        Store store = storeRepository.findByName(scraper.getStoreName())
-                .orElseThrow(() -> new RuntimeException("Store not found: " + scraper.getStoreName()));
+        Store store = storeRepository.findByName(scraper.getStoreRowName())
+                .orElseThrow(() -> new RuntimeException("Store not found: " + scraper.getStoreRowName()));
 
         Set<String> existingUrlSet = new HashSet<>();
         if (staleEnabled && !testMode) {
-            List<String> existingUrls = productRepository.findUrlsByStoreName(store.getName());
+            List<String> existingUrls = productRepository.findUrlsByStoreNameAndProductType(
+                    store.getName(), scraper.getProductType());
             existingUrlSet.addAll(existingUrls);
             log.info("[{}] Stale detection: {} existing products tracked", scraper.getStoreName(), existingUrlSet.size());
         }
@@ -173,6 +175,9 @@ public class ScraperService {
                     if (!hasDescription) return false;
                     if (skipByDescription)
                         return p.getBrand() != null && !p.getBrand().isBlank();
+                    if ("creatine".equals(p.getProductType())) {
+                        return p.getCreatineGramsPerServing() != null;
+                    }
                     return baseEnricher.isNonProteinProduct(p.getName())
                             || (p.getSugarPer100g() != null
                                 && p.getCaloriePer100g() != null && p.getCaloriePer100g() >= 200
@@ -440,7 +445,7 @@ public class ScraperService {
         }
 
         if (staleEnabled && !testMode && !wasBlocked && !existingUrlSet.isEmpty()) {
-            removeStaleProducts(store.getName(), existingUrlSet, foundUrls);
+            removeStaleProducts(scraper.getStoreName(), existingUrlSet, foundUrls);
         }
 
         log.info("[{}] Scraping complete. Total products: {}", scraper.getStoreName(), products.size());
@@ -565,17 +570,33 @@ public class ScraperService {
     @Transactional
     public boolean saveOrUpdateProduct(Product scraped, Store store) {
 
-        // 0. Provera da li je proizvod proteinski suplement
-        if (baseEnricher.isNonProteinProduct(scraped.getName())) {
-            log.info("[{}] Skipping '{}' - not a protein supplement", store.getName(), scraped.getName());
-            return false;
-        }
+        boolean isCreatine = "creatine".equals(scraped.getProductType());
 
-        // Odbaci mass gainere i snackove sa premalo proteina (gaineri, barovi, namazi)
-        if (scraped.getProteinPer100g() != null && scraped.getProteinPer100g() < 25.0) {
-            log.info("[{}] Skipping '{}' — protein {}g/100g too low for a protein supplement",
-                    store.getName(), scraped.getName(), scraped.getProteinPer100g());
-            return false;
+        if (isCreatine) {
+            // Kreatin nema proteinski sadržaj, pa protein-specifični gejtovi ispod ne važe.
+            // Umesto toga, odbaci ako ne postoji nikakva potvrda gramaže kreatina po serviranju
+            // niti ključna reč u nazivu — znak da je nešto pogrešno detektovano kao kreatin.
+            boolean hasCreatineGrams = scraped.getCreatineGramsPerServing() != null
+                    && scraped.getCreatineGramsPerServing() > 0;
+            boolean nameLooksLikeCreatine = scraped.getName() != null
+                    && scraped.getName().toLowerCase().matches(".*(kreatin|creatine).*");
+            if (!hasCreatineGrams && !nameLooksLikeCreatine) {
+                log.info("[{}] Skipping '{}' — no creatine confirmation (name/grams)", store.getName(), scraped.getName());
+                return false;
+            }
+        } else {
+            // 0. Provera da li je proizvod proteinski suplement
+            if (baseEnricher.isNonProteinProduct(scraped.getName())) {
+                log.info("[{}] Skipping '{}' - not a protein supplement", store.getName(), scraped.getName());
+                return false;
+            }
+
+            // Odbaci mass gainere i snackove sa premalo proteina (gaineri, barovi, namazi)
+            if (scraped.getProteinPer100g() != null && scraped.getProteinPer100g() < 25.0) {
+                log.info("[{}] Skipping '{}' — protein {}g/100g too low for a protein supplement",
+                        store.getName(), scraped.getName(), scraped.getProteinPer100g());
+                return false;
+            }
         }
 
         // 1. Normalizuj brend
@@ -855,6 +876,29 @@ public class ScraperService {
     }
 
     public Double calculateValueScore(Double numericPrice, Product p, double brandScore) {
+        ValueScoreBreakdown breakdown = computeValueScoreBreakdown(numericPrice, p, brandScore);
+        return breakdown == null ? null : breakdown.total();
+    }
+
+    public ValueScoreBreakdown computeValueScoreBreakdown(Double numericPrice, Product p) {
+        double brandScore = 4.5;
+        if (p.getBrand() != null && !p.getBrand().isBlank()) {
+            brandScore = brandReputationRepository
+                    .findFirstByBrandNameIgnoreCase(p.getBrand())
+                    .map(BrandReputation::getScore)
+                    .orElse(4.5);
+        }
+        return computeValueScoreBreakdown(numericPrice, p, brandScore);
+    }
+
+    public ValueScoreBreakdown computeValueScoreBreakdown(Double numericPrice, Product p, double brandScore) {
+        if ("creatine".equals(p.getProductType())) {
+            Double creatineTotal = calculateCreatineValueScore(numericPrice, p, brandScore);
+            if (creatineTotal == null) return null;
+            // Creatine is a near-commodity ingredient with no purity/digestibility/ingredient
+            // spread like whey sources have — the total score IS the value-for-money score.
+            return new ValueScoreBreakdown(creatineTotal, 10.0, 10.0, 10.0, false, creatineTotal);
+        }
         if (numericPrice == null || numericPrice <= 0) return null;
         if (p.getProteinPer100g() == null) return null;
         double packageGrams = extractPackageGrams(p);
@@ -966,7 +1010,14 @@ public class ScraperService {
         // so they score below quality whey products even when cheaply priced.
         if (isBeefCollagen) total *= 0.72;
 
-        return Math.round(total * 10.0) / 10.0;
+        return new ValueScoreBreakdown(
+                Math.round(valueMoney * 10.0) / 10.0,
+                Math.round(proteinPurity * 10.0) / 10.0,
+                Math.round(digestibility * 10.0) / 10.0,
+                Math.round(ingredients * 10.0) / 10.0,
+                isBeefCollagen,
+                Math.round(total * 10.0) / 10.0
+        );
     }
 
     public Double computeProteinPerRsd(Double numericPrice, Product p) {
@@ -999,6 +1050,28 @@ public class ScraperService {
         String lower = text.toLowerCase();
         return lower.contains("beef") || lower.contains("hovezi") || lower.contains("collagen") ||
                 lower.contains("hydrobeef") || BEEF_PROTEIN_ADJACENCY.matcher(text).find();
+    }
+
+    // Creatine monohydrate is a near-commodity ingredient (no digestibility/purity spread like
+    // whey sources have), so unlike calculateValueScore's multi-factor formula this is just a
+    // single price-per-gram-of-product score. Benchmarks are a rough starting estimate (~2 RSD /
+    // ~0.02 EUR per gram) and should be recalibrated once real market data comes in from scraping.
+    private Double calculateCreatineValueScore(Double numericPrice, Product p, double brandScore) {
+        if (numericPrice == null || numericPrice <= 0) return null;
+        double packageGrams = extractPackageGrams(p);
+        if (packageGrams <= 0) return null;
+
+        double pricePerGram = numericPrice / packageGrams;
+        double maxPricePerGram = "EUR".equals(p.getCurrency()) ? 0.08 : 8.0;
+        if (pricePerGram > maxPricePerGram) return null;
+
+        double benchmark = "EUR".equals(p.getCurrency()) ? 0.02 : 2.0;
+        if (brandScore >= 8.0)      benchmark *= 1.25;
+        else if (brandScore >= 7.0) benchmark *= 1.12;
+
+        double ratio = pricePerGram / benchmark;
+        double score = 10.0 / (1.0 + Math.exp(3.5 * (ratio - 1.2)));
+        return Math.max(0, Math.min(10, score));
     }
 
     private double getCategoryBenchmark(String proteinSource, String currency) {

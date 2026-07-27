@@ -90,6 +90,7 @@ function buildConclusion(
   purity: number,
   digest: number,
   ingredients: number,
+  hasBeefCollagenFiller: boolean,
 ): string {
   const strengths: string[] = [];
   const weaknesses: string[] = [];
@@ -113,6 +114,11 @@ function buildConclusion(
       else if (pricePerGramProt > 9) weaknesses.push("visoka cena po gramu proteina");
       else if (pricePerGramProt > 7) weaknesses.push("iznadprosečna cena");
     }
+  }
+
+  // Goveđi hidrolizat/kolagen kao punilo — nutritivno slabiji od whey-a uprkos visokom % proteina
+  if (hasBeefCollagenFiller) {
+    weaknesses.push("sadrži hidrolizat goveđeg proteina/kolagena kao punilo (nepotpun aminokiselinski profil)");
   }
 
   // Čistoća
@@ -157,22 +163,26 @@ function buildConclusion(
 interface Props {
   score: number;
   product: Product;
+  valueForMoneyScore: number;
   proteinPurityScore: number;
   digestScore: number;
   ingredientsScore: number;
+  hasBeefCollagenFiller?: boolean;
 }
 
 export default function ValueScoreCard({
   score,
   product,
+  valueForMoneyScore,
   proteinPurityScore,
   digestScore,
   ingredientsScore,
+  hasBeefCollagenFiller = false,
 }: Props) {
   const color      = getScoreColor(score);
   const bg         = getScoreBg(score);
   const label      = getScoreLabel(score);
-  const conclusion = buildConclusion(score, product, proteinPurityScore, digestScore, ingredientsScore);
+  const conclusion = buildConclusion(score, product, proteinPurityScore, digestScore, ingredientsScore, hasBeefCollagenFiller);
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm mb-6">
@@ -189,7 +199,7 @@ export default function ValueScoreCard({
 
         {/* Dimenzije */}
         <div className="flex-1 w-full space-y-3">
-          <DimBar icon="💰" label={IS_HR ? "Vrijednost za novac" : "Vrednost za novac"} score={score} />
+          <DimBar icon="💰" label={IS_HR ? "Vrijednost za novac" : "Vrednost za novac"} score={valueForMoneyScore} />
           <DimBar icon="🧬" label="Čistoća proteina"  score={proteinPurityScore} />
           <DimBar icon="⚡" label="Apsorpcija"         score={digestScore} />
           <DimBar icon="🌿" label="Sastojci"           score={ingredientsScore} />

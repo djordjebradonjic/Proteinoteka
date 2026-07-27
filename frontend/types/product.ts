@@ -4,6 +4,15 @@ export interface PriceHistory {
   timestamp: string;
 }
 
+export interface ValueScoreBreakdown {
+  valueForMoney: number;
+  proteinPurity: number;
+  absorption: number;
+  ingredients: number;
+  beefCollagenFiller: boolean;
+  total: number;
+}
+
 export interface Product {
   id: number;
   name: string;
@@ -32,4 +41,5 @@ export interface Product {
   market?: string | null;
   currency?: string | null;
   groupId?: number | null;
+  valueBreakdown?: ValueScoreBreakdown | null;
 }

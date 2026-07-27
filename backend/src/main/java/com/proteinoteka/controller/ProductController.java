@@ -5,6 +5,7 @@ import com.proteinoteka.dto.CompareProductDTO;
 import com.proteinoteka.dto.PriceHistoryDTO;
 import com.proteinoteka.dto.ProductDTO;
 import com.proteinoteka.dto.StorePriceDTO;
+import com.proteinoteka.dto.ValueScoreBreakdown;
 import com.proteinoteka.model.AffiliateLink;
 import com.proteinoteka.model.ClickEvent;
 import com.proteinoteka.model.PriceHistory;
@@ -14,6 +15,7 @@ import com.proteinoteka.repository.ClickEventRepository;
 import com.proteinoteka.repository.PriceHistoryRepository;
 import com.proteinoteka.repository.ProductRepository;
 import com.proteinoteka.service.ProductGroupService;
+import com.proteinoteka.service.ScraperService;
 import com.proteinoteka.util.BotDetector;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -50,6 +52,7 @@ public class ProductController {
     private final ClickEventRepository clickEventRepository;
     private final AffiliateLinkRepository affiliateLinkRepository;
     private final ProductGroupService productGroupService;
+    private final ScraperService scraperService;
 
     private static final java.util.Set<String> NULLABLE_SORT_COLS =
             java.util.Set.of("valueScore", "proteinPerRsd", "lastPriceChangeAt", "lastPriceDropPct", "lastPriceIncreasePct");
@@ -65,9 +68,10 @@ public class ProductController {
             @RequestParam(required = false) Double maxPrice,
             @RequestParam(required = false) String weightRange,
             @RequestParam(required = false) String market,
+            @RequestParam(required = false) String productType,
             Pageable pageable) {
 
-        Specification<Product> spec = buildSpec(name, storeName, brand, flavour, category, minPrice, maxPrice, weightRange, market);
+        Specification<Product> spec = buildSpec(name, storeName, brand, flavour, category, minPrice, maxPrice, weightRange, market, productType);
 
         // JPA Criteria API doesn't support NULLS LAST — exclude nulls via spec instead.
         // Products with no valueScore/proteinPerRsd are irrelevant when sorting by those fields.
@@ -96,8 +100,9 @@ public class ProductController {
     private Specification<Product> buildSpec(String name, String storeName, String brand,
                                              String flavour, String category,
                                              Double minPrice, Double maxPrice, String weightRange,
-                                             String market) {
-        Specification<Product> spec = Specification.where(ProductSpecifications.hasMarket(market));
+                                             String market, String productType) {
+        Specification<Product> spec = Specification.where(ProductSpecifications.hasMarket(market))
+                .and(ProductSpecifications.hasProductType(productType));
         if (name != null && !name.isEmpty())
             spec = spec.and(ProductSpecifications.hasName(name));
         if (storeName != null && !storeName.isEmpty())
@@ -140,7 +145,7 @@ public class ProductController {
     @GetMapping("/{id}")
     public ResponseEntity<ProductDTO> getById(@PathVariable Long id) {
         return productRepository.findById(id)
-                .map(this::convertToDTO)
+                .map(p -> convertToDTO(p, true))
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -438,6 +443,13 @@ public class ProductController {
     }
 
     private ProductDTO convertToDTO(Product product) {
+        return convertToDTO(product, false);
+    }
+
+    // includeBreakdown triggers an extra brand-reputation lookup to build the full value-score
+    // breakdown (used by the product detail page's ValueScoreCard). Skipped for list/search
+    // endpoints, which only need the already-persisted overall valueScore.
+    private ProductDTO convertToDTO(Product product, boolean includeBreakdown) {
         Double prevPrice = product.getPriceHistories().stream()
                 .filter(h -> h.getNumericPrice() != null && h.getNumericPrice() > 0)
                 .sorted(Comparator.comparing(PriceHistory::getTimestamp).reversed())
@@ -445,10 +457,17 @@ public class ProductController {
                 .findFirst()
                 .orElse(null);
 
-        return toProductDTO(product, prevPrice);
+        return toProductDTO(product, prevPrice, includeBreakdown);
     }
 
     private ProductDTO toProductDTO(Product product, Double prevPrice) {
+        return toProductDTO(product, prevPrice, false);
+    }
+
+    private ProductDTO toProductDTO(Product product, Double prevPrice, boolean includeBreakdown) {
+        ValueScoreBreakdown breakdown = includeBreakdown
+                ? scraperService.computeValueScoreBreakdown(product.getNumericPrice(), product)
+                : null;
         return new ProductDTO(
                 product.getId(),
                 product.getName(),
@@ -479,7 +498,8 @@ public class ProductController {
                 product.getCanonicalSlug(),
                 product.getMarket(),
                 product.getCurrency(),
-                product.getGroupId()
+                product.getGroupId(),
+                breakdown
         );
     }
 }

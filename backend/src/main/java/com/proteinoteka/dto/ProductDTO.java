@@ -29,6 +29,7 @@ public record ProductDTO(Long id,
                          String canonicalSlug,
                          String market,
                          String currency,
-                         Long groupId)
+                         Long groupId,
+                         ValueScoreBreakdown valueBreakdown)
     {
 }
