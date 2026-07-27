@@ -74,6 +74,7 @@ public class SupplementStoreScraper implements StoreScraper {
     private List<Product> parseListingPage(Document doc) {
         List<Product> products = new ArrayList<>();
         Elements cards = doc.select("div.product-layout");
+        Set<String> seenUrls = new HashSet<>();
 
         for (Element card : cards) {
             Element linkEl = card.selectFirst("div.caption h4 a");
@@ -85,6 +86,8 @@ public class SupplementStoreScraper implements StoreScraper {
             String url = q >= 0 ? href.substring(0, q) : href;
             if (url.isBlank()) continue;
             if (!url.startsWith("http")) url = BASE_URL + url;
+            // Sale items are rendered twice on this page (main grid + specials module) — skip repeats
+            if (!seenUrls.add(url)) continue;
 
             Product p = new Product();
             p.setUrl(url);

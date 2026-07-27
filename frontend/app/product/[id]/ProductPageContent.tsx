@@ -521,9 +521,13 @@ export default function ProductPageContent({ product, similar, storePrices, revi
       cena: h.numericPrice as number,
     }));
 
-  // Add current price as the final point so the chart always ends at today's price
+  // Add current price as the final point so the chart always ends at today's price.
+  // Uses the real current date, not lastUpdated — the price is still valid "as of now"
+  // even if the last scrape was days ago, and lastUpdated is set moments after the last
+  // history row's timestamp, so using it here made the two final points collapse onto
+  // the same day whenever the last scrape was itself the price-change event.
   const currentPoint = product.numericPrice > 0 ? {
-    datum: new Date(product.lastUpdated ?? Date.now()).toLocaleDateString(MARKET.locale, { day: "2-digit", month: "short" }),
+    datum: new Date().toLocaleDateString(MARKET.locale, { day: "2-digit", month: "short" }),
     cena: product.numericPrice,
   } : null;
 
