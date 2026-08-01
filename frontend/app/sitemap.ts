@@ -47,6 +47,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/vodici/biotechusa-100-pure-whey`,         changeFrequency: "monthly" as const, priority: 0.7, lastModified: d("2026-06-01") },
     { url: `${BASE}/vodici/gold-standard-whey-recenzija`,     changeFrequency: "monthly" as const, priority: 0.7, lastModified: d("2025-06-01") },
     { url: `${BASE}/vodici/protein-za-zene`,                  changeFrequency: "monthly" as const, priority: 0.7, lastModified: d("2026-05-01") },
+    { url: `${BASE}/vodici/dymatize-iso-100-recenzija`,       changeFrequency: "weekly"  as const, priority: 0.8, lastModified: now },
     // SEO landing pages
     { url: `${BASE}/najbolji-whey-protein-srbija`, changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/najjeftiniji-whey-protein`,    changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },

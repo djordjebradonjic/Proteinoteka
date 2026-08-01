@@ -39,6 +39,7 @@ export default async function Page() {
       intro={`Dymatize je američki brend poznat po ISO100 — jednom od najpopularnijih hidrolizovanih whey proteina na tržištu. ISO100 se odlikuje visokim sadržajem proteina (25g po porciji), minimalnim ugljenim hidratima i mastima, i bržom apsorpcijom zahvaljujući hidrolizi. Na Proteinoteci pratimo sve Dymatize cene u srpskim prodavnicama.${products.length > 0 ? ` Trenutno pratimo ${products.length} Dymatize proizvoda u Srbiji.` : ""}`}
       products={products}
       currentSlug="dymatize-proteini"
+      extraGuideLinks={[{ label: "ISO100 recenzija", href: "/vodici/dymatize-iso-100-recenzija" }]}
       faqs={[
         {
           q: "Šta je Dymatize ISO100 i zašto je popularan?",

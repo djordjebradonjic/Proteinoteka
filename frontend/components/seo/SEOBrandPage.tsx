@@ -253,7 +253,7 @@ function FAQSection({ faqs }: { faqs: { q: string; a: string }[] }) {
   );
 }
 
-function CrossLinks() {
+function CrossLinks({ extraGuideLinks = [] }: { extraGuideLinks?: { label: string; href: string }[] }) {
   return (
     <div className="space-y-4">
       <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
@@ -270,7 +270,7 @@ function CrossLinks() {
       <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
         <h3 className="text-sm font-bold text-slate-700 mb-3">Korisni vodiči:</h3>
         <div className="flex flex-wrap gap-2">
-          {GUIDE_LINKS.map(link => (
+          {[...extraGuideLinks, ...GUIDE_LINKS].map(link => (
             <Link key={link.href} href={link.href}
               className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-all">
               {link.label}
@@ -303,10 +303,11 @@ export interface SEOBrandPageProps {
   products: Product[];
   currentSlug: string;
   faqs: { q: string; a: string }[];
+  extraGuideLinks?: { label: string; href: string }[];
 }
 
 export function SEOBrandPage({
-  h1, brandName, intro, products, currentSlug, faqs,
+  h1, brandName, intro, products, currentSlug, faqs, extraGuideLinks,
 }: SEOBrandPageProps) {
   const sorted = [...products].sort((a, b) => (b.valueScore ?? 0) - (a.valueScore ?? 0));
   const topCompareIds = sorted.slice(0, 3).map(p => p.id).join(",");
@@ -406,7 +407,7 @@ export function SEOBrandPage({
 
         <FAQSection faqs={faqs} />
 
-        <CrossLinks />
+        <CrossLinks extraGuideLinks={extraGuideLinks} />
 
         <div className="bg-white rounded-xl border border-slate-200 p-6 text-center shadow-sm">
           <h2 className="text-lg font-bold text-slate-900 mb-2">Poredi sa ostalim brendovima</h2>

@@ -82,6 +82,12 @@ const ARTICLES = [
     readMin: 6,
   },
   {
+    href: "/vodici/dymatize-iso-100-recenzija",
+    title: "Dymatize ISO100 — recenzija, sastav i cene u Srbiji",
+    excerpt: "Hidrolizovani izolat, 25g proteina po porciji, NSF Certified for Sport. Poređenje sa jeftinijim Elite Whey i aktuelne cene iz svih prodavnica.",
+    readMin: 6,
+  },
+  {
     href: "/vodici/protein-za-zene",
     title: "Protein za žene — mitovi i istine",
     excerpt: "Takozvani ženski protein je marketing. Nećeš postati mišićava. Koji tip proteina zaista birati i koliko košta mesec dana — bez uvijanja.",

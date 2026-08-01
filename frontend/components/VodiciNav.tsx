@@ -51,6 +51,11 @@ const GUIDES = [
     readMin: 6,
   },
   {
+    slug: "dymatize-iso-100-recenzija",
+    title: "Dymatize ISO100 — recenzija, sastav i cene",
+    readMin: 6,
+  },
+  {
     slug: "protein-za-zene",
     title: "Protein za žene — mitovi i istine",
     readMin: 7,
