@@ -9,14 +9,14 @@ import GuideDisclaimer from "@/components/GuideDisclaimer";
 import ProteinCalculator from "@/components/ProteinCalculator";
 
 export const metadata: Metadata = {
-  title: { absolute: "Koliko proteina dnevno? Tačan broj za tvoju težinu | Proteinoteka" },
+  title: { absolute: "Koliko Proteina Dnevno? Kalkulator + Tabela | Proteinoteka" },
   description:
-    "Za 80kg osobu koja trenira: 128–176g proteina dnevno (1.6–2.2g/kg). Tabela preporuka po cilju i težini — masa, mršavljenje, rekreacija. Konkretna računica.",
+    "Unesi težinu — kalkulator odmah izračuna tačan dnevni unos proteina. Tabela za svaki cilj: rekreacija, masa, mršavljenje, 50+. Zasnovano na ISSN preporukama.",
   alternates: { canonical: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/vodici/koliko-proteina-dnevno` },
   openGraph: {
-    title: "Koliko proteina dnevno? Tačan broj za tvoju težinu | Proteinoteka",
+    title: "Koliko Proteina Dnevno? Kalkulator + Tabela | Proteinoteka",
     description:
-      "Za 80kg osobu koja trenira: 128–176g proteina dnevno (1.6–2.2g/kg). Tabela preporuka po cilju i težini — masa, mršavljenje, rekreacija. Konkretna računica.",
+      "Unesi težinu — kalkulator odmah izračuna tačan dnevni unos proteina. Tabela za svaki cilj: rekreacija, masa, mršavljenje, 50+. Zasnovano na ISSN preporukama.",
     url: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/vodici/koliko-proteina-dnevno`,
     siteName: "Proteinoteka",
     locale: MARKET_CONFIG[CURRENT_MARKET].ogLocale,
