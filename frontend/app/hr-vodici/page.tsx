@@ -136,6 +136,24 @@ const HR_GUIDES = [
     desc: "Kratki odgovor: ne. Goji te kalorijski suficit. Što kalorije shakea i termički učinak znače za vas.",
     readMin: 7,
   },
+  {
+    href: "/hr-vodici/kada-piti-protein-hrvatska",
+    title: "Kada piti protein — prije, poslije treninga ili ujutro?",
+    desc: "Ukupan dnevni unos je bitniji od trenutka, ali tri termina ipak imaju stvarnu prednost. Konkretan raspored kroz dan.",
+    readMin: 7,
+  },
+  {
+    href: "/hr-vodici/whey-isolate-vs-concentrate-hrvatska",
+    title: "Whey Isolate ili Concentrate — što odabrati?",
+    desc: "Tablica razlika u sastavu, tko stvarno treba isolate i koliko ta razlika košta na godišnjoj razini — s aktualnim cijenama.",
+    readMin: 7,
+  },
+  {
+    href: "/hr-vodici/protein-za-zene-hrvatska",
+    title: "Protein za žene u Hrvatskoj — mitovi i činjenice",
+    desc: "Postoji li stvarno 'ženski' protein? Hoćete li se namišićiti? Konkretni odgovori bez marketinga, s aktualnim cijenama.",
+    readMin: 7,
+  },
 ];
 
 export default function Page() {
