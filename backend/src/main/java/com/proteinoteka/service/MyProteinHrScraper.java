@@ -3,6 +3,7 @@ package com.proteinoteka.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.playwright.Page;
+import com.microsoft.playwright.options.WaitUntilState;
 import com.proteinoteka.model.Product;
 import com.proteinoteka.util.ProductNameCleaner;
 import lombok.RequiredArgsConstructor;
@@ -58,9 +59,6 @@ public class MyProteinHrScraper implements StoreScraper {
     public String getCurrency() { return "EUR"; }
 
     @Override
-    public boolean usePlaywrightForListing() { return false; }
-
-    @Override
     public String buildPageUrl(int page) {
         return page == 0 ? BASE_URL : BASE_URL + "?pageNumber=" + (page + 1);
     }
@@ -87,7 +85,7 @@ public class MyProteinHrScraper implements StoreScraper {
             if (p != null) stubs.add(p);
         }
 
-        return enrichWithDetails(stubs, skipUrls);
+        return enrichWithDetails(page, stubs, skipUrls);
     }
 
     // -------------------- Listing parsing --------------------
@@ -120,7 +118,7 @@ public class MyProteinHrScraper implements StoreScraper {
 
     // -------------------- Detail page enrichment + variant expansion --------------------
 
-    private List<Product> enrichWithDetails(List<Product> stubs, Set<String> skipUrls) {
+    private List<Product> enrichWithDetails(Page page, List<Product> stubs, Set<String> skipUrls) {
         List<Product> result = new ArrayList<>();
         int consecutiveFailures = 0;
 
@@ -131,7 +129,7 @@ public class MyProteinHrScraper implements StoreScraper {
                 continue;
             }
 
-            Document doc = fetchDetailPage(stub.getUrl());
+            Document doc = fetchDetailPage(page, stub.getUrl());
             if (doc == null) {
                 consecutiveFailures++;
                 if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
@@ -203,19 +201,34 @@ public class MyProteinHrScraper implements StoreScraper {
         return result;
     }
 
-    private Document fetchDetailPage(String url) {
+    // Navigates the same Playwright page/context used for the listing (real browser
+    // fingerprint, stealth init script, route blocking already applied by ScraperService)
+    // instead of a bare JSoup GET — MyProtein HR's bot protection was blocking the JSoup
+    // fingerprint even through a clean rotating residential proxy. Falls back to JSoup
+    // only if Playwright navigation is exhausted, mirroring ScraperService's own
+    // listing-page fallback pattern. Base URI is set to the post-redirect page.url() so
+    // doc.location() above still reflects the real final URL, same as a JSoup connection.
+    private Document fetchDetailPage(Page page, String url) {
         for (int attempt = 1; attempt <= MAX_DETAIL_FETCH_RETRIES; attempt++) {
             try {
-                return httpClient.connection(url).get();
+                page.navigate(url, new Page.NavigateOptions()
+                        .setWaitUntil(WaitUntilState.DOMCONTENTLOADED)
+                        .setTimeout(15000));
+                page.waitForTimeout(300 + ThreadLocalRandom.current().nextLong(700));
+                return Jsoup.parse(page.content(), page.url());
             } catch (Exception e) {
-                log.warn("[{}] Detail fetch attempt {}/{} failed for {}: {}",
+                log.warn("[{}] Playwright detail fetch attempt {}/{} failed for {}: {}",
                         STORE_NAME, attempt, MAX_DETAIL_FETCH_RETRIES, url, e.getMessage());
                 safeSleep(2000L * attempt);
             }
         }
-        log.error("[{}] Failed to fetch {} after {} attempts, skipping",
-                STORE_NAME, url, MAX_DETAIL_FETCH_RETRIES);
-        return null;
+        log.warn("[{}] Playwright detail fetch exhausted for {} — trying JSoup fallback", STORE_NAME, url);
+        try {
+            return httpClient.connection(url).get();
+        } catch (Exception e) {
+            log.error("[{}] JSoup fallback also failed for {}: {}", STORE_NAME, url, e.getMessage());
+            return null;
+        }
     }
 
     // -------------------- masterData extraction --------------------

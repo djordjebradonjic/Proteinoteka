@@ -35,11 +35,14 @@ public class ScrapingSchedulerService {
      * Store types:
      *   Playwright (browser, heavy): Proteinbox, SupplementStore, Proteini.si, Supplementshop,
      *                                Shopbuilder, XSport, Polleo Sport, Proteka, Nutrition Shop HR,
-     *                                Proteini Outlet HR, Proteini.si HR
-     *   HTTP/API   (light):          FitLab, GymBeam, MyProtein, Pansport, Lama, Ogistrashop,
-     *                                GymBeam HR, MyProtein HR, GymBeam Kreatin (pilot: same
-     *                                physical store as GymBeam, separate /kreatin listing —
-     *                                see StoreScraper.getStoreRowName())
+     *                                Proteini Outlet HR, Proteini.si HR, GymBeam, GymBeam HR,
+     *                                GymBeam Kreatin (pilot: same physical store as GymBeam,
+     *                                separate /kreatin listing — see StoreScraper.getStoreRowName()),
+     *                                MyProtein HR (moved from JSoup to Playwright after GymBeam's/
+     *                                MyProtein HR's bot protection started blocking the JSoup
+     *                                fingerprint even through a clean rotating residential proxy —
+     *                                see AbstractGymBeamScraper/MyProteinHrScraper.fetchDetailPage)
+     *   HTTP/API   (light):          FitLab, MyProtein, Pansport, Lama, Ogistrashop
      *
      * Rules: max 2 heavy Playwright scrapers per day, each in its own time window
      * (never concurrent); light scrapers are paired freely alongside them.
@@ -55,7 +58,8 @@ public class ScrapingSchedulerService {
         ));
         m.put(2, List.of(
             new ScrapeWindow(List.of("Proteini.si"),                   9, 12),
-            new ScrapeWindow(List.of("FitLab", "Lama"),                 13, 16)
+            new ScrapeWindow(List.of("FitLab", "Lama"),                 13, 16),
+            new ScrapeWindow(List.of("MyProtein HR"),                   17, 19)
         ));
         m.put(3, List.of(
             new ScrapeWindow(List.of("Supplementshop"),                9, 11),
@@ -76,7 +80,7 @@ public class ScrapingSchedulerService {
         m.put(7, List.of(
             new ScrapeWindow(List.of("Proteini.si HR"),                9, 13),
             new ScrapeWindow(List.of("MyProtein", "Pansport"),         14, 16),
-            new ScrapeWindow(List.of("GymBeam HR", "MyProtein HR"),    17, 19)
+            new ScrapeWindow(List.of("GymBeam HR"),                    17, 19)
         ));
         SCHEDULE = java.util.Collections.unmodifiableMap(m);
     }

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.microsoft.playwright.Page;
+import com.microsoft.playwright.options.WaitUntilState;
 import com.proteinoteka.model.Product;
 import com.proteinoteka.util.ProductNameCleaner;
 import lombok.RequiredArgsConstructor;
@@ -56,9 +57,6 @@ public abstract class AbstractGymBeamScraper implements StoreScraper {
     private double minPackageGrams() { return isCreatineMode() ? MIN_PACKAGE_GRAMS_CREATINE : MIN_PACKAGE_GRAMS; }
 
     @Override
-    public boolean usePlaywrightForListing() { return false; }
-
-    @Override
     public String buildPageUrl(int page) {
         return page == 0 ? getBaseUrl() : getBaseUrl() + "?p=" + (page + 1);
     }
@@ -82,7 +80,7 @@ public abstract class AbstractGymBeamScraper implements StoreScraper {
             Product p = parseElement(el);
             if (p != null) stubs.add(p);
         }
-        return enrichWithDetails(stubs, skipUrls);
+        return enrichWithDetails(page, stubs, skipUrls);
     }
 
     // -------------------- Listing parsing --------------------
@@ -116,7 +114,7 @@ public abstract class AbstractGymBeamScraper implements StoreScraper {
 
     // -------------------- Detail page enrichment + variant expansion --------------------
 
-    private List<Product> enrichWithDetails(List<Product> stubs, Set<String> skipUrls) {
+    private List<Product> enrichWithDetails(Page page, List<Product> stubs, Set<String> skipUrls) {
         List<Product> result = new ArrayList<>();
         int consecutiveFailures = 0;
 
@@ -127,7 +125,7 @@ public abstract class AbstractGymBeamScraper implements StoreScraper {
                 continue;
             }
 
-            Document doc = fetchDetailPage(stub.getUrl());
+            Document doc = fetchDetailPage(page, stub.getUrl());
             if (doc == null) {
                 consecutiveFailures++;
                 if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
@@ -207,19 +205,34 @@ public abstract class AbstractGymBeamScraper implements StoreScraper {
         return result;
     }
 
-    private Document fetchDetailPage(String url) {
+    // Navigates the same Playwright page/context used for the listing (real browser
+    // fingerprint, stealth init script, route blocking already applied by ScraperService)
+    // instead of a bare JSoup GET — GymBeam/GymBeam HR's bot protection was blocking the
+    // JSoup fingerprint even through a clean rotating residential proxy. Falls back to
+    // JSoup only if Playwright navigation is exhausted, mirroring ScraperService's own
+    // listing-page fallback pattern.
+    private Document fetchDetailPage(Page page, String url) {
         for (int attempt = 1; attempt <= MAX_DETAIL_FETCH_RETRIES; attempt++) {
             try {
-                return httpClient.connection(url).get();
+                page.navigate(url, new Page.NavigateOptions()
+                        .setWaitUntil(WaitUntilState.DOMCONTENTLOADED)
+                        .setTimeout(15000));
+                page.waitForTimeout(300 + ThreadLocalRandom.current().nextLong(700));
+                return Jsoup.parse(page.content(), page.url());
             } catch (Exception e) {
-                log.warn("[{}] Detail fetch attempt {}/{} failed for {}: {}",
+                log.warn("[{}] Playwright detail fetch attempt {}/{} failed for {}: {}",
                         getStoreName(), attempt, MAX_DETAIL_FETCH_RETRIES, url, e.getMessage());
                 safeSleep(2000L * attempt);
             }
         }
-        log.error("[{}] Failed to fetch {} after {} attempts, skipping",
-                getStoreName(), url, MAX_DETAIL_FETCH_RETRIES);
-        return null;
+        log.warn("[{}] Playwright detail fetch exhausted for {} — trying JSoup fallback",
+                getStoreName(), url);
+        try {
+            return httpClient.connection(url).get();
+        } catch (Exception e) {
+            log.error("[{}] JSoup fallback also failed for {}: {}", getStoreName(), url, e.getMessage());
+            return null;
+        }
     }
 
     // -------------------- Astro "devalue" props extraction --------------------
