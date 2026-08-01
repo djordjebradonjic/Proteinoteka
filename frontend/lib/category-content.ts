@@ -188,4 +188,34 @@ export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
       },
     ],
   },
+
+  egg: {
+    h1: "Egg Protein — Cene u Srbiji 2026",
+    intro:
+      "Protein od jajeta (albumin) je jedan od najstarijih proteinskih suplemenata — pre pojave whey-a, bio je standard u bodybuildingu. Bez mlečnih derivata i laktoze, sa kompletnim aminokiselinskim profilom sličnim whey-u. Dobra opcija za osobe koje ne podnose mlečne proteine, a žele nešto brže od biljnog proteina. Poredimo sve egg protein opcije dostupne u Srbiji.",
+    guides: [
+      { href: "/vodici/koliko-proteina-dnevno",           label: "📊 Koliko proteina dnevno?" },
+      { href: "/vodici/kada-piti-protein",                label: "⏰ Kada piti protein" },
+      { href: "/vodici/whey-isolate-vs-concentrate",      label: "⚗️ Isolate vs Concentrate" },
+      { href: "/vodici/koliko-novca-mesecno-za-proteine", label: "💸 Mesečni trošak proteina" },
+    ],
+    faqs: [
+      {
+        q: "Šta je egg protein i od čega se pravi?",
+        a: "Egg protein (albumin) se dobija sušenjem i dehidracijom belanceta jajeta, bez žumanceta — zato je gotovo bez masti i ugljenih hidrata. Sadrži kompletan aminokiselinski profil sa svih 9 esencijalnih aminokiselina, po kvalitetu blizu whey proteina.",
+      },
+      {
+        q: "Da li je egg protein bolji izbor od whey-a za osobe sa intolerancijom na laktozu?",
+        a: "Da — egg protein je potpuno bez mlečnih derivata i laktoze, pa je bezbedan izbor za osobe koje ne podnose whey ili kazein. Apsorbuje se sporije od whey isolate-a, ali brže od kazeina — negde između ta dva po brzini.",
+      },
+      {
+        q: "Koliko proteina ima egg protein na 100g?",
+        a: "Tipičan egg protein prah sadrži 80–90g proteina na 100g, uporedivo sa whey isolate-om. Pošto je žumance uklonjeno, sadržaj masti je minimalan (obično ispod 2g na 100g).",
+      },
+      {
+        q: "Zašto je egg protein manje popularan i skuplji od whey-a?",
+        a: "Proizvodnja egg proteina je skuplja i sporija od whey-a (koji je nusproizvod masovne proizvodnje sira), pa je i ponuda manja. Ukus je takođe specifičniji za mnoge korisnike. I dalje je koristan izbor za nišu koja izbegava i mlečne i biljne proteine.",
+      },
+    ],
+  },
 };

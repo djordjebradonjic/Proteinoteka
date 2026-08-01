@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
+import { CURRENT_MARKET, MARKET_CONFIG } from "./lib/marketConfig";
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
@@ -92,6 +93,19 @@ const nextConfig: NextConfig = {
     }));
 
     return [
+      // Vercel's auto-generated `<project>.vercel.app` domain serves the exact same
+      // content as the real domain but with no SEO protections of its own (robots.ts
+      // and sitemap.ts apply per-request, not per-host). Google was crawling and
+      // recording it as a separate site (confirmed via GSC Links export, Aug 2026 —
+      // it showed up as the majority "linking site" to proteinoteka.rs). Redirect it
+      // to the real domain for this deployment's market so it can't be crawled as a
+      // duplicate site at all.
+      {
+        source: '/:path*',
+        has: [{ type: 'host' as const, value: '.*\\.vercel\\.app' }],
+        destination: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/:path*`,
+        permanent: true,
+      },
       // Canonical host: always redirect www → non-www (permanent 301)
       {
         source: '/:path*',

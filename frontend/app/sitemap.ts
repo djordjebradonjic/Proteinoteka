@@ -1,4 +1,6 @@
 import { MetadataRoute } from "next";
+import fs from "fs";
+import path from "path";
 import { CATEGORIES } from "@/lib/categories";
 import { productUrl } from "@/lib/productUrl";
 import { Product } from "@/types/product";
@@ -7,6 +9,64 @@ import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
 export const revalidate = 86400;
 
 const BASE = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
+
+// Guide URLs used to be a fully hand-maintained array — easy to forget to add a new
+// guide directory to (it happened at least once). Instead, the slug list is read
+// straight off the filesystem so a new guide always appears in the sitemap; only the
+// per-guide priority/changeFrequency/lastModified tuning below stays manual (falls
+// back to a sane default, with a build-log warning, if a guide has no tuned entry).
+type GuideMeta = { changeFrequency: "weekly" | "monthly"; priority: number; lastModified?: Date };
+const DEFAULT_GUIDE_META: GuideMeta = { changeFrequency: "monthly", priority: 0.6 };
+
+function listGuideSlugs(routeSegment: string): string[] {
+  const dir = path.join(process.cwd(), "app", routeSegment);
+  try {
+    return fs
+      .readdirSync(dir, { withFileTypes: true })
+      .filter((e) => e.isDirectory() && fs.existsSync(path.join(dir, e.name, "page.tsx")))
+      .map((e) => e.name)
+      .sort();
+  } catch {
+    return [];
+  }
+}
+
+function buildGuideEntries(
+  routeSegment: string,
+  metaOverrides: Record<string, GuideMeta>,
+  indexEntry: MetadataRoute.Sitemap[number],
+  now: Date,
+): MetadataRoute.Sitemap {
+  const slugsOnDisk = listGuideSlugs(routeSegment);
+  const entries: MetadataRoute.Sitemap = [indexEntry];
+
+  for (const slug of slugsOnDisk) {
+    const meta = metaOverrides[slug];
+    if (!meta) {
+      console.warn(
+        `[sitemap] ${routeSegment}/${slug} has no tuned sitemap entry — using defaults. ` +
+          `Add it to the meta map in app/sitemap.ts to set a deliberate priority/changeFrequency.`,
+      );
+    }
+    const m = meta ?? DEFAULT_GUIDE_META;
+    entries.push({
+      url: `${BASE}/${routeSegment}/${slug}`,
+      changeFrequency: m.changeFrequency,
+      priority: m.priority,
+      lastModified: m.lastModified ?? now,
+    });
+  }
+
+  for (const slug of Object.keys(metaOverrides)) {
+    if (!slugsOnDisk.includes(slug)) {
+      console.warn(
+        `[sitemap] ${routeSegment}/${slug} has a tuned sitemap entry but no matching page.tsx on disk — remove it from app/sitemap.ts.`,
+      );
+    }
+  }
+
+  return entries;
+}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
@@ -31,23 +91,32 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
   ];
 
+  const RS_GUIDE_META: Record<string, GuideMeta> = {
+    "koliko-proteina-dnevno":           { changeFrequency: "monthly", priority: 0.7, lastModified: d("2025-04-01") },
+    "kada-piti-protein":                { changeFrequency: "monthly", priority: 0.7, lastModified: d("2025-04-01") },
+    "whey-isolate-vs-concentrate":      { changeFrequency: "monthly", priority: 0.7, lastModified: d("2025-04-01") },
+    "da-li-protein-goji":               { changeFrequency: "monthly", priority: 0.7, lastModified: d("2025-05-01") },
+    "protein-za-mrsavljenje":           { changeFrequency: "monthly", priority: 0.7, lastModified: d("2025-05-01") },
+    "najbolji-protein-za-pocetnike":    { changeFrequency: "weekly",  priority: 0.85, lastModified: now },
+    "whey-protein-za-pocetnike":        { changeFrequency: "monthly", priority: 0.7, lastModified: d("2025-05-01") },
+    "kako-uzimati-whey-protein":        { changeFrequency: "weekly",  priority: 0.8, lastModified: now },
+    "koliko-novca-mesecno-za-proteine": { changeFrequency: "weekly",  priority: 0.8, lastModified: now },
+    "scitec-nutrition-whey":            { changeFrequency: "monthly", priority: 0.7, lastModified: d("2026-06-19") },
+    "biotechusa-100-pure-whey":         { changeFrequency: "monthly", priority: 0.7, lastModified: d("2026-06-01") },
+    "gold-standard-whey-recenzija":     { changeFrequency: "monthly", priority: 0.7, lastModified: d("2025-06-01") },
+    "protein-za-zene":                  { changeFrequency: "monthly", priority: 0.7, lastModified: d("2026-05-01") },
+    "dymatize-iso-100-recenzija":       { changeFrequency: "weekly",  priority: 0.8, lastModified: now },
+  };
+
   const rsOnlyPages: MetadataRoute.Sitemap = CURRENT_MARKET === "rs" ? [
-    // Guides (RS-only — Serbian language, must not appear in HR sitemap)
-    { url: `${BASE}/vodici`,                                  changeFrequency: "monthly" as const, priority: 0.7, lastModified: d("2026-06-01") },
-    { url: `${BASE}/vodici/koliko-proteina-dnevno`,           changeFrequency: "monthly" as const, priority: 0.7, lastModified: d("2025-04-01") },
-    { url: `${BASE}/vodici/kada-piti-protein`,                changeFrequency: "monthly" as const, priority: 0.7, lastModified: d("2025-04-01") },
-    { url: `${BASE}/vodici/whey-isolate-vs-concentrate`,      changeFrequency: "monthly" as const, priority: 0.7, lastModified: d("2025-04-01") },
-    { url: `${BASE}/vodici/da-li-protein-goji`,               changeFrequency: "monthly" as const, priority: 0.7, lastModified: d("2025-05-01") },
-    { url: `${BASE}/vodici/protein-za-mrsavljenje`,           changeFrequency: "monthly" as const, priority: 0.7, lastModified: d("2025-05-01") },
-    { url: `${BASE}/vodici/najbolji-protein-za-pocetnike`,    changeFrequency: "weekly"  as const, priority: 0.85, lastModified: now },
-    { url: `${BASE}/vodici/whey-protein-za-pocetnike`,        changeFrequency: "monthly" as const, priority: 0.7, lastModified: d("2025-05-01") },
-    { url: `${BASE}/vodici/kako-uzimati-whey-protein`,        changeFrequency: "weekly"  as const, priority: 0.8, lastModified: now },
-    { url: `${BASE}/vodici/koliko-novca-mesecno-za-proteine`, changeFrequency: "weekly"  as const, priority: 0.8, lastModified: now },
-    { url: `${BASE}/vodici/scitec-nutrition-whey`,            changeFrequency: "monthly" as const, priority: 0.7, lastModified: d("2026-06-19") },
-    { url: `${BASE}/vodici/biotechusa-100-pure-whey`,         changeFrequency: "monthly" as const, priority: 0.7, lastModified: d("2026-06-01") },
-    { url: `${BASE}/vodici/gold-standard-whey-recenzija`,     changeFrequency: "monthly" as const, priority: 0.7, lastModified: d("2025-06-01") },
-    { url: `${BASE}/vodici/protein-za-zene`,                  changeFrequency: "monthly" as const, priority: 0.7, lastModified: d("2026-05-01") },
-    { url: `${BASE}/vodici/dymatize-iso-100-recenzija`,       changeFrequency: "weekly"  as const, priority: 0.8, lastModified: now },
+    // Guides (RS-only — Serbian language, must not appear in HR sitemap). Slugs are read
+    // from the filesystem (see buildGuideEntries above); RS_GUIDE_META only tunes ranking hints.
+    ...buildGuideEntries(
+      "vodici",
+      RS_GUIDE_META,
+      { url: `${BASE}/vodici`, changeFrequency: "monthly", priority: 0.7, lastModified: d("2026-06-01") },
+      now,
+    ),
     // SEO landing pages
     { url: `${BASE}/najbolji-whey-protein-srbija`, changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/najjeftiniji-whey-protein`,    changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
@@ -87,19 +156,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/najjeftiniji-whey-protein-4500g-plus`,    changeFrequency: "weekly" as const, priority: 0.8, lastModified: now },
   ] : [];
 
+  const HR_GUIDE_META: Record<string, GuideMeta> = {
+    "najbolji-protein-za-pocetnike-hrvatska":  { changeFrequency: "weekly",  priority: 0.85, lastModified: now },
+    "whey-protein-za-pocetnike-hrvatska":      { changeFrequency: "monthly", priority: 0.75, lastModified: now },
+    "kako-uzimati-whey-protein-hrvatska":      { changeFrequency: "weekly",  priority: 0.8,  lastModified: now },
+    "koliko-kosta-protein-hrvatska":           { changeFrequency: "weekly",  priority: 0.8,  lastModified: now },
+    "koliko-proteina-dnevno-hrvatska":         { changeFrequency: "monthly", priority: 0.75, lastModified: now },
+    "da-li-protein-goji-hrvatska":             { changeFrequency: "monthly", priority: 0.75, lastModified: now },
+    "protein-za-mrsavljenje-hrvatska":         { changeFrequency: "weekly",  priority: 0.8,  lastModified: now },
+    "kada-piti-protein-hrvatska":              { changeFrequency: "monthly", priority: 0.75, lastModified: now },
+    "whey-isolate-vs-concentrate-hrvatska":    { changeFrequency: "monthly", priority: 0.75, lastModified: now },
+    "protein-za-zene-hrvatska":                { changeFrequency: "monthly", priority: 0.75, lastModified: now },
+  };
+
   const hrOnlyPages: MetadataRoute.Sitemap = CURRENT_MARKET === "hr" ? [
-    // Guides
-    { url: `${BASE}/hr-vodici`,                                         changeFrequency: "monthly" as const, priority: 0.7,  lastModified: now },
-    { url: `${BASE}/hr-vodici/najbolji-protein-za-pocetnike-hrvatska`,  changeFrequency: "weekly"  as const, priority: 0.85, lastModified: now },
-    { url: `${BASE}/hr-vodici/whey-protein-za-pocetnike-hrvatska`,      changeFrequency: "monthly" as const, priority: 0.75, lastModified: now },
-    { url: `${BASE}/hr-vodici/kako-uzimati-whey-protein-hrvatska`,      changeFrequency: "weekly"  as const, priority: 0.8,  lastModified: now },
-    { url: `${BASE}/hr-vodici/koliko-kosta-protein-hrvatska`,           changeFrequency: "weekly"  as const, priority: 0.8,  lastModified: now },
-    { url: `${BASE}/hr-vodici/koliko-proteina-dnevno-hrvatska`,        changeFrequency: "monthly" as const, priority: 0.75, lastModified: now },
-    { url: `${BASE}/hr-vodici/da-li-protein-goji-hrvatska`,            changeFrequency: "monthly" as const, priority: 0.75, lastModified: now },
-    { url: `${BASE}/hr-vodici/protein-za-mrsavljenje-hrvatska`,        changeFrequency: "weekly"  as const, priority: 0.8,  lastModified: now },
-    { url: `${BASE}/hr-vodici/kada-piti-protein-hrvatska`,             changeFrequency: "monthly" as const, priority: 0.75, lastModified: now },
-    { url: `${BASE}/hr-vodici/whey-isolate-vs-concentrate-hrvatska`,   changeFrequency: "monthly" as const, priority: 0.75, lastModified: now },
-    { url: `${BASE}/hr-vodici/protein-za-zene-hrvatska`,               changeFrequency: "monthly" as const, priority: 0.75, lastModified: now },
+    // Guides — slugs read from the filesystem, see RS block above for the same pattern.
+    ...buildGuideEntries(
+      "hr-vodici",
+      HR_GUIDE_META,
+      { url: `${BASE}/hr-vodici`, changeFrequency: "monthly", priority: 0.7, lastModified: now },
+      now,
+    ),
     // SEO landing pages
     { url: `${BASE}/najbolji-whey-protein-hrvatska`,     changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/najjeftiniji-whey-protein-hrvatska`, changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },

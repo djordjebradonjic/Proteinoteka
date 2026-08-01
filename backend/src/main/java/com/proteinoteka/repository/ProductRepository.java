@@ -132,6 +132,14 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
     List<Product> findByGroupId(Long groupId);
 
+    // Group-wide canonical id (lowest id across ALL group members, unfiltered by store/price) —
+    // must stay the single source of truth for "which member is SEO-canonical" so the product
+    // page's rel=canonical and sitemap.ts's dedup can never disagree (they used to compute this
+    // independently and could diverge — see ProductGroupService.getStorePrices() cheapest-per-store
+    // filtering vs. sitemap's unfiltered group scan).
+    @Query("SELECT MIN(p.id) FROM products p WHERE p.groupId = :groupId")
+    Long findMinIdByGroupId(@Param("groupId") Long groupId);
+
     @Query("SELECT p FROM products p WHERE LOWER(TRIM(p.name)) = LOWER(TRIM(:name)) " +
            "AND p.store = :store " +
            "AND p.primaryWeightGrams IS NOT NULL " +

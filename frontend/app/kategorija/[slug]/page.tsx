@@ -6,6 +6,7 @@ import HomeContent from "@/components/HomeContent";
 import { CATEGORIES, getCategoryBySlug } from "@/lib/categories";
 import { CATEGORY_CONTENT } from "@/lib/category-content";
 import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
+import { hreflangAlternates } from "@/lib/hreflang";
 
 export const revalidate = 86400;
 
@@ -115,11 +116,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description: m.description,
     alternates: {
       canonical: `${BASE_URL}/kategorija/${slug}`,
-      languages: {
-        "sr": `https://proteinoteka.rs/kategorija/${slug}`,
-        "hr": `https://proteinoteka.com.hr/kategorija/${slug}`,
-        "x-default": `https://proteinoteka.rs/kategorija/${slug}`,
-      },
+      languages: hreflangAlternates(`/kategorija/${slug}`),
     },
     openGraph: {
       title: m.title,

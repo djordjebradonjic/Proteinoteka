@@ -468,6 +468,13 @@ public class ProductController {
         ValueScoreBreakdown breakdown = includeBreakdown
                 ? scraperService.computeValueScoreBreakdown(product.getNumericPrice(), product)
                 : null;
+        // Only resolved for the single-product detail fetch (same includeBreakdown=true callers) —
+        // computing this per row would add an extra query per item on list/search endpoints, which
+        // don't need it. Matches sitemap.ts's definition exactly (lowest id across the WHOLE group,
+        // not filtered by store/price) so the two can no longer disagree on which member is canonical.
+        Long groupCanonicalId = (includeBreakdown && product.getGroupId() != null)
+                ? productRepository.findMinIdByGroupId(product.getGroupId())
+                : null;
         return new ProductDTO(
                 product.getId(),
                 product.getName(),
@@ -499,6 +506,7 @@ public class ProductController {
                 product.getMarket(),
                 product.getCurrency(),
                 product.getGroupId(),
+                groupCanonicalId,
                 breakdown
         );
     }

@@ -41,5 +41,6 @@ export interface Product {
   market?: string | null;
   currency?: string | null;
   groupId?: number | null;
+  groupCanonicalId?: number | null;
   valueBreakdown?: ValueScoreBreakdown | null;
 }

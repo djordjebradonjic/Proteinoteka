@@ -7,6 +7,7 @@ export const PRODUCT_CATEGORY_SLUGS: Record<string, string> = {
   casein:           "kazein",
   vegan:            "biljni-protein",
   blend:            "protein-blend",
+  egg:              "egg-protein",
 };
 
 // Category labels shown in breadcrumbs and metadata
@@ -17,6 +18,7 @@ export const PRODUCT_CATEGORY_LABELS: Record<string, string> = {
   casein:           "Kazein",
   vegan:            "Biljni Protein",
   blend:            "Protein Blend",
+  egg:              "Egg Protein",
 };
 
 // Slugs used in /kategorija/[slug] listing pages (separate from product URL segments)
@@ -27,6 +29,7 @@ export const KATEGORIJA_SLUGS: Record<string, string> = {
   casein:           "kazein",
   vegan:            "biljni-protein",
   blend:            "blend",
+  egg:              "egg-protein",
 };
 
 const VALID_PRODUCT_CATEGORIES = new Set([
@@ -75,6 +78,7 @@ export const PRODUCT_CATEGORY_TO_KATEGORIJA: Record<string, string> = {
   "kazein":         "/kategorija/kazein",
   "biljni-protein": "/kategorija/biljni-protein",
   "protein-blend":  "/kategorija/blend",
+  "egg-protein":    "/kategorija/egg-protein",
   "suplementi":     "/",
 };
 

@@ -114,17 +114,24 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   // Duplicate-content consolidation: when multiple stores sell the same physical
   // product, every store's row is its own page with near-identical name/nutrition
   // content — Google was flagging most of them "Crawled - currently not indexed".
-  // Only the oldest listing (lowest id, stable over time) in the group is declared
-  // canonical; every other member points its rel=canonical at that one instead of
-  // itself. The page itself still renders normally and is NOT redirected — a user
-  // (or a link) landing on a non-canonical store's page still sees that store's info.
-  const canonicalGroupMember = storePrices.reduce<StorePrice | null>(
-    (min, sp) => (min === null || sp.id < min.id ? sp : min),
-    null,
-  );
-  const canonical = canonicalGroupMember && canonicalGroupMember.id !== product.id
-    ? `${BASE_URL}${productUrl({ ...canonicalGroupMember, name: canonicalGroupMember.name ?? product.name })}`
-    : `${BASE_URL}${productUrl(product)}`;
+  // Only the oldest listing (lowest id, stable over time) *across the whole group*
+  // is declared canonical; every other member points its rel=canonical at that one
+  // instead of itself. The page itself still renders normally and is NOT redirected
+  // — a user (or a link) landing on a non-canonical store's page still sees that
+  // store's info.
+  //
+  // groupCanonicalId comes from the backend (MIN(id) over ALL group members) and
+  // must be used here rather than re-derived from `storePrices` — storePrices only
+  // contains the cheapest product per store, so a group's true lowest-id member can
+  // be absent from it entirely if a same-store, higher-id sibling is currently
+  // cheaper. Computing "lowest id" from that filtered list previously let this page
+  // and sitemap.ts (which scans the full unfiltered group) disagree on which URL is
+  // canonical — a contradictory signal to Google. See project SEO memory, Aug 2026.
+  let canonical = `${BASE_URL}${productUrl(product)}`;
+  if (product.groupCanonicalId != null && product.groupCanonicalId !== product.id) {
+    const canonicalProduct = await fetchProduct(product.groupCanonicalId);
+    if (canonicalProduct) canonical = `${BASE_URL}${productUrl(canonicalProduct)}`;
+  }
 
   const title       = buildProductTitle(product.name);
 
