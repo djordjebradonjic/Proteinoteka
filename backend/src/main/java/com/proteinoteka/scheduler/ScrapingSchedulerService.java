@@ -256,6 +256,10 @@ public class ScrapingSchedulerService {
                 dataQualityService.checkOutliers();
             }
 
+            if (entry.getStatus() == ScrapeStatus.PARTIAL || entry.getStatus() == ScrapeStatus.BLOCKED) {
+                maybeScheduleRetry(scraper);
+            }
+
         } catch (Exception e) {
             entry.setStatus(ScrapeStatus.FAILED);
             entry.setErrorMessage(e.getMessage() != null
@@ -268,6 +272,26 @@ public class ScrapingSchedulerService {
         }
 
         return entry;
+    }
+
+    // PARTIAL/BLOCKED runs (e.g. detail-page fetches tripping AbstractGymBeamScraper's/
+    // MyProteinHrScraper's MAX_CONSECUTIVE_FAILURES after a transient proxy block) would
+    // otherwise leave stale prices for the un-scraped products until the next 7-day cycle.
+    // Retry once, a few hours later, so a temporary block gets a same-day second chance.
+    private static final Duration PARTIAL_RETRY_DELAY = Duration.ofHours(3);
+
+    private void maybeScheduleRetry(StoreScraper scraper) {
+        String storeName = scraper.getStoreName();
+        LocalDateTime todayStart = LocalDate.now(BELGRADE).atStartOfDay();
+        long attemptsToday = scrapeLogRepository.countByStoreNameAndStartedAtAfter(storeName, todayStart);
+        if (attemptsToday > 1) {
+            log.info("[Scheduler] {} already retried today — not scheduling another retry", storeName);
+            return;
+        }
+
+        Instant retryAt = Instant.now().plus(PARTIAL_RETRY_DELAY);
+        log.warn("[Scheduler] {} came back incomplete — scheduling one retry at {}", storeName, retryAt);
+        taskScheduler.schedule(() -> executeWithLogging(scraper), retryAt);
     }
 
     // A scrape that finishes without throwing (so isn't FAILED) can still be a silent

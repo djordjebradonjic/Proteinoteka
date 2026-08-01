@@ -17,6 +17,8 @@ public interface ScrapeLogRepository extends JpaRepository<ScrapeLog, Long> {
 
     boolean existsByStoreNameAndStartedAtAfter(String storeName, LocalDateTime after);
 
+    long countByStoreNameAndStartedAtAfter(String storeName, LocalDateTime after);
+
     @Query("SELECT s FROM ScrapeLog s WHERE s.startedAt = (" +
            "  SELECT MAX(s2.startedAt) FROM ScrapeLog s2 WHERE s2.storeName = s.storeName" +
            ")")
