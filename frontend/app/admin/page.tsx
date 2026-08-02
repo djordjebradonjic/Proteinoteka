@@ -80,7 +80,7 @@ function mergeByDate(views: DayClick[], compares: DayClick[], clickouts: DayClic
 }
 
 type ClearMode = "all" | "keepClickOut" | "clicks";
-type Tab = "analytics" | "grupe" | "recenzije" | "domeni" | "izvestaji";
+type Tab = "analytics" | "grupe" | "recenzije" | "domeni" | "izvestaji" | "kvalitet";
 type Market = "sve" | "rs" | "hr";
 
 // ── Main page ─────────────────────────────────────────────────────────────────
@@ -101,6 +101,7 @@ export default function AdminPage() {
               { id: "grupe",      label: "Grupe",      icon: <Zap    className="w-4 h-4" /> },
               { id: "recenzije",  label: "Recenzije",  icon: <Star   className="w-4 h-4" /> },
               { id: "izvestaji",  label: "Izveštaji",  icon: <FileText className="w-4 h-4" /> },
+              { id: "kvalitet",   label: "Kvalitet",   icon: <CheckCircle2 className="w-4 h-4" /> },
             ] as { id: Tab; label: string; icon: React.ReactNode }[]).map(t => (
               <button
                 key={t.id}
@@ -124,6 +125,7 @@ export default function AdminPage() {
         {tab === "grupe"      && <GrupeTab />}
         {tab === "recenzije"  && <RecenzijeTab />}
         {tab === "izvestaji"  && <IzvestajiTab />}
+        {tab === "kvalitet"   && <KvalitetTab />}
       </div>
     </main>
   );
@@ -1502,6 +1504,218 @@ function DomainCard({ result, flagEmoji }: { result: DomainResult; flagEmoji: st
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+// ── Kvalitet tab ───────────────────────────────────────────────────────────────
+
+interface DataQualityReportData {
+  market: string;
+  totalProducts: number;
+  withProteinPer100g: number; withoutProteinPer100g: number; proteinCoveragePercent: number;
+  withSugarPer100g: number; withoutSugarPer100g: number; sugarCoveragePercent: number;
+  withFatPer100g: number; withoutFatPer100g: number; fatCoveragePercent: number;
+  withCaloriePer100g: number; withoutCaloriePer100g: number; calorieCoveragePercent: number;
+  withProteinSource: number; withoutProteinSource: number; proteinSourceCoveragePercent: number;
+  withPrimaryWeightGrams: number; withoutPrimaryWeightGrams: number; primaryWeightCoveragePercent: number;
+  withValueScore: number; withoutValueScore: number; valueScoreCoveragePercent: number;
+  withImage: number; withoutImage: number; imageCoveragePercent: number;
+  zeroPriceEntries: number; nullNumericPriceEntries: number; suspiciouslyHighPriceEntries: number;
+  validPriceEntries: number; priceStringNullOrEmpty: number;
+  withoutStoreEntries: number; duplicateGroups: number;
+  summary: string; warnings: string[];
+}
+interface DataQualityResponse { report: DataQualityReportData; outliers: string[]; }
+
+const OUTLIER_TYPE_LABELS: Record<string, string> = {
+  PROTEIN_TOO_HIGH: "Protein previsok",
+  PROTEIN_TOO_LOW: "Protein prenizak",
+  CALORIE_IMPOSSIBLE: "Kalorije nemoguće",
+  CALORIE_TOO_HIGH: "Kalorije previsoke",
+  FAT_TOO_HIGH: "Masti previsoke",
+  SUGAR_TOO_HIGH: "Šećer previsok",
+  WEIGHT_IMPLAUSIBLE: "Težina nerealna",
+  STALE_PRODUCT: "Zastareo proizvod",
+};
+
+function coverageColor(pct: number): string {
+  return pct >= 80 ? "#22c55e" : pct >= 50 ? "#f59e0b" : "#ef4444";
+}
+
+function KvalitetTab() {
+  const [data, setData]       = useState<DataQualityResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState(false);
+  const [market, setMarket]   = useState<Market>("sve");
+  const [showAllOutliers, setShowAllOutliers] = useState(false);
+
+  const load = (m: Market) => {
+    setLoading(true);
+    setError(false);
+    const qs = m !== "sve" ? `?market=${m}` : "";
+    fetch(`/api/admin/data-quality${qs}`)
+      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+      .then(setData)
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { load("sve"); }, []);
+
+  const handleMarketChange = (m: Market) => {
+    setMarket(m);
+    setShowAllOutliers(false);
+    load(m);
+  };
+
+  if (loading && !data) return <div className="text-center py-16 text-slate-400 text-sm">Učitavanje...</div>;
+  if (error || !data) return <div className="text-center py-16 text-red-400 text-sm">Greška pri učitavanju.</div>;
+
+  const { report, outliers } = data;
+
+  const coverageRows = [
+    { label: "Protein",          pct: report.proteinCoveragePercent,       with: report.withProteinPer100g,       without: report.withoutProteinPer100g },
+    { label: "Šećer",            pct: report.sugarCoveragePercent,         with: report.withSugarPer100g,         without: report.withoutSugarPer100g },
+    { label: "Masti",            pct: report.fatCoveragePercent,           with: report.withFatPer100g,           without: report.withoutFatPer100g },
+    { label: "Kalorije",         pct: report.calorieCoveragePercent,       with: report.withCaloriePer100g,       without: report.withoutCaloriePer100g },
+    { label: "Tip proteina",     pct: report.proteinSourceCoveragePercent, with: report.withProteinSource,        without: report.withoutProteinSource },
+    { label: "Težina pakovanja", pct: report.primaryWeightCoveragePercent, with: report.withPrimaryWeightGrams,   without: report.withoutPrimaryWeightGrams },
+    { label: "Value Score",      pct: report.valueScoreCoveragePercent,    with: report.withValueScore,           without: report.withoutValueScore },
+    { label: "Slika",            pct: report.imageCoveragePercent,         with: report.withImage,                without: report.withoutImage },
+  ];
+
+  const visibleOutliers = showAllOutliers ? outliers : outliers.slice(0, 15);
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <h2 className="text-base font-bold text-slate-900">Kvalitet podataka</h2>
+            <p className="text-sm text-slate-400 mt-0.5">Pokrivenost nutritivnih podataka i sumnjive vrednosti</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1 bg-slate-100 rounded-xl p-1">
+              {(["sve", "rs", "hr"] as Market[]).map(m => (
+                <button
+                  key={m}
+                  onClick={() => handleMarketChange(m)}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${
+                    market === m
+                      ? m === "rs" ? "bg-[#1B2B4B] text-white"
+                      : m === "hr" ? "bg-red-600 text-white"
+                      : "bg-white text-slate-700 shadow-sm"
+                      : "text-slate-500 hover:text-slate-700"
+                  }`}
+                >
+                  {m === "sve" ? "Sve" : m === "rs" ? ".rs" : ".hr"}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => load(market)}
+              disabled={loading}
+              className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-700 text-xs font-bold rounded-xl transition-colors"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+              Osveži
+            </button>
+          </div>
+        </div>
+        <p className="text-xs text-slate-400 font-mono mt-3">{report.summary}</p>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatBox label="Ukupno proizvoda" value={report.totalProducts} color="#1B2B4B" />
+        <StatBox label="Duplikat grupe" value={report.duplicateGroups} color={report.duplicateGroups > 5 ? "#ef4444" : "#22c55e"} />
+        <StatBox label="Bez prodavnice" value={report.withoutStoreEntries} color={report.withoutStoreEntries > 0 ? "#ef4444" : "#22c55e"} />
+        <StatBox label="Sumnjivo skupo (>100k)" value={report.suspiciouslyHighPriceEntries} color={report.suspiciouslyHighPriceEntries > 0 ? "#f59e0b" : "#22c55e"} />
+      </div>
+
+      <Section title="Pokrivenost podataka">
+        <div className="space-y-3">
+          {coverageRows.map(row => (
+            <div key={row.label}>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="font-semibold text-slate-600">{row.label}</span>
+                <span className="font-bold" style={{ color: coverageColor(row.pct) }}>
+                  {row.pct.toFixed(1)}% <span className="text-slate-400 font-normal">({row.with}/{row.with + row.without})</span>
+                </span>
+              </div>
+              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{ width: `${row.pct}%`, backgroundColor: coverageColor(row.pct) }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        <Section title="Cene">
+          <div className="space-y-2.5 text-sm">
+            <DataQualityRow label="Validne cene" value={report.validPriceEntries} color="#22c55e" />
+            <DataQualityRow label="numericPrice = 0" value={report.zeroPriceEntries} color="#ef4444" />
+            <DataQualityRow label="numericPrice = NULL" value={report.nullNumericPriceEntries} color="#ef4444" />
+            <DataQualityRow label="Prazan price string" value={report.priceStringNullOrEmpty} color="#f59e0b" />
+            <DataQualityRow label="Sumnjivo visoka cena" value={report.suspiciouslyHighPriceEntries} color="#f59e0b" />
+          </div>
+        </Section>
+        <Section title="Upozorenja">
+          {report.warnings.length === 0 ? (
+            <p className="text-sm text-emerald-600 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Nema upozorenja.</p>
+          ) : (
+            <ul className="space-y-2">
+              {report.warnings.map((w, i) => (
+                <li key={i} className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">{w}</li>
+              ))}
+            </ul>
+          )}
+        </Section>
+      </div>
+
+      <Section title={`Outlieri i zastareli proizvodi (${outliers.length})`}>
+        {outliers.length === 0 ? (
+          <p className="text-sm text-emerald-600 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Nema pronađenih anomalija.</p>
+        ) : (
+          <>
+            <div className="space-y-1.5 max-h-[480px] overflow-y-auto">
+              {visibleOutliers.map((o, i) => <OutlierRow key={i} text={o} />)}
+            </div>
+            {outliers.length > 15 && (
+              <button
+                onClick={() => setShowAllOutliers(v => !v)}
+                className="mt-3 text-xs font-semibold text-[#FF9900] hover:underline"
+              >
+                {showAllOutliers ? "Prikaži manje" : `Prikaži svih ${outliers.length}`}
+              </button>
+            )}
+          </>
+        )}
+      </Section>
+    </div>
+  );
+}
+
+function DataQualityRow({ label, value, color }: { label: string; value: number; color: string }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-slate-600">{label}</span>
+      <span className="font-bold" style={{ color: value > 0 ? color : "#94a3b8" }}>{value}</span>
+    </div>
+  );
+}
+
+function OutlierRow({ text }: { text: string }) {
+  const [type, ...rest] = text.split(" — ");
+  const label = OUTLIER_TYPE_LABELS[type] ?? type;
+  return (
+    <div className="flex items-start gap-2 text-xs px-3 py-1.5 rounded-lg hover:bg-slate-50">
+      <span className="shrink-0 font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 uppercase tracking-wide text-[10px]">{label}</span>
+      <span className="text-slate-600 font-mono truncate">{rest.join(" — ")}</span>
     </div>
   );
 }

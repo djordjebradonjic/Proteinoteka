@@ -22,51 +22,51 @@ public class DataQualityService {
     // for 2x that is a sign the scraper is silently failing for it specifically.
     private static final int STALE_DAYS = 14;
 
-    public DataQualityReport generateReport() {
-        log.info("Generating Data Quality Report...");
+    public DataQualityReport generateReport(String market) {
+        log.info("Generating Data Quality Report (market={})...", market == null ? "all" : market);
 
-        int total = (int) repo.count();
+        int total = repo.countTotal(market);
 
         // Nutrition - protein
-        int withoutProtein = repo.countWithoutProtein();
+        int withoutProtein = repo.countWithoutProtein(market);
         int withProtein = total - withoutProtein;
 
         // Nutrition - new fields
-        int withoutSugar = repo.countWithoutSugar();
+        int withoutSugar = repo.countWithoutSugar(market);
         int withSugar = total - withoutSugar;
 
-        int withoutFat = repo.countWithoutFat();
+        int withoutFat = repo.countWithoutFat(market);
         int withFat = total - withoutFat;
 
-        int withoutCalories = repo.countWithoutCalories();
+        int withoutCalories = repo.countWithoutCalories(market);
         int withCalories = total - withoutCalories;
 
-        int withoutProteinSource = repo.countWithoutProteinSource();
+        int withoutProteinSource = repo.countWithoutProteinSource(market);
         int withProteinSource = total - withoutProteinSource;
 
-        int withoutPrimaryWeight = repo.countWithoutPrimaryWeight();
+        int withoutPrimaryWeight = repo.countWithoutPrimaryWeight(market);
         int withPrimaryWeight = total - withoutPrimaryWeight;
 
         // Value Score
-        int withoutValueScore = repo.countWithoutValueScore();
+        int withoutValueScore = repo.countWithoutValueScore(market);
         int withValueScore = total - withoutValueScore;
 
         // Images
-        int withImage = repo.countWithImage();
+        int withImage = repo.countWithImage(market);
         int withoutImage = total - withImage;
 
         // Prices
-        int nullNumericPrice = repo.countNullNumericPrice();
-        int zeroPrice = repo.countZeroNumericPrice();
-        int highPrice = repo.countSuspiciouslyHighPrice();
-        int validPrice = repo.countValidNumericPrice();
-        int emptyPriceString = repo.countEmptyPriceString();
+        int nullNumericPrice = repo.countNullNumericPrice(market);
+        int zeroPrice = repo.countZeroNumericPrice(market);
+        int highPrice = repo.countSuspiciouslyHighPrice(market);
+        int validPrice = repo.countValidNumericPrice(market);
+        int emptyPriceString = repo.countEmptyPriceString(market);
 
         // Other
-        int withoutStore = repo.countWithoutStore();
-        int duplicateGroups = repo.countDuplicateGroups();
+        int withoutStore = repo.countWithoutStore(market);
+        int duplicateGroups = repo.countDuplicateGroups(market);
 
-        repo.findTopDuplicates().forEach(row ->
+        repo.findTopDuplicates(market).forEach(row ->
                 log.warn("Duplicate: '{}' appears {} times", row[0], row[1])
         );
 
@@ -93,6 +93,7 @@ public class DataQualityService {
         warnings.forEach(w -> log.warn(w));
 
         return DataQualityReport.builder()
+                .market(market == null ? "sve" : market)
                 .totalProducts(total)
                 .withProteinPer100g(withProtein)
                 .withoutProteinPer100g(withoutProtein)
@@ -178,24 +179,24 @@ public class DataQualityService {
      * Detects products with physically impossible or suspicious nutrition values.
      * Returns a list of human-readable issue strings and logs them as warnings.
      */
-    public List<String> checkOutliers() {
+    public List<String> checkOutliers(String market) {
         List<String> issues = new ArrayList<>();
 
-        for (Object[] row : repo.findHighProteinOutliers()) {
+        for (Object[] row : repo.findHighProteinOutliers(market)) {
             String msg = String.format("PROTEIN_TOO_HIGH — id=%s [%s] '%s' protein=%.1fg/100g (max realistic: 95g)",
                     row[0], row[1], row[2], ((Number) row[3]).doubleValue());
             issues.add(msg);
             log.warn("[DataQuality] {}", msg);
         }
 
-        for (Object[] row : repo.findLowProteinOutliers()) {
+        for (Object[] row : repo.findLowProteinOutliers(market)) {
             String msg = String.format("PROTEIN_TOO_LOW — id=%s [%s] '%s' protein=%.1fg/100g (min expected: 20g)",
                     row[0], row[1], row[2], ((Number) row[3]).doubleValue());
             issues.add(msg);
             log.warn("[DataQuality] {}", msg);
         }
 
-        for (Object[] row : repo.findCalorieTooLowOutliers()) {
+        for (Object[] row : repo.findCalorieTooLowOutliers(market)) {
             String msg = String.format("CALORIE_IMPOSSIBLE — id=%s [%s] '%s' protein=%.1fg but calorie=%.1fkcal (min: protein×4=%.0f)",
                     row[0], row[1], row[2],
                     ((Number) row[3]).doubleValue(),
@@ -205,28 +206,28 @@ public class DataQualityService {
             log.warn("[DataQuality] {}", msg);
         }
 
-        for (Object[] row : repo.findCalorieTooHighOutliers()) {
+        for (Object[] row : repo.findCalorieTooHighOutliers(market)) {
             String msg = String.format("CALORIE_TOO_HIGH — id=%s [%s] '%s' calorie=%.1fkcal/100g (max expected: 600)",
                     row[0], row[1], row[2], ((Number) row[3]).doubleValue());
             issues.add(msg);
             log.warn("[DataQuality] {}", msg);
         }
 
-        for (Object[] row : repo.findHighFatOutliers()) {
+        for (Object[] row : repo.findHighFatOutliers(market)) {
             String msg = String.format("FAT_TOO_HIGH — id=%s [%s] '%s' fat=%.1fg/100g (max expected: 50g)",
                     row[0], row[1], row[2], ((Number) row[3]).doubleValue());
             issues.add(msg);
             log.warn("[DataQuality] {}", msg);
         }
 
-        for (Object[] row : repo.findHighSugarOutliers()) {
+        for (Object[] row : repo.findHighSugarOutliers(market)) {
             String msg = String.format("SUGAR_TOO_HIGH — id=%s [%s] '%s' sugar=%.1fg/100g (max expected: 30g)",
                     row[0], row[1], row[2], ((Number) row[3]).doubleValue());
             issues.add(msg);
             log.warn("[DataQuality] {}", msg);
         }
 
-        for (Object[] row : repo.findImplausiblyLowWeightOutliers()) {
+        for (Object[] row : repo.findImplausiblyLowWeightOutliers(market)) {
             String msg = String.format("WEIGHT_IMPLAUSIBLE — id=%s [%s] '%s' primaryWeightGrams=%.2fg (likely a kg typo on the store site)",
                     row[0], row[1], row[2], ((Number) row[3]).doubleValue());
             issues.add(msg);
@@ -234,7 +235,7 @@ public class DataQualityService {
         }
 
         LocalDateTime staleCutoff = LocalDateTime.now().minusDays(STALE_DAYS);
-        for (Object[] row : repo.findStaleProducts(staleCutoff)) {
+        for (Object[] row : repo.findStaleProducts(staleCutoff, market)) {
             String msg = String.format("STALE_PRODUCT — id=%s [%s] '%s' lastUpdated=%s (not refreshed in %d+ days)",
                     row[0], row[1], row[2], row[3], STALE_DAYS);
             issues.add(msg);

@@ -390,9 +390,10 @@ public class AdminController {
     }
 
     @GetMapping("/data-quality")
-    public ResponseEntity<Map<String, Object>> dataQuality() {
-        var report = dataQualityService.generateReport();
-        var outliers = dataQualityService.checkOutliers();
+    public ResponseEntity<Map<String, Object>> dataQuality(@RequestParam(required = false) String market) {
+        final String m = (market != null && !market.isBlank()) ? market : null;
+        var report = dataQualityService.generateReport(m);
+        var outliers = dataQualityService.checkOutliers(m);
         return ResponseEntity.ok(Map.of("report", report, "outliers", outliers));
     }
 

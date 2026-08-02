@@ -7,6 +7,7 @@ import java.util.List;
 @Data
 @Builder
 public class DataQualityReport {
+    private String market;
     private int totalProducts;
 
     // Nutrition - protein

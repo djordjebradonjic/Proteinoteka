@@ -257,7 +257,7 @@ public class ScrapingSchedulerService {
                 evictProductCaches();
                 aiDescriptionJob.enrichAllMissingDescriptions();
                 triggerFrontendRevalidation();
-                dataQualityService.checkOutliers();
+                dataQualityService.checkOutliers(null);
             }
 
             if (entry.getStatus() == ScrapeStatus.PARTIAL || entry.getStatus() == ScrapeStatus.BLOCKED) {
