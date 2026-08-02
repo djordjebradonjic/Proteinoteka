@@ -39,6 +39,12 @@ public class PolleoSportScraper implements StoreScraper {
             Pattern.CASE_INSENSITIVE
     );
 
+    // div.brandc reflects whatever house-brand badge the theme shows (frequently stale/wrong
+    // for third-party lines like Optimum Nutrition or Body Attack — verified live: it read
+    // "Polleo Sport Nutrition" for a Gold Standard Whey product). The schema.org Product
+    // JSON-LD block carries the real manufacturer name and is accurate for third-party brands.
+    private static final Pattern LD_JSON_BRAND = Pattern.compile("\"brand\"\\s*:\\s*\\{[^}]*\"name\"\\s*:\\s*\"([^\"]+)\"");
+
     private volatile int productLimit = Integer.MAX_VALUE;
 
     public void setProductLimit(int limit)  { this.productLimit = limit; }
@@ -225,9 +231,15 @@ public class PolleoSportScraper implements StoreScraper {
         // Price from detail page (in case listing price was 0 or missing)
         enrichPriceFromDetailPage(doc, p);
 
-        // Brand: first div.brandc in the product content (not related-products section)
-        Element brandEl = doc.selectFirst("div.brandc");
-        if (brandEl != null && !brandEl.text().isBlank()) p.setBrand(brandEl.text().trim());
+        // Brand: prefer the schema.org JSON-LD Product block (accurate manufacturer name),
+        // fall back to div.brandc (theme badge, can be stale/wrong — see LD_JSON_BRAND doc).
+        String ldBrand = extractJsonLdBrand(doc);
+        if (ldBrand != null) {
+            p.setBrand(ldBrand);
+        } else {
+            Element brandEl = doc.selectFirst("div.brandc");
+            if (brandEl != null && !brandEl.text().isBlank()) p.setBrand(brandEl.text().trim());
+        }
 
         // Description
         Element descEl = doc.selectFirst("#tab-description, .product-description, div[id*=description]");
@@ -247,6 +259,19 @@ public class PolleoSportScraper implements StoreScraper {
             extractNutritionFromTable(doc, p);
             baseEnricher.enrichWithAiIfNeeded(doc, p, STORE_NAME);
         }
+    }
+
+    private String extractJsonLdBrand(Document doc) {
+        for (Element script : doc.select("script[type=application/ld+json]")) {
+            String json = script.html();
+            if (!json.contains("\"@type\": \"Product\"") && !json.contains("\"@type\":\"Product\"")) continue;
+            Matcher m = LD_JSON_BRAND.matcher(json);
+            if (m.find()) {
+                String brand = m.group(1).trim();
+                if (!brand.isBlank()) return brand;
+            }
+        }
+        return null;
     }
 
     // -------------------- Nutrition table parsing --------------------
