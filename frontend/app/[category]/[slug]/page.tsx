@@ -286,6 +286,41 @@ export default async function ProductSlugPage({ params }: Params) {
           seller: { "@type": "Organization", name: product.storeName },
         };
 
+  // Individual Review nodes — the aggregate rollup was already emitted below, but Google's
+  // Product rich-result guidelines credit real per-review text/author more than a bare
+  // AggregateRating, and this data is already fetched for the on-page review list anyway.
+  const reviewsJsonLd = reviews
+    .filter((r) => r.comment != null && r.comment.trim().length > 0)
+    .slice(0, 20)
+    .map((r) => ({
+      "@type": "Review",
+      author: { "@type": "Person", name: r.displayName?.trim() || "Anonimni korisnik" },
+      datePublished: r.createdAt,
+      reviewBody: r.comment,
+      reviewRating: {
+        "@type": "Rating",
+        ratingValue: r.rating,
+        bestRating: 5,
+        worstRating: 1,
+      },
+    }));
+
+  // Value-score sub-breakdown as structured additionalProperty — the 4-part scoring
+  // (value-for-money, protein purity, digestibility, ingredients) is already computed
+  // server-side for this page (ProductController includeBreakdown=true) but was previously
+  // only rendered visually on /kako-racunamo-value-score, never exposed as machine-readable data.
+  const valuePropertiesJsonLd = product.valueBreakdown
+    ? [
+        ...(product.valueScore != null
+          ? [{ "@type": "PropertyValue", name: "Proteinoteka Value Score", value: product.valueScore, maxValue: 10 }]
+          : []),
+        { "@type": "PropertyValue", name: "Odnos cene i kvaliteta", value: product.valueBreakdown.valueForMoney, maxValue: 10 },
+        { "@type": "PropertyValue", name: "Čistoća proteina", value: product.valueBreakdown.proteinPurity, maxValue: 10 },
+        { "@type": "PropertyValue", name: "Svarljivost", value: product.valueBreakdown.absorption, maxValue: 10 },
+        { "@type": "PropertyValue", name: "Kvalitet sastojaka", value: product.valueBreakdown.ingredients, maxValue: 10 },
+      ]
+    : [];
+
   const jsonLd = [
     {
       "@context": "https://schema.org",
@@ -306,6 +341,8 @@ export default async function ProductSlugPage({ params }: Params) {
           worstRating: 1,
         },
       }),
+      ...(reviewsJsonLd.length > 0 && { review: reviewsJsonLd }),
+      ...(valuePropertiesJsonLd.length > 0 && { additionalProperty: valuePropertiesJsonLd }),
     },
     {
       "@context": "https://schema.org",
