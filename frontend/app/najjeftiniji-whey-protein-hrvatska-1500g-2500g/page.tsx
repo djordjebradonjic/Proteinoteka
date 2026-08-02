@@ -4,6 +4,7 @@ import { Metadata } from "next";
 import { fetchTopProducts } from "@/lib/seo-data";
 import { SEOLandingPage } from "@/components/seo/SEOLandingPage";
 import { WeightRangeTabsHR } from "@/components/seo/WeightRangeTabsHR";
+import { WeightRangeInsights } from "@/components/seo/WeightRangeInsights";
 
 export const revalidate = 86400;
 
@@ -50,13 +51,14 @@ export default async function Page() {
   return (
     <SEOLandingPage
       h1="Najjeftiniji Whey Protein 1.5kg–2.5kg u Hrvatskoj"
-      intro="Pakiranja od 1.5 do 2.5 kilograma — dobar kompromis između cijene po gramu i veličine investicije. Pratimo cijene iz svih hrvatskih trgovina i prikazujemo ih sortirano od najjeftinijeg."
+      intro="Pakiranja od 1.5 do 2.5 kilograma — dobar kompromis između cijene po gramu i veličine investicije. Dovoljno veliko da cijena po gramu proteina bude znatno bolja nego kod 1kg pakiranja, a dovoljno malo da ne riskiraš puno ako promijeniš mišljenje o okusu ili brendu. Pratimo cijene iz svih hrvatskih trgovina i prikazujemo ih sortirano od najjeftinijeg."
       quickAnswer={quickAnswer}
       products={products}
       listHeading="Whey proteini 1.5kg–2.5kg sortirani od najjeftinije cijene"
       tableCaption="Najjeftiniji whey proteini 1.5kg–2.5kg u Hrvatskoj — aktualne cijene"
       currentSlug="najjeftiniji-whey-protein-hrvatska-1500g-2500g"
       headerSection={<WeightRangeTabsHR currentSlug="najjeftiniji-whey-protein-hrvatska-1500g-2500g" />}
+      middleSection={<WeightRangeInsights products={products} />}
       faqs={[
         {
           q: "Isplati li se kupiti 2kg pakiranje umjesto 1kg?",
@@ -65,6 +67,14 @@ export default async function Page() {
         {
           q: "Koliko porcija ima u 2kg pakiranju whey proteina?",
           a: "Ovisno o preporučenoj porciji brenda, ali tipično 2kg pakiranje ima između 50 i 70 porcija (porcija od 30g = ~66 porcija). Uz dvije porcije dnevno, to je otprilike mjesec dana suplementacije.",
+        },
+        {
+          q: "Je li raspon 1.5–2.5kg dovoljan za cijeli ciklus mase?",
+          a: "Za standardni 8–12-tjedni ciklus mase uz jednu do dvije porcije dnevno, pakiranje od oko 2kg obično pokriva veći dio razdoblja, ali za dulje cikluse vjerojatno ćeš naručiti ponovno. Ako znaš da planiraš dulje razdoblje bez mijenjanja okusa, veći raspon (3kg+) isplativiji je po gramu.",
+        },
+        {
+          q: "Koliko se razlikuje cijena po gramu proteina između 1kg i 2kg pakiranja?",
+          a: "U prosjeku, pakiranje od 2kg košta 10–20% manje po gramu proteina od istog proizvoda u 1kg pakiranju, iako razlika ovisi o brendu i trenutnim akcijama u trgovinama. Iznad, u dijelu s brojevima za ovaj raspon, vidiš aktualnu prosječnu cijenu po gramu za proizvode koji su trenutno dostupni.",
         },
       ]}
     />

@@ -4,6 +4,7 @@ import { Metadata } from "next";
 import { fetchTopProducts } from "@/lib/seo-data";
 import { SEOLandingPage } from "@/components/seo/SEOLandingPage";
 import { WeightRangeTabsHR } from "@/components/seo/WeightRangeTabsHR";
+import { WeightRangeInsights } from "@/components/seo/WeightRangeInsights";
 
 export const revalidate = 86400;
 
@@ -57,6 +58,7 @@ export default async function Page() {
       tableCaption="Najjeftiniji whey proteini 500g–1.5kg u Hrvatskoj — aktualne cijene"
       currentSlug="najjeftiniji-whey-protein-hrvatska"
       headerSection={<WeightRangeTabsHR currentSlug="najjeftiniji-whey-protein-hrvatska" />}
+      middleSection={<WeightRangeInsights products={products} />}
       faqs={[
         {
           q: "Koliko otprilike košta whey protein u Hrvatskoj?",

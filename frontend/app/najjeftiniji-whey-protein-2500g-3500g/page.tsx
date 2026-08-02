@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { fetchTopProducts } from "@/lib/seo-data";
 import { SEOLandingPage } from "@/components/seo/SEOLandingPage";
 import { WeightRangeTabs } from "@/components/seo/WeightRangeTabs";
+import { WeightRangeInsights } from "@/components/seo/WeightRangeInsights";
 
 export const revalidate = 86400;
 
@@ -54,6 +55,7 @@ export default async function Page() {
       tableCaption="Najjeftiniji whey proteini 3kg u Srbiji — aktuelne cene"
       currentSlug="najjeftiniji-whey-protein-2500g-3500g"
       headerSection={<WeightRangeTabs currentSlug="najjeftiniji-whey-protein-2500g-3500g" />}
+      middleSection={<WeightRangeInsights products={products} />}
       faqs={[
         {
           q: "Koliko traje 3kg pakovanje whey proteina?",
@@ -62,6 +64,14 @@ export default async function Page() {
         {
           q: "Zašto su 3kg paketi popularniji od 1kg?",
           a: "Veće pakovanje znači nižu cenu po gramu proteina i ređe narudžbine. Razlika može biti i 20–30% u ceni po gramu u poređenju sa kilogramskim pakovanjem.",
+        },
+        {
+          q: "Da li se 3kg pakovanje isplati ako treniram samo 2–3 puta nedeljno?",
+          a: "Da, ako protein piješ svaki dan (ne samo posle treninga) — dnevna doza od jedne porcije je uobičajena preporuka za ukupan dnevni unos proteina, ne samo za dane treninga. Ako ga piješ samo posle treninga, veće pakovanje će jednostavno trajati duže, što je i dalje ušteda dokle god se ne bliži roku trajanja.",
+        },
+        {
+          q: "Kako da sačuvam protein svežim do kraja 3kg pakovanja?",
+          a: "Drži kesu/kutiju čvrsto zatvorenu, na suvom mestu van direktne sunčeve svetlosti i daleko od izvora vlage (npr. odmah pored šporeta). Koristi suvu kašiku svaki put — vlaga je glavni uzrok grudvanja i bržeg kvarenja praška, ne sam protok vremena.",
         },
       ]}
     />

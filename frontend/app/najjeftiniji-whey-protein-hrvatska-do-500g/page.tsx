@@ -4,6 +4,7 @@ import { Metadata } from "next";
 import { fetchTopProducts } from "@/lib/seo-data";
 import { SEOLandingPage } from "@/components/seo/SEOLandingPage";
 import { WeightRangeTabsHR } from "@/components/seo/WeightRangeTabsHR";
+import { WeightRangeInsights } from "@/components/seo/WeightRangeInsights";
 
 export const revalidate = 86400;
 
@@ -50,13 +51,14 @@ export default async function Page() {
   return (
     <SEOLandingPage
       h1="Najjeftiniji Whey Protein do 500g u Hrvatskoj"
-      intro="Mala pakiranja whey proteina — idealna za isprobavanje ili kraća razdoblja. Pratimo cijene iz svih hrvatskih trgovina i prikazujemo ih sortirano od najjeftinijeg."
+      intro="Mala pakiranja whey proteina — idealna za isprobavanje, kraća razdoblja ili kad tek testiraš odgovara li ti redovita suplementacija. Cijena po gramu proteina ovdje je uvijek viša nego kod većih pakiranja, ali to je cijena koju plaćaš za fleksibilnost. Pratimo cijene iz svih hrvatskih trgovina i prikazujemo ih sortirano od najjeftinijeg."
       quickAnswer={quickAnswer}
       products={products}
       listHeading="Whey proteini do 500g sortirani od najjeftinije cijene"
       tableCaption="Najjeftiniji whey proteini do 500g u Hrvatskoj — aktualne cijene"
       currentSlug="najjeftiniji-whey-protein-hrvatska-do-500g"
       headerSection={<WeightRangeTabsHR currentSlug="najjeftiniji-whey-protein-hrvatska-do-500g" />}
+      middleSection={<WeightRangeInsights products={products} />}
       faqs={[
         {
           q: "Isplati li se kupiti protein u manjem pakiranju?",
@@ -65,6 +67,14 @@ export default async function Page() {
         {
           q: "Koji su najčešći razlozi za kupnju pakiranja do 500g?",
           a: "Isprobavanje novog okusa, kraći ciklus suplementacije, pokloni ili ograničen budžet. Cijena po gramu proteina uvijek je viša nego kod pakiranja od 1 kg i više.",
+        },
+        {
+          q: "Koliko dugo traje pakiranje whey proteina do 500g?",
+          a: "Ovisno o točnoj gramaži, ali tipično pakiranje od 400–500g traje 13–17 porcija uz standardnu dozu od 30g. Uz jednu porciju dnevno, to je otprilike dva do tri tjedna — dovoljno da testiraš okus i podnošljivost prije nego što naručiš veće pakiranje.",
+        },
+        {
+          q: "Izgubi li manje pakiranje brže kvalitetu nakon otvaranja?",
+          a: "Ne značajno brže od velikog pakiranja — whey protein u prahu je relativno stabilan ako se čuva zatvoren, na suhom i izvan izravne sunčeve svjetlosti. Prednost manjeg pakiranja je što ga potrošiš prije nego što to uopće postane pitanje.",
         },
       ]}
     />

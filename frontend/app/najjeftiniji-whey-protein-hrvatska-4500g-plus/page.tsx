@@ -4,6 +4,7 @@ import { Metadata } from "next";
 import { fetchTopProducts } from "@/lib/seo-data";
 import { SEOLandingPage } from "@/components/seo/SEOLandingPage";
 import { WeightRangeTabsHR } from "@/components/seo/WeightRangeTabsHR";
+import { WeightRangeInsights } from "@/components/seo/WeightRangeInsights";
 
 export const revalidate = 86400;
 
@@ -57,6 +58,7 @@ export default async function Page() {
       tableCaption="Najjeftiniji whey proteini 5kg+ u Hrvatskoj — aktualne cijene"
       currentSlug="najjeftiniji-whey-protein-hrvatska-4500g-plus"
       headerSection={<WeightRangeTabsHR currentSlug="najjeftiniji-whey-protein-hrvatska-4500g-plus" />}
+      middleSection={<WeightRangeInsights products={products} />}
       faqs={[
         {
           q: "Koliko dugo traje 5kg pakiranje whey proteina?",
@@ -65,6 +67,14 @@ export default async function Page() {
         {
           q: "Postoji li rizik pri kupnji velikog pakiranja?",
           a: "Glavni rizik je da ti se okus dosadi ili odustaneš od treninga. Stoga preporučamo da prije kupnje velikog pakiranja ispitaš okus u manjem, ili odabereš čokoladu/vaniliju — klasike koji rijetko postanu zamorne.",
+        },
+        {
+          q: "Dolaze li pakiranja od 5kg+ s dodatnom opremom poput mjerice ili šejkera?",
+          a: "Ovisi o brendu i trgovini — neki proizvođači dodaju mjericu u svako pakiranje bez obzira na veličinu, drugi je izostavljaju kod velikih formata jer se prodaju kao dopuna postojećoj zalihi. Provjeri opis proizvoda ili pitaj trgovinu prije narudžbe ako ti je mjerica bitna.",
+        },
+        {
+          q: "Kome se najviše isplati kupnja pakiranja od 5kg+?",
+          a: "Sportašima i rekreativcima koji redovito treniraju, već znaju koji im okus i brend odgovara, i žele najnižu moguću cijenu po gramu proteina uz najrjeđe moguće narudžbe. Ako tek počinješ ili mijenjaš brend, manje pakiranje sigurniji je prvi izbor.",
         },
       ]}
     />

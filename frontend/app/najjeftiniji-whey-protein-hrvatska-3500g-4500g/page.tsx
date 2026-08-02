@@ -4,6 +4,7 @@ import { Metadata } from "next";
 import { fetchTopProducts } from "@/lib/seo-data";
 import { SEOLandingPage } from "@/components/seo/SEOLandingPage";
 import { WeightRangeTabsHR } from "@/components/seo/WeightRangeTabsHR";
+import { WeightRangeInsights } from "@/components/seo/WeightRangeInsights";
 
 export const revalidate = 86400;
 
@@ -57,6 +58,7 @@ export default async function Page() {
       tableCaption="Najjeftiniji whey proteini 4kg u Hrvatskoj — aktualne cijene"
       currentSlug="najjeftiniji-whey-protein-hrvatska-3500g-4500g"
       headerSection={<WeightRangeTabsHR currentSlug="najjeftiniji-whey-protein-hrvatska-3500g-4500g" />}
+      middleSection={<WeightRangeInsights products={products} />}
       faqs={[
         {
           q: "Tko kupuje 4kg pakiranje whey proteina?",
@@ -65,6 +67,14 @@ export default async function Page() {
         {
           q: "Je li cijena po gramu proteina znatno niža kod 4kg pakiranja?",
           a: "Da — generalno možeš očekivati 15–25% nižu cijenu po gramu u usporedbi s 1kg pakiranjem istog brenda. Razlika varira prema brendu i trgovini, a cijenu po gramu proteina možeš vidjeti na svakom proizvodu na Proteinoteci.",
+        },
+        {
+          q: "Postoji li razlika u kvaliteti između 1kg i 4kg pakiranja istog proizvoda?",
+          a: "Ne — isti proizvod iz iste proizvodne serije ima identičan sastav bez obzira na veličinu pakiranja. Razlika je isključivo u cijeni po gramu i, kod nekih brendova, u vrsti pakiranja (vrećica umjesto kutije kod većih formata).",
+        },
+        {
+          q: "Na što obratiti pažnju prije kupnje 4kg pakiranja?",
+          a: "Prije svega na okus — isprobaj manje pakiranje istog proizvoda ako nisi siguran da će ti odgovarati kroz 130+ porcija. Također provjeri rok trajanja na deklaraciji u trgovini, jer veća pakiranja dulje stoje na tvojoj polici prije nego što ih potrošiš.",
         },
       ]}
     />
