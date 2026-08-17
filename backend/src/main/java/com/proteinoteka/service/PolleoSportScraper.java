@@ -20,7 +20,13 @@ import java.util.regex.Pattern;
 
 /**
  * Scrapes polleosport.hr — custom SSR platform (not WooCommerce/OpenCart).
- * No JS needed → plain JSoup, no proxy needed → zero iProyal credit usage.
+ * Site added Cloudflare Turnstile (site-wide, cf-mitigated: challenge on every
+ * page including the homepage) around 2026-08-09 — plain JSoup/HTTP clients get
+ * a 403 on every request since they can't execute the JS challenge. Both listing
+ * and detail pages go through the shared Playwright browser context (with the
+ * residential proxy via requiresProxy(), since Railway's datacenter IP is a likely
+ * trigger for the challenge). Once one page in the context solves the challenge,
+ * Cloudflare's clearance cookie is reused for the rest of the run.
  * Products: /proteini/ with ?page=N pagination. Each size variant is a separate URL.
  */
 @Slf4j
@@ -52,13 +58,13 @@ public class PolleoSportScraper implements StoreScraper {
 
     private final NutritionParserService nutritionParser;
     private final BaseScraperEnricher baseEnricher;
-    private final ProxyAwareHttpClient httpClient;
 
     @Override public String getStoreName() { return STORE_NAME; }
     @Override public String getBaseUrl()   { return BASE_URL; }
     @Override public String getMarket()    { return "hr"; }
     @Override public String getCurrency()  { return "EUR"; }
     @Override public boolean usePlaywrightForListing() { return true; }
+    @Override public boolean requiresProxy() { return true; }
 
     @Override
     public void waitForListing(Page page) {
@@ -106,7 +112,7 @@ public class PolleoSportScraper implements StoreScraper {
             if (p != null) stubs.add(p);
         }
 
-        return enrichWithDetails(stubs, skipUrls);
+        return enrichWithDetails(page, stubs, skipUrls);
     }
 
     // -------------------- Listing parsing --------------------
@@ -171,7 +177,7 @@ public class PolleoSportScraper implements StoreScraper {
 
     // -------------------- Detail page enrichment --------------------
 
-    private List<Product> enrichWithDetails(List<Product> stubs, Set<String> skipUrls) {
+    private List<Product> enrichWithDetails(Page listingPage, List<Product> stubs, Set<String> skipUrls) {
         List<Product> result = new ArrayList<>();
         int consecutiveFailures = 0;
 
@@ -182,7 +188,7 @@ public class PolleoSportScraper implements StoreScraper {
                 continue;
             }
 
-            Document doc = fetchDetailPage(stub.getUrl());
+            Document doc = fetchDetailPage(listingPage, stub.getUrl());
             if (doc == null) {
                 consecutiveFailures++;
                 if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
@@ -434,20 +440,37 @@ public class PolleoSportScraper implements StoreScraper {
         return null;
     }
 
-    private Document fetchDetailPage(String url) {
+    // Cloudflare Turnstile blocks plain HTTP clients site-wide — detail pages are fetched
+    // through a real page in the same (proxied, stealth-patched) browser context that the
+    // listing navigation used, so the JS challenge actually runs and the resulting clearance
+    // cookie carries over to every subsequent detail page in this run.
+    private Document fetchDetailPage(Page listingPage, String url) {
         for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+            Page detailPage = null;
             try {
-                // Direct JSoup — no proxy needed, polleosport.hr is plain SSR
-                return org.jsoup.Jsoup.connect(url)
-                        .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
-                        .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-                        .header("Accept-Language", "hr-HR,hr;q=0.9,en;q=0.8")
-                        .referrer(BASE_URL)
-                        .timeout(15000)
-                        .get();
+                detailPage = listingPage.context().newPage();
+                detailPage.navigate(url, new Page.NavigateOptions()
+                        .setTimeout(20000)
+                        .setWaitUntil(com.microsoft.playwright.options.WaitUntilState.DOMCONTENTLOADED));
+                try {
+                    detailPage.waitForSelector("h1",
+                            new Page.WaitForSelectorOptions().setTimeout(12000));
+                } catch (Exception ignored) {
+                    // Falls through to the firewall-title check below
+                }
+
+                String title = detailPage.title();
+                if (title != null && (title.contains("Cloudflare") || title.contains("Just a moment")
+                        || title.contains("Attention Required") || title.contains("Access denied"))) {
+                    throw new RuntimeException("Blocked by firewall interstitial: " + title);
+                }
+
+                return org.jsoup.Jsoup.parse(detailPage.content(), url);
             } catch (Exception e) {
                 log.warn("[{}] Detail fetch attempt {}/{} failed for {}: {}", STORE_NAME, attempt, MAX_RETRIES, url, e.getMessage());
                 safeSleep(3000L * attempt);
+            } finally {
+                if (detailPage != null) detailPage.close();
             }
         }
         return null;

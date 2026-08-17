@@ -41,6 +41,13 @@ public interface StoreScraper {
         return true;
     }
 
+    // Route the Playwright browser context through the iProyal residential proxy.
+    // Default false — proxy bandwidth costs money, so only opt in for stores whose
+    // anti-bot protection actually requires a non-datacenter IP (e.g. Cloudflare Turnstile).
+    default boolean requiresProxy() {
+        return false;
+    }
+
     // Override in scrapers where the product grid is rendered by JS after DOMContentLoaded
     default void waitForListing(Page page) {}
 

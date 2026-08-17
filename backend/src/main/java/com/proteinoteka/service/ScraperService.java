@@ -209,7 +209,8 @@ public class ScraperService {
             try {
                 String randomUA = getRandomUserAgent();
                 log.info("[{}] Using User-Agent: {}", scraper.getStoreName(), randomUA);
-                if (proxyEnabled) {
+                boolean useProxyForThisStore = proxyEnabled && scraper.requiresProxy();
+                if (useProxyForThisStore) {
                     log.info("[{}] Proxy enabled: {}:{}", scraper.getStoreName(), proxyHost, proxyPort);
                 }
 
@@ -226,7 +227,7 @@ public class ScraperService {
                                 "Upgrade-Insecure-Requests", "1"
                         ));
 
-                if (proxyEnabled && !proxyHost.isBlank()) {
+                if (useProxyForThisStore && !proxyHost.isBlank()) {
                     contextOptions.setProxy(new Proxy("http://" + proxyHost + ":" + proxyPort)
                             .setUsername(proxyUsername)
                             .setPassword(proxyPassword));
