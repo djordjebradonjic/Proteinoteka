@@ -22,18 +22,31 @@ public final class ProductLineMatcher {
     // distinguish different product lines at the same brand+weight (e.g. Maximalium's
     // "100% Whey Protein" blend vs "Isolate Whey Protein" are different SKUs at the same
     // weight; treating both as empty/generic previously merged them into one group).
+    // "anabolic" is a generic marketing prefix like "gold"/"pro"/"ultra"/"premium" (already
+    // stopworded below) — without it, e.g. Amix's "Anabolic Masster" (beef/collagen blend,
+    // ~45% protein) and "Anabolic Monster Whey" (real whey concentrate, ~80% protein) both
+    // reduce to a set containing "anabolic" and get treated as the same product line.
     private static final Set<String> NAME_STOPWORDS = Set.of(
             "whey", "protein", "proteini", "plant",
             "100", "pure", "natural", "ukus", "flavor", "flavour", "vanilla", "vanila",
             "chocolate", "cokolada", "sport", "nutrition", "the", "and", "with", "pro",
             "ultra", "gold", "lean", "diet", "basic", "complete", "premium", "iso",
-            "zero", "raw", "fusion", "powder", "instant", "formula"
+            "zero", "raw", "fusion", "powder", "instant", "formula", "anabolic"
     );
 
     public static Set<String> productLineWords(String name, String brand) {
         if (name == null) return Collections.emptySet();
         String lower = name.toLowerCase();
-        if (brand != null) lower = lower.replace(brand.toLowerCase().trim(), "");
+        // Strip the brand word-by-word rather than as one exact phrase — names commonly
+        // spell the brand as "Amix™"/"AMIX" while the brand field holds "Amix Nutrition",
+        // so a whole-phrase match silently fails and the brand word (e.g. "amix") leaks
+        // through as if it were a distinguishing word in every product from that brand,
+        // which is enough to make otherwise-unrelated product lines look like matches.
+        if (brand != null) {
+            for (String brandWord : brand.toLowerCase().trim().split("\\s+")) {
+                if (brandWord.length() > 1) lower = lower.replace(brandWord, "");
+            }
+        }
         lower = lower.replaceAll("\\d+[.,]?\\d*\\s*(kg|g|gr\\b|lb\\b)", "");
         lower = lower.replaceAll("[^a-zčćšđž\\s]", " ");
         Set<String> words = new HashSet<>();
