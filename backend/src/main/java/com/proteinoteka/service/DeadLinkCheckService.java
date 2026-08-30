@@ -66,6 +66,9 @@ public class DeadLinkCheckService {
 
     private boolean isDead(String url) {
         try {
+            // Deliberately no proxy: a blocked/ambiguous response is already treated as
+            // "not dead" below, so a datacenter IP costs nothing in accuracy here and this
+            // runs against the entire catalog weekly — not worth the iProyal bandwidth.
             int status = httpClient.connection(url)
                     .ignoreHttpErrors(true)
                     .method(Connection.Method.GET)

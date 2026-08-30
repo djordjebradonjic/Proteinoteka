@@ -453,7 +453,7 @@ public class ProteiniOutletHrScraper implements StoreScraper {
     private Document fetchDetailPage(String url) {
         for (int attempt = 1; attempt <= MAX_DETAIL_FETCH_RETRIES; attempt++) {
             try {
-                return httpClient.connection(url)
+                return httpClient.connection(url, requiresProxy())
                         .header("Accept-Language", "hr-HR,hr;q=0.9,en;q=0.8")
                         .get();
             } catch (Exception e) {

@@ -228,7 +228,7 @@ public abstract class AbstractGymBeamScraper implements StoreScraper {
         log.warn("[{}] Playwright detail fetch exhausted for {} — trying JSoup fallback",
                 getStoreName(), url);
         try {
-            return httpClient.connection(url).get();
+            return httpClient.connection(url, requiresProxy()).get();
         } catch (Exception e) {
             log.error("[{}] JSoup fallback also failed for {}: {}", getStoreName(), url, e.getMessage());
             return null;

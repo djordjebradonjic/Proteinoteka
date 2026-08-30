@@ -224,7 +224,7 @@ public class MyProteinHrScraper implements StoreScraper {
         }
         log.warn("[{}] Playwright detail fetch exhausted for {} — trying JSoup fallback", STORE_NAME, url);
         try {
-            return httpClient.connection(url).get();
+            return httpClient.connection(url, requiresProxy()).get();
         } catch (Exception e) {
             log.error("[{}] JSoup fallback also failed for {}: {}", STORE_NAME, url, e.getMessage());
             return null;
