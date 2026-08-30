@@ -12,9 +12,9 @@ import { Product } from "@/types/product";
 
 export const revalidate = 86400;
 
-const TITLE = "Protein bez laktoze — najbolji izbor za osetljiv stomak | Proteinoteka";
+const TITLE = "Protein bez laktoze — šta izabrati | Proteinoteka";
 const DESCRIPTION =
-  "Whey izolat, belance ili biljni protein — koji protein je zaista bez laktoze i kako da izbegneš nadutost i gasove. Praktičan vodič sa aktuelnim cenama iz Srbije.";
+  "Whey izolat, belance ili biljni — koji protein je zaista bez laktoze i kako da izbegneš nadutost i gasove. Praktičan vodič sa cenama iz Srbije.";
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },

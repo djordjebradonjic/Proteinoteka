@@ -12,9 +12,9 @@ import { Product } from "@/types/product";
 
 export const revalidate = 86400;
 
-const TITLE = "Kazein protein — šta je, kada se pije i zašto pred spavanje | Proteinoteka";
+const TITLE = "Kazein protein — šta je i kada se pije | Proteinoteka";
 const DESCRIPTION =
-  "Kazein je sporo-varljivi mlečni protein koji hrani mišiće satima. Šta je micelarni kazein, kada ga piti, po čemu se razlikuje od whey-a i koliko košta u Srbiji — bez marketinga.";
+  "Sporo-varljivi mlečni protein koji hrani mišiće satima. Šta je micelarni kazein, kada ga piti, po čemu se razlikuje od whey-a i cena u Srbiji.";
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },

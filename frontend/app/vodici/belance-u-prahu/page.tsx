@@ -12,9 +12,9 @@ import { Product } from "@/types/product";
 
 export const revalidate = 86400;
 
-const TITLE = "Belance u prahu — kalorije, cena i kako ga koristiti (bez mleka i laktoze) | Proteinoteka";
+const TITLE = "Belance u prahu — kalorije, cena i upotreba | Proteinoteka";
 const DESCRIPTION =
-  "Koliko kalorija ima belance, koliko proteina daje kašika praha i za koga ima smisla umesto whey-a. Nutritivna vrednost, aktuelne cene iz srpskih prodavnica i praktični saveti za šejk i pečenje.";
+  "Koliko kalorija ima belance, koliko proteina daje kašika praha i za koga ima smisla umesto whey-a. Nutritivna vrednost i aktuelne cene iz Srbije.";
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },

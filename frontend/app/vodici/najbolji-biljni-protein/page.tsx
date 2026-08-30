@@ -12,9 +12,9 @@ import { Product } from "@/types/product";
 
 export const revalidate = 86400;
 
-const TITLE = "Najbolji biljni (veganski) protein — grašak, soja, pirinač i kako izabrati | Proteinoteka";
+const TITLE = "Najbolji biljni protein — kako izabrati | Proteinoteka";
 const DESCRIPTION =
-  "Koji biljni protein je najbolji, da li mu fali aminokiselina i kako da izabereš kvalitetan veganski protein. Poređenje graška, soje i pirinča sa aktuelnim cenama iz Srbije.";
+  "Koji biljni protein je najbolji, da li mu fali aminokiselina i kako da izabereš kvalitetan veganski protein — grašak, soja i pirinač, sa cenama.";
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },

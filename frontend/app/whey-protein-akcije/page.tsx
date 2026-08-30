@@ -15,11 +15,11 @@ export const revalidate = 21600;
 
 export const metadata: Metadata = {
   title: IS_HR
-    ? { absolute: "Whey protein akcije — proteini na sniženju uživo | Proteinoteka" }
-    : { absolute: "Whey protein akcije — proteini na sniženju uživo | Proteinoteka" },
+    ? { absolute: "Whey protein akcije — sniženja uživo | Proteinoteka" }
+    : { absolute: "Whey protein akcije — sniženja uživo | Proteinoteka" },
   description: IS_HR
-    ? "Proteini kojima je cijena stvarno pala — pratimo povijest cijena u svim trgovinama i izdvajamo aktualna sniženja u odnosu na prosjek zadnjih 90 dana. Ažurira se cijele godine."
-    : "Proteini kojima je cena stvarno pala — pratimo istoriju cena u svim prodavnicama i izdvajamo aktuelna sniženja u odnosu na prosek poslednjih 90 dana. Ažurira se cele godine.",
+    ? "Proteini kojima je cijena stvarno pala — prava sniženja u svim trgovinama u odnosu na prosjek zadnjih 90 dana. Ažurira se cijele godine."
+    : "Proteini kojima je cena stvarno pala — prava sniženja u svim prodavnicama u odnosu na prosek poslednjih 90 dana. Ažurira se cele godine.",
   alternates: {
     canonical: `${BASE}${SLUG}`,
     languages: hreflangAlternates(SLUG),

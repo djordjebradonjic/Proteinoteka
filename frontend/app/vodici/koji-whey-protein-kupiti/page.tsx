@@ -12,9 +12,9 @@ import { Product } from "@/types/product";
 
 export const revalidate = 86400;
 
-const TITLE = "Koji whey protein kupiti — kako da odlučiš za 5 minuta | Proteinoteka";
+const TITLE = "Koji whey protein kupiti — okvir za odluku | Proteinoteka";
 const DESCRIPTION =
-  "Concentrate, izolat ili blend? Kako da izabereš whey protein prema cilju, budžetu i varenju — jednostavan okvir za odluku plus aktuelno najbolji izbori iz Srbije.";
+  "Concentrate, izolat ili blend? Kako da izabereš whey protein prema cilju, budžetu i varenju — okvir za odluku i najisplativiji izbori iz Srbije.";
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },
