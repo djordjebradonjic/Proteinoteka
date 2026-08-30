@@ -253,6 +253,17 @@ public class ScrapingSchedulerService {
             log.info("[Scheduler] Finished scrape: {} — {} products ({})",
                     scraper.getStoreName(), products.size(), entry.getStatus());
 
+            // BLOCKED runs finish "cleanly" (no exception), so errorMessage is otherwise
+            // empty. Surface the diagnostic ScraperService captured (page title, URL,
+            // whether the proxy was applied) so this is debuggable from ScrapeLog alone,
+            // without needing live application log access.
+            if (entry.getStatus() == ScrapeStatus.BLOCKED) {
+                String diagnostic = scraperService.getLastBlockDiagnostic();
+                if (diagnostic != null) {
+                    entry.setErrorMessage(diagnostic.substring(0, Math.min(diagnostic.length(), 500)));
+                }
+            }
+
             if (entry.getStatus() == ScrapeStatus.SUCCESS || entry.getStatus() == ScrapeStatus.PARTIAL) {
                 evictProductCaches();
                 aiDescriptionJob.enrichAllMissingDescriptions();

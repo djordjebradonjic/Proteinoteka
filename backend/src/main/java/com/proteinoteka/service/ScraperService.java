@@ -105,6 +105,17 @@ public class ScraperService {
     @Value("${scraping.stale.max-removal-percent:50}")
     private int maxRemovalPercent;
 
+    // Diagnostic capture for BLOCKED runs (0 products found) — set during scrapeStore()
+    // so ScrapingSchedulerService can persist *why* into ScrapeLog.errorMessage without
+    // needing live application log access. Scrapes never run concurrently within one JVM
+    // (heavy Playwright scrapers are always sequential — see ScrapingSchedulerService's
+    // non-overlap invariant), so a plain field is safe here.
+    private volatile String lastBlockDiagnostic;
+
+    public String getLastBlockDiagnostic() {
+        return lastBlockDiagnostic;
+    }
+
     // Playwright 1.42 bundles Chromium 123 — keep UA versions close to engine to avoid sec-ch-ua mismatch.
     // No Firefox/Safari — TLS fingerprint would mismatch the Chromium engine.
     private static final List<String> USER_AGENTS = List.of(
@@ -191,6 +202,7 @@ public class ScraperService {
         Set<String> foundUrls = new HashSet<>();
         List<Product> products = new ArrayList<>();
         boolean wasBlocked = false;
+        lastBlockDiagnostic = null;
 
         try (Playwright playwright = Playwright.create()) {
             Browser browser = playwright.chromium().launch(
@@ -358,6 +370,10 @@ public class ScraperService {
                                 log.error("[{}] JSoup listing fetch failed for page {}: {}",
                                         scraper.getStoreName(), currentPage, jsoupEx.getMessage());
                                 pageLoadFailed = true;
+                                if (currentPage == 0 && lastBlockDiagnostic == null) {
+                                    lastBlockDiagnostic = "jsoup-listing-failed msg=" + jsoupEx.getMessage()
+                                            + " proxy=" + scraper.requiresProxy();
+                                }
                             }
                         } else if (!navigateWithRetry(page, url, 3)) {
                             log.warn("[{}] Playwright navigation failed — trying JSoup direct fetch for {}",
@@ -370,6 +386,11 @@ public class ScraperService {
                                 log.error("[{}] JSoup fallback also failed for page {}: {}",
                                         scraper.getStoreName(), currentPage, jsoupEx.getMessage());
                                 pageLoadFailed = true;
+                                if (currentPage == 0) {
+                                    lastBlockDiagnostic = "playwright-and-jsoup-failed msg=" + jsoupEx.getMessage()
+                                            + " proxy=" + scraper.requiresProxy()
+                                            + " | " + lastBlockDiagnostic;
+                                }
                             }
                         }
 
@@ -397,6 +418,9 @@ public class ScraperService {
                             if (isBlockedByFirewall(page)) {
                                 log.error("[{}] FIREWALL persists after waitForListing. Stopping scraper.", scraper.getStoreName());
                                 wasBlocked = true;
+                                lastBlockDiagnostic = String.format(
+                                        "firewall title='%s' url=%s proxy=%s page=%d",
+                                        safeTitle(page), safeUrl(page), useProxyForThisStore, currentPage);
                                 break;
                             }
                             log.info("[{}] Firewall bypassed via waitForListing fallback.", scraper.getStoreName());
@@ -410,6 +434,17 @@ public class ScraperService {
 
                         log.info("[{}] Found {} products on page {}",
                                 scraper.getStoreName(), pageProducts.size(), currentPage);
+
+                        // Page loaded, title didn't match any known challenge string, yet the
+                        // listing parsed zero products — a silent block (e.g. a Turnstile
+                        // interstitial that leaves <title> unchanged, or a bot-detection page
+                        // with unfamiliar wording). Capture it the same way so BLOCKED runs are
+                        // diagnosable from ScrapeLog.errorMessage without live log access.
+                        if (currentPage == 0 && pageProducts.isEmpty() && lastBlockDiagnostic == null) {
+                            lastBlockDiagnostic = String.format(
+                                    "no-products title='%s' url=%s proxy=%s contentLen=%d",
+                                    safeTitle(page), safeUrl(page), useProxyForThisStore, doc.html().length());
+                        }
 
                         for (Product p : pageProducts) {
                             p.setStore(store);
@@ -530,6 +565,9 @@ public class ScraperService {
                 return true;
             } catch (Exception e) {
                 log.warn("Navigate retry {}/{} for {}: {}", i + 1, maxRetries, url, e.getMessage());
+                if (i == maxRetries - 1 && lastBlockDiagnostic == null) {
+                    lastBlockDiagnostic = "navigate-failed msg=" + e.getMessage();
+                }
                 try {
                     Thread.sleep(2000 * (i + 1));
                 } catch (InterruptedException ie) {
@@ -538,6 +576,14 @@ public class ScraperService {
             }
         }
         return false;
+    }
+
+    private static String safeTitle(Page page) {
+        try { return page.title(); } catch (Exception e) { return "?"; }
+    }
+
+    private static String safeUrl(Page page) {
+        try { return page.url(); } catch (Exception e) { return "?"; }
     }
 
     private boolean isBlockedByFirewall(Page page) {
