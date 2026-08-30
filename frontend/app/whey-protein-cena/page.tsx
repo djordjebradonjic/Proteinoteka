@@ -220,7 +220,7 @@ export default async function Page() {
         },
         {
           q: "Kada padaju cene proteina — postoje li sezonske akcije?",
-          a: "Da. Najveće akcije su tokom Black Friday novembra (popusti do 40%), posle Nove godine (januarski rasprodaja zaliha) i pred letnju sezonu (april–maj). Aktiviraj price alert na Proteinoteci za proizvod koji te zanima — dobiješ email čim cena padne.",
+          a: "Da. Najveće akcije su tokom Black Friday novembra (popusti do 40%), posle Nove godine (januarska rasprodaja zaliha) i pred letnju sezonu (april–maj). Aktuelna prava sniženja pratimo tokom cele godine na strani „whey protein akcije\", gde poredimo trenutnu cenu sa prosekom poslednjih 90 dana. Možeš i da aktiviraš price alert za proizvod koji te zanima — dobiješ email čim cena padne.",
         },
         {
           q: "Koji whey protein daje najviše proteina za novac?",

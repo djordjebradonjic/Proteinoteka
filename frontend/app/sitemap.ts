@@ -83,6 +83,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/newsletter`,                changeFrequency: "monthly" as const, priority: 0.4, lastModified: d("2026-07-18") },
     { url: `${BASE}/baza-podataka`,             changeFrequency: "monthly" as const, priority: 0.5, lastModified: d("2025-06-01") },
     { url: `${BASE}/crni-petak`,                changeFrequency: "daily"   as const, priority: 0.9, lastModified: now },
+    { url: `${BASE}/whey-protein-akcije`,       changeFrequency: "daily"   as const, priority: 0.85, lastModified: now },
     ...CATEGORIES.map((c) => ({
       url: `${BASE}/kategorija/${c.slug}`,
       changeFrequency: "weekly" as const,

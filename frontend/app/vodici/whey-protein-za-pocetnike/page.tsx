@@ -69,6 +69,10 @@ const faqItems = [
     q: "Koji je najjeftiniji dobar whey protein za početnike u Srbiji?",
     a: "Gledaj Value Score na Proteinoteka.rs — rangiramo sve dostupne WPC proteine po gramu proteina za novac. Skitec 100% Whey, MyProtein Impact Whey i Biotech 100% Whey Protein su stalno pri vrhu liste po isplativosti.",
   },
+  {
+    q: "Da li je mlečni protein isto što i whey?",
+    a: "Nije baš isto. Kravlje mleko sadrži dve grupe proteina: whey (surutku, oko 20%) i kazein (oko 80%). Whey je onaj brzi deo koji se odvaja pri pravljenju sira i to je ono što kupuješ kao whey protein u prahu. Kad neko kaže 'mlečni protein', obično misli na proizvod koji sadrži i whey i kazein zajedno, dok je čist whey samo surutkin deo. Oba dolaze iz mleka, ali se whey brže vari.",
+  },
 ];
 
 const BASE = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;

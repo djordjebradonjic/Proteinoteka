@@ -149,6 +149,11 @@ const SEO_PAGES = [
     excerpt: "Aktuelne cene sortirane od najjeftinije — sve prodavnice na jednom mestu.",
   },
   {
+    href: "/whey-protein-akcije",
+    title: "Whey protein akcije",
+    excerpt: "Proteini kojima je cena stvarno pala — prava sniženja u odnosu na prosek poslednjih 90 dana, iz svih prodavnica.",
+  },
+  {
     href: "/whey-protein-cena",
     title: "Whey protein cena u Srbiji",
     excerpt: "Pregled aktuelnih cena concentrate, izolata i hidrolizata iz svih prodavnica.",
