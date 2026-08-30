@@ -213,6 +213,15 @@ public class ScraperService {
                 if (useProxyForThisStore) {
                     log.info("[{}] Proxy enabled: {}:{}", scraper.getStoreName(), proxyHost, proxyPort);
                 }
+                // iProyal's residential gateway hands out a NEW IP per connection by default
+                // (no session param) — great for one-off requests, but bad for a Cloudflare-
+                // protected multi-page run: the exit IP drifting mid-session while cookies
+                // (cf_clearance) stay put is itself a bot signal. Pin one IP for this whole
+                // scrapeStore() run via a sticky session, and let it rotate to a fresh
+                // residential IP on the NEXT run (next call to scrapeStore()) instead.
+                String stickyProxyPassword = useProxyForThisStore
+                        ? proxyPassword + "_session-" + randomSessionId() + "_lifetime-1h"
+                        : proxyPassword;
 
                 Browser.NewContextOptions contextOptions = new Browser.NewContextOptions()
                         .setUserAgent(randomUA)
@@ -230,7 +239,7 @@ public class ScraperService {
                 if (useProxyForThisStore && !proxyHost.isBlank()) {
                     contextOptions.setProxy(new Proxy("http://" + proxyHost + ":" + proxyPort)
                             .setUsername(proxyUsername)
-                            .setPassword(proxyPassword));
+                            .setPassword(stickyProxyPassword));
                 }
 
                 BrowserContext context = browser.newContext(contextOptions);
@@ -342,7 +351,7 @@ public class ScraperService {
                             // Server-rendered stores (PrestaShop, Drupal, Next.js SSR) — JSoup is enough for listing.
                             // Avoids loading images/JS/tracking through proxy on listing pages.
                             try {
-                                String html = httpClient.connection(url).get().html();
+                                String html = httpClient.connection(url, scraper.requiresProxy()).get().html();
                                 page.setContent(html);
                                 log.info("[{}] JSoup listing fetch succeeded for {}", scraper.getStoreName(), url);
                             } catch (Exception jsoupEx) {
@@ -354,7 +363,7 @@ public class ScraperService {
                             log.warn("[{}] Playwright navigation failed — trying JSoup direct fetch for {}",
                                     scraper.getStoreName(), url);
                             try {
-                                String html = httpClient.connection(url).get().html();
+                                String html = httpClient.connection(url, scraper.requiresProxy()).get().html();
                                 page.setContent(html);
                                 log.info("[{}] JSoup direct fetch succeeded for {}", scraper.getStoreName(), url);
                             } catch (Exception jsoupEx) {
@@ -564,6 +573,17 @@ public class ScraperService {
 
     private String getRandomUserAgent() {
         return USER_AGENTS.get(ThreadLocalRandom.current().nextInt(USER_AGENTS.size()));
+    }
+
+    // iProyal sticky-session IDs must be an 8-character alphanumeric string.
+    private static final String SESSION_ID_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789";
+
+    private String randomSessionId() {
+        StringBuilder sb = new StringBuilder(8);
+        for (int i = 0; i < 8; i++) {
+            sb.append(SESSION_ID_ALPHABET.charAt(ThreadLocalRandom.current().nextInt(SESSION_ID_ALPHABET.length())));
+        }
+        return sb.toString();
     }
 
     // -------------------- Save / Update --------------------

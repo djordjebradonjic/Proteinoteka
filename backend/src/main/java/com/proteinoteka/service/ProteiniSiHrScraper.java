@@ -257,7 +257,7 @@ public class ProteiniSiHrScraper implements StoreScraper {
     private Document fetchDetailPage(String url) {
         for (int attempt = 1; attempt <= 3; attempt++) {
             try {
-                return httpClient.connection(url).get();
+                return httpClient.connection(url, requiresProxy()).get();
             } catch (Exception e) {
                 log.warn("[{}] Detail fetch attempt {}/3 failed for {}: {}", STORE_NAME, attempt, url, e.getMessage());
                 safeSleep(2000L * attempt);

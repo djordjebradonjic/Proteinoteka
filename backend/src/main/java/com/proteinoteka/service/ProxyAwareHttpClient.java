@@ -14,9 +14,15 @@ import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 
 /**
- * Builds Jsoup connections routed through the configured iProyal proxy (if enabled).
+ * Builds Jsoup connections, optionally routed through the configured iProyal proxy.
  * Used for plain HTML fetches (listing pages, product detail pages) so that
- * server-rendered stores don't need a full Playwright/Chromium load — saving proxy bandwidth.
+ * server-rendered stores don't need a full Playwright/Chromium load.
+ *
+ * Proxy usage is opt-in per call via {@link #connection(String, boolean)} — pass
+ * {@code scraper.requiresProxy()}, mirroring the Playwright browser-context proxy gate in
+ * ScraperService. {@link #connection(String)} defaults to no proxy, since almost every JSoup
+ * caller (plain server-rendered sites, dead-link checks) doesn't need a residential IP; routing
+ * it through the proxy anyway just burns iProyal bandwidth for no anti-bot benefit.
  *
  * SSL note: iProyal uses a transparent HTTP CONNECT tunnel — the target site's TLS certificate
  * is presented directly to the client, so normal certificate validation works fine.
@@ -43,8 +49,16 @@ public class ProxyAwareHttpClient {
 
     private static final javax.net.ssl.SSLSocketFactory TRUST_ALL_FACTORY = buildTrustAllFactory();
 
+    // Defaults to no proxy. Callers that don't actually need a residential IP (the vast
+    // majority — plain server-rendered listing/detail pages) should stay on this so they
+    // don't silently burn iProyal bandwidth just because some OTHER scraper enabled the
+    // global proxy flag. Only a scraper whose requiresProxy() is true should pass useProxy=true.
     public Connection connection(String url) {
-        if (proxyEnabled && !proxyHost.isBlank() && !proxyUsername.isBlank()) {
+        return connection(url, false);
+    }
+
+    public Connection connection(String url, boolean useProxy) {
+        if (useProxy && proxyEnabled && !proxyHost.isBlank() && !proxyUsername.isBlank()) {
             // Java 8u111+ disables Basic auth for HTTPS proxy tunneling by default — re-enable it
             System.setProperty("jdk.http.auth.tunneling.disabledSchemes", "");
             System.setProperty("jdk.http.auth.proxying.disabledSchemes", "");
@@ -63,7 +77,7 @@ public class ProxyAwareHttpClient {
                 .referrer("https://www.google.com/")
                 .timeout(15000);
 
-        if (proxyEnabled && !proxyHost.isBlank()) {
+        if (useProxy && proxyEnabled && !proxyHost.isBlank()) {
             conn = conn.proxy(proxyHost, proxyPort);
             // Bypass SSL certificate verification when routing through proxy.
             // The Railway JVM CA bundle may not include all intermediate CAs needed to

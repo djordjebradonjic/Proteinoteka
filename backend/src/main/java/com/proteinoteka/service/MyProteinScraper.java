@@ -213,7 +213,7 @@ public class MyProteinScraper implements StoreScraper {
     private Document fetchDetailPage(String url) {
         for (int attempt = 1; attempt <= MAX_DETAIL_FETCH_RETRIES; attempt++) {
             try {
-                return httpClient.connection(url).get();
+                return httpClient.connection(url, requiresProxy()).get();
             } catch (Exception e) {
                 log.warn("[{}] Detail fetch attempt {}/{} failed for {}: {}",
                         STORE_NAME, attempt, MAX_DETAIL_FETCH_RETRIES, url, e.getMessage());
