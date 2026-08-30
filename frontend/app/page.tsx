@@ -82,20 +82,26 @@ export const metadata: Metadata = {
 };
 
 async function getInitialProducts() {
-  try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/products?page=0&size=12&sort=random&market=${process.env.NEXT_PUBLIC_MARKET ?? 'rs'}`,
-      { next: { revalidate: 21600, tags: ["products"] } },
-    );
-    const data = await res.json();
-    return {
-      content: data.content ?? [],
-      totalPages: data.page?.totalPages ?? 0,
-      totalItems: data.page?.totalElements ?? 0,
-    };
-  } catch {
-    return { content: [], totalPages: 0, totalItems: 0 };
+  // Deliberately let network errors and non-OK responses propagate (no catch-to-empty
+  // here): this fetch feeds the homepage's main grid under `revalidate: 21600`, so if we
+  // swallowed a transient backend outage (e.g. mid-deploy) into `{ content: [] }`, ISR would
+  // bake "Nema rezultata" into the cache for up to 6 hours. Throwing instead makes Next.js
+  // keep serving the last successfully generated page and retry on the next request — see
+  // node_modules/next/dist/docs/01-app/02-guides/incremental-static-regeneration.md
+  // ("Handling uncaught exceptions").
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/products?page=0&size=12&sort=random&market=${process.env.NEXT_PUBLIC_MARKET ?? 'rs'}`,
+    { next: { revalidate: 21600, tags: ["products"] } },
+  );
+  if (!res.ok) {
+    throw new Error(`Failed to fetch initial products, received status ${res.status}`);
   }
+  const data = await res.json();
+  return {
+    content: data.content ?? [],
+    totalPages: data.page?.totalPages ?? 0,
+    totalItems: data.page?.totalElements ?? 0,
+  };
 }
 
 export default async function Home() {
