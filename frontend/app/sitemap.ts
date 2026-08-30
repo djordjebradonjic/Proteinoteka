@@ -93,8 +93,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const RS_GUIDE_META: Record<string, GuideMeta> = {
     "koliko-proteina-dnevno":           { changeFrequency: "monthly", priority: 0.7, lastModified: d("2025-04-01") },
-    "kada-piti-protein":                { changeFrequency: "monthly", priority: 0.7, lastModified: d("2025-04-01") },
-    "whey-isolate-vs-concentrate":      { changeFrequency: "monthly", priority: 0.7, lastModified: d("2025-04-01") },
+    "kada-piti-protein":                { changeFrequency: "weekly",  priority: 0.75, lastModified: now },
+    "whey-isolate-vs-concentrate":      { changeFrequency: "weekly",  priority: 0.75, lastModified: now },
     "da-li-protein-goji":               { changeFrequency: "monthly", priority: 0.7, lastModified: d("2025-05-01") },
     "protein-za-mrsavljenje":           { changeFrequency: "monthly", priority: 0.7, lastModified: d("2025-05-01") },
     "najbolji-protein-za-pocetnike":    { changeFrequency: "weekly",  priority: 0.85, lastModified: now },
@@ -106,6 +106,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "gold-standard-whey-recenzija":     { changeFrequency: "monthly", priority: 0.7, lastModified: d("2025-06-01") },
     "protein-za-zene":                  { changeFrequency: "monthly", priority: 0.7, lastModified: d("2026-05-01") },
     "dymatize-iso-100-recenzija":       { changeFrequency: "weekly",  priority: 0.8, lastModified: now },
+    "belance-u-prahu":                  { changeFrequency: "weekly",  priority: 0.8, lastModified: now },
+    "kazein-protein":                   { changeFrequency: "weekly",  priority: 0.8, lastModified: now },
+    "najbolji-biljni-protein":          { changeFrequency: "weekly",  priority: 0.8, lastModified: now },
+    "protein-bez-laktoze":              { changeFrequency: "weekly",  priority: 0.8, lastModified: now },
+    "koji-whey-protein-kupiti":         { changeFrequency: "weekly",  priority: 0.8, lastModified: now },
   };
 
   const rsOnlyPages: MetadataRoute.Sitemap = CURRENT_MARKET === "rs" ? [

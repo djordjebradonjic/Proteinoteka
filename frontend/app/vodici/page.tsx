@@ -64,6 +64,36 @@ const ARTICLES = [
     readMin: 4,
   },
   {
+    href: "/vodici/belance-u-prahu",
+    title: "Belance u prahu — kalorije, cena i kako ga koristiti",
+    excerpt: "~80g proteina na 100g praha, bez laktoze i bez mleka. Koliko kalorija ima belance, za koga ima smisla umesto whey-a i aktuelne cene iz Srbije.",
+    readMin: 7,
+  },
+  {
+    href: "/vodici/kazein-protein",
+    title: "Kazein protein — šta je, kada se pije i zašto pred spavanje",
+    excerpt: "Sporo-varljivi mlečni protein koji hrani mišiće satima. Micelarni vs kazeinat, kada ga piti, po čemu se razlikuje od whey-a i koliko košta.",
+    readMin: 6,
+  },
+  {
+    href: "/vodici/najbolji-biljni-protein",
+    title: "Najbolji biljni (veganski) protein — kako izabrati",
+    excerpt: "Grašak, soja, pirinač — koji je najbolji, da li mu fali aminokiselina i kako da izabereš kvalitetan veganski protein. Sa aktuelnim cenama.",
+    readMin: 6,
+  },
+  {
+    href: "/vodici/protein-bez-laktoze",
+    title: "Protein bez laktoze — šta izabrati za osetljiv stomak",
+    excerpt: "Whey izolat, belance ili biljni — koji protein je zaista bez laktoze i kako da izbegneš nadutost i gasove. Praktičan vodič sa cenama.",
+    readMin: 5,
+  },
+  {
+    href: "/vodici/koji-whey-protein-kupiti",
+    title: "Koji whey protein kupiti — kako da odlučiš za 5 minuta",
+    excerpt: "Concentrate, izolat ili blend? Jednostavan okvir za odluku prema cilju, budžetu i varenju, plus trenutno najisplativiji izbori iz Srbije.",
+    readMin: 5,
+  },
+  {
     href: "/vodici/scitec-nutrition-whey",
     title: "Scitec Nutrition 100% Whey Protein — sastav, pakovanja i cene u Srbiji",
     excerpt: "Concentrate/isolate blend sa ~74–77g proteina/100g i Digezyme® probavnim enzimima. Aktuelne cene svih pakovanja (500g–5kg) iz srpskih prodavnica.",

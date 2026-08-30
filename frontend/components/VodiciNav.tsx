@@ -36,6 +36,31 @@ const GUIDES = [
     readMin: 4,
   },
   {
+    slug: "belance-u-prahu",
+    title: "Belance u prahu — kalorije, cena i kako ga koristiti",
+    readMin: 7,
+  },
+  {
+    slug: "kazein-protein",
+    title: "Kazein protein — šta je i kada se pije",
+    readMin: 6,
+  },
+  {
+    slug: "najbolji-biljni-protein",
+    title: "Najbolji biljni (veganski) protein — kako izabrati",
+    readMin: 6,
+  },
+  {
+    slug: "protein-bez-laktoze",
+    title: "Protein bez laktoze — šta izabrati",
+    readMin: 5,
+  },
+  {
+    slug: "koji-whey-protein-kupiti",
+    title: "Koji whey protein kupiti — okvir za odluku",
+    readMin: 5,
+  },
+  {
     slug: "scitec-nutrition-whey",
     title: "Scitec Nutrition 100% Whey Protein — sastav, pakovanja i cene",
     readMin: 6,
