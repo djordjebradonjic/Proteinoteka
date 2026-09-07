@@ -589,10 +589,20 @@ public class ScraperService {
     private boolean isBlockedByFirewall(Page page) {
         try {
             String title = page.title();
+            // Cloudflare's "Just a moment..." interstitial is localized per the request's
+            // Accept-Language header — which we deliberately set to sr-RS for these stores
+            // (see contextOptions above), so it renders as "Sačekajte trenutak..." rather
+            // than the English string. Confirmed live on both Proteinbox and Polleo Sport
+            // via lastBlockDiagnostic: both showed this exact Serbian title, meaning the
+            // English-only check below never recognized the challenge page, so the
+            // waitForListing-retry path (which gives the JS challenge time to clear) never
+            // ran and the scrape fell straight through to a silent 0-product result.
             return title.contains("Cloudflare")
                     || title.contains("Just a moment")
                     || title.contains("Attention Required")
-                    || title.contains("Access denied");
+                    || title.contains("Access denied")
+                    || title.contains("Sačekajte")
+                    || title.contains("Sacekajte");
         } catch (Exception e) {
             return false;
         }
