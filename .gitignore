@@ -4,3 +4,11 @@ package.json
 src/main/resources/application-railway.yaml
 railway_dump.sql
 *.sql.dump
+
+# ad-hoc local scripts/scratch files — never meant to be committed (may contain secrets)
+scratch/
+
+# health-check tool: credentials + generated run history stay local
+ops/health-check/.env
+ops/health-check/history/
+ops/health-check/__pycache__/

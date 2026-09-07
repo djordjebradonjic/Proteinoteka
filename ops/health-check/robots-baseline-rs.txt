@@ -1,0 +1,34 @@
+User-Agent: GPTBot
+Allow: /
+
+User-Agent: ChatGPT-User
+Allow: /
+
+User-Agent: PerplexityBot
+Allow: /
+
+User-Agent: ClaudeBot
+Allow: /
+
+User-Agent: Google-Extended
+Allow: /
+
+User-Agent: CCBot
+Disallow: /
+
+User-Agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /compare
+Disallow: /odjava
+Disallow: /_next/image
+Disallow: /*?*sort=
+Disallow: /*?*query=
+Disallow: /*?*brand=
+Disallow: /*?*store=
+Disallow: /*?*minPrice=
+Disallow: /*?*maxPrice=
+Disallow: /*?*page=
+
+Sitemap: https://proteinoteka.rs/sitemap.xml
