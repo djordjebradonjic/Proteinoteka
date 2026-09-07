@@ -33,22 +33,8 @@ public class ProteinboxScraper implements StoreScraper {
     private final NutritionParserService nutritionParser;
     private final BaseScraperEnricher baseEnricher;
     private final WeightParser weightParser;
+    private final ProxyAwareHttpClient httpClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
-
-    @org.springframework.beans.factory.annotation.Value("${playwright.proxy.enabled:false}")
-    private boolean proxyEnabled;
-
-    @org.springframework.beans.factory.annotation.Value("${playwright.proxy.host:geo.iproyal.com}")
-    private String proxyHost;
-
-    @org.springframework.beans.factory.annotation.Value("${playwright.proxy.port:12321}")
-    private int proxyPort;
-
-    @org.springframework.beans.factory.annotation.Value("${playwright.proxy.username:}")
-    private String proxyUsername;
-
-    @org.springframework.beans.factory.annotation.Value("${playwright.proxy.password:}")
-    private String proxyPassword;
 
 
     @Override
@@ -76,25 +62,16 @@ public class ProteinboxScraper implements StoreScraper {
         } catch (Exception e) {
             log.warn("[{}] Playwright blocked — falling back to JSoup for listing: {}", STORE_NAME, page.url());
             try {
-                if (proxyEnabled && !proxyHost.isBlank() && !proxyUsername.isBlank()) {
-                    java.net.Authenticator.setDefault(new java.net.Authenticator() {
-                        @Override
-                        protected java.net.PasswordAuthentication getPasswordAuthentication() {
-                            return new java.net.PasswordAuthentication(proxyUsername, proxyPassword.toCharArray());
-                        }
-                    });
-                }
-                org.jsoup.Connection conn = Jsoup.connect(page.url())
-                        .userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36")
-                        .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
-                        .header("Accept-Language", "sr-RS,sr;q=0.9,en-US;q=0.8,en;q=0.7")
-                        .header("Accept-Encoding", "gzip, deflate, br")
-                        .referrer("https://www.google.com/")
-                        .timeout(15000);
-                if (proxyEnabled && !proxyHost.isBlank()) {
-                    conn = conn.proxy(proxyHost, proxyPort);
-                }
-                String html = conn.get().html();
+                // Force the shared iProyal proxy on for this fallback regardless of
+                // requiresProxy() (Proteinbox doesn't need a residential IP normally, but
+                // this path only runs when bot detection already caught the Railway
+                // datacenter IP, so routing around it here is worth the bandwidth). Route
+                // through ProxyAwareHttpClient rather than building the connection by hand —
+                // a hand-rolled version of this used to skip the
+                // jdk.http.auth.tunneling.disabledSchemes reset ProxyAwareHttpClient applies,
+                // which silently disables Basic auth on the CONNECT tunnel and made iProyal
+                // reject every request with 407 Proxy Authentication Required.
+                String html = httpClient.connection(page.url(), true).get().html();
                 page.setContent(html);
                 log.info("[{}] JSoup fallback succeeded — injected real HTML into page", STORE_NAME);
             } catch (Exception jsoupEx) {
