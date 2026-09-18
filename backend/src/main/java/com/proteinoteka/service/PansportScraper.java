@@ -520,7 +520,8 @@ public class PansportScraper implements StoreScraper {
         try {
             String title = page.title();
             return title.contains("Cloudflare") || title.contains("Just a moment")
-                    || title.contains("Attention Required") || title.contains("Access denied");
+                    || title.contains("Attention Required") || title.contains("Access denied")
+                    || title.contains("Sačekajte") || title.contains("Sacekajte");
         } catch (Exception e) { return false; }
     }
 
