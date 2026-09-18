@@ -14,6 +14,7 @@ import com.proteinoteka.repository.PriceHistoryRepository;
 import com.proteinoteka.repository.ProductRepository;
 import com.proteinoteka.repository.ScrapeLogRepository;
 import com.proteinoteka.repository.StoreRepository;
+import com.proteinoteka.util.PriceIntegrity;
 import com.proteinoteka.util.PriceParser;
 import com.proteinoteka.util.ProductLineMatcher;
 import jakarta.transaction.Transactional;
@@ -200,6 +201,9 @@ public class ScraperService {
                 scraper.getStoreName(), completeNutritionUrls.size());
 
         Set<String> foundUrls = new HashSet<>();
+        // Rows already matched by an item of this run — the URL-changed fallbacks must not
+        // re-point them at a different item (see saveOrUpdateProduct).
+        Set<Long> claimedProductIds = new HashSet<>();
         List<Product> products = new ArrayList<>();
         boolean wasBlocked = false;
         lastBlockDiagnostic = null;
@@ -385,9 +389,15 @@ public class ScraperService {
                                     safeTitle(page), safeUrl(page), useProxyForThisStore, doc.html().length());
                         }
 
+                        // The same URL emitted twice with different prices would be written as two
+                        // price changes in one run (A→B→A history, re-"discovered" as a drop every
+                        // week). Keep one item per URL — the lowest price, like the variant scrapers.
+                        pageProducts = PriceIntegrity.keepLowestPricePerUrl(
+                                pageProducts, item -> priceParser.parse(item.getPrice()));
+
                         for (Product p : pageProducts) {
                             p.setStore(store);
-                            boolean saved = saveOrUpdateProduct(p, store);
+                            boolean saved = saveOrUpdateProduct(p, store, claimedProductIds);
                             products.add(p);
                             if (saved && p.getUrl() != null) {
                                 foundUrls.add(p.getUrl());
@@ -729,6 +739,17 @@ public class ScraperService {
 
     @Transactional
     public boolean saveOrUpdateProduct(Product scraped, Store store) {
+        return saveOrUpdateProduct(scraped, store, new HashSet<>());
+    }
+
+    /**
+     * @param claimedProductIds ids of rows already matched by an item of the current scrape run
+     *                          (updated in place). A row claimed by one item is never re-pointed at
+     *                          another by the URL-changed fallbacks — that flip-flopped one row
+     *                          between two different products and wrote fake price drops.
+     */
+    @Transactional
+    public boolean saveOrUpdateProduct(Product scraped, Store store, Set<Long> claimedProductIds) {
 
         boolean isCreatine = "creatine".equals(scraped.getProductType());
 
@@ -811,12 +832,24 @@ public class ScraperService {
             Optional<Product> byWeight = productRepository.findByNameAndStoreAndWeight(
                     scraped.getName(), store, scraped.getPrimaryWeightGrams());
             if (byWeight.isPresent()) {
-                log.info("[{}] SKU promenjen za '{}' {}g — stari URL: {}, novi URL: {}",
-                        store.getName(), scraped.getName(),
-                        Math.round(scraped.getPrimaryWeightGrams()),
-                        byWeight.get().getUrl(), scraped.getUrl());
-                byWeight.get().setUrl(scraped.getUrl());
-                existingOpt = byWeight;
+                Product match = byWeight.get();
+                if (isRepointAllowed(match, numericPrice, claimedProductIds)) {
+                    log.info("[{}] SKU promenjen za '{}' {}g — stari URL: {}, novi URL: {}",
+                            store.getName(), scraped.getName(),
+                            Math.round(scraped.getPrimaryWeightGrams()),
+                            match.getUrl(), scraped.getUrl());
+                    match.setUrl(scraped.getUrl());
+                    existingOpt = byWeight;
+                } else {
+                    // Same name+weight but a different product (claimed by another item this run,
+                    // or the price is too far off) — becomes a new row instead of hijacking this one.
+                    log.warn("[{}] Refusing to re-point '{}' {}g (row {} at {} {}, scraped {} {}): "
+                                    + "claimed this run or price deviates >{}% — treating as a new product",
+                            store.getName(), scraped.getName(),
+                            Math.round(scraped.getPrimaryWeightGrams()), match.getId(),
+                            match.getNumericPrice(), store.getCurrency(), numericPrice, store.getCurrency(),
+                            Math.round(PriceIntegrity.MAX_REPOINT_PRICE_DEVIATION * 100));
+                }
             } else {
                 // Fallback: i URL i ime su se promenili istovremeno (re-platforming prodavnice) —
                 // traži najbliži fuzzy match po imenu među proizvodima iste prodavnice/gramaze,
@@ -826,6 +859,11 @@ public class ScraperService {
                 Product bestMatch = null;
                 int bestScore = 0;
                 for (Product candidate : candidates) {
+                    // Only rows that can safely change identity are eligible: not already matched
+                    // by another item this run, and with a near-identical price. Filtering here
+                    // (rather than rejecting the best match afterwards) lets a legitimate
+                    // candidate win over a higher-scoring but unsafe one.
+                    if (!isRepointAllowed(candidate, numericPrice, claimedProductIds)) continue;
                     int score = me.xdrop.fuzzywuzzy.FuzzySearch.tokenSetRatio(
                             scraped.getName().toLowerCase(), candidate.getName().toLowerCase());
                     if (score > bestScore) {
@@ -880,6 +918,7 @@ public class ScraperService {
 
         if (existingOpt.isPresent()) {
             Product existing = existingOpt.get();
+            if (existing.getId() != null) claimedProductIds.add(existing.getId());
 
             // Capture old numeric price before overwriting — used for drop detection below
             Double oldNumericPrice = existing.getNumericPrice();
@@ -1016,10 +1055,21 @@ public class ScraperService {
             scraped.setProteinPerCurrency(computeProteinPerRsd(numericPrice, scraped));
             scraped.setCanonicalSlug(slugifyWithWeight(scraped.getName(), weightGrams > 0 ? weightGrams : null, store.getMarket()));
             productRepository.save(scraped);
+            if (scraped.getId() != null) claimedProductIds.add(scraped.getId());
             productGroupService.tryAutoAssign(scraped);
             log.info("[{}] New product saved: '{}'", store.getName(), scraped.getName());
             return true;
         }
+    }
+
+    /**
+     * Whether a URL-changed fallback may re-point {@code candidate} at the item being saved:
+     * the row must not already belong to another item of this run, and the price must be nearly
+     * unchanged (a real SKU change keeps its price; a different product doesn't).
+     */
+    private boolean isRepointAllowed(Product candidate, Double scrapedPrice, Set<Long> claimedProductIds) {
+        if (candidate.getId() != null && claimedProductIds.contains(candidate.getId())) return false;
+        return PriceIntegrity.isSafeRepoint(candidate.getNumericPrice(), scrapedPrice);
     }
 
     // -------------------- Score calculation --------------------

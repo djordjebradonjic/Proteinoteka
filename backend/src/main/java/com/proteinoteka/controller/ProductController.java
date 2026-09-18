@@ -17,6 +17,7 @@ import com.proteinoteka.repository.ProductRepository;
 import com.proteinoteka.service.ProductGroupService;
 import com.proteinoteka.service.ScraperService;
 import com.proteinoteka.util.BotDetector;
+import com.proteinoteka.util.PriceIntegrity;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -297,6 +298,11 @@ public class ProductController {
         return priceHistoryRepository.findProductsWithMultiplePriceEntries().stream()
                 .filter(p -> p.getNumericPrice() != null && p.getNumericPrice() > 0)
                 .filter(p -> effectiveMarket.equals(p.getMarket()))
+                // Two history rows minutes apart mean one scrape run wrote the row twice (A→B→A
+                // flapping between two products/variants), not a real repricing — the "drop"
+                // would be fake. Also covers flapping already stored before the scraper guards.
+                .filter(p -> !PriceIntegrity.hasUnstablePriceHistory(
+                        p.getPriceHistories().stream().map(PriceHistory::getTimestamp).toList()))
                 .map(this::convertToDTO)
                 .filter(dto -> dto.previousPrice() != null
                         && dto.numericPrice() != null
