@@ -73,7 +73,7 @@ public class PolleoSportScraper implements StoreScraper {
     public void waitForListing(Page page) {
         try {
             page.waitForSelector("div.product-item-container",
-                    new com.microsoft.playwright.Page.WaitForSelectorOptions().setTimeout(15000));
+                    new com.microsoft.playwright.Page.WaitForSelectorOptions().setTimeout(45000));
         } catch (Exception e) {
             log.warn("[{}] Timeout waiting for product cards on listing page", STORE_NAME);
         }

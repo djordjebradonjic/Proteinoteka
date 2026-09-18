@@ -541,8 +541,10 @@ public class ScraperService {
                     || title.contains("Just a moment")
                     || title.contains("Attention Required")
                     || title.contains("Access denied")
-                    || title.contains("Sačekajte")
-                    || title.contains("Sacekajte");
+                    || title.contains("Sačekajte")   // sr
+                    || title.contains("Sacekajte")   // sr ascii fallback
+                    || title.contains("Pričekajte")  // hr
+                    || title.contains("Pricekajte"); // hr ascii fallback
         } catch (Exception e) {
             return false;
         }
