@@ -65,6 +65,9 @@ public class PolleoSportScraper implements StoreScraper {
     @Override public String getCurrency()  { return "EUR"; }
     @Override public boolean usePlaywrightForListing() { return true; }
     @Override public boolean requiresProxy() { return true; }
+    @Override public String getLocale() { return "hr-HR"; }
+    @Override public String getTimezoneId() { return "Europe/Zagreb"; }
+    @Override public String getAcceptLanguage() { return "hr-HR,hr;q=0.9,en-US;q=0.8,en;q=0.7"; }
 
     @Override
     public void waitForListing(Page page) {

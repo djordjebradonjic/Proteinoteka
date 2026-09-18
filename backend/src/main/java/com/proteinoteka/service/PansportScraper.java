@@ -35,7 +35,18 @@ public class PansportScraper implements StoreScraper {
 
     @Override public String getStoreName() { return STORE_NAME; }
     @Override public String getBaseUrl()   { return BASE_URL; }
-    @Override public boolean usePlaywrightForListing() { return false; }
+    @Override public boolean usePlaywrightForListing() { return true; }
+    @Override public boolean requiresProxy() { return true; }
+
+    @Override
+    public void waitForListing(Page page) {
+        try {
+            page.waitForSelector("div.product-teaser",
+                    new Page.WaitForSelectorOptions().setTimeout(15000));
+        } catch (Exception e) {
+            log.warn("[{}] Timeout waiting for product teasers on listing page", STORE_NAME);
+        }
+    }
 
     @Override
     public boolean hasNextPage(Document doc) {

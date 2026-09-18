@@ -238,11 +238,11 @@ public class ScraperService {
                 Browser.NewContextOptions contextOptions = new Browser.NewContextOptions()
                         .setUserAgent(randomUA)
                         .setViewportSize(1920, 1080)
-                        .setLocale("sr-RS")
-                        .setTimezoneId("Europe/Belgrade")
+                        .setLocale(scraper.getLocale())
+                        .setTimezoneId(scraper.getTimezoneId())
                         .setDeviceScaleFactor(1)
                         .setExtraHTTPHeaders(Map.of(
-                                "Accept-Language", "sr-RS,sr;q=0.9,en-US;q=0.8,en;q=0.7",
+                                "Accept-Language", scraper.getAcceptLanguage(),
                                 "Accept-Encoding", "gzip, deflate, br",
                                 "DNT", "1",
                                 "Upgrade-Insecure-Requests", "1"
@@ -279,70 +279,9 @@ public class ScraperService {
                     }
                 });
 
-                context.addInitScript("""
-                        // 1. Remove webdriver flag — primary Cloudflare check
-                        Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
-
-                        // 2. Full chrome object — headless omits these by default
-                        window.chrome = {
-                          app: {
-                            isInstalled: false,
-                            InstallState: { DISABLED: 'disabled', INSTALLED: 'installed', NOT_INSTALLED: 'not_installed' },
-                            RunningState: { CANNOT_RUN: 'cannot_run', READY_TO_RUN: 'ready_to_run', RUNNING: 'running' }
-                          },
-                          runtime: {
-                            OnInstalledReason: {}, OnRestartRequiredReason: {},
-                            PlatformArch: {}, PlatformNaclArch: {}, PlatformOs: {}, RequestUpdateCheckStatus: {}
-                          },
-                          loadTimes: function() {},
-                          csi: function() {}
-                        };
-
-                        // 3. Permissions — headless returns 'denied' for notifications; real browser returns 'default'
-                        const _origPermQuery = window.navigator.permissions.query.bind(navigator.permissions);
-                        window.navigator.permissions.query = (params) =>
-                          params.name === 'notifications'
-                            ? Promise.resolve({ state: Notification.permission })
-                            : _origPermQuery(params);
-
-                        // 4. Realistic plugins list (headless has none)
-                        Object.defineProperty(navigator, 'plugins', {
-                          get: () => {
-                            const p = [
-                              { name: 'Chrome PDF Plugin',  filename: 'internal-pdf-viewer',              description: 'Portable Document Format' },
-                              { name: 'Chrome PDF Viewer',  filename: 'mhjfbmdgcfjbbpaeojofohoefgiehjai', description: '' },
-                              { name: 'Native Client',      filename: 'internal-nacl-plugin',             description: '' }
-                            ];
-                            p.__proto__ = PluginArray.prototype;
-                            return p;
-                          }
-                        });
-
-                        // 5. Language + hardware fingerprint
-                        Object.defineProperty(navigator, 'languages',          { get: () => ['sr-RS', 'sr', 'en-US', 'en'] });
-                        Object.defineProperty(navigator, 'vendor',             { get: () => 'Google Inc.' });
-                        Object.defineProperty(navigator, 'hardwareConcurrency',{ get: () => 8 });
-                        Object.defineProperty(navigator, 'deviceMemory',       { get: () => 8 });
-
-                        // 6. Network info — headless omits navigator.connection
-                        Object.defineProperty(navigator, 'connection', {
-                          get: () => ({ rtt: 50, downlink: 10, effectiveType: '4g', saveData: false })
-                        });
-
-                        // 7. Window dimensions — headless outerWidth/Height differ from viewport
-                        window.outerWidth  = window.innerWidth;
-                        window.outerHeight = window.innerHeight + 100;
-
-                        // 8. WebGL renderer — headless shows SwiftShader/llvmpipe; spoof Intel
-                        try {
-                          const _getParam = WebGLRenderingContext.prototype.getParameter;
-                          WebGLRenderingContext.prototype.getParameter = function(param) {
-                            if (param === 37445) return 'Intel Inc.';
-                            if (param === 37446) return 'Intel Iris OpenGL Engine';
-                            return _getParam.call(this, param);
-                          };
-                        } catch(e) {}
-                        """);
+                context.addInitScript(buildStealthScript(
+                        extractChromeVersion(randomUA),
+                        buildLanguagesArray(scraper.getLocale())));
 
                 try {
                     Page page = context.newPage();
@@ -629,6 +568,150 @@ public class ScraperService {
 
     private String getRandomUserAgent() {
         return USER_AGENTS.get(ThreadLocalRandom.current().nextInt(USER_AGENTS.size()));
+    }
+
+    private static String extractChromeVersion(String userAgent) {
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("Chrome/(\\d+)").matcher(userAgent);
+        return m.find() ? m.group(1) : "124";
+    }
+
+    // Converts a BCP-47 locale like "hr-HR" into a JS array literal like ['hr-HR','hr','en-US','en']
+    private static String buildLanguagesArray(String locale) {
+        String lang = locale.contains("-") ? locale.substring(0, locale.indexOf('-')) : locale;
+        if (locale.equals(lang)) {
+            return "['" + locale + "', 'en-US', 'en']";
+        }
+        return "['" + locale + "', '" + lang + "', 'en-US', 'en']";
+    }
+
+    private static String buildStealthScript(String chromeVersion, String languages) {
+        return
+            "// 1. Remove webdriver flag — primary Cloudflare check\n" +
+            "Object.defineProperty(navigator, 'webdriver', { get: () => undefined });\n" +
+            "\n" +
+            "// 2. Full chrome object — headless omits these by default\n" +
+            "window.chrome = {\n" +
+            "  app: {\n" +
+            "    isInstalled: false,\n" +
+            "    InstallState: { DISABLED: 'disabled', INSTALLED: 'installed', NOT_INSTALLED: 'not_installed' },\n" +
+            "    RunningState: { CANNOT_RUN: 'cannot_run', READY_TO_RUN: 'ready_to_run', RUNNING: 'running' }\n" +
+            "  },\n" +
+            "  runtime: {\n" +
+            "    OnInstalledReason: {}, OnRestartRequiredReason: {},\n" +
+            "    PlatformArch: {}, PlatformNaclArch: {}, PlatformOs: {}, RequestUpdateCheckStatus: {}\n" +
+            "  },\n" +
+            "  loadTimes: function() {},\n" +
+            "  csi: function() {}\n" +
+            "};\n" +
+            "\n" +
+            "// 3. Permissions — headless returns 'denied' for notifications; real browser returns 'default'\n" +
+            "const _origPermQuery = window.navigator.permissions.query.bind(navigator.permissions);\n" +
+            "window.navigator.permissions.query = (params) =>\n" +
+            "  params.name === 'notifications'\n" +
+            "    ? Promise.resolve({ state: Notification.permission })\n" +
+            "    : _origPermQuery(params);\n" +
+            "\n" +
+            "// 4. Realistic plugins list (headless has none)\n" +
+            "Object.defineProperty(navigator, 'plugins', {\n" +
+            "  get: () => {\n" +
+            "    const p = [\n" +
+            "      { name: 'Chrome PDF Plugin',  filename: 'internal-pdf-viewer',              description: 'Portable Document Format' },\n" +
+            "      { name: 'Chrome PDF Viewer',  filename: 'mhjfbmdgcfjbbpaeojofohoefgiehjai', description: '' },\n" +
+            "      { name: 'Native Client',      filename: 'internal-nacl-plugin',             description: '' }\n" +
+            "    ];\n" +
+            "    p.__proto__ = PluginArray.prototype;\n" +
+            "    return p;\n" +
+            "  }\n" +
+            "});\n" +
+            "\n" +
+            "// 5. Language + hardware fingerprint — locale-matched to each scraper's market\n" +
+            "Object.defineProperty(navigator, 'languages',           { get: () => " + languages + " });\n" +
+            "Object.defineProperty(navigator, 'vendor',              { get: () => 'Google Inc.' });\n" +
+            "Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => 8 });\n" +
+            "Object.defineProperty(navigator, 'deviceMemory',        { get: () => 8 });\n" +
+            "\n" +
+            "// 6. Network info — headless omits navigator.connection\n" +
+            "Object.defineProperty(navigator, 'connection', {\n" +
+            "  get: () => ({ rtt: 50, downlink: 10, effectiveType: '4g', saveData: false })\n" +
+            "});\n" +
+            "\n" +
+            "// 7. Window + screen dimensions — headless values differ from a real desktop\n" +
+            "window.outerWidth  = window.innerWidth;\n" +
+            "window.outerHeight = window.innerHeight + 100;\n" +
+            "try {\n" +
+            "  Object.defineProperty(screen, 'width',       { get: () => 1920 });\n" +
+            "  Object.defineProperty(screen, 'height',      { get: () => 1080 });\n" +
+            "  Object.defineProperty(screen, 'availWidth',  { get: () => 1920 });\n" +
+            "  Object.defineProperty(screen, 'availHeight', { get: () => 1040 });\n" +
+            "  Object.defineProperty(screen, 'colorDepth',  { get: () => 24 });\n" +
+            "  Object.defineProperty(screen, 'pixelDepth',  { get: () => 24 });\n" +
+            "} catch(e) {}\n" +
+            "\n" +
+            "// 8. WebGL1 + WebGL2 renderer — headless shows SwiftShader/llvmpipe; spoof Intel\n" +
+            "try {\n" +
+            "  const _getParam = WebGLRenderingContext.prototype.getParameter;\n" +
+            "  WebGLRenderingContext.prototype.getParameter = function(param) {\n" +
+            "    if (param === 37445) return 'Intel Inc.';\n" +
+            "    if (param === 37446) return 'Intel Iris OpenGL Engine';\n" +
+            "    return _getParam.call(this, param);\n" +
+            "  };\n" +
+            "} catch(e) {}\n" +
+            "try {\n" +
+            "  const _getParam2 = WebGL2RenderingContext.prototype.getParameter;\n" +
+            "  WebGL2RenderingContext.prototype.getParameter = function(param) {\n" +
+            "    if (param === 37445) return 'Intel Inc.';\n" +
+            "    if (param === 37446) return 'Intel Iris OpenGL Engine';\n" +
+            "    return _getParam2.call(this, param);\n" +
+            "  };\n" +
+            "} catch(e) {}\n" +
+            "\n" +
+            "// 9. Canvas fingerprint — inject imperceptible per-session noise so the\n" +
+            "// toDataURL hash differs from the known headless constant value\n" +
+            "try {\n" +
+            "  const _toDataURL = HTMLCanvasElement.prototype.toDataURL;\n" +
+            "  HTMLCanvasElement.prototype.toDataURL = function(type, ...args) {\n" +
+            "    const ctx = this.getContext('2d');\n" +
+            "    if (ctx && this.width > 0 && this.height > 0) {\n" +
+            "      const imgData = ctx.getImageData(0, 0, 1, 1);\n" +
+            "      imgData.data[0] ^= 3;\n" +
+            "      ctx.putImageData(imgData, 0, 0);\n" +
+            "    }\n" +
+            "    return _toDataURL.call(this, type, ...args);\n" +
+            "  };\n" +
+            "  const _getImageData = CanvasRenderingContext2D.prototype.getImageData;\n" +
+            "  CanvasRenderingContext2D.prototype.getImageData = function(sx, sy, sw, sh) {\n" +
+            "    const data = _getImageData.call(this, sx, sy, sw, sh);\n" +
+            "    data.data[0] ^= 3;\n" +
+            "    return data;\n" +
+            "  };\n" +
+            "} catch(e) {}\n" +
+            "\n" +
+            "// 10. AudioContext fingerprint — add tiny deterministic noise to frequency data\n" +
+            "try {\n" +
+            "  const _getChannelData = AudioBuffer.prototype.getChannelData;\n" +
+            "  AudioBuffer.prototype.getChannelData = function(channel) {\n" +
+            "    const arr = _getChannelData.call(this, channel);\n" +
+            "    if (arr.length > 0) arr[0] += 1e-7;\n" +
+            "    return arr;\n" +
+            "  };\n" +
+            "} catch(e) {}\n" +
+            "\n" +
+            "// 11. navigator.userAgentData — Chrome 90+ Client Hints API; headless may omit or\n" +
+            "// return a version inconsistent with the spoofed User-Agent string\n" +
+            "try {\n" +
+            "  Object.defineProperty(navigator, 'userAgentData', {\n" +
+            "    get: () => ({\n" +
+            "      brands: [\n" +
+            "        { brand: 'Not:A-Brand',    version: '8' },\n" +
+            "        { brand: 'Chromium',       version: '" + chromeVersion + "' },\n" +
+            "        { brand: 'Google Chrome',  version: '" + chromeVersion + "' }\n" +
+            "      ],\n" +
+            "      mobile: false,\n" +
+            "      platform: 'Windows',\n" +
+            "      getHighEntropyValues: () => Promise.resolve({})\n" +
+            "    })\n" +
+            "  });\n" +
+            "} catch(e) {}\n";
     }
 
     // iProyal sticky-session IDs must be an 8-character alphanumeric string.

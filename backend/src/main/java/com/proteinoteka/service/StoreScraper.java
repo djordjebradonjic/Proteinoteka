@@ -48,6 +48,16 @@ public interface StoreScraper {
         return false;
     }
 
+    // BCP-47 locale for the browser context — controls navigator.language and Accept-Language.
+    // Override for non-Serbian markets so the locale matches the site's expected visitor profile.
+    default String getLocale() { return "sr-RS"; }
+
+    // IANA timezone for the browser context — used by Intl APIs and date formatting.
+    default String getTimezoneId() { return "Europe/Belgrade"; }
+
+    // Accept-Language header sent on every request. Should match getLocale().
+    default String getAcceptLanguage() { return "sr-RS,sr;q=0.9,en-US;q=0.8,en;q=0.7"; }
+
     // Override in scrapers where the product grid is rendered by JS after DOMContentLoaded
     default void waitForListing(Page page) {}
 
