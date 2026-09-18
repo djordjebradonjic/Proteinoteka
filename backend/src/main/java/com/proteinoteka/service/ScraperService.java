@@ -880,9 +880,9 @@ public class ScraperService {
                 // fallback can silently re-point an unrelated product's row (and its old price)
                 // at the scraped item, poisoning price_history with a fake "drop".
                 if (bestMatch != null && bestScore >= FUZZY_MATCH_THRESHOLD
-                        && ProductLineMatcher.hasWordOverlap(
-                                ProductLineMatcher.productLineWords(scraped.getName(), bestMatch.getBrand()),
-                                ProductLineMatcher.productLineWords(bestMatch.getName(), bestMatch.getBrand()))) {
+                        && ProductLineMatcher.sameProductLine(
+                                scraped.getName(), bestMatch.getBrand(),
+                                bestMatch.getName(), bestMatch.getBrand())) {
                     log.info("[{}] SKU i ime promenjeni za '{}' {}g — fuzzy match na '{}' (score: {}), stari URL: {}, novi URL: {}",
                             store.getName(), scraped.getName(), Math.round(scraped.getPrimaryWeightGrams()),
                             bestMatch.getName(), bestScore, bestMatch.getUrl(), scraped.getUrl());

@@ -17,15 +17,22 @@ public class BrandNormalizerService {
 
     private static final int MATCH_THRESHOLD = 75; // 0-100, koliko slično mora biti
 
+    /**
+     * Strips a numbered-list prefix ("96.Scitec Nutrition" → "Scitec Nutrition") and ®/™.
+     * The dot is required: the old pattern made it optional and turned "5Star" / "5 Stars"
+     * into "Star" / "Stars", which then failed to match the "5 Stars" brand.
+     */
+    static String clean(String rawBrand) {
+        return rawBrand
+                .replaceAll("^\\d+\\.\\s*", "")
+                .replaceAll("[®™]", "")
+                .trim();
+    }
+
     public String normalize(String rawBrand) {
         if (rawBrand == null || rawBrand.isBlank()) return rawBrand;
 
-        // Očisti brojeve i specijalne karaktere ispred naziva
-        // npr. "96.Scitec Nutrition" → "Scitec Nutrition"
-        String cleaned = rawBrand
-                .replaceAll("^\\d+\\.?\\s*", "")   // ukloni "96." sa početka
-                .replaceAll("[®™]", "")              // ukloni ® i ™
-                .trim();
+        String cleaned = clean(rawBrand);
 
         List<BrandReputation> allBrands = brandReputationRepository.findAll();
 

@@ -28,6 +28,15 @@ public class ProductGroupController {
         return ResponseEntity.ok(productGroupService.autoGenerateGroups());
     }
 
+    /**
+     * Recompute each group's weight from its actual members and dissolve groups with fewer than
+     * two listings. Idempotent; run after manual group edits.
+     */
+    @PostMapping("/refresh")
+    public ResponseEntity<Map<String, Object>> refresh() {
+        return ResponseEntity.ok(productGroupService.refreshGroupMetadata());
+    }
+
     /** List all groups with their members, sorted by store count descending. */
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> listGroups() {
