@@ -168,18 +168,39 @@ def check_data_quality(cfg):
 
 # ───────────────────────── C. Direktan read-only psql ─────────────────────────
 
+def _redact(text, cfg):
+    """Strips the connection string/password from anything that ends up in the JSON report or the terminal."""
+    url = cfg.get("DATABASE_URL") or ""
+    if url:
+        text = text.replace(url, "<DATABASE_URL>")
+    return re.sub(r"postgres(?:ql)?://\S+", "<DATABASE_URL>", text)
+
+
+_db_unreachable = None  # first connection failure, reused so 4 checks don't each wait 30s
+
+
 def run_psql(cfg, sql, maxsplit=-1):
     """Runs one read-only SQL statement via the psql CLI. Every call site below
     passes a plain SELECT — this tool never writes to the database."""
+    global _db_unreachable
+    if _db_unreachable:
+        return None, _db_unreachable
     try:
         result = subprocess.run(
             ["psql", cfg["DATABASE_URL"], "-v", "ON_ERROR_STOP=1", "-t", "-A", "-F", "\t", "-c", sql],
             capture_output=True, text=True, timeout=30,
+            env={**os.environ, "PGCONNECT_TIMEOUT": "10"},
         )
     except (subprocess.TimeoutExpired, FileNotFoundError) as e:
-        return None, str(e)
+        err = _redact(str(e), cfg)
+        if isinstance(e, subprocess.TimeoutExpired):
+            _db_unreachable = err
+        return None, err
     if result.returncode != 0:
-        return None, result.stderr.strip()
+        err = _redact(result.stderr.strip(), cfg)
+        if "connection to server" in err:
+            _db_unreachable = err
+        return None, err
     rows = [line.split("\t", maxsplit) for line in result.stdout.splitlines() if line.strip()]
     return rows, None
 
