@@ -95,4 +95,17 @@ ROLLBACK;   -- <- change to COMMIT after reviewing the output above
 -- Not covered here: rows whose history is weeks apart but belongs to a DIFFERENT product (e.g.
 -- GymBeam RS Soy Isolate 562: 4490 -> 1600, Mutant Mass 834/989). Run
 -- cleanup_implausible_price_history.sql for those.
+--
+-- MANUAL — Proteini.si HR "SNICKERS HI PROTEIN LOW SUGAR BAR, 12x57g" (product 1178): the store sells
+-- the same item at a regular URL (39.94 EUR) and an Outlet URL with ?discount=171526 (28.53 EUR,
+-- "29% Outlet"). The regular and Outlet scrapers took turns re-pointing this one row between the
+-- two URLs, so its weekly history alternates 39.94 <-> 28.53 (a fake -29% drop each time; weeks
+-- apart, so neither the timing guard nor the 50% cap catches it). The row's current URL is the
+-- Outlet one, so 28.53 is its true price and the 39.94 rows belong to the regular URL. With the
+-- scraper guard deployed the regular item gets its own row; then:
+--   DELETE FROM price_history WHERE product_id = 1178 AND numeric_price = 39.94;
+--   UPDATE products SET last_price_change_at = NULL, last_price_drop_pct = NULL,
+--                       last_price_increase_pct = NULL WHERE id = 1178;
+-- Other flappers whose cause was not confirmed (check their history before touching): Formel 90
+-- (GymBeam HR, 1511), Nutrition Shop Nutrend 500g (1109), MyProtein Milkshake 4350g (1477).
 -- ---------------------------------------------------------------------------------------------

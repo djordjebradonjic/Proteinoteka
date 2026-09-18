@@ -338,6 +338,11 @@ public class ProductController {
         return priceHistoryRepository.findProductsWithHistorySince(since).stream()
                 .filter(p -> p.getNumericPrice() != null && p.getNumericPrice() > 0)
                 .filter(p -> effectiveMarket.equals(p.getMarket()))
+                // Flapping history (two rows minutes apart = one run wrote the row twice) inflates
+                // the 90-day average with a price the product never really had, which shows up as
+                // a fake "discount". Same guard as /price-drops.
+                .filter(p -> !PriceIntegrity.hasUnstablePriceHistory(
+                        p.getPriceHistories().stream().map(PriceHistory::getTimestamp).toList()))
                 .map(p -> {
                     List<Double> recentPrices = p.getPriceHistories().stream()
                             .filter(h -> h.getTimestamp() != null && !h.getTimestamp().isBefore(since))
