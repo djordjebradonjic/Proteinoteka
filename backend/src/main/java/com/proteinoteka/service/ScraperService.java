@@ -30,7 +30,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.regex.Pattern;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -57,14 +56,6 @@ public class ScraperService {
 
     // Used to impute missing sugar values so the ingredients penalty is applied fairly
     // even when a product page omits nutrition details.
-    private static final Map<String, Double> SUGAR_MEDIAN_BY_SOURCE = Map.of(
-        "whey_concentrate", 6.3,
-        "blend",            4.4,
-        "whey_isolate",     1.0,
-        "hydrolysate",      3.0,
-        "casein",           3.0,
-        "vegan",            0.2
-    );
 
     private final ProductRepository productRepository;
     private final StoreRepository storeRepository;
@@ -509,7 +500,7 @@ public class ScraperService {
             try {
                 page.navigate(url, new Page.NavigateOptions()
                         .setWaitUntil(WaitUntilState.DOMCONTENTLOADED)
-                        .setTimeout(10000));
+                        .setTimeout(45000));
                 page.waitForTimeout(500 + (int)(Math.random() * 1000));
                 return true;
             } catch (Exception e) {
@@ -781,6 +772,14 @@ public class ScraperService {
         }
 
         // 1. Normalizuj brend
+        // Some store templates leak page text into the brand field (e.g. "g | Biljni Protein iz...").
+        // That is never a brand: drop it so it can't create a junk brand_reputation miss.
+        if (scraped.getBrand() != null
+                && (scraped.getBrand().length() > 40 || scraped.getBrand().contains("|"))) {
+            log.warn("[{}] Discarding implausible brand '{}' for '{}'",
+                    store.getName(), scraped.getBrand(), scraped.getName());
+            scraped.setBrand(null);
+        }
         if (scraped.getBrand() != null) {
             scraped.setBrand(brandNormalizer.normalize(scraped.getBrand()));
         }
@@ -981,7 +980,6 @@ public class ScraperService {
             // GROUP 1 — uvek ažuriraj
             existing.setPrice(scraped.getPrice());
             existing.setNumericPrice(numericPrice);
-            existing.setValueScore(valueScore);
             existing.setLastUpdated(LocalDateTime.now());
 
             // GROUP 2 — ažuriraj samo ako postoji nova vrednost
@@ -1032,8 +1030,11 @@ public class ScraperService {
             existing.setProteinPerCurrency(computeProteinPerRsd(numericPrice, existing));
             existing.setMarket(store.getMarket() != null ? store.getMarket() : "rs");
             existing.setCurrency(store.getCurrency() != null ? store.getCurrency() : "RSD");
+            // Recomputed from the merged row and stored even when null: a product that is no longer
+            // scoreable (bad protein %, implausible price) must not keep its old score.
             Double updatedScore = calculateValueScore(numericPrice, existing);
-            if (updatedScore != null) existing.setValueScore(updatedScore);
+            existing.setValueScore(updatedScore);
+            if (updatedScore == null) existing.setPercentileRank(null);
             double slugWeight = weightGrams > 0 ? weightGrams
                     : (existing.getPrimaryWeightGrams() != null ? existing.getPrimaryWeightGrams() : 0);
             if (existing.getCanonicalSlug() == null || existing.getCanonicalSlug().isBlank()) {
@@ -1073,161 +1074,32 @@ public class ScraperService {
     }
 
     // -------------------- Score calculation --------------------
+    // All formula / eligibility / benchmark logic lives in ValueScoreCalculator (pure, unit-tested).
+    // A null result means the product can't be fairly scored (see ValueScoreCalculator.SkipReason)
+    // and callers MUST store that null — keeping an older score would resurrect a stale/wrong one.
+
+    private double brandScoreFor(Product p) {
+        if (p.getBrand() == null || p.getBrand().isBlank()) return ValueScoreCalculator.DEFAULT_BRAND_SCORE;
+        return brandReputationRepository
+                .findFirstByBrandNameIgnoreCase(p.getBrand())
+                .map(BrandReputation::getScore)
+                .orElse(ValueScoreCalculator.DEFAULT_BRAND_SCORE);
+    }
 
     public Double calculateValueScore(Double numericPrice, Product p) {
-        double brandScore = 4.5;
-        if (p.getBrand() != null && !p.getBrand().isBlank()) {
-            brandScore = brandReputationRepository
-                    .findFirstByBrandNameIgnoreCase(p.getBrand())
-                    .map(BrandReputation::getScore)
-                    .orElse(4.5);
-        }
-        return calculateValueScore(numericPrice, p, brandScore);
+        return ValueScoreCalculator.score(numericPrice, p, brandScoreFor(p));
     }
 
     public Double calculateValueScore(Double numericPrice, Product p, double brandScore) {
-        ValueScoreBreakdown breakdown = computeValueScoreBreakdown(numericPrice, p, brandScore);
-        return breakdown == null ? null : breakdown.total();
+        return ValueScoreCalculator.score(numericPrice, p, brandScore);
     }
 
     public ValueScoreBreakdown computeValueScoreBreakdown(Double numericPrice, Product p) {
-        double brandScore = 4.5;
-        if (p.getBrand() != null && !p.getBrand().isBlank()) {
-            brandScore = brandReputationRepository
-                    .findFirstByBrandNameIgnoreCase(p.getBrand())
-                    .map(BrandReputation::getScore)
-                    .orElse(4.5);
-        }
-        return computeValueScoreBreakdown(numericPrice, p, brandScore);
+        return ValueScoreCalculator.breakdown(numericPrice, p, brandScoreFor(p));
     }
 
     public ValueScoreBreakdown computeValueScoreBreakdown(Double numericPrice, Product p, double brandScore) {
-        if ("creatine".equals(p.getProductType())) {
-            Double creatineTotal = calculateCreatineValueScore(numericPrice, p, brandScore);
-            if (creatineTotal == null) return null;
-            // Creatine is a near-commodity ingredient with no purity/digestibility/ingredient
-            // spread like whey sources have — the total score IS the value-for-money score.
-            return new ValueScoreBreakdown(creatineTotal, 10.0, 10.0, 10.0, false, creatineTotal);
-        }
-        if (numericPrice == null || numericPrice <= 0) return null;
-        if (p.getProteinPer100g() == null) return null;
-        double packageGrams = extractPackageGrams(p);
-        if (packageGrams <= 0) return null;
-
-        // Detect beef/collagen hydrolysate — nutritionally inferior to whey (no tryptophan, low BCAAs).
-        // These products report high protein % by nitrogen assay but have poor DIAAS/PDCAAS scores.
-        // Scraped names are sometimes truncated/mistranslated (e.g. "Anabolic Monster Beef" -> "Anabolic
-        // Masster"), so also check proteinSource and the AI-generated description, which reliably mention
-        // "beef"/"goveđi" even when the product name doesn't.
-        boolean isBeefCollagen = containsBeefKeyword(p.getName()) ||
-                containsBeefKeyword(p.getProteinSource()) ||
-                containsBeefProteinIngredient(p.getAiDescription()) ||
-                containsBeefProteinIngredient(p.getDescription());
-
-        // 1. VALUE FOR MONEY (0-10) - weight 0.35
-        double proteinTotalGrams = (p.getProteinPer100g() / 100.0) * packageGrams;
-        if (proteinTotalGrams <= 0) return null;
-        double pricePerGramProtein = numericPrice / proteinTotalGrams;
-        double maxPricePerGram = "EUR".equals(p.getCurrency()) ? 0.50 : 50.0;
-        if (pricePerGramProtein > maxPricePerGram) return null;
-        double benchmark = getCategoryBenchmark(p.getProteinSource(), p.getCurrency());
-        // Trusted brands justify a price premium — shift the benchmark up so they aren't penalized
-        // for costing more than no-name locals (9.5 brand = 25% tolerance, 7.0+ = 12%)
-        if (brandScore >= 8.0)      benchmark *= 1.25;
-        else if (brandScore >= 7.0) benchmark *= 1.12;
-        double ratio = pricePerGramProtein / benchmark;
-
-        double valueMoney = 10.0 / (1.0 + Math.exp(3.5 * (ratio - 1.2)));
-        valueMoney = Math.max(0, Math.min(10, valueMoney));
-
-        // 2. PROTEIN PURITY (0-10) - weight 0.20
-        double proteinPct = p.getProteinPer100g();
-        double proteinPurity = 10 * Math.pow(Math.max(0, (proteinPct - 60) / 40.0), 0.7);
-        // Beef/collagen protein has high nitrogen content but poor essential AA profile —
-        // the measured protein % overstates the effective quality. Apply a 50% purity penalty.
-        if (isBeefCollagen) proteinPurity *= 0.50;
-        proteinPurity = Math.max(0, Math.min(10, proteinPurity));
-
-        // 3. DIGESTIBILITY (0-10) - weight 0.15
-        double digestibility = 7.0;
-        if (isBeefCollagen) {
-            // Collagen is missing tryptophan — DIAAS ≈ 0 for muscle protein synthesis purposes
-            digestibility = 4.5;
-        } else if (p.getProteinSource() != null) {
-            String src = p.getProteinSource().toLowerCase();
-            if (src.contains("hydro"))           digestibility = 10.0;
-            else if (src.contains("cfm"))        digestibility = 9.7;
-            else if (src.contains("isolat"))     digestibility = 9.3;
-            else if (src.contains("casein"))     digestibility = 8.0;
-            else if (src.contains("concentrat")) digestibility = 7.5;
-            else if (src.contains("vegan"))      digestibility = 6.5;
-            if (src.contains("lactose"))         digestibility = Math.min(10, digestibility + 0.3);
-        }
-
-        // 4. INGREDIENTS (0-10) - weight 0.15
-        // Sugar: use measured value when available; otherwise impute from category median.
-        double ingredients = 10.0;
-        boolean sugarImputed = false;
-        double effectiveSugar;
-        if (p.getSugarPer100g() != null) {
-            effectiveSugar = p.getSugarPer100g();
-        } else {
-            String src = p.getProteinSource() != null ? p.getProteinSource().toLowerCase() : "";
-            effectiveSugar = SUGAR_MEDIAN_BY_SOURCE.getOrDefault(src, 4.0);
-            sugarImputed = true;
-        }
-        if (effectiveSugar > 10)     ingredients -= 3.0;
-        else if (effectiveSugar > 5) ingredients -= 1.5;
-
-        if (p.getDescription() != null) {
-            String desc = p.getDescription().toLowerCase();
-            if (desc.contains("aspartam") || desc.contains("acesulfam"))
-                ingredients -= 1.5;
-            if (desc.contains("artificial") || desc.contains("color")  ||
-                    desc.contains("emulsifier") || desc.contains("boja")   ||
-                    desc.contains("emulgator")  || desc.contains("aroma"))
-                ingredients -= 1.0;
-        }
-        ingredients = Math.max(0, ingredients);
-
-        // Penal: skupo + nepoznat brend
-        if (brandScore < 6.0 && ratio > 1.2) {
-            valueMoney *= 0.85;
-        }
-
-        // 6. CONFIDENCE PENALTY
-        // Imputed sugar counts as half-missing (we estimated, not measured).
-        double missingWeight = 0;
-        if (sugarImputed)                                               missingWeight += 0.5;
-        if (p.getFatPer100g() == null)                                  missingWeight += 1;
-        if (p.getDescription() == null || p.getDescription().isBlank()) missingWeight += 1;
-        if (p.getProteinSource() == null)                               missingWeight += 1;
-        double confidencePenalty = Math.max(0.84, 1.0 - (missingWeight * 0.04));
-
-        // FINAL SCORE
-        // Brand weight raised to 15% (from 10%) to prevent unknown cheap brands from
-        // outranking established, tested brands purely on price.
-        double total =
-                (0.35 * valueMoney)    +
-                        (0.20 * proteinPurity) +
-                        (0.15 * digestibility) +
-                        (0.15 * ingredients)   +
-                        (0.15 * brandScore);
-
-        total *= confidencePenalty;
-
-        // Beef/collagen proteins are nutritionally incomplete — apply a final 0.72x multiplier
-        // so they score below quality whey products even when cheaply priced.
-        if (isBeefCollagen) total *= 0.72;
-
-        return new ValueScoreBreakdown(
-                Math.round(valueMoney * 10.0) / 10.0,
-                Math.round(proteinPurity * 10.0) / 10.0,
-                Math.round(digestibility * 10.0) / 10.0,
-                Math.round(ingredients * 10.0) / 10.0,
-                isBeefCollagen,
-                Math.round(total * 10.0) / 10.0
-        );
+        return ValueScoreCalculator.breakdown(numericPrice, p, brandScore);
     }
 
     public Double computeProteinPerRsd(Double numericPrice, Product p) {
@@ -1235,84 +1107,6 @@ public class ScraperService {
         if (p.getProteinPer100g() == null || p.getPrimaryWeightGrams() == null
                 || p.getPrimaryWeightGrams() <= 0) return null;
         return (p.getProteinPer100g() / 100.0 * p.getPrimaryWeightGrams()) / numericPrice;
-    }
-
-    private boolean containsBeefKeyword(String text) {
-        if (text == null) return false;
-        String lower = text.toLowerCase();
-        return lower.contains("beef") || lower.contains("goveđ") ||
-                lower.contains("govedi") || lower.contains("hovezi") ||
-                lower.contains("collagen") || lower.contains("hydrobeef") ||
-                lower.contains("hydro beef");
-    }
-
-    // Free-text descriptions mention "goveđ*" (bovine) in harmless contexts too — e.g. "goveđe
-    // mleko" (cow's milk, the normal source of any whey/casein product) or "goveđi serumski
-    // albumin" (a naturally occurring minor whey fraction) — which must NOT trigger the beef/
-    // collagen quality penalty. Only a "goveđ*" mention directly adjacent to "protein"/"kolagen"/
-    // "belančevin(e)" denotes an actual added beef-protein filler ingredient.
-    private static final Pattern BEEF_PROTEIN_ADJACENCY = Pattern.compile(
-            "gov\\S*\\s+(protein\\S*|kolagen\\S*|bjelančevin\\S*|belančevin\\S*)",
-            Pattern.CASE_INSENSITIVE);
-
-    private boolean containsBeefProteinIngredient(String text) {
-        if (text == null) return false;
-        String lower = text.toLowerCase();
-        return lower.contains("beef") || lower.contains("hovezi") || lower.contains("collagen") ||
-                lower.contains("hydrobeef") || BEEF_PROTEIN_ADJACENCY.matcher(text).find();
-    }
-
-    // Creatine monohydrate is a near-commodity ingredient (no digestibility/purity spread like
-    // whey sources have), so unlike calculateValueScore's multi-factor formula this is just a
-    // single price-per-gram-of-product score. Benchmarks are a rough starting estimate (~2 RSD /
-    // ~0.02 EUR per gram) and should be recalibrated once real market data comes in from scraping.
-    private Double calculateCreatineValueScore(Double numericPrice, Product p, double brandScore) {
-        if (numericPrice == null || numericPrice <= 0) return null;
-        double packageGrams = extractPackageGrams(p);
-        if (packageGrams <= 0) return null;
-
-        double pricePerGram = numericPrice / packageGrams;
-        double maxPricePerGram = "EUR".equals(p.getCurrency()) ? 0.08 : 8.0;
-        if (pricePerGram > maxPricePerGram) return null;
-
-        double benchmark = "EUR".equals(p.getCurrency()) ? 0.02 : 2.0;
-        if (brandScore >= 8.0)      benchmark *= 1.25;
-        else if (brandScore >= 7.0) benchmark *= 1.12;
-
-        double ratio = pricePerGram / benchmark;
-        double score = 10.0 / (1.0 + Math.exp(3.5 * (ratio - 1.2)));
-        return Math.max(0, Math.min(10, score));
-    }
-
-    private double getCategoryBenchmark(String proteinSource, String currency) {
-        if ("EUR".equals(currency)) {
-            if (proteinSource == null) return 0.065;
-            String src = proteinSource.toLowerCase();
-            // Benchmarks calibrated to actual HR market median prices (EUR/g protein)
-            // HR medians: hydro=0.070, cfm/iso=0.074, casein=0.063, vegan=0.042, blend=0.053, conc=0.065
-            if (src.contains("hydro"))       return 0.075;
-            if (src.contains("cfm"))         return 0.075;
-            if (src.contains("isolat"))      return 0.075;
-            if (src.contains("casein"))      return 0.065;
-            if (src.contains("vegan"))       return 0.038;
-            if (src.contains("blend"))       return 0.053;
-            if (src.contains("concentrat"))  return 0.065;
-            if (src.contains("egg"))         return 0.065;
-            return 0.065;
-        }
-        if (proteinSource == null) return 5.5;
-        String src = proteinSource.toLowerCase();
-        // Benchmarks calibrated to actual RS market median prices (RSD/g protein)
-        // RS medians: hydro=4.11, iso=6.84, casein=5.37, vegan=5.38, blend=5.86, conc=5.39, egg=9.61
-        if (src.contains("hydro"))       return 5.0;
-        if (src.contains("cfm"))         return 7.5;
-        if (src.contains("isolat"))      return 7.5;
-        if (src.contains("casein"))      return 5.5;
-        if (src.contains("vegan"))       return 5.8;
-        if (src.contains("blend"))       return 6.0;
-        if (src.contains("concentrat"))  return 5.5;
-        if (src.contains("egg"))         return 9.5;
-        return 5.5;
     }
 
     /**
@@ -1339,32 +1133,7 @@ public class ScraperService {
     }
 
     private double extractPackageGrams(Product p) {
-        if (p.getPrimaryWeightGrams() != null && p.getPrimaryWeightGrams() > 0) {
-            return p.getPrimaryWeightGrams();
-        }
-        boolean isEmpty;
-        try {
-            isEmpty = p.getPackage_weight() == null || p.getPackage_weight().isEmpty();
-        } catch (org.hibernate.LazyInitializationException e) {
-            return 0;
-        }
-        if (isEmpty) return 0;
-
-        for (String raw : p.getPackage_weight()) {
-            String weight = raw.toLowerCase().replaceAll("\\s+", "");
-            try {
-                if (weight.contains("kg")) {
-                    double val = Double.parseDouble(weight.replace("kg", "").replace(",", ".")) * 1000;
-                    if (val > 0) return val;
-                } else if (weight.contains("g")) {
-                    double val = Double.parseDouble(weight.replace("g", "").replace(",", "."));
-                    if (val > 0) return val;
-                }
-            } catch (Exception ignored) {}
-        }
-
-        log.warn("Cannot parse any package weight from: '{}'", p.getPackage_weight());
-        return 0;
+        return ValueScoreCalculator.extractPackageGrams(p);
     }
 
     // ── URL slug generation ───────────────────────────────────────────────────────

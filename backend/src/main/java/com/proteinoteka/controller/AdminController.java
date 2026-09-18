@@ -8,6 +8,7 @@ import com.proteinoteka.model.ScrapeLog;
 import com.proteinoteka.repository.AlertJobRepository;
 import com.proteinoteka.repository.AlertUnsubscribeRepository;
 import com.proteinoteka.repository.BrandReputationRepository;
+import com.proteinoteka.service.ValueScoreCalculator;
 import com.proteinoteka.repository.ProductRepository;
 import com.proteinoteka.repository.WishlistItemRepository;
 import com.proteinoteka.scheduler.ScrapingSchedulerService;
@@ -359,15 +360,17 @@ public class AdminController {
 
         List<Product> all = productRepository.findAll();
         int updated = 0;
+        int cleared = 0;
         for (Product p : all) {
             double brandScore = p.getBrand() != null
-                    ? brandScores.getOrDefault(p.getBrand().toLowerCase().trim(), 4.5)
-                    : 4.5;
+                    ? brandScores.getOrDefault(p.getBrand().toLowerCase().trim(), ValueScoreCalculator.DEFAULT_BRAND_SCORE)
+                    : ValueScoreCalculator.DEFAULT_BRAND_SCORE;
             Double newScore = scraperService.calculateValueScore(p.getNumericPrice(), p, brandScore);
-            if (newScore != null) {
-                p.setValueScore(newScore);
-                updated++;
-            }
+            // Store null too: an unscoreable product (gainer, bar, bad protein %, implausible price)
+            // must lose its old score, otherwise a stale wrong one keeps ranking on the site.
+            if (newScore == null && p.getValueScore() != null) cleared++;
+            if (newScore != null) updated++;
+            p.setValueScore(newScore);
             p.setProteinPerRsd(scraperService.computeProteinPerRsd(p.getNumericPrice(), p));
         }
         // Compute percentile ranks based on value score
@@ -375,6 +378,7 @@ public class AdminController {
                 .filter(p -> p.getValueScore() != null)
                 .sorted(java.util.Comparator.comparingDouble(Product::getValueScore))
                 .toList();
+        all.stream().filter(p -> p.getValueScore() == null).forEach(p -> p.setPercentileRank(null));
         for (int i = 0; i < withScore.size(); i++) {
             int pct = (int) Math.round((double) i / withScore.size() * 100);
             withScore.get(i).setPercentileRank(pct);
@@ -386,7 +390,7 @@ public class AdminController {
             if (cache != null) cache.clear();
         });
         invalidateFrontendCache();
-        return ResponseEntity.ok("Updated " + updated + " products");
+        return ResponseEntity.ok("Updated " + updated + " products, cleared score on " + cleared);
     }
 
     @GetMapping("/data-quality")
@@ -443,9 +447,9 @@ public class AdminController {
             List<Product> all = productRepository.findAll();
             for (Product p : all) {
                 double brandScore = p.getBrand() != null
-                        ? brandScores.getOrDefault(p.getBrand().toLowerCase().trim(), 4.5) : 4.5;
-                Double newScore = scraperService.calculateValueScore(p.getNumericPrice(), p, brandScore);
-                if (newScore != null) p.setValueScore(newScore);
+                        ? brandScores.getOrDefault(p.getBrand().toLowerCase().trim(), ValueScoreCalculator.DEFAULT_BRAND_SCORE)
+                        : ValueScoreCalculator.DEFAULT_BRAND_SCORE;
+                p.setValueScore(scraperService.calculateValueScore(p.getNumericPrice(), p, brandScore));
                 p.setProteinPerRsd(scraperService.computeProteinPerRsd(p.getNumericPrice(), p));
             }
             productRepository.saveAll(all);

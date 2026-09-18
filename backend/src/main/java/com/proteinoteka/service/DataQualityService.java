@@ -2,7 +2,10 @@ package com.proteinoteka.service;
 
 
 import com.proteinoteka.dto.DataQualityReport;
+import com.proteinoteka.model.BrandReputation;
+import com.proteinoteka.repository.BrandReputationRepository;
 import com.proteinoteka.repository.DataQualityRepository;
+import com.proteinoteka.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -10,6 +13,8 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -17,6 +22,8 @@ import java.util.List;
 public class DataQualityService {
 
     private final DataQualityRepository repo;
+    private final ProductRepository productRepository;
+    private final BrandReputationRepository brandReputationRepository;
 
     // Full store rotation is weekly (see ScrapingSchedulerService); a product untouched
     // for 2x that is a sign the scraper is silently failing for it specifically.
@@ -242,12 +249,31 @@ public class DataQualityService {
             log.warn("[DataQuality] {}", msg);
         }
 
+        issues.addAll(checkValueScoreIntegrity(market));
+
         if (issues.isEmpty()) {
             log.info("[DataQuality] Outlier check passed — no suspicious values found.");
         } else {
             log.warn("[DataQuality] Outlier check found {} issue(s). Review and fix manually or wait for next scrape.", issues.size());
         }
 
+        return issues;
+    }
+
+    /**
+     * Everything the value score depends on: stale/unscoreable scores, implausible protein or price,
+     * cross-store inconsistency, weight vs name, unknown brands and benchmark drift.
+     * See {@link ValueScoreAudit}.
+     */
+    public List<String> checkValueScoreIntegrity(String market) {
+        List<com.proteinoteka.model.Product> products = productRepository.findAll().stream()
+                .filter(p -> market == null || market.equalsIgnoreCase(p.getMarket()))
+                .toList();
+        Map<String, Double> brands = brandReputationRepository.findAll().stream()
+                .collect(Collectors.toMap(b -> b.getBrandName().toLowerCase().trim(),
+                        BrandReputation::getScore, (a, b) -> a));
+        List<String> issues = ValueScoreAudit.run(products, brands);
+        issues.forEach(i -> log.warn("[DataQuality] {}", i));
         return issues;
     }
 

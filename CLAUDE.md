@@ -88,6 +88,10 @@ Filtering is implemented via JPA `Specification` chaining in `ProductSpecificati
 2. Fallback → `AiNutritionService` (Anthropic API, env var `ANTHROPIC_API_KEY`)
 3. Brand normalization → `BrandNormalizerService` (fuzzy matching via FuzzyWuzzy)
 
+### Value score
+
+All scoring logic lives in `ValueScoreCalculator` (pure, unit-tested; `ScraperService.calculateValueScore` and the admin recalculation only delegate). A product that can't be fairly scored gets `valueScore = null` with a `SkipReason` (bar/meal replacement/gainer, protein % contradicting the protein type or >95%, implausible price per gram, weight in name contradicting stored weight, missing data) — callers must store that null, never keep an older score. Beef/collagen: full penalty only when it is the protein source (name/`proteinSource`); a small one when it is just an ingredient (regex needs the `(?<!\p{L})` word boundary). Category benchmarks are calibrated to market medians; `GET /api/admin/data-quality` (`ValueScoreAudit`) reports stale scores, price/weight/protein outliers, cross-store inconsistency, unknown brands and benchmark drift — check it after big scrapes and re-run `POST /api/admin/recalculate-scores` after changing any scoring rule. New brands need a `brand_reputation` migration (unknown brands silently default to 4.5).
+
 ### Database
 
 PostgreSQL with Flyway migrations (`src/main/resources/db/migration/`, V1–V10). Key tables: `products`, `stores`, `price_history`, `brand_reputation`, `product_flavours`, `product_package_weights`.
