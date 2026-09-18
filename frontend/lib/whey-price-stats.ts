@@ -304,6 +304,14 @@ export function computeWheyPriceStats(catalog: Product[]): WheyPriceStats {
   };
 }
 
+/** Best listings of one protein type by the site's Value Score (gainers and unpriced rows excluded). */
+export function topByValueScore(catalog: Product[], source: TypeSource, limit: number): Product[] {
+  return catalog
+    .filter((p) => usable(p) && p.proteinSource === source && p.valueScore != null)
+    .sort((a, b) => (b.valueScore ?? 0) - (a.valueScore ?? 0))
+    .slice(0, limit);
+}
+
 export const getWheyPriceStats = cache(async (): Promise<WheyPriceStats> =>
   computeWheyPriceStats(await fetchMarketCatalog()),
 );
