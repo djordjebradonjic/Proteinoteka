@@ -198,6 +198,11 @@ public class XSportScraper implements StoreScraper {
         { "musclepharm",        "MusclePharm"        },
         { "optimum nutrition",  "Optimum Nutrition"  },
         { "bs pro",             "Basic Supplements"  },
+        // "BS ISO-PRO", "BS Vegan Protein": "BS" alone fuzzy-matched the BSN brand
+        { "bs ",                "Basic Supplements"  },
+        // "5Star Whey Isolate": the digit-stripping brand cleaner used to leave just "Star"
+        { "5star",              "5 Stars"            },
+        { "5 star",             "5 Stars"            },
         { "scitec",             "Scitec Nutrition"   },
         { "kevin levrone",      "Kevin Levrone"      },
         { "gold standard",      "Optimum Nutrition"  },

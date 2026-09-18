@@ -5,6 +5,7 @@ import com.proteinoteka.dto.DataQualityReport;
 import com.proteinoteka.model.BrandReputation;
 import com.proteinoteka.repository.BrandReputationRepository;
 import com.proteinoteka.repository.DataQualityRepository;
+import com.proteinoteka.repository.ProductGroupRepository;
 import com.proteinoteka.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,7 @@ public class DataQualityService {
     private final DataQualityRepository repo;
     private final ProductRepository productRepository;
     private final BrandReputationRepository brandReputationRepository;
+    private final ProductGroupRepository productGroupRepository;
 
     // Full store rotation is weekly (see ScrapingSchedulerService); a product untouched
     // for 2x that is a sign the scraper is silently failing for it specifically.
@@ -249,7 +251,9 @@ public class DataQualityService {
             log.warn("[DataQuality] {}", msg);
         }
 
-        issues.addAll(checkValueScoreIntegrity(market));
+        List<com.proteinoteka.model.Product> products = loadProducts(market);
+        issues.addAll(checkValueScoreIntegrity(products));
+        issues.addAll(checkProductGroupIntegrity(products));
 
         if (issues.isEmpty()) {
             log.info("[DataQuality] Outlier check passed — no suspicious values found.");
@@ -260,19 +264,42 @@ public class DataQualityService {
         return issues;
     }
 
+    private List<com.proteinoteka.model.Product> loadProducts(String market) {
+        return productRepository.findAll().stream()
+                .filter(p -> market == null || market.equalsIgnoreCase(p.getMarket()))
+                .toList();
+    }
+
     /**
      * Everything the value score depends on: stale/unscoreable scores, implausible protein or price,
      * cross-store inconsistency, weight vs name, unknown brands and benchmark drift.
      * See {@link ValueScoreAudit}.
      */
     public List<String> checkValueScoreIntegrity(String market) {
-        List<com.proteinoteka.model.Product> products = productRepository.findAll().stream()
-                .filter(p -> market == null || market.equalsIgnoreCase(p.getMarket()))
-                .toList();
+        return checkValueScoreIntegrity(loadProducts(market));
+    }
+
+    private List<String> checkValueScoreIntegrity(List<com.proteinoteka.model.Product> products) {
         Map<String, Double> brands = brandReputationRepository.findAll().stream()
                 .collect(Collectors.toMap(b -> b.getBrandName().toLowerCase().trim(),
                         BrandReputation::getScore, (a, b) -> a));
         List<String> issues = ValueScoreAudit.run(products, brands);
+        issues.forEach(i -> log.warn("[DataQuality] {}", i));
+        return issues;
+    }
+
+    /**
+     * Cross-store price-comparison groups: wrong members, mixed pack sizes/brands/protein types,
+     * duplicate groups, ungrouped listings that belong in a group, wrong protein % inside a group.
+     * See {@link ProductGroupAudit}.
+     */
+    private List<String> checkProductGroupIntegrity(List<com.proteinoteka.model.Product> products) {
+        java.util.Set<String> markets = products.stream()
+                .map(p -> p.getMarket() == null ? "rs" : p.getMarket()).collect(Collectors.toSet());
+        List<com.proteinoteka.model.ProductGroup> groups = productGroupRepository.findAll().stream()
+                .filter(g -> markets.contains(g.getMarket() == null ? "rs" : g.getMarket()))
+                .toList();
+        List<String> issues = ProductGroupAudit.run(groups, products);
         issues.forEach(i -> log.warn("[DataQuality] {}", i));
         return issues;
     }

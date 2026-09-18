@@ -86,15 +86,6 @@ class ValueScoreAuditTest {
     }
 
     @Test
-    void sameGroupWithDifferentProteinAcrossStoresIsFlagged() {
-        Product a = scored(product("Isolate 750g", "Known", 94, 750, "whey_isolate", 4800));
-        Product b = scored(product("Isolate 750g", "Known", 90, 750, "whey_isolate", 4900));
-        Product c = scored(product("Isolate 750g", "Known", 70, 750, "whey_isolate", 4700));
-        a.setGroupId(7L); b.setGroupId(7L); c.setGroupId(7L);
-        assertTrue(has(ValueScoreAudit.run(List.of(a, b, c), BRANDS), "GROUP_INCONSISTENT"));
-    }
-
-    @Test
     void unknownAndGarbageBrandsAreReported() {
         Product a = scored(product("Whey A", "Brand Nobody Added", 80, 1000, "whey_concentrate", 4400));
         Product b = scored(product("Whey B", "g | Biljni Protein iz kanadskog graška sa 80% proteina", 80, 1000, "whey_concentrate", 4400));

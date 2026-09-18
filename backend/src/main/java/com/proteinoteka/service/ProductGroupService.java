@@ -20,6 +20,61 @@ public class ProductGroupService {
     private final ProductRepository productRepository;
     private final ProductGroupRepository productGroupRepository;
 
+    /**
+     * Two listings are the same pack only if their weights are within this fraction. Real cross-store
+     * noise is ~1-2% (2270/2260/2300, 900/908, 1800/1816); 5% keeps that together while separating
+     * genuinely different pack sizes (Gold Standard 2020g vs 2270g is 12%). The previous 10% window
+     * also let a chain of members drift apart.
+     */
+    public static final double WEIGHT_TOLERANCE = 0.05;
+
+    /**
+     * Protein type used for grouping. Beef as the protein source is its own family (labels flip
+     * between "beef" and "hydrolysate" for the same Monster Beef product) and an explicit "hydro"
+     * in the name wins over a whey label, same as the value score.
+     */
+    public static String groupingSource(Product p) {
+        if (ValueScoreCalculator.beefContent(p) == ValueScoreCalculator.BeefContent.PRIMARY) return "beef";
+        return normalizeSource(ValueScoreCalculator.effectiveSource(p));
+    }
+
+    /** Average of the members' real weights (never the group's stored weight, which goes stale). */
+    public static double averageWeight(List<Product> members) {
+        return members.stream()
+                .map(Product::getPrimaryWeightGrams)
+                .filter(w -> w != null && w > 0)
+                .mapToDouble(Double::doubleValue)
+                .average().orElse(0);
+    }
+
+    /**
+     * Single source of truth for "does this product belong in this group" — used by auto-assignment
+     * and by the audit so they can never disagree. Same market and brand, same pack size (against
+     * the members' actual average weight), same protein type, same product line, and no other
+     * listing from the same store (a comparison group has at most one listing per store).
+     */
+    public static boolean fitsGroup(Product p, ProductGroup g, List<Product> members) {
+        if (members.isEmpty() || p.getBrand() == null || p.getPrimaryWeightGrams() == null
+                || p.getPrimaryWeightGrams() <= 0 || g.getBrand() == null) return false;
+        String market = p.getMarket() != null ? p.getMarket() : "rs";
+        if (!market.equalsIgnoreCase(g.getMarket() != null ? g.getMarket() : "rs")) return false;
+        if (!p.getBrand().trim().equalsIgnoreCase(g.getBrand().trim())) return false;
+
+        double avg = averageWeight(members);
+        if (avg <= 0 || Math.abs(p.getPrimaryWeightGrams() - avg) / avg > WEIGHT_TOLERANCE) return false;
+
+        if (!groupingSource(p).equals(groupingSource(members.get(0)))) return false;
+
+        if (p.getStore() != null && members.stream().anyMatch(m ->
+                m.getStore() != null && m.getStore().getId().equals(p.getStore().getId()))) return false;
+
+        // brand+weight+source alone can't tell apart distinct product lines sold under one brand
+        // (e.g. "Iso Cool" vs "Iso Sensation 93", or a store's private-label "Rice Protein" vs
+        // "Vegan Blend"): require a shared distinguishing word, or both fully generic.
+        return members.stream().anyMatch(m ->
+                ProductLineMatcher.sameProductLine(p.getName(), p.getBrand(), m.getName(), m.getBrand()));
+    }
+
     // ── Public: get store prices for a product ────────────────────────────────
 
     public List<StorePriceDTO> getStorePrices(Long productId) {
@@ -66,13 +121,25 @@ public class ProductGroupService {
     public Map<String, Object> autoGenerateGroups() {
         List<Product> all = productRepository.findAll();
 
-        // Group by market + brand (lowercase) + protein_source_normalized
+        // First let ungrouped products join EXISTING groups. Without this a product that was
+        // scraped before its group existed (or that the scraper's one-shot tryAutoAssign missed)
+        // stays ungrouped forever, and generating new groups from leftovers creates duplicates
+        // of groups that already exist.
+        int attached = 0;
+        for (Product p : all) {
+            if (p.getGroupId() == null && p.getBrand() != null && p.getPrimaryWeightGrams() != null) {
+                tryAutoAssign(p);
+                if (p.getGroupId() != null) attached++;
+            }
+        }
+
+        // Group by market + brand (lowercase) + protein type
         Map<String, List<Product>> byBrandSource = new HashMap<>();
         for (Product p : all) {
             if (p.getBrand() == null || p.getPrimaryWeightGrams() == null) continue;
             if (p.getGroupId() != null) continue;
             String market = p.getMarket() != null ? p.getMarket() : "rs";
-            String key = market + "|" + p.getBrand().toLowerCase().trim() + "|" + normalizeSource(p.getProteinSource());
+            String key = market + "|" + p.getBrand().toLowerCase().trim() + "|" + groupingSource(p);
             byBrandSource.computeIfAbsent(key, k -> new ArrayList<>()).add(p);
         }
 
@@ -132,7 +199,7 @@ public class ProductGroupService {
             }
         }
 
-        return Map.of("groupsCreated", created, "clustersTooSmall", skipped);
+        return Map.of("groupsCreated", created, "clustersTooSmall", skipped, "productsAttachedToExistingGroups", attached);
     }
 
     /**
@@ -144,12 +211,10 @@ public class ProductGroupService {
         List<List<Product>> lines = new ArrayList<>();
 
         for (Product p : cluster) {
-            Set<String> pWords = productLineWords(p.getName(), p.getBrand());
             boolean placed = false;
-
             for (List<Product> line : lines) {
-                Set<String> lineWords = productLineWords(line.get(0).getName(), line.get(0).getBrand());
-                if (hasWordOverlap(pWords, lineWords)) {
+                Product first = line.get(0);
+                if (ProductLineMatcher.sameProductLine(p.getName(), p.getBrand(), first.getName(), first.getBrand())) {
                     line.add(p);
                     placed = true;
                     break;
@@ -162,14 +227,6 @@ public class ProductGroupService {
             }
         }
         return lines;
-    }
-
-    private Set<String> productLineWords(String name, String brand) {
-        return ProductLineMatcher.productLineWords(name, brand);
-    }
-
-    private boolean hasWordOverlap(Set<String> a, Set<String> b) {
-        return ProductLineMatcher.hasWordOverlap(a, b);
     }
 
     // ── Admin: list all groups with their products ────────────────────────────
@@ -249,67 +306,76 @@ public class ProductGroupService {
         productGroupRepository.deleteById(groupId);
     }
 
-    // ── Auto-assign: called from scraper when a new product is saved ──────────
+    // ── Auto-assign: called from scraper when a product is saved, and by autoGenerateGroups ──
 
     @Transactional
     public void tryAutoAssign(Product product) {
         if (product.getBrand() == null || product.getPrimaryWeightGrams() == null) return;
         if (product.getGroupId() != null) return;
 
-        String brandNorm = product.getBrand().toLowerCase().trim();
-        String sourceNorm = normalizeSource(product.getProteinSource());
-        double weight = product.getPrimaryWeightGrams();
         String market = product.getMarket() != null ? product.getMarket() : "rs";
+        List<ProductGroup> candidates = productGroupRepository
+                .findByBrandIgnoreCaseAndMarket(product.getBrand().toLowerCase().trim(), market);
 
-        List<ProductGroup> candidates = productGroupRepository.findByBrandIgnoreCaseAndMarket(brandNorm, market);
-        List<ProductGroup> matches = candidates.stream()
-                .filter(g -> {
-                    if (g.getWeightGrams() == null) return false;
-                    double ratio = weight / g.getWeightGrams();
-                    return ratio >= 0.90 && ratio <= 1.10;
-                })
-                .filter(g -> {
-                    // Check source compatibility by looking at existing members
-                    List<Product> members = productRepository.findByGroupId(g.getId());
-                    if (members.isEmpty()) return true;
-                    String existingSource = normalizeSource(members.get(0).getProteinSource());
-                    return existingSource.equals(sourceNorm);
-                })
-                .filter(g -> {
-                    // A price-comparison group should have at most one listing per store —
-                    // reject groups that already contain a product from this product's store,
-                    // since the brand+weight+source heuristic alone can't tell apart two
-                    // different product lines from the same brand/store (e.g. "Battery Complete
-                    // Whey" vs "Battery Whey Protein" at the same weight).
-                    if (product.getStore() == null) return true;
-                    List<Product> members = productRepository.findByGroupId(g.getId());
-                    return members.stream().noneMatch(m ->
-                            m.getStore() != null && m.getStore().getId().equals(product.getStore().getId()));
-                })
-                .filter(g -> {
-                    // Same guard autoGenerateGroups uses: brand+weight+source alone can't tell
-                    // apart distinct product lines sold under a generic/house brand (e.g. store
-                    // name used as "brand" for private-label SKUs — "Rice Protein" vs "Vegan
-                    // Blend" vs "Pumpkin Protein" all share brand/weight/source but are different
-                    // products). Require the name to share a distinguishing word with an existing
-                    // member, unless both reduce to no distinguishing words at all.
-                    List<Product> members = productRepository.findByGroupId(g.getId());
-                    if (members.isEmpty()) return true;
-                    Set<String> pWords = productLineWords(product.getName(), product.getBrand());
-                    return members.stream().anyMatch(m ->
-                            hasWordOverlap(pWords, productLineWords(m.getName(), m.getBrand())));
-                })
-                .toList();
-
-        if (matches.size() == 1) {
-            product.setGroupId(matches.get(0).getId());
-            productRepository.save(product);
+        List<ProductGroup> matches = new ArrayList<>();
+        Map<Long, List<Product>> membersByGroup = new HashMap<>();
+        for (ProductGroup g : candidates) {
+            List<Product> members = productRepository.findByGroupId(g.getId());
+            if (fitsGroup(product, g, members)) {
+                matches.add(g);
+                membersByGroup.put(g.getId(), members);
+            }
         }
+
+        // Ambiguous (two groups fit — usually a duplicate group for the same product): leave it
+        // for a human / the audit rather than guess.
+        if (matches.size() == 1) {
+            ProductGroup g = matches.get(0);
+            product.setGroupId(g.getId());
+            productRepository.save(product);
+            List<Product> all = new ArrayList<>(membersByGroup.get(g.getId()));
+            all.add(product);
+            refreshWeight(g, all);
+        }
+    }
+
+    // ── Admin: recompute group metadata and drop groups that can't compare anything ──────────
+
+    /**
+     * Group weight/name were only set at creation, so they went stale as members changed (a group
+     * named "…1kg" whose members are all 900g). Recomputes each group's weight from its members and
+     * dissolves groups with fewer than two listings (nothing to compare). Idempotent.
+     */
+    @Transactional
+    public Map<String, Object> refreshGroupMetadata() {
+        int weightsUpdated = 0;
+        int dissolved = 0;
+        for (ProductGroup g : productGroupRepository.findAll()) {
+            List<Product> members = productRepository.findByGroupId(g.getId());
+            if (members.size() < 2) {
+                members.forEach(p -> p.setGroupId(null));
+                productRepository.saveAll(members);
+                productGroupRepository.deleteById(g.getId());
+                dissolved++;
+                continue;
+            }
+            if (refreshWeight(g, members)) weightsUpdated++;
+        }
+        return Map.of("weightsUpdated", weightsUpdated, "groupsDissolved", dissolved);
+    }
+
+    private boolean refreshWeight(ProductGroup g, List<Product> members) {
+        double avg = averageWeight(members);
+        if (avg <= 0) return false;
+        if (g.getWeightGrams() != null && Math.abs(g.getWeightGrams() - avg) / avg <= 0.005) return false;
+        g.setWeightGrams(avg);
+        productGroupRepository.save(g);
+        return true;
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private String normalizeSource(String source) {
+    private static String normalizeSource(String source) {
         if (source == null) return "unknown";
         // Treat blend and whey_concentrate as the same family — scraper ambiguity
         if ("blend".equals(source) || "whey_concentrate".equals(source)) return "whey_base";
@@ -330,7 +396,7 @@ public class ProductGroupService {
                 current.add(p);
             } else {
                 double refWeight = current.get(0).getPrimaryWeightGrams();
-                if (p.getPrimaryWeightGrams() <= refWeight * 1.10) {
+                if (p.getPrimaryWeightGrams() <= refWeight * (1 + WEIGHT_TOLERANCE)) {
                     current.add(p);
                 } else {
                     clusters.add(new ArrayList<>(current));

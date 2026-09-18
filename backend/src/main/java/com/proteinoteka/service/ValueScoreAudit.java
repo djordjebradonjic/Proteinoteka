@@ -113,34 +113,9 @@ public final class ValueScoreAudit {
             if (weightIssue != null) issues.add("WEIGHT_NAME_MISMATCH — " + tag + " " + weightIssue + " — price per gram and score use the latter");
         }
 
-        issues.addAll(groupInconsistencies(protein));
         issues.addAll(brandIssues(protein, brandScoresLowercase));
         issues.addAll(benchmarkDrift(protein, ppgById));
         return issues;
-    }
-
-    // ------------------------------------------------------------------ groups
-
-    private static List<String> groupInconsistencies(List<Product> products) {
-        List<String> out = new ArrayList<>();
-        Map<Long, List<Product>> groups = products.stream()
-                .filter(p -> p.getGroupId() != null)
-                .collect(Collectors.groupingBy(Product::getGroupId));
-        groups.forEach((gid, ps) -> {
-            if (ps.size() < 2) return;
-            var proteins = ps.stream().map(Product::getProteinPer100g).filter(x -> x != null).toList();
-            if (proteins.size() >= 2) {
-                double min = proteins.stream().mapToDouble(Double::doubleValue).min().orElse(0);
-                double max = proteins.stream().mapToDouble(Double::doubleValue).max().orElse(0);
-                if (max - min > 3.0) {
-                    out.add(String.format(Locale.ROOT,
-                            "GROUP_INCONSISTENT — group %d '%s' has protein %.1f–%.1f%% across stores (ids %s); one store has a wrong value",
-                            gid, ps.get(0).getName(), min, max,
-                            ps.stream().map(p -> String.valueOf(p.getId())).collect(Collectors.joining(","))));
-                }
-            }
-        });
-        return out;
     }
 
     // ------------------------------------------------------------------ brands

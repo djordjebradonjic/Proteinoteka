@@ -31,11 +31,38 @@ public final class ProductLineMatcher {
             "100", "pure", "natural", "ukus", "flavor", "flavour", "vanilla", "vanila",
             "chocolate", "cokolada", "sport", "nutrition", "the", "and", "with", "pro",
             "ultra", "gold", "lean", "diet", "basic", "complete", "premium", "iso",
-            "zero", "raw", "fusion", "powder", "instant", "formula", "anabolic"
+            "zero", "raw", "fusion", "powder", "instant", "formula", "anabolic",
+            // listing noise, never part of a product line's identity
+            "gratis", "besplatno", "šejker", "shaker", "visokog", "kvaliteta", "kvalitete",
+            "doza", "doze", "porcija", "porcije", "grama", "grams", "gram", "proteina"
+    );
+
+    // Serbian/Croatian vs English spellings of the words that DO distinguish lines. Without this
+    // "Izolat whey protein" and "Isolate Whey Protein" (same Maximalium SKU) share no word.
+    private static final java.util.Map<String, String> SYNONYMS = java.util.Map.ofEntries(
+            java.util.Map.entry("izolat", "isolate"), java.util.Map.entry("izolata", "isolate"),
+            java.util.Map.entry("izolate", "isolate"),
+            java.util.Map.entry("kazein", "casein"), java.util.Map.entry("kazeina", "casein"),
+            java.util.Map.entry("micelarni", "micellar"), java.util.Map.entry("micelarna", "micellar"),
+            java.util.Map.entry("koncentrat", "concentrate"), java.util.Map.entry("koncentrata", "concentrate"),
+            java.util.Map.entry("veganski", "vegan"), java.util.Map.entry("veganska", "vegan"),
+            java.util.Map.entry("hidrolizat", "hydrolysate"), java.util.Map.entry("hidrolizovani", "hydrolysate"),
+            java.util.Map.entry("hydrolyzed", "hydrolysate"), java.util.Map.entry("hydrolysed", "hydrolysate"),
+            java.util.Map.entry("veggie", "vegan"), java.util.Map.entry("profesional", "professional")
     );
 
     public static Set<String> productLineWords(String name, String brand) {
         if (name == null) return Collections.emptySet();
+        Set<String> words = new HashSet<>();
+        for (String w : stripBrandAndWeight(name, brand).split("\\s+")) {
+            w = SYNONYMS.getOrDefault(w, w);
+            if (w.length() > 2 && !NAME_STOPWORDS.contains(w)) words.add(w);
+        }
+        return words;
+    }
+
+    /** Lower-cased name with brand words, weights and non-letters removed (words still separated). */
+    private static String stripBrandAndWeight(String name, String brand) {
         String lower = name.toLowerCase();
         // Strip the brand word-by-word rather than as one exact phrase — names commonly
         // spell the brand as "Amix™"/"AMIX" while the brand field holds "Amix Nutrition",
@@ -47,13 +74,33 @@ public final class ProductLineMatcher {
                 if (brandWord.length() > 1) lower = lower.replace(brandWord, "");
             }
         }
-        lower = lower.replaceAll("\\d+[.,]?\\d*\\s*(kg|g|gr\\b|lb\\b)", "");
-        lower = lower.replaceAll("[^a-zčćšđž\\s]", " ");
-        Set<String> words = new HashSet<>();
-        for (String w : lower.split("\\s+")) {
-            if (w.length() > 2 && !NAME_STOPWORDS.contains(w)) words.add(w);
+        // unit must end at a word boundary: "1000 grama" -> "", but "100 gold" must keep "gold"
+        lower = lower.replaceAll("\\d+[.,]?\\d*\\s*(kg|grama|grams|gram|gr|g|lb)\\b", "");
+        return lower.replaceAll("[^a-zčćšđž\\s]", " ");
+    }
+
+    /**
+     * True when two names denote the same product line. Extends {@link #hasWordOverlap} with a
+     * compound-word fallback: stores spell the same line as "Iso Sensation 93" and
+     * "IsoSensation 93", "Iso Cool" and "IsoCool". A distinguishing word of at least 4 letters
+     * that appears inside the other name once spaces are removed counts as a match. Still false
+     * when only one side has distinguishing words (e.g. "Vegan Blend" vs "Protein boba").
+     */
+    public static boolean sameProductLine(String nameA, String brandA, String nameB, String brandB) {
+        Set<String> a = productLineWords(nameA, brandA);
+        Set<String> b = productLineWords(nameB, brandB);
+        if (hasWordOverlap(a, b)) return true;
+        if (a.isEmpty() || b.isEmpty()) return false;
+        String compactA = stripBrandAndWeight(nameA, brandA).replaceAll("\\s+", "");
+        String compactB = stripBrandAndWeight(nameB, brandB).replaceAll("\\s+", "");
+        return containsAnyWord(compactB, a) || containsAnyWord(compactA, b);
+    }
+
+    private static boolean containsAnyWord(String compact, Set<String> words) {
+        for (String w : words) {
+            if (w.length() >= 4 && compact.contains(w)) return true;
         }
-        return words;
+        return false;
     }
 
     public static boolean hasWordOverlap(Set<String> a, Set<String> b) {
