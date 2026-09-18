@@ -100,7 +100,20 @@ function CompareShortcut({ products }: { products: Product[] }) {
   );
 }
 
-function ProductTable({ products, caption }: { products: Product[]; caption: string }) {
+function pricePerGramProtein(p: Product): number | null {
+  if (!p.proteinPer100g || !p.primaryWeightGrams || !(p.numericPrice > 0)) return null;
+  return p.numericPrice / ((p.proteinPer100g / 100) * p.primaryWeightGrams);
+}
+
+function ProductTable({
+  products,
+  caption,
+  showPricePerGramProtein,
+}: {
+  products: Product[];
+  caption: string;
+  showPricePerGramProtein?: boolean;
+}) {
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       <div className="px-5 py-4 border-b border-slate-100">
@@ -115,6 +128,9 @@ function ProductTable({ products, caption }: { products: Product[]; caption: str
               <th className="text-right py-3 pr-4 text-xs font-semibold text-slate-500 uppercase tracking-wide">{IS_HR ? "Cijena" : "Cena"}</th>
               <th className="text-right py-3 pr-4 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Gramaža</th>
               <th className="text-right py-3 pr-4 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Protein</th>
+              {showPricePerGramProtein && (
+                <th className="text-right py-3 pr-4 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">{IS_HR ? "€/g proteina" : "RSD/g proteina"}</th>
+              )}
               <th className="text-right py-3 pr-4 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Score</th>
               <th className="text-right py-3 pr-5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Akcija</th>
             </tr>
@@ -138,6 +154,14 @@ function ProductTable({ products, caption }: { products: Product[]; caption: str
                 <td className="py-3 pr-4 text-right text-slate-600 hidden sm:table-cell">
                   {p.proteinPer100g != null ? `${p.proteinPer100g}g` : "—"}
                 </td>
+                {showPricePerGramProtein && (
+                  <td className="py-3 pr-4 text-right font-semibold text-slate-900 whitespace-nowrap">
+                    {(() => {
+                      const v = pricePerGramProtein(p);
+                      return v == null ? "—" : v.toFixed(IS_HR ? 3 : 2).replace(".", ",");
+                    })()}
+                  </td>
+                )}
                 <td className="py-3 pr-4 text-right hidden sm:table-cell">
                   {p.valueScore != null ? (
                     <span className="font-bold text-xs" style={{ color: getScoreColor(p.valueScore) }}>
@@ -279,13 +303,15 @@ export interface SEOLandingPageProps {
   disclaimer?: string;
   headerSection?: React.ReactNode;
   middleSection?: React.ReactNode;
+  /** Adds an "RSD/g proteina" column to the table — for pages whose ranking is by that metric. */
+  showPricePerGramProtein?: boolean;
 }
 
 const BASE_URL = BASE_URL_CONST;
 
 export function SEOLandingPage({
   h1, intro, quickAnswer, products, tableCaption, listHeading, currentSlug,
-  faqs, extraLinks, disclaimer, headerSection, middleSection,
+  faqs, extraLinks, disclaimer, headerSection, middleSection, showPricePerGramProtein,
 }: SEOLandingPageProps) {
   const topCompareIds = products.slice(0, 3).map(p => p.id).join(",");
   const compareHref = topCompareIds ? `/compare?ids=${topCompareIds}` : "/compare";
@@ -388,7 +414,11 @@ export function SEOLandingPage({
 
         {/* Table */}
         {products.length > 0 && (
-          <ProductTable products={products.slice(0, 15)} caption={tableCaption} />
+          <ProductTable
+            products={products.slice(0, 15)}
+            caption={tableCaption}
+            showPricePerGramProtein={showPricePerGramProtein}
+          />
         )}
 
         {/* FAQ — extended pages only */}
