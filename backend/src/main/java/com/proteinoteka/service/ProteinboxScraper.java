@@ -43,6 +43,11 @@ public class ProteinboxScraper implements StoreScraper {
     @Override
     public String getBaseUrl() { return BASE_URL; }
 
+    // Cloudflare serves the "Sačekajte trenutak..." challenge to Railway's datacenter IP,
+    // which left every listing page blocked (0 products) — route through the residential proxy.
+    @Override
+    public boolean requiresProxy() { return true; }
+
     @Override
     public boolean hasNextPage(Document doc) {
         if (doc.selectFirst("a.next.page-numbers") != null) return true;
