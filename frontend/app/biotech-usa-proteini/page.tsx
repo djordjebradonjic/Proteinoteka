@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { CURRENT_MARKET } from "@/lib/marketConfig";
 import { Metadata } from "next";
@@ -7,29 +8,43 @@ import { BrandLineGuide } from "@/components/seo/BrandLineGuide";
 import { PackTable } from "@/components/seo/PackTable";
 import { formatPrice } from "@/lib/formatPrice";
 import { SEOBrandPage } from "@/components/seo/SEOBrandPage";
+import { rsPageMetadata } from "@/lib/seo-meta";
 
 export const revalidate = 86400;
 
-export const metadata: Metadata = {
-  title: { absolute: "BioTech USA proteini u Srbiji — cene i poređenje 2026 | Proteinoteka" },
-  description:
-    "Aktuelne cene BioTech USA proteina u srpskim prodavnicama: Iso Whey Zero, 100% Pure Whey i ostale linije. Cena po pakovanju i po gramu proteina iz svih prodavnica.",
-  alternates: { canonical: "https://proteinoteka.rs/biotech-usa-proteini" },
-  openGraph: {
-    title: "BioTech USA proteini u Srbiji 2026 | Proteinoteka",
+// The brand string is stored under several spellings depending on the store and the
+// normalisation run; the API compares brand names case-insensitively and accepts a list.
+const loadBiotech = cache(async () => {
+  const fetched = await fetchBrandProducts({ brand: "BioTech USA,Biotech,BioTechUSA,Biotech USA", limit: 100 });
+  const seen = new Set<number>();
+  const products = fetched.filter((p) => {
+    if (seen.has(p.id)) return false;
+    seen.add(p.id);
+    return true;
+  });
+  // fetch helpers swallow errors and return []; never let ISR cache that as a "valid" empty page.
+  if (products.length === 0) throw new Error("biotech-usa-proteini: no BioTech products returned, refusing to render");
+  return products;
+});
+
+// The cheapest listing goes into the title: "cena" queries click through on a concrete price.
+// Any failure falls back to the static title, a missing price must never break metadata.
+export async function generateMetadata(): Promise<Metadata> {
+  let from = "";
+  try {
+    const cheapest = Math.min(...(await loadBiotech()).filter((p) => p.numericPrice > 0).map((p) => p.numericPrice));
+    if (Number.isFinite(cheapest)) from = `, od ${formatPrice(Math.round(cheapest))}`;
+  } catch {
+    /* static fallback */
+  }
+  return rsPageMetadata({
+    path: "/biotech-usa-proteini",
+    title: `BioTech USA proteini cena u Srbiji${from}`,
     description:
-      "Poređenje cena BioTech USA proizvoda u srpskim prodavnicama. Iso Whey Zero, 100% Pure Whey — gde je BioTech USA najjeftiniji u Srbiji?",
-    url: "https://proteinoteka.rs/biotech-usa-proteini",
-    siteName: "Proteinoteka",
-    locale: "sr_RS",
-    type: "website",
-    images: [{ url: "https://proteinoteka.rs/opengraph-image", width: 1200, height: 630, alt: "Proteinoteka" }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    images: ["https://proteinoteka.rs/opengraph-image"],
-  },
-};
+      "Cene BioTech USA proteina (Iso Whey Zero, 100% Pure Whey i druge linije) u srpskim prodavnicama: cena po pakovanju i po gramu proteina iz svih prodavnica.",
+    ogTitle: "BioTech USA proteini u Srbiji 2026 | Proteinoteka",
+  });
+}
 
 // Order matters: first match wins ("Hydro" and "Casein" must be tested before the generic whey lines).
 const LINES: BrandLine[] = [
@@ -45,17 +60,7 @@ const fmt1 = (v: number) => v.toFixed(1).replace(".", ",");
 
 export default async function Page() {
   if (CURRENT_MARKET !== "rs") notFound();
-  // The brand string is stored under several spellings depending on the store and the
-  // normalisation run; the API compares brand names case-insensitively and accepts a list.
-  const fetched = await fetchBrandProducts({ brand: "BioTech USA,Biotech,BioTechUSA,Biotech USA", limit: 100 });
-  const seen = new Set<number>();
-  const products = fetched.filter((p) => {
-    if (seen.has(p.id)) return false;
-    seen.add(p.id);
-    return true;
-  });
-  // fetch helpers swallow errors and return []; never let ISR cache that as a "valid" empty page.
-  if (products.length === 0) throw new Error("biotech-usa-proteini: no BioTech products returned, refusing to render");
+  const products = await loadBiotech();
 
   const stats = getSeoCopyStats(products);
   const lineStats = computeLineStats(products, LINES);

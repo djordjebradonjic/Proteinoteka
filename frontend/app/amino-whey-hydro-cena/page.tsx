@@ -1,39 +1,56 @@
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { CURRENT_MARKET } from "@/lib/marketConfig";
 import { Metadata } from "next";
 import { fetchProductsByQuery, getSeoCopyStats } from "@/lib/seo-data";
 import { fetchMarketCatalog } from "@/lib/whey-price-stats";
-import { compareCost, computeLineStats, formatWeightG, medianGpBySource, packRows, packSizeTrend, srPlural, type BrandLine } from "@/lib/brand-line-stats";
+import { compareCost, computeLineStats, formatWeightG, medianGpBySource, packRows, packSizeTrend, srPlural, widestSamePackSpread, type BrandLine } from "@/lib/brand-line-stats";
 import { BrandLineGuide } from "@/components/seo/BrandLineGuide";
 import { PackTable } from "@/components/seo/PackTable";
 import { formatPrice } from "@/lib/formatPrice";
 import { SEOBrandPage } from "@/components/seo/SEOBrandPage";
 import type { Product } from "@/types/product";
+import { rsPageMetadata } from "@/lib/seo-meta";
+import { safeJsonLd } from "@/lib/jsonLd";
 
 export const revalidate = 86400;
 
-export const metadata: Metadata = {
-  title: { absolute: "Amino Whey Hydro cena u Srbiji 2026 — sva pakovanja | Proteinoteka" },
-  description:
-    "Koliko košta THE Nutrition Amino Whey Hydro u Srbiji? Cena svakog pakovanja (750 g, 3,5 kg...) po prodavnici i po gramu proteina, uz poređenje sa ostalim hidrolizatima.",
-  alternates: { canonical: "https://proteinoteka.rs/amino-whey-hydro-cena" },
-  openGraph: {
-    title: "Amino Whey Hydro cena u Srbiji 2026 | Proteinoteka",
-    description:
-      "Aktuelne cene THE Nutrition Amino Whey Hydro u srpskim prodavnicama: sva pakovanja, cena po gramu proteina i value score.",
-    url: "https://proteinoteka.rs/amino-whey-hydro-cena",
-    siteName: "Proteinoteka",
-    locale: "sr_RS",
-    type: "website",
-    images: [{ url: "https://proteinoteka.rs/opengraph-image", width: 1200, height: 630, alt: "Proteinoteka" }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    images: ["https://proteinoteka.rs/opengraph-image"],
-  },
-};
-
 const NAME_RE = /amino\s+(whey\s+)?hydro/i;
+
+const loadAmino = cache(async (): Promise<Product[]> => {
+  const [a, b] = await Promise.all([
+    fetchProductsByQuery({ name: "amino whey hydro", limit: 100 }),
+    fetchProductsByQuery({ name: "amino hydro", limit: 100 }),
+  ]);
+  const seen = new Set<number>();
+  const products = [...a, ...b].filter((p) => {
+    if (seen.has(p.id) || !NAME_RE.test(p.name)) return false;
+    seen.add(p.id);
+    return true;
+  });
+  // fetch helpers swallow errors and return []; never let ISR cache that as a "valid" empty page.
+  if (products.length === 0) throw new Error("amino-whey-hydro-cena: no products returned, refusing to render");
+  return products;
+});
+
+// The cheapest listing goes into the title: "cena" queries click through on a concrete price.
+// Any failure falls back to the static title, a missing price must never break metadata.
+export async function generateMetadata(): Promise<Metadata> {
+  let from = "";
+  try {
+    const cheapest = Math.min(...(await loadAmino()).filter((p) => p.numericPrice > 0).map((p) => p.numericPrice));
+    if (Number.isFinite(cheapest)) from = `, od ${formatPrice(Math.round(cheapest))}`;
+  } catch {
+    /* static fallback */
+  }
+  return rsPageMetadata({
+    path: "/amino-whey-hydro-cena",
+    title: `Amino Whey Hydro cena u Srbiji${from}`,
+    description:
+      "Koliko košta THE Nutrition Amino Whey Hydro u Srbiji? Cena svakog pakovanja po prodavnici i po gramu proteina, uz poređenje sa hidrolizatima i izolatima.",
+    ogTitle: "Amino Whey Hydro cena u Srbiji 2026 | Proteinoteka",
+  });
+}
 
 // One line only: the guide block is used here for the cheapest-listing link and the
 // "same pack, different price" comparison across stores.
@@ -57,21 +74,26 @@ async function marketMedians() {
 export default async function Page() {
   if (CURRENT_MARKET !== "rs") notFound();
 
-  const [a, b, market] = await Promise.all([
-    fetchProductsByQuery({ name: "amino whey hydro", limit: 100 }),
-    fetchProductsByQuery({ name: "amino hydro", limit: 100 }),
-    marketMedians(),
-  ]);
-  const seen = new Set<number>();
-  const products: Product[] = [...a, ...b].filter((p) => {
-    if (seen.has(p.id) || !NAME_RE.test(p.name)) return false;
-    seen.add(p.id);
-    return true;
-  });
-  // fetch helpers swallow errors and return []; never let ISR cache that as a "valid" empty page.
-  if (products.length === 0) throw new Error("amino-whey-hydro-cena: no products returned, refusing to render");
+  const [products, market] = await Promise.all([loadAmino(), marketMedians()]);
 
   const stats = getSeoCopyStats(products);
+  // AggregateOffer only for a single pack size sold by several stores, so low/high are comparable.
+  const pack = widestSamePackSpread(products, 2);
+  const productJsonLd = pack ? {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: `THE Nutrition Amino Whey Hydro ${formatWeightG(pack.weightG)}`,
+    brand: { "@type": "Brand", name: "THE Nutrition" },
+    category: "Proteinski prah",
+    ...(pack.low.imageUrl ? { image: pack.low.imageUrl } : {}),
+    offers: {
+      "@type": "AggregateOffer",
+      priceCurrency: "RSD",
+      lowPrice: pack.low.numericPrice,
+      highPrice: pack.high.numericPrice,
+      offerCount: pack.stores,
+    },
+  } : null;
   const storeNames = [...new Set(products.map((p) => p.storeName))].sort();
   const rows = packRows(products);
   const trend = packSizeTrend(rows);
@@ -106,6 +128,9 @@ export default async function Page() {
       extraGuideLinks={[{ label: "Whey izolat: vodič i cene", href: "/whey-protein-izolat" }]}
       insightsSection={
         <>
+          {productJsonLd && (
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(productJsonLd) }} />
+          )}
           <PackTable
             title="Amino Whey Hydro: cena po pakovanju"
             products={products}

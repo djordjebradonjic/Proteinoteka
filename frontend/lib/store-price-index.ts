@@ -9,6 +9,8 @@ import type { Product } from "@/types/product";
 export const FRESH_DAYS = 14;
 /** A store needs this many products in common with another store before we publish an index for it. */
 export const MIN_COMPARED_GROUPS = 5;
+/** Only stores compared on at least this many products can be named "cheapest": a tiny basket proves little. */
+export const MIN_GROUPS_FOR_RANKING = 10;
 /** Groups whose priciest listing is more than this multiple of the cheapest are almost always a scraping error. */
 const MAX_PLAUSIBLE_SPREAD = 2;
 const GAINER_RE = /\b(mass|gainer)\b/i;
@@ -27,6 +29,8 @@ export interface StoreIndexRow {
   index: number | null;
   /** Share (0..1) of compared groups where this store had the lowest price (ties count). */
   cheapestShare: number | null;
+  /** True when the index rests on at least MIN_GROUPS_FOR_RANKING products. */
+  ranked: boolean;
 }
 
 export interface StoreIndex {
@@ -35,6 +39,8 @@ export interface StoreIndex {
   groupsCompared: number;
   freshListings: number;
   totalListings: number;
+  /** Most recent listing refresh across all stores. */
+  updatedAt: Date | null;
 }
 
 const usable = (p: Product) =>
@@ -95,21 +101,25 @@ export function computeStoreIndex(products: Product[], now: Date = new Date()): 
       comparedGroups: r.length,
       index: enough ? r.reduce((s, v) => s + v, 0) / r.length : null,
       cheapestShare: enough ? (cheapest.get(store) ?? 0) / r.length : null,
+      ranked: r.length >= MIN_GROUPS_FOR_RANKING,
     };
   });
 
-  // Stores with an index first (cheapest first), then the rest by size.
+  // Tier 0: index on a solid basket, tier 1: index on a small basket, tier 2: no index.
+  // Cheapest first inside a tier, so a store with 6 shared products can't top the list.
+  const tier = (r: StoreIndexRow) => (r.index == null ? 2 : r.ranked ? 0 : 1);
   rows.sort((a, b) =>
-    a.index != null && b.index != null ? a.index - b.index
-    : a.index != null ? -1
-    : b.index != null ? 1
+    tier(a) !== tier(b) ? tier(a) - tier(b)
+    : a.index != null && b.index != null ? a.index - b.index
     : b.listings - a.listings);
 
   const all = [...stores.values()].flat();
+  const allTimes = all.map((p) => (p.lastUpdated ? new Date(p.lastUpdated).getTime() : NaN)).filter(Number.isFinite);
   return {
     rows,
     groupsCompared,
     freshListings: all.filter((p) => isFresh(p, now)).length,
     totalListings: all.length,
+    updatedAt: allTimes.length > 0 ? new Date(Math.max(...allTimes)) : null,
   };
 }

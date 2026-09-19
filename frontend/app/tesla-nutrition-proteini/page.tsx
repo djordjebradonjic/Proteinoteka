@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { CURRENT_MARKET } from "@/lib/marketConfig";
 import { Metadata } from "next";
@@ -7,29 +8,46 @@ import { BrandLineGuide } from "@/components/seo/BrandLineGuide";
 import { PackTable } from "@/components/seo/PackTable";
 import { formatPrice } from "@/lib/formatPrice";
 import { SEOBrandPage } from "@/components/seo/SEOBrandPage";
+import { rsPageMetadata } from "@/lib/seo-meta";
 
 export const revalidate = 86400;
 
-export const metadata: Metadata = {
-  title: { absolute: "Tesla Nutrition proteini u Srbiji — cene i poređenje 2026 | Proteinoteka" },
-  description:
-    "Cene Tesla Nutrition proteina u srpskim prodavnicama: Iso Zero 100 i Whey Charger 100. Cena po pakovanju i po gramu proteina, iz svih prodavnica koje pratimo.",
-  alternates: { canonical: "https://proteinoteka.rs/tesla-nutrition-proteini" },
-  openGraph: {
-    title: "Tesla Nutrition proteini u Srbiji 2026 | Proteinoteka",
+// The brand string differs between stores/normalisation runs, and some listings only carry
+// "Tesla" in the product name, so we merge both lookups and keep anything that says Tesla.
+const loadTesla = cache(async () => {
+  const [byBrand, byName] = await Promise.all([
+    fetchBrandProducts({ brand: "Tesla Nutrition,Tesla Sports Nutrition,Tesla", limit: 100 }),
+    fetchProductsByQuery({ name: "tesla", limit: 100 }),
+  ]);
+  const seen = new Set<number>();
+  const products = [...byBrand, ...byName].filter((p) => {
+    if (seen.has(p.id) || !(/tesla/i.test(p.name) || /tesla/i.test(p.brand ?? ""))) return false;
+    seen.add(p.id);
+    return true;
+  });
+  // fetch helpers swallow errors and return []; never let ISR cache that as a "valid" empty page.
+  if (products.length === 0) throw new Error("tesla-nutrition-proteini: no Tesla products returned, refusing to render");
+  return products;
+});
+
+// The cheapest listing goes into the title: "cena" queries click through on a concrete price.
+// Any failure falls back to the static title, a missing price must never break metadata.
+export async function generateMetadata(): Promise<Metadata> {
+  let from = "";
+  try {
+    const cheapest = Math.min(...(await loadTesla()).filter((p) => p.numericPrice > 0).map((p) => p.numericPrice));
+    if (Number.isFinite(cheapest)) from = `, od ${formatPrice(Math.round(cheapest))}`;
+  } catch {
+    /* static fallback */
+  }
+  return rsPageMetadata({
+    path: "/tesla-nutrition-proteini",
+    title: `Tesla proteini cena u Srbiji${from}`,
     description:
-      "Poređenje cena Tesla Iso Zero 100 i Whey Charger 100 u srpskim prodavnicama. Gde je Tesla najjeftinija u Srbiji?",
-    url: "https://proteinoteka.rs/tesla-nutrition-proteini",
-    siteName: "Proteinoteka",
-    locale: "sr_RS",
-    type: "website",
-    images: [{ url: "https://proteinoteka.rs/opengraph-image", width: 1200, height: 630, alt: "Proteinoteka" }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    images: ["https://proteinoteka.rs/opengraph-image"],
-  },
-};
+      "Cene Tesla Nutrition proteina (Iso Zero 100, Whey Charger 100) u srpskim prodavnicama: cena po pakovanju i po gramu proteina, uz poređenje prodavnica.",
+    ogTitle: "Tesla Nutrition proteini u Srbiji 2026 | Proteinoteka",
+  });
+}
 
 // Order matters: first match wins. Product names come from the stores ("Iso zero100 2kg – Tesla
 // nutrition", "Tesla Whey Charger 5kg"), so the patterns tolerate missing spaces.
@@ -45,20 +63,7 @@ const fmt1 = (v: number) => v.toFixed(1).replace(".", ",");
 export default async function Page() {
   if (CURRENT_MARKET !== "rs") notFound();
 
-  // The brand string differs between stores/normalisation runs, and some listings only carry
-  // "Tesla" in the product name, so we merge both lookups and keep anything that says Tesla.
-  const [byBrand, byName] = await Promise.all([
-    fetchBrandProducts({ brand: "Tesla Nutrition,Tesla Sports Nutrition,Tesla", limit: 100 }),
-    fetchProductsByQuery({ name: "tesla", limit: 100 }),
-  ]);
-  const seen = new Set<number>();
-  const products = [...byBrand, ...byName].filter((p) => {
-    if (seen.has(p.id) || !(/tesla/i.test(p.name) || /tesla/i.test(p.brand ?? ""))) return false;
-    seen.add(p.id);
-    return true;
-  });
-  // fetch helpers swallow errors and return []; never let ISR cache that as a "valid" empty page.
-  if (products.length === 0) throw new Error("tesla-nutrition-proteini: no Tesla products returned, refusing to render");
+  const products = await loadTesla();
 
   const stats = getSeoCopyStats(products);
   const lineStats = computeLineStats(products, LINES);

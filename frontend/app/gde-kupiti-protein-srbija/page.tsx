@@ -1,10 +1,12 @@
+import { cache } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import Header from "@/components/Header";
 import { CURRENT_MARKET } from "@/lib/marketConfig";
 import { fetchMarketCatalog } from "@/lib/whey-price-stats";
-import { computeStoreIndex, isFresh, FRESH_DAYS, MIN_COMPARED_GROUPS, type StoreIndexRow } from "@/lib/store-price-index";
+import { computeStoreIndex, isFresh, FRESH_DAYS, MIN_COMPARED_GROUPS, MIN_GROUPS_FOR_RANKING, type StoreIndexRow } from "@/lib/store-price-index";
+import { rsPageMetadata } from "@/lib/seo-meta";
 import { formatWeightG, srPlural, widestSamePackSpread } from "@/lib/brand-line-stats";
 import { formatPrice } from "@/lib/formatPrice";
 import { productUrl } from "@/lib/productUrl";
@@ -13,27 +15,6 @@ import { safeJsonLd } from "@/lib/jsonLd";
 export const revalidate = 21600;
 
 const URL_PATH = "/gde-kupiti-protein-srbija";
-
-export const metadata: Metadata = {
-  title: { absolute: "Gde kupiti protein u Srbiji — koja prodavnica je najjeftinija | Proteinoteka" },
-  description:
-    "Poređenje prodavnica proteina u Srbiji na istim proizvodima: indeks cena, koliko često je koja prodavnica najjeftinija i koliko su sveže cene. Računa se iz živih podataka.",
-  alternates: { canonical: `https://proteinoteka.rs${URL_PATH}` },
-  openGraph: {
-    title: "Gde kupiti protein u Srbiji — poređenje prodavnica | Proteinoteka",
-    description:
-      "Koja srpska prodavnica suplemenata ima najniže cene na istim proizvodima? Indeks cena po prodavnici, računat iz živih podataka.",
-    url: `https://proteinoteka.rs${URL_PATH}`,
-    siteName: "Proteinoteka",
-    locale: "sr_RS",
-    type: "website",
-    images: [{ url: "https://proteinoteka.rs/opengraph-image", width: 1200, height: 630, alt: "Proteinoteka" }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    images: ["https://proteinoteka.rs/opengraph-image"],
-  },
-};
 
 // Dedicated store pages on the RS site (lower-cased store name -> path).
 const STORE_PAGES: Record<string, string> = {
@@ -51,6 +32,7 @@ const STORE_PAGES: Record<string, string> = {
   "xsport": "/xsport-proteini",
 };
 
+const dateFormat = new Intl.DateTimeFormat("sr-Latn-RS", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Belgrade" });
 const pct = (index: number) => `+${Math.round((index - 1) * 100)}%`;
 const plural = {
   store: { one: "prodavnici", few: "prodavnice", many: "prodavnica" },
@@ -61,12 +43,31 @@ const plural = {
 
 // Deliberately lets fetch errors propagate: an ISR page that swallowed a failed catalog
 // fetch would cache a wrong/empty comparison, throwing keeps the last good render instead.
-async function loadIndex() {
+const loadIndex = cache(async () => {
   const products = await fetchMarketCatalog();
   const now = new Date();
   const index = computeStoreIndex(products, now);
-  const spread = widestSamePackSpread(products.filter((p) => isFresh(p, now)), 3);
+  const fresh = products.filter((p) => isFresh(p, now));
+  // Most dramatic gap among packs sold by at least 5 stores, so one odd listing can't carry the example.
+  const spread = widestSamePackSpread(fresh, 5, { prefer: "pct", maxPct: 1 }) ?? widestSamePackSpread(fresh, 3);
   return { index, spread };
+});
+
+export async function generateMetadata(): Promise<Metadata> {
+  let count = "";
+  try {
+    const { index } = await loadIndex();
+    if (index.rows.length > 0) count = `: ${index.rows.length} prodavnica poređeno`;
+  } catch {
+    /* static fallback */
+  }
+  return rsPageMetadata({
+    path: URL_PATH,
+    title: `Gde kupiti protein u Srbiji${count}`,
+    description:
+      "Koja prodavnica proteina je najjeftinija? Indeks cena na identičnim proizvodima, koliko često je koja najjeftinija i koliko su sveže cene. Računa se iz živih podataka.",
+    ogTitle: "Gde kupiti protein u Srbiji: poređenje prodavnica | Proteinoteka",
+  });
 }
 
 function ageLabel(row: StoreIndexRow): string {
@@ -80,23 +81,23 @@ export default async function Page() {
   if (CURRENT_MARKET !== "rs") notFound();
 
   const { index, spread } = await loadIndex();
-  const { rows, groupsCompared, freshListings, totalListings } = index;
-  const ranked = rows.filter((r) => r.index != null);
-  const unranked = rows.filter((r) => r.index == null);
+  const { rows, groupsCompared, freshListings, totalListings, updatedAt } = index;
   const stale = rows.filter((r) => r.fresh === 0);
-  const top = ranked[0];
+  const top = rows.find((r) => r.ranked);
+  // Stores with a lower index than the leader but too small a basket to be named cheapest.
+  const smallBasket = top ? rows.filter((r) => r.index != null && !r.ranked && r.index < top.index!) : [];
   const storeCount = rows.length;
 
   const faqs: { q: string; a: string }[] = [
     {
       q: "Koja prodavnica proteina je najjeftinija u Srbiji?",
       a: top
-        ? `Prema našem indeksu trenutno je najpovoljnija ${top.store}: na ${top.comparedGroups} ${srPlural(top.comparedGroups, plural.product)} koje prodaje i još neka druga prodavnica, u proseku je ${top.index! <= 1.005 ? "uvek najjeftinija" : `${Math.round((top.index! - 1) * 100)}% skuplja od najjeftinije ponude`}, a najniža cena je kod nje u ${Math.round(top.cheapestShare! * 100)}% poređenja. Poredak se menja kako se cene menjaju, zato se tabela računa iznova iz podataka, bez ručnog upisivanja.`
+        ? `Prema našem indeksu trenutno je najpovoljnija ${top.store} (broj poređenih proizvoda: ${top.comparedGroups}): u proseku je ${top.index! <= 1.005 ? "uvek najjeftinija" : `${Math.round((top.index! - 1) * 100)}% skuplja od najjeftinije ponude`}, a najniža cena je kod nje u ${Math.round(top.cheapestShare! * 100)}% poređenja. Poredak se menja kako se cene menjaju, zato se tabela računa iznova iz podataka, bez ručnog upisivanja.${smallBasket.length > 0 ? ` ${smallBasket.map((r) => `${r.store} (${r.comparedGroups} ${srPlural(r.comparedGroups, plural.product)})`).join(", ")} ${smallBasket.length > 1 ? "imaju" : "ima"} niži indeks, ali na premalo zajedničkih proizvoda da bismo ${smallBasket.length > 1 ? "ih" : "je"} proglasili najjeftinijom.` : ""}`
         : "Za sada nemamo dovoljno zajedničkih proizvoda između prodavnica da bismo objavili pouzdan indeks.",
     },
     {
       q: "Kako računate indeks cena?",
-      a: `Poredimo samo identične proizvode: isti brend, ista vrsta proteina i isto pakovanje (u okviru 5%), koje prodaju bar dve prodavnice. Za svaki takav proizvod cenu svake prodavnice delimo sa najnižom cenom za taj proizvod, pa uzimamo prosek. Indeks +0% znači da je prodavnica uvek najjeftinija, a +10% da je u proseku 10% skuplja od najjeftinije. Prodavnica dobija indeks tek kad ima najmanje ${MIN_COMPARED_GROUPS} zajedničkih proizvoda. Cene starije od ${FRESH_DAYS} dana ne ulaze u računicu, a proizvode čija je razlika između prodavnica veća od 100% izuzimamo, jer je to skoro uvek greška u podacima.`,
+      a: `Poredimo samo identične proizvode: isti brend, ista vrsta proteina i isto pakovanje (u okviru 5%), koje prodaju bar dve prodavnice. Za svaki takav proizvod cenu svake prodavnice delimo sa najnižom cenom za taj proizvod, pa uzimamo prosek. Indeks +0% znači da je prodavnica uvek najjeftinija, a +10% da je u proseku 10% skuplja od najjeftinije. Prodavnica dobija indeks tek kad ima najmanje ${MIN_COMPARED_GROUPS} zajedničkih proizvoda, a da bude proglašena najjeftinijom mora ih imati najmanje ${MIN_GROUPS_FOR_RANKING}. Cene starije od ${FRESH_DAYS} dana ne ulaze u računicu, a proizvode čija je razlika između prodavnica veća od 100% izuzimamo, jer je to skoro uvek greška u podacima.`,
     },
     {
       q: "Da li je najjeftinija prodavnica uvek najbolji izbor?",
@@ -126,8 +127,33 @@ export default async function Page() {
     mainEntity: faqs.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
   };
 
+  const rankedStores = rows.filter((r) => r.ranked);
+  const webPageJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: "Gde kupiti protein u Srbiji: poređenje prodavnica",
+    url: `https://proteinoteka.rs${URL_PATH}`,
+    inLanguage: "sr-RS",
+    ...(updatedAt ? { dateModified: updatedAt.toISOString() } : {}),
+    ...(rankedStores.length > 0 ? {
+      mainEntity: {
+        "@type": "ItemList",
+        name: "Prodavnice proteina u Srbiji po indeksu cena",
+        itemListOrder: "https://schema.org/ItemListOrderAscending",
+        numberOfItems: rankedStores.length,
+        itemListElement: rankedStores.map((r, i) => ({
+          "@type": "ListItem",
+          position: i + 1,
+          name: r.store,
+          ...(STORE_PAGES[r.store.toLowerCase()] ? { url: `https://proteinoteka.rs${STORE_PAGES[r.store.toLowerCase()]}` } : {}),
+        })),
+      },
+    } : {}),
+  };
+
   return (
     <div className="min-h-screen bg-slate-50">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(webPageJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqJsonLd) }} />
       <Header />
@@ -166,7 +192,7 @@ export default async function Page() {
                   </tr>
                 </thead>
                 <tbody>
-                  {[...ranked, ...unranked].map((r, i) => {
+                  {rows.map((r) => {
                     const page = STORE_PAGES[r.store.toLowerCase()];
                     return (
                       <tr key={r.store} className="border-b border-slate-100 last:border-0">
@@ -177,8 +203,11 @@ export default async function Page() {
                             ) : (
                               <span className="font-semibold text-slate-900">{r.store}</span>
                             )}
-                            {i === 0 && r.index != null && (
+                            {r === top && (
                               <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-green-100 text-green-700">Najpovoljnija</span>
+                            )}
+                            {r.index != null && !r.ranked && (
+                              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500">mali uzorak</span>
                             )}
                           </div>
                           <div className="text-[11px] text-slate-400 mt-0.5">{r.listings} {srPlural(r.listings, plural.offer)}</div>
@@ -202,6 +231,11 @@ export default async function Page() {
               </table>
             </div>
           </div>
+          <p className="text-xs text-slate-400 mt-3">
+            {updatedAt ? `Podaci ažurirani: ${dateFormat.format(updatedAt)} ` : ""}
+            Ovo poređenje meri samo cenu istih proizvoda. Kvalitet i vrednost pojedinačnog proteina meri{" "}
+            <Link href="/kako-racunamo-value-score" className="text-[#FF9900] hover:underline">value score</Link>.
+          </p>
           {stale.length > 0 && (
             <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 mt-3 leading-relaxed">
               <strong>Bez svežih cena:</strong> {stale.map((r) => r.store).join(", ")}. Cene u ovim prodavnicama nisu osvežene u poslednjih {FRESH_DAYS} dana, pa ne ulaze u indeks dok se podaci ne vrate.
