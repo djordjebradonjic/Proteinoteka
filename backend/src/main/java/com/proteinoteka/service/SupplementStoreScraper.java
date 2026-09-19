@@ -27,7 +27,6 @@ public class SupplementStoreScraper implements StoreScraper {
     private static final String BASE_URL    = "https://supplementstore.rs";
     private static final String LISTING_URL = BASE_URL + "/kategorije/proteini?limit=100";
 
-    private final NutritionParserService nutritionParser;
     private final BaseScraperEnricher    baseEnricher;
     private final ProductRepository      productRepository;
     private final PriceParser            priceParser;
@@ -187,10 +186,11 @@ public class SupplementStoreScraper implements StoreScraper {
 
                     extractNutritionFromBrText(docNutrition, p);
 
-                    if (p.getProteinPer100g() == null && p.getDescription() != null) {
-                        Double protein = nutritionParser.extractProteinPer100g(p.getDescription());
-                        if (protein != null) p.setProteinPer100g(protein);
-                    }
+                    // No protein guess from the marketing description: it mixes per-serving grams
+                    // ("24 g proteina" → 24, "30 g proteina" → 30) and ad copy ("90% proteina") with
+                    // per-100g values. A wrong value is worse than none — a "too low" one makes
+                    // saveOrUpdateProduct drop the whole product, and the DB/AI fallbacks below only
+                    // run for a null protein.
 
                     baseEnricher.enrichWithAiIfNeeded(docNutrition, p, STORE_NAME);
                 } else {
