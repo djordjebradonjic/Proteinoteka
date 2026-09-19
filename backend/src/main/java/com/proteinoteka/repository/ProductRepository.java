@@ -126,9 +126,8 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     List<String> findUrlsByStoreName(@Param("storeName") String storeName);
 
     // Scoped variant for stores that host more than one product family under the same
-    // `stores` row (e.g. GymBeam protein + GymBeam Kreatin) — stale-URL detection must not
-    // treat the other family's products as missing just because this scraper's listing never
-    // covers them.
+    // `stores` row (e.g. GymBeam protein + GymBeam creatine) — stale-URL detection must not
+    // treat the other family's products as missing just because this listing never covers them.
     @Query("SELECT p.url FROM products p WHERE p.store.name = :storeName AND p.productType = :productType")
     List<String> findUrlsByStoreNameAndProductType(@Param("storeName") String storeName,
                                                     @Param("productType") String productType);

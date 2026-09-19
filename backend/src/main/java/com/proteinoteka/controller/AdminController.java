@@ -159,11 +159,12 @@ public class AdminController {
         return ResponseEntity.accepted().body("GymBeam scraping started in background");
     }
 
-    // Pilot creatine scraper — see GymBeamCreatineScraper
+    // Kept for existing callers: the creatine listing is now a target of the normal GymBeam scraper,
+    // so this is just POST /scrape/store?name=GymBeam&types=creatine.
     @PostMapping("/scrape/gymbeam-kreatin")
     public ResponseEntity<String> scrapeGymBeamKreatin() {
-        runAsync("scraper-gymbeam-kreatin", () -> schedulerService.scrapeStoreNow("GymBeam Kreatin"));
-        return ResponseEntity.accepted().body("GymBeam Kreatin scraping started in background");
+        runAsync("scraper-gymbeam-kreatin", () -> schedulerService.scrapeStoreNow("GymBeam", Set.of(ProductTypes.CREATINE)));
+        return ResponseEntity.accepted().body("GymBeam creatine scraping started in background");
     }
 
     @PostMapping("/scrape/myprotein")

@@ -7,6 +7,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.WaitUntilState;
 import com.proteinoteka.model.Product;
+import com.proteinoteka.service.producttype.ProductTypeProfile;
+import com.proteinoteka.service.producttype.ProductTypes;
 import com.proteinoteka.util.ProductNameCleaner;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +22,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
@@ -47,18 +50,19 @@ public abstract class AbstractGymBeamScraper implements StoreScraper {
     // RS rounds to integer (RSD), HR keeps 2 decimals (EUR)
     protected abstract String formatPrice(double price);
 
-    // Override to true for a scraper covering this store's creatine listing instead of protein.
-    // Bypasses the protein-only isNonProteinProduct filter, lowers the minimum package size
-    // (creatine tubs are commonly 100-300g, well under protein's 500g floor), tags parsed
-    // products with productType="creatine", and routes nutrition extraction to the creatine
-    // regex/AI path instead of the protein one.
-    protected boolean isCreatineMode() { return false; }
+    // Creatine tubs are commonly 100-300g, well under protein's 500g floor.
+    private static double minPackageGrams(String productType) {
+        return ProductTypes.CREATINE.equals(productType) ? MIN_PACKAGE_GRAMS_CREATINE : MIN_PACKAGE_GRAMS;
+    }
 
-    private double minPackageGrams() { return isCreatineMode() ? MIN_PACKAGE_GRAMS_CREATINE : MIN_PACKAGE_GRAMS; }
+    // Listing pagination is the same on every collection page of the store: ?p=2, ?p=3, ...
+    protected static String pageUrl(String baseUrl, int page) {
+        return page == 0 ? baseUrl : baseUrl + "?p=" + (page + 1);
+    }
 
     @Override
     public String buildPageUrl(int page) {
-        return page == 0 ? getBaseUrl() : getBaseUrl() + "?p=" + (page + 1);
+        return pageUrl(getBaseUrl(), page);
     }
 
     @Override
@@ -73,14 +77,27 @@ public abstract class AbstractGymBeamScraper implements StoreScraper {
 
     @Override
     public List<Product> scrape(Page page, Document doc, Set<String> skipUrls) {
+        return scrapeListing(page, doc, skipUrls, ProductTypes.PROTEIN, null, false);
+    }
+
+    // The same collection-page markup serves every product family; the target says which one this
+    // page is, and the profile decides what is acceptable (see ProductTypeProfile.rejectReason).
+    @Override
+    public List<Product> scrape(ListingTarget target, ProductTypeProfile profile,
+                                Page page, Document doc, Set<String> skipUrls) {
+        return scrapeListing(page, doc, skipUrls, profile.code(), profile, target.categoryTrusted());
+    }
+
+    private List<Product> scrapeListing(Page page, Document doc, Set<String> skipUrls,
+                                        String productType, ProductTypeProfile profile, boolean categoryTrusted) {
         List<Product> stubs = new ArrayList<>();
         Elements elements = doc.select("div[data-test=cp-products] > a[id^=product_item_]");
-        log.info("[{}] Found {} products on listing page", getStoreName(), elements.size());
+        log.info("[{}] Found {} {} products on listing page", getStoreName(), elements.size(), productType);
         for (Element el : elements) {
             Product p = parseElement(el);
             if (p != null) stubs.add(p);
         }
-        return enrichWithDetails(page, stubs, skipUrls);
+        return enrichWithDetails(page, stubs, skipUrls, productType, profile, categoryTrusted);
     }
 
     // -------------------- Listing parsing --------------------
@@ -114,14 +131,22 @@ public abstract class AbstractGymBeamScraper implements StoreScraper {
 
     // -------------------- Detail page enrichment + variant expansion --------------------
 
-    private List<Product> enrichWithDetails(Page page, List<Product> stubs, Set<String> skipUrls) {
+    private List<Product> enrichWithDetails(Page page, List<Product> stubs, Set<String> skipUrls,
+                                            String productType, ProductTypeProfile profile, boolean categoryTrusted) {
         List<Product> result = new ArrayList<>();
         int consecutiveFailures = 0;
+        boolean creatine = ProductTypes.CREATINE.equals(productType);
 
         for (Product stub : stubs) {
             if (stub.getUrl() == null || stub.getUrl().isBlank()) continue;
-            if (!isCreatineMode() && baseEnricher.isNonProteinProduct(stub.getName())) {
-                log.info("[{}] Skipping '{}' - not a protein product", getStoreName(), stub.getName());
+            // Judged on the listing title alone, before a detail page (a browser navigation, so proxy
+            // traffic on some stores) is spent on something that can never be stored.
+            Optional<String> rejected = profile != null
+                    ? profile.rejectReason(stub, categoryTrusted)
+                    : baseEnricher.isNonProteinProduct(stub.getName())
+                            ? Optional.of("not a protein product") : Optional.empty();
+            if (rejected.isPresent()) {
+                log.info("[{}] Skipping '{}' - {}", getStoreName(), stub.getName(), rejected.get());
                 continue;
             }
 
@@ -150,9 +175,10 @@ public abstract class AbstractGymBeamScraper implements StoreScraper {
                 String descriptionHtml = dataTabs.path("description").path("html").asText("");
                 Document descDoc = Jsoup.parse(descriptionHtml);
 
-                List<Product> variants = expandByPackageWeight(productData, stub);
+                List<Product> variants = expandByPackageWeight(productData, stub, productType);
                 if (variants.isEmpty()) {
-                    log.debug("[{}] '{}' -> no eligible package sizes (>=500g, in stock)", getStoreName(), stub.getName());
+                    log.debug("[{}] '{}' -> no eligible package sizes (>={}g, in stock)",
+                            getStoreName(), stub.getName(), (int) minPackageGrams(productType));
                     safeSleep(3000 + ThreadLocalRandom.current().nextLong(3000));
                     continue;
                 }
@@ -164,7 +190,7 @@ public abstract class AbstractGymBeamScraper implements StoreScraper {
                 boolean anyNeedsNutrition = variants.stream()
                         .anyMatch(v -> !skipUrls.contains(v.getUrl()));
                 if (anyNeedsNutrition) {
-                    if (isCreatineMode()) {
+                    if (creatine) {
                         if (!first.getDescription().isBlank()) {
                             Double grams = nutritionParser.extractCreatineGramsPerServing(first.getDescription());
                             if (grams != null) first.setCreatineGramsPerServing(grams);
@@ -280,7 +306,12 @@ public abstract class AbstractGymBeamScraper implements StoreScraper {
     // -------------------- Variant expansion --------------------
 
     List<Product> expandByPackageWeight(JsonNode productData, Product stub) {
+        return expandByPackageWeight(productData, stub, ProductTypes.PROTEIN);
+    }
+
+    List<Product> expandByPackageWeight(JsonNode productData, Product stub, String productType) {
         List<Product> variants = new ArrayList<>();
+        double minGrams = minPackageGrams(productType);
         String cleanName = ProductNameCleaner.clean(productData.path("name").asText(stub.getName()));
 
         boolean hasMassOption = false;
@@ -310,8 +341,8 @@ public abstract class AbstractGymBeamScraper implements StoreScraper {
             for (Map.Entry<String, List<JsonNode>> entry : groups.entrySet()) {
                 String massLabel = entry.getKey();
                 double grams = parseWeightToGrams(massLabel);
-                if (grams < minPackageGrams()) {
-                    log.debug("[{}] '{}' -> skipping {} (< 500g)", getStoreName(), cleanName, massLabel);
+                if (grams < minGrams) {
+                    log.debug("[{}] '{}' -> skipping {} (< {}g)", getStoreName(), cleanName, massLabel, (int) minGrams);
                     continue;
                 }
 
@@ -327,7 +358,7 @@ public abstract class AbstractGymBeamScraper implements StoreScraper {
 
                 Product variant = new Product();
                 variant.setName(cleanName);
-                variant.setProductType(isCreatineMode() ? "creatine" : "protein");
+                variant.setProductType(productType);
                 String weightSlug = massLabel.replaceAll("\\s+", "");
                 variant.setUrl(stub.getUrl() + (stub.getUrl().contains("?") ? "&" : "?") + "pakovanje=" + weightSlug);
                 variant.setPrice(formatPrice(firstProduct.path("price_range").path("minimum_price")
@@ -354,8 +385,8 @@ public abstract class AbstractGymBeamScraper implements StoreScraper {
         } else {
             double grams = parsePrimaryWeightFromName(cleanName);
             if (grams == 0) grams = parseWeightFromUrl(stub.getUrl());
-            if (grams > 0 && grams < minPackageGrams()) {
-                log.debug("[{}] '{}' -> skipping (< {}g)", getStoreName(), cleanName, (int) minPackageGrams());
+            if (grams > 0 && grams < minGrams) {
+                log.debug("[{}] '{}' -> skipping (< {}g)", getStoreName(), cleanName, (int) minGrams);
                 return variants;
             }
 
@@ -379,7 +410,7 @@ public abstract class AbstractGymBeamScraper implements StoreScraper {
 
             Product variant = new Product();
             variant.setName(cleanName);
-            variant.setProductType(isCreatineMode() ? "creatine" : "protein");
+            variant.setProductType(productType);
             variant.setUrl(stub.getUrl());
             variant.setPrice(formatPrice(price));
 

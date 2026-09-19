@@ -36,8 +36,6 @@ public class ScrapingSchedulerService {
      *   Playwright (browser, heavy): Proteinbox, SupplementStore, Proteini.si, Supplementshop,
      *                                Shopbuilder, XSport, Polleo Sport, Proteka, Nutrition Shop HR,
      *                                Proteini Outlet HR, Proteini.si HR, GymBeam, GymBeam HR,
-     *                                GymBeam Kreatin (pilot: same physical store as GymBeam,
-     *                                separate /kreatin listing — see StoreScraper.getStoreRowName()),
      *                                MyProtein HR (moved from JSoup to Playwright after GymBeam's/
      *                                MyProtein HR's bot protection started blocking the JSoup
      *                                fingerprint even through a clean rotating residential proxy —
@@ -67,7 +65,7 @@ public class ScrapingSchedulerService {
         ));
         m.put(4, List.of(
             new ScrapeWindow(List.of("XSport"),                        9, 13),
-            new ScrapeWindow(List.of("GymBeam", "GymBeam Kreatin", "Ogistrashop"), 14, 17)
+            new ScrapeWindow(List.of("GymBeam", "Ogistrashop"), 14, 17)
         ));
         m.put(5, List.of(
             new ScrapeWindow(List.of("Polleo Sport"),                  9, 12),

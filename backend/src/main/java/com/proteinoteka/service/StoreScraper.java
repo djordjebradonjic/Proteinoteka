@@ -12,9 +12,9 @@ public interface StoreScraper {
     String getStoreName();
 
     // The `stores` table row this scraper's products attach to. Defaults to getStoreName().
-    // A second scraper covering another product family for the SAME physical store (e.g. a
-    // "GymBeam Kreatin" scraper alongside "GymBeam") overrides only this to point back at the
-    // shared row, while getStoreName() stays distinct for scheduling/ScrapeLog identity.
+    // A second scraper for the SAME physical store overrides only this to point back at the shared
+    // row, while getStoreName() stays distinct for scheduling/ScrapeLog identity. Another product
+    // family of a store is normally just another listingTargets() entry, not a second scraper.
     default String getStoreRowName() { return getStoreName(); }
 
     // Product family this scraper covers. Used to scope stale-URL detection so a second

@@ -3,6 +3,8 @@ package com.proteinoteka.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.proteinoteka.model.Product;
+import com.proteinoteka.service.producttype.CreatineProfile;
+import com.proteinoteka.service.producttype.ProductTypes;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,8 +16,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class GymBeamScraperTest {
@@ -134,5 +138,77 @@ public class GymBeamScraperTest {
         assertEquals(4.5, p.getFatPer100g());
         assertEquals(2.3, p.getSugarPer100g());
         assertEquals(374.2, p.getCaloriePer100g());
+    }
+
+    // ---------------------------------------------------------------- creatine as a second listing
+
+    @Test
+    void listingTargets_walkProteinThenCreatineOfTheSameStore() {
+        List<ListingTarget> targets = scraper.listingTargets();
+        assertEquals(List.of("protein", "creatine"), targets.stream().map(ListingTarget::productType).toList());
+
+        ListingTarget.HtmlPaged protein = (ListingTarget.HtmlPaged) targets.get(0).source();
+        assertEquals("https://gymbeam.rs/proteini", protein.pageUrl().apply(0));
+        assertEquals("https://gymbeam.rs/proteini?p=2", protein.pageUrl().apply(1));
+
+        ListingTarget.HtmlPaged creatine = (ListingTarget.HtmlPaged) targets.get(1).source();
+        assertEquals("https://gymbeam.rs/kreatin", creatine.pageUrl().apply(0));
+        assertEquals("https://gymbeam.rs/kreatin?p=3", creatine.pageUrl().apply(2));
+        assertTrue(targets.get(1).categoryTrusted());
+    }
+
+    @Test
+    void listingTargets_croatianStoreHasItsOwnCreatineListing() {
+        GymBeamHrScraper hr = new GymBeamHrScraper(nutritionParser, baseEnricher, httpClient);
+        ListingTarget.HtmlPaged creatine = (ListingTarget.HtmlPaged) hr.listingTargets().get(1).source();
+        assertEquals(ProductTypes.CREATINE, hr.listingTargets().get(1).productType());
+        assertEquals("https://gymbeam.hr/kreatin", creatine.pageUrl().apply(0));
+        assertEquals("https://gymbeam.hr/kreatin?p=2", creatine.pageUrl().apply(1));
+    }
+
+    @Test
+    void expandByPackageWeight_keepsSmallTubsForCreatineThatTheProteinFloorDrops() throws Exception {
+        JsonNode productData = objectMapper.readTree(new File("src/test/resources/gymbeam/gold_standard_productdata.json"));
+        Product stub = new Product();
+        stub.setUrl("https://gymbeam.rs/290-100-whey-gold-standard-protein-optimum-nutrition.html");
+        stub.setName("100% Whey Gold Standard - Optimum Nutrition");
+
+        List<Product> asProtein = scraper.expandByPackageWeight(productData, stub, ProductTypes.PROTEIN);
+        List<Product> asCreatine = scraper.expandByPackageWeight(productData, stub, ProductTypes.CREATINE);
+
+        // the fixture has an in-stock 450g pack: below the 500g protein floor, above the 60g creatine one
+        assertTrue(asProtein.stream().noneMatch(v -> Double.valueOf(450.0).equals(v.getPrimaryWeightGrams())));
+        Product small = asCreatine.stream()
+                .filter(v -> Double.valueOf(450.0).equals(v.getPrimaryWeightGrams()))
+                .findFirst().orElseThrow();
+        assertEquals(ProductTypes.CREATINE, small.getProductType());
+        assertTrue(asProtein.stream().allMatch(v -> ProductTypes.PROTEIN.equals(v.getProductType())));
+    }
+
+    // A listing where every title is rejected must not open a single detail page (a browser
+    // navigation, so proxy traffic on some stores): the page is null, so any attempt would fail loudly.
+    @Test
+    void scrape_creatineTargetRejectsOtherFamiliesOnTheListingTitle() {
+        Document listing = Jsoup.parse("""
+                <div data-test="cp-products">
+                  <a id="product_item_1" title="PhD Pre-Workout Burn 300g" href="https://gymbeam.rs/phd-burn"></a>
+                  <a id="product_item_2" title="Back to Gym XXL paket" href="https://gymbeam.rs/paket"></a>
+                </div>""");
+
+        List<Product> result = scraper.scrape(scraper.listingTargets().get(1), new CreatineProfile(),
+                null, listing, Set.of());
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void scrape_proteinPathStillSkipsNonProteinTitlesWithoutOpeningThem() {
+        when(baseEnricher.isNonProteinProduct("Creatine Monohydrate 500g")).thenReturn(true);
+        Document listing = Jsoup.parse("""
+                <div data-test="cp-products">
+                  <a id="product_item_1" title="Creatine Monohydrate 500g" href="https://gymbeam.rs/creatine"></a>
+                </div>""");
+
+        assertTrue(scraper.scrape(null, listing, Set.of()).isEmpty());
     }
 }
