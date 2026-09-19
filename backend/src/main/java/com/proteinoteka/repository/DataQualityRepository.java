@@ -117,7 +117,7 @@ public interface DataQualityRepository extends JpaRepository<Product, Long> {
         FROM products p JOIN stores s ON p.store_id = s.id
         WHERE p.calorie_per_100g IS NOT NULL
           AND p.protein_per_100g IS NOT NULL
-          AND p.calorie_per_100g < p.protein_per_100g * 4
+          AND p.calorie_per_100g < p.protein_per_100g * 4 * 0.95
           AND (:market IS NULL OR p.market = :market)
         ORDER BY p.calorie_per_100g
         """, nativeQuery = true)

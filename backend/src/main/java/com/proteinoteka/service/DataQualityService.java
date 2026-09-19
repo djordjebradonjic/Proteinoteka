@@ -210,11 +210,11 @@ public class DataQualityService {
         }
 
         for (Object[] row : repo.findCalorieTooLowOutliers(market)) {
-            String msg = String.format("CALORIE_IMPOSSIBLE — id=%s [%s] '%s' protein=%.1fg but calorie=%.1fkcal (min: protein×4=%.0f)",
+            String msg = String.format("CALORIE_IMPOSSIBLE — id=%s [%s] '%s' protein=%.1fg but calorie=%.1fkcal (min: protein×4 minus 5%% label rounding = %.0f)",
                     row[0], row[1], row[2],
                     ((Number) row[3]).doubleValue(),
                     ((Number) row[4]).doubleValue(),
-                    ((Number) row[3]).doubleValue() * 4);
+                    ((Number) row[3]).doubleValue() * 4 * 0.95);
             issues.add(msg);
             log.warn("[DataQuality] {}", msg);
         }
