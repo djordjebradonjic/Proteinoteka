@@ -73,11 +73,11 @@ public class SupplementStoreScraper implements StoreScraper {
 
     private List<Product> parseListingPage(Document doc) {
         List<Product> products = new ArrayList<>();
-        Elements cards = doc.select("div.product-layout");
+        Elements cards = doc.select(".product-layout");
         Set<String> seenUrls = new HashSet<>();
 
         for (Element card : cards) {
-            Element linkEl = card.selectFirst("div.caption h4 a");
+            Element linkEl = card.selectFirst("div.name a");
             if (linkEl == null) continue;
 
             String href = linkEl.attr("href").trim();
@@ -101,20 +101,19 @@ public class SupplementStoreScraper implements StoreScraper {
                 p.getPackage_weight().add(formatWeight(weightGrams));
             }
 
-            // Regular: <p class="price">X RSD</p>; Sale: <p class="price"><span class="price-new">X</span></p>
-            Element pricePara = card.selectFirst("p.price");
-            if (pricePara != null) {
-                Element saleEl = pricePara.selectFirst("span.price-new");
-                String rawPrice = saleEl != null ? saleEl.text() : pricePara.ownText();
-                p.setPrice(parsePriceString(rawPrice));
-            }
+            // Regular: <div class="price"><span class="price-normal">X RSD</span></div>;
+            // Sale: <span class="price-new">X</span> + <span class="price-old">Y</span>
+            Element priceEl = card.selectFirst("div.price .price-new");
+            if (priceEl == null) priceEl = card.selectFirst("div.price .price-normal");
+            if (priceEl != null) p.setPrice(parsePriceString(priceEl.text()));
 
             // Listing image — upgrade to 600x600 by replacing thumbnail suffix
-            Element img = card.selectFirst("img.img-responsive");
+            Element img = card.selectFirst("img.img-first");
+            if (img == null) img = card.selectFirst("img.img-responsive");
             if (img != null) {
                 String src = img.attr("src").trim();
                 if (!src.isBlank()) {
-                    src = src.replace("-228x228.", "-600x600.");
+                    src = src.replace("-350x350.", "-600x600.").replace("-228x228.", "-600x600.");
                     if (!src.startsWith("http")) src = BASE_URL + src;
                     p.setImageUrl(src);
                 }
@@ -181,27 +180,8 @@ public class SupplementStoreScraper implements StoreScraper {
                 enrichDescription(docMain, p);
 
                 if (!skipUrls.contains(p.getUrl())) {
-                    // Click nutrition tab only if href is a pure anchor (won't navigate away)
+                    // Journal3 theme renders all tab panes in the initial HTML — no tab click needed
                     Document docNutrition = docMain;
-                    try {
-                        var tabLink = page.querySelector("a[href='#tabcustom0'], ul.nav-tabs a[href*='tabcustom']");
-                        if (tabLink != null) {
-                            String tabHref = (String) page.evaluate("el => el.getAttribute('href')", tabLink);
-                            if (tabHref != null && tabHref.startsWith("#")) {
-                                String urlBefore = page.url();
-                                tabLink.click();
-                                page.waitForTimeout(600);
-                                if (page.url().equals(urlBefore)) {
-                                    docNutrition = Jsoup.parse(page.content());
-                                    log.debug("[{}] Clicked nutrition tab for '{}'", STORE_NAME, p.getName());
-                                } else {
-                                    log.warn("[{}] Tab click navigated away from '{}' — skipping re-parse", STORE_NAME, p.getName());
-                                    page.navigate(p.getUrl(), new com.microsoft.playwright.Page.NavigateOptions()
-                                            .setWaitUntil(WaitUntilState.DOMCONTENTLOADED).setTimeout(20000));
-                                }
-                            }
-                        }
-                    } catch (Exception ignored) {}
 
                     extractNutritionFromBrText(docNutrition, p);
 
@@ -237,7 +217,13 @@ public class SupplementStoreScraper implements StoreScraper {
     // ── Field enrichment ─────────────────────────────────────────────────────────
 
     private void enrichBrand(Document doc, Product p) {
-        // OpenCart puts manufacturer in a <ul> list with "Proizvođač:" label
+        // Journal3 theme: <div class="product-manufacturer"><a href=".../brend/x"><span>Brand</span></a></div>
+        Element manufacturer = doc.selectFirst(".product-manufacturer a");
+        if (manufacturer != null) {
+            String brand = manufacturer.text().trim();
+            if (!brand.isBlank()) { p.setBrand(brand); return; }
+        }
+        // Legacy OpenCart theme: manufacturer in a <ul> list with "Proizvođač:" label
         for (Element li : doc.select("ul li")) {
             String text = li.text();
             if (text.contains("Proizvođač:") || text.contains("Manufacturer:")) {
@@ -255,18 +241,14 @@ public class SupplementStoreScraper implements StoreScraper {
     }
 
     private void enrichPriceFromDetail(Document doc, Product p) {
-        // supplementstore.rs (OpenCart): main product price is in ul.list-unstyled > li > h2.
-        // Do NOT use p.price — those elements appear in related-product cards and return the
+        // supplementstore.rs (Journal3): main product price is in .product-price-group > .price-group.
+        // Do NOT use .price-normal — those elements appear in related-product cards and return the
         // wrong (related) product's price, causing swapped prices between variants.
-        Element h2 = doc.selectFirst("ul.list-unstyled h2");
-        if (h2 != null) {
-            String price = parsePriceString(h2.text());
-            if (price != null && !price.isBlank()) { p.setPrice(price); return; }
-        }
-        // Fallback for sale prices: <h2><span class="price-new">...</span></h2>
-        Element saleEl = doc.selectFirst("ul.list-unstyled .price-new");
-        if (saleEl != null) {
-            String price = parsePriceString(saleEl.text());
+        // Regular: <div class="product-price">; sale: <div class="product-price-new"> + <div class="product-price-old">
+        Element priceEl = doc.selectFirst(".product-price-group .product-price-new");
+        if (priceEl == null) priceEl = doc.selectFirst(".product-price-group .product-price");
+        if (priceEl != null) {
+            String price = parsePriceString(priceEl.text());
             if (price != null && !price.isBlank()) p.setPrice(price);
         }
     }
@@ -292,8 +274,9 @@ public class SupplementStoreScraper implements StoreScraper {
     }
 
     private void enrichDescription(Document doc, Product p) {
-        Element el = doc.selectFirst("#tab-description");
-        if (el == null) el = doc.selectFirst("div.tab-content");
+        // First tab pane of the product info tabs ("Opis"); the others are "Sastav" and reviews
+        Element el = doc.selectFirst(".product-info .tab-content > .tab-pane");
+        if (el == null) el = doc.selectFirst("#tab-description");
         if (el != null) {
             String text = el.text().trim();
             if (!text.isBlank()) p.setDescription(text);
@@ -311,7 +294,9 @@ public class SupplementStoreScraper implements StoreScraper {
      * The LAST numeric value on each line is always the per-100g value.
      */
     private void extractNutritionFromBrText(Document doc, Product p) {
-        Element tabEl = doc.selectFirst("#tabcustom0");
+        // "Sastav" tab (custom product tab module); older theme used #tabcustom0
+        Element tabEl = doc.selectFirst(".product-info .tab-pane[id^=product_extra_]");
+        if (tabEl == null) tabEl = doc.selectFirst("#tabcustom0");
         if (tabEl == null) tabEl = doc.selectFirst("#tab-description");
         if (tabEl == null) return;
 
@@ -326,6 +311,9 @@ public class SupplementStoreScraper implements StoreScraper {
         String[] lines = tabEl.html().split("(?i)<br\\s*/?>", -1);
 
         boolean inNutritionSection = false;
+        // Column order differs per brand: "na 30g | na 100g" (Ultimate) vs "100g | 30g" (QNT).
+        // Decided by which figure comes first in the section header.
+        boolean per100First = false;
         for (String rawLine : lines) {
             String line = Jsoup.parse(rawLine).text().replaceAll("[\\u00A0\\s]+", " ").trim();
             if (line.isBlank()) continue;
@@ -336,30 +324,31 @@ public class SupplementStoreScraper implements StoreScraper {
                         || lower.contains("na 100g") || lower.contains("per 100g")
                         || lower.contains("tabela hranljivih") || lower.contains("nutritiona")) {
                     inNutritionSection = true;
+                    per100First = isPer100ColumnFirst(line);
                 }
                 continue;
             }
 
             if ((lower.startsWith("proteini") || lower.startsWith("protein") || lower.startsWith("belančevine"))
                     && !lower.contains("koncentrat") && !lower.contains("izvor") && !lower.contains("od čega")) {
-                Double val = extractLastNumber(line);
+                Double val = extractPer100Number(line, per100First);
                 // Sanity check: per-100g protein must be ≥20g for a protein product
                 if (val != null && val >= 20 && val <= 95) p.setProteinPer100g(val);
 
             } else if ((lower.startsWith("masti") || lower.startsWith("fat") || lower.startsWith("lipidi")
                     || lower.startsWith("ukupne masti"))
                     && !lower.contains("zasić") && !lower.contains("trans") && !lower.contains("od čega")) {
-                Double val = extractLastNumber(line);
+                Double val = extractPer100Number(line, per100First);
                 if (val != null && val >= 0 && val <= 100) p.setFatPer100g(val);
 
             } else if (lower.startsWith("šećeri") || lower.startsWith("seceri")
                     || lower.startsWith("sugar") || lower.startsWith("od čega šećeri")
                     || lower.startsWith("od toga šećeri")) {
-                Double val = extractLastNumber(line);
+                Double val = extractPer100Number(line, per100First);
                 if (val != null && val >= 0 && val <= 100) p.setSugarPer100g(val);
 
             } else if (lower.startsWith("energij") || lower.startsWith("energy") || lower.startsWith("kalorij")) {
-                Double kcal = extractLastKcal(line);
+                Double kcal = extractPer100Kcal(line, per100First);
                 if (kcal != null && kcal > 0 && kcal <= 900) p.setCaloriePer100g(kcal);
             }
         }
@@ -394,6 +383,29 @@ public class SupplementStoreScraper implements StoreScraper {
                 if (kcal != null && kcal > 50 && kcal <= 900) p.setCaloriePer100g(kcal);
             }
         }
+    }
+
+    /** True when the first figure in a nutrition header ("Nutritivne vrednosti 100g 30g") is the 100g column. */
+    private boolean isPer100ColumnFirst(String header) {
+        Matcher m = Pattern.compile("(\\d+[.,]?\\d*)\\s*g?").matcher(header);
+        return m.find() && Double.parseDouble(m.group(1).replace(",", ".")) == 100.0;
+    }
+
+    /** Per-100g figure of a nutrition row: first number when the 100g column comes first, else the last. */
+    private Double extractPer100Number(String text, boolean per100First) {
+        if (!per100First) return extractLastNumber(text);
+        Matcher m = Pattern.compile("(\\d+[.,]\\d+|\\d+)").matcher(text);
+        if (!m.find()) return null;
+        try { return Double.parseDouble(m.group(1).replace(",", ".")); }
+        catch (Exception ignored) { return null; }
+    }
+
+    private Double extractPer100Kcal(String text, boolean per100First) {
+        if (!per100First) return extractLastKcal(text);
+        Matcher m = Pattern.compile("(\\d+[.,]?\\d*)\\s*kcal", Pattern.CASE_INSENSITIVE).matcher(text);
+        if (!m.find()) return null;
+        try { return Double.parseDouble(m.group(1).replace(",", ".")); }
+        catch (Exception ignored) { return null; }
     }
 
     /** Returns the last standalone number on a line (handles "83,3", "3.3g", "398kcal"). */

@@ -126,8 +126,8 @@ public class SupplementStoreScraperTest {
 
     @Test
     void shouldExtractPriceFromDetailPage() {
-        // Verify the price element exists in the detail HTML
-        var priceEl = detailDoc.selectFirst("span.atcp-price, p.price");
+        // Main product price sits in .product-price-group (related-product cards use .price-normal)
+        var priceEl = detailDoc.selectFirst(".product-price-group .product-price");
         assertNotNull(priceEl, "Price element mora postojati na detail strani");
         String raw = priceEl.text();
         System.out.println("Raw cena sa detail strane: '" + raw + "'");
@@ -136,21 +136,21 @@ public class SupplementStoreScraperTest {
 
     @Test
     void shouldExtractNutritionFromBrText() {
-        // Nutrition is in #tabcustom0 (custom tab), not in #tab-description
-        var el = detailDoc.selectFirst("#tabcustom0");
-        assertNotNull(el, "#tabcustom0 mora postojati na detail strani");
+        // Nutrition is in the "Sastav" tab pane (custom product tab), not in the "Opis" pane
+        var el = detailDoc.selectFirst(".product-info .tab-pane[id^=product_extra_]");
+        assertNotNull(el, "Sastav tab mora postojati na detail strani");
         String html = el.html();
 
         assertTrue(html.contains("Proteini") || html.contains("proteini"),
-                "#tabcustom0 mora sadržati 'Proteini'");
+                "Sastav tab mora sadržati 'Proteini'");
         assertTrue(html.contains("Nutritivne vrednosti"),
-                "#tabcustom0 mora sadržati header 'Nutritivne vrednosti'");
+                "Sastav tab mora sadržati header 'Nutritivne vrednosti'");
         assertTrue(html.contains("83,3") || html.contains("83.3"),
                 "Mora biti prisutna vrednost proteina ~83g/100g");
         assertTrue(html.contains("398"),
                 "Mora biti prisutna vrednost kalorija ~398 kcal/100g");
 
-        System.out.println("Nutritivni podaci prisutni u #tabcustom0 ✓");
+        System.out.println("Nutritivni podaci prisutni u Sastav tabu ✓");
         System.out.println("Protein 83,3g/100g marker: " + html.contains("83,3"));
         System.out.println("Kcal 398/100g marker: " + html.contains("398"));
     }
