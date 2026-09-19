@@ -4,6 +4,7 @@ export type NavLink = { label: string; href: string };
 
 const RS_HEADER_GUIDES: NavLink[] = [
   { label: "Whey protein cena",          href: "/whey-protein-cena"                  },
+  { label: "Gde kupiti protein?",        href: "/gde-kupiti-protein-srbija"          },
   { label: "Najjeftiniji whey protein",  href: "/najjeftiniji-whey-protein"          },
   { label: "Najbolji whey protein",      href: "/najbolji-whey-protein-srbija"       },
   { label: "Whey izolat Srbija",         href: "/whey-isolate-srbija"                },

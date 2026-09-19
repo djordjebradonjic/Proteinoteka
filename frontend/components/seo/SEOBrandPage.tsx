@@ -51,6 +51,7 @@ const SEO_LANDING_LINKS = IS_HR ? [
   { label: "🥇 Najbolji Whey",         href: "/najbolji-whey-protein-srbija" },
   { label: "💰 Najjeftiniji Whey",     href: "/najjeftiniji-whey-protein"    },
   { label: "📊 Whey Protein Cena",     href: "/whey-protein-cena"            },
+  { label: "🏪 Gde kupiti",            href: "/gde-kupiti-protein-srbija"    },
 ];
 
 // ── Sub-components ────────────────────────────────────────────────────────────

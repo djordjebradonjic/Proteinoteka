@@ -110,7 +110,11 @@ export function computeLineStats(products: Product[], lines: BrandLine[]): LineS
  * priciest listing. Uses the audited groupId, which already guarantees same brand, protein
  * type and pack size within 5%. Null when no group is sold in at least `minStores` stores.
  */
-export function widestSamePackSpread(products: Product[], minStores = 3): SamePackSpread | null {
+export function widestSamePackSpread(
+  products: Product[],
+  minStores = 3,
+  opts: { prefer?: "stores" | "pct"; maxPct?: number } = {},
+): SamePackSpread | null {
   const groups = new Map<number, Product[]>();
   for (const p of products) {
     if (p.groupId == null || !usable(p)) continue;
@@ -142,9 +146,13 @@ export function widestSamePackSpread(products: Product[], minStores = 3): SamePa
       diff: high.numericPrice - low.numericPrice,
       pct: high.numericPrice / low.numericPrice - 1,
     };
-    if (!best || candidate.stores > best.stores || (candidate.stores === best.stores && candidate.pct > best.pct)) {
-      best = candidate;
-    }
+    if (opts.maxPct != null && candidate.pct > opts.maxPct) continue; // almost always a scraping error
+    const better = !best
+      ? true
+      : opts.prefer === "pct"
+        ? candidate.pct > best.pct
+        : candidate.stores > best.stores || (candidate.stores === best.stores && candidate.pct > best.pct);
+    if (better) best = candidate;
   }
   return best;
 }

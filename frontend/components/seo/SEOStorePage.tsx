@@ -165,6 +165,15 @@ function FAQSection({ faqs }: { faqs: StoreFAQ[] }) {
 function CrossLinks() {
   return (
     <div className="space-y-4">
+      {!IS_HR && (
+        <Link
+          href="/gde-kupiti-protein-srbija"
+          className="block bg-white rounded-xl p-5 border border-slate-200 hover:border-[#FF9900] transition-all"
+        >
+          <span className="block text-sm font-bold text-slate-900">Koliko je ova prodavnica jeftina u odnosu na ostale?</span>
+          <span className="block text-xs text-slate-500 mt-1">Indeks cena svih prodavnica, računat na istim proizvodima →</span>
+        </Link>
+      )}
       <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
         <h3 className="text-sm font-bold text-slate-700 mb-3">Istraži po kategorijama:</h3>
         <div className="flex flex-wrap gap-2">
