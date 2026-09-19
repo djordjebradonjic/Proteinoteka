@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { safeEqual } from "@/lib/safeEqual";
 
 const COOKIE = "admin_session";
 
@@ -50,10 +51,11 @@ export async function POST(req: NextRequest) {
 
   const { username, password } = await req.json();
 
-  if (
-    username === process.env.ADMIN_USERNAME &&
-    password === process.env.ADMIN_PASSWORD
-  ) {
+  // Evaluate both comparisons (no short-circuit) and require the env vars to be set, so an
+  // unconfigured deployment can never be logged into with empty/undefined credentials.
+  const userOk = safeEqual(username, process.env.ADMIN_USERNAME);
+  const passOk = safeEqual(password, process.env.ADMIN_PASSWORD);
+  if (process.env.ADMIN_USERNAME && process.env.ADMIN_PASSWORD && userOk && passOk) {
     clearFailures(ip);
     const token = await sessionToken();
     const res = NextResponse.json({ ok: true });

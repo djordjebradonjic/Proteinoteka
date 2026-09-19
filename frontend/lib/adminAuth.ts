@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { safeEqual } from "@/lib/safeEqual";
 
 const COOKIE = "admin_session";
 
@@ -9,7 +10,10 @@ async function expectedToken(): Promise<string> {
 }
 
 export async function isAdminAuthenticated(req: NextRequest): Promise<boolean> {
+  // Fail closed: without credentials configured the expected cookie would be a hash of
+  // "undefined:undefined", which anyone could compute.
+  if (!process.env.ADMIN_USERNAME || !process.env.ADMIN_PASSWORD) return false;
   const cookie = req.cookies.get(COOKIE)?.value;
   if (!cookie) return false;
-  return cookie === await expectedToken();
+  return safeEqual(cookie, await expectedToken());
 }
