@@ -423,17 +423,37 @@ public final class ValueScoreCalculator {
 
     // Creatine monohydrate is a near-commodity ingredient (no digestibility/purity spread like
     // whey sources have), so unlike the protein formula this is just a single price-per-gram-of-
-    // product score. Benchmarks are a rough starting estimate (~2 RSD / ~0.02 EUR per gram).
+    // product score.
+    //
+    // The benchmark is the market median price per gram of pack for powders, measured 2026-09-19 from
+    // live store listings: RS 9.95 RSD/g (17 rows, 2 stores; quartiles 7.98-11.96), HR 0.083 EUR/g
+    // (20 rows, 2 stores; quartiles 0.063-0.094). The two markets agree (0.083 EUR is ~9.75 RSD).
+    // The first estimate (2 RSD/g) was five times too low and scored every real listing near zero.
+    // Two stores per market is a thin base: re-derive from the wider catalogue with the audit's median
+    // report once more stores carry creatine, then run recalculate-scores.
+    private static final double CREATINE_BENCHMARK_RSD_PER_G = 10.0;
+    private static final double CREATINE_BENCHMARK_EUR_PER_G = 0.085;
+    // Above this a listing is a data error or not creatine at all (highest real one: a 29 RSD/g GAA blend).
+    private static final double CREATINE_MAX_TO_BENCHMARK = 4.0;
+    // Below this it is not (only) creatine: carbohydrate mixes sold under a creatine name (Nutrend Creaport,
+    // Amix VitarGO + Kre-Alkalyn) cost 0.26-0.31x the median per gram and would otherwise top the ranking,
+    // while the cheapest real powders measured 0.55x. Same idea as the protein price floor.
+    private static final double CREATINE_MIN_TO_BENCHMARK = 0.35;
+
     private static Evaluation evaluateCreatine(Double numericPrice, Product p, double brandScore) {
         if (numericPrice == null || numericPrice <= 0) return skip(SkipReason.MISSING_DATA);
         double packageGrams = extractPackageGrams(p);
         if (packageGrams <= 0) return skip(SkipReason.MISSING_DATA);
 
+        boolean eur = "EUR".equals(p.getCurrency());
         double pricePerGram = numericPrice / packageGrams;
-        double maxPricePerGram = "EUR".equals(p.getCurrency()) ? 0.08 : 8.0;
-        if (pricePerGram > maxPricePerGram) return skip(SkipReason.IMPLAUSIBLE_PRICE);
+        double marketBenchmark = eur ? CREATINE_BENCHMARK_EUR_PER_G : CREATINE_BENCHMARK_RSD_PER_G;
+        if (pricePerGram > marketBenchmark * CREATINE_MAX_TO_BENCHMARK
+                || pricePerGram < marketBenchmark * CREATINE_MIN_TO_BENCHMARK) {
+            return skip(SkipReason.IMPLAUSIBLE_PRICE);
+        }
 
-        double benchmark = "EUR".equals(p.getCurrency()) ? 0.02 : 2.0;
+        double benchmark = marketBenchmark;
         if (brandScore >= 8.0)      benchmark *= 1.25;
         else if (brandScore >= 7.0) benchmark *= 1.12;
 

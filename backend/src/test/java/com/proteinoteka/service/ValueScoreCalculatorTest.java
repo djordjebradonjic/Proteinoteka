@@ -260,17 +260,54 @@ class ValueScoreCalculatorTest {
 
     // ------------------------------------------------------------------ creatine
 
-    @Test
-    void creatineKeepsItsOwnSimplePath() {
+    private static Product creatine(String currency, double grams) {
         Product c = new Product();
         c.setProductType("creatine");
         c.setName("Creatine Monohydrate");
-        c.setCurrency("RSD");
-        c.setPrimaryWeightGrams(500.0);
-        Double score = ValueScoreCalculator.score(1000.0, c, MID_BRAND); // 2 RSD/g
-        assertNotNull(score);
-        assertTrue(score > 5 && score <= 10);
+        c.setCurrency(currency);
+        c.setPrimaryWeightGrams(grams);
+        return c;
+    }
+
+    @Test
+    void creatineIsScoredAgainstTheMeasuredMarketMedianPerGram() {
+        Product c = creatine("RSD", 500.0);
+        // market medians 2026-09-19: RS 9.95 RSD/g, HR 0.083 EUR/g
+        double atMedian = ValueScoreCalculator.score(5000.0, c, MID_BRAND);     // 10 RSD/g
+        double cheap = ValueScoreCalculator.score(3000.0, c, MID_BRAND);        // 6 RSD/g (a bulk tub)
+        double pricey = ValueScoreCalculator.score(7500.0, c, MID_BRAND);       // 15 RSD/g
+
+        assertTrue(atMedian > 5 && atMedian < 8, "a median-priced listing is decent, not perfect: " + atMedian);
+        assertTrue(cheap > 8, "a clearly cheaper listing scores high: " + cheap);
+        assertTrue(cheap > atMedian && atMedian > pricey);
+        assertTrue(pricey < atMedian - 2, "50% above the median loses several points: " + pricey + " vs " + atMedian);
+    }
+
+    @Test
+    void creatineInEuroUsesItsOwnBenchmarkAndAgreesWithRsd() {
+        double eur = ValueScoreCalculator.score(42.5, creatine("EUR", 500.0), MID_BRAND);    // 0.085 EUR/g
+        double rsd = ValueScoreCalculator.score(5000.0, creatine("RSD", 500.0), MID_BRAND);  // 10 RSD/g
+        assertEquals(rsd, eur, 0.5, "the same real price level scores the same in both currencies");
+    }
+
+    @Test
+    void creatineOutsideAnyBelievablePriceOrWithoutDataIsNotScored() {
+        Product c = creatine("RSD", 500.0);
         assertNull(ValueScoreCalculator.score(null, c, MID_BRAND));
-        assertNull(ValueScoreCalculator.score(10000.0, c, MID_BRAND)); // 20 RSD/g > cap
+        assertNull(ValueScoreCalculator.score(25000.0, c, MID_BRAND), "50 RSD/g is above 4x the median");
+        assertNotNull(ValueScoreCalculator.score(14500.0, c, MID_BRAND), "29 RSD/g is a real (premium GAA blend) listing");
+        assertNull(ValueScoreCalculator.score(5000.0, creatine("RSD", 0.0), MID_BRAND), "no pack weight");
+        assertEquals(ValueScoreCalculator.SkipReason.IMPLAUSIBLE_PRICE,
+                ValueScoreCalculator.evaluate(25000.0, c, MID_BRAND).skipReason());
+    }
+
+    @Test
+    void aCarbohydrateMixSoldUnderACreatineNameIsNotRankedAsTheBestValue() {
+        // real listings from nutrition-shop.hr / proteini-outlet.com, 2026-09-19: 0.022 and 0.027 EUR/g,
+        // against 0.047 EUR/g for the cheapest real creatine powder
+        assertNull(ValueScoreCalculator.score(13.0, creatine("EUR", 600.0), MID_BRAND), "Nutrend Creaport 600 g");
+        assertNull(ValueScoreCalculator.score(53.0, creatine("EUR", 2000.0), MID_BRAND), "Amix VitarGO + Kre-Alkalyn 2 kg");
+        assertNotNull(ValueScoreCalculator.score(18.7, creatine("EUR", 400.0), MID_BRAND), "cheapest real powder, 400 g");
+        assertNotNull(ValueScoreCalculator.score(2890.0, creatine("RSD", 500.0), MID_BRAND), "Ostrovit 500 g, 5.78 RSD/g");
     }
 }
