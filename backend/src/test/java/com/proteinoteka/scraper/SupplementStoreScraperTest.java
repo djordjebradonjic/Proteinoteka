@@ -2,7 +2,6 @@ package com.proteinoteka.scraper;
 
 import com.proteinoteka.model.Product;
 import com.proteinoteka.service.BaseScraperEnricher;
-import com.proteinoteka.service.NutritionParserService;
 import com.proteinoteka.service.SupplementStoreScraper;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -22,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(MockitoExtension.class)
 public class SupplementStoreScraperTest {
 
-    @Mock private NutritionParserService nutritionParser;
     @Mock private BaseScraperEnricher baseEnricher;
 
     private SupplementStoreScraper scraper;
@@ -31,7 +29,7 @@ public class SupplementStoreScraperTest {
 
     @BeforeEach
     void setUp() throws IOException {
-        scraper = new SupplementStoreScraper(nutritionParser, baseEnricher, null, null);
+        scraper = new SupplementStoreScraper(baseEnricher, null, null);
         listingDoc = Jsoup.parse(new File("src/test/resources/html/supplementstore_listing.html"), StandardCharsets.UTF_8.name());
         detailDoc  = Jsoup.parse(new File("src/test/resources/html/supplementstore_detail.html"),  StandardCharsets.UTF_8.name());
     }
