@@ -232,6 +232,8 @@ export interface SEOStorePageProps {
   products: Product[];
   faqs: StoreFAQ[];
   currentSlug: string;
+  /** Optional block rendered between the decision cards and the ranked product list. */
+  insightsSection?: React.ReactNode;
 }
 
 export function SEOStorePage({
@@ -241,6 +243,7 @@ export function SEOStorePage({
   products,
   faqs,
   currentSlug,
+  insightsSection,
 }: SEOStorePageProps) {
   const sorted = [...products].sort((a, b) => (b.valueScore ?? 0) - (a.valueScore ?? 0));
   const topCompareIds = sorted.slice(0, 3).map(p => p.id).join(",");
@@ -333,6 +336,8 @@ export function SEOStorePage({
 
         {/* Decision summary */}
         {products.length > 0 && <DecisionSummary products={sorted} />}
+
+        {insightsSection}
 
         {/* Product list */}
         {sorted.length > 0 && (

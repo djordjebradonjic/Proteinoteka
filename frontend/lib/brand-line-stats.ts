@@ -148,3 +148,55 @@ export function widestSamePackSpread(products: Product[], minStores = 3): SamePa
   }
   return best;
 }
+
+export interface PackRow {
+  product: Product;
+  weightG: number;
+  gp: number; // price per gram of protein
+}
+
+/** Listings with usable weight/protein/price, smallest pack first (cheapest first within a size). */
+export function packRows(products: Product[]): PackRow[] {
+  return products
+    .filter((p) => usable(p) && plausibleProtein(p))
+    .map((p) => ({ product: p, weightG: p.primaryWeightGrams!, gp: pricePerGProtein(p) }))
+    .sort((a, b) => a.weightG - b.weightG || a.product.numericPrice - b.product.numericPrice);
+}
+
+export interface PackTrend {
+  small: PackRow;
+  large: PackRow;
+  cmp: "cheaper" | "pricier" | "similar"; // the large pack vs the small one, per gram of protein
+}
+
+/**
+ * Whether the biggest pack is actually cheaper per gram of protein than the smallest one
+ * (best listing of each). Null when there are no two clearly different pack sizes.
+ */
+export function packSizeTrend(rows: PackRow[]): PackTrend | null {
+  if (rows.length < 2) return null;
+  const minW = rows[0].weightG;
+  const maxW = rows[rows.length - 1].weightG;
+  if (maxW / minW < 1.5) return null;
+  const best = (group: PackRow[]) => [...group].sort((a, b) => a.gp - b.gp)[0];
+  const small = best(rows.filter((r) => r.weightG / minW < 1.2));
+  const large = best(rows.filter((r) => r.weightG / maxW > 0.83));
+  return { small, large, cmp: compareCost(large.gp, small.gp) };
+}
+
+export interface SourceGp {
+  gp: number; // median price per gram of protein
+  count: number;
+}
+
+/** Median price per gram of protein per protein source (whey_isolate, casein, ...). */
+export function medianGpBySource(products: Product[]): Record<string, SourceGp> {
+  const bySource = new Map<string, number[]>();
+  for (const p of products) {
+    if (!p.proteinSource || !usable(p) || !plausibleProtein(p)) continue;
+    bySource.set(p.proteinSource, [...(bySource.get(p.proteinSource) ?? []), pricePerGProtein(p)]);
+  }
+  const out: Record<string, SourceGp> = {};
+  for (const [source, values] of bySource) out[source] = { gp: median(values)!, count: values.length };
+  return out;
+}
