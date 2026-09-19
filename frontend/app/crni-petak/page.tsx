@@ -6,6 +6,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
 import FeaturedPriceDropCard from "@/components/FeaturedPriceDropCard";
+import { safeJsonLd } from "@/lib/jsonLd";
 
 const IS_HR = CURRENT_MARKET === "hr";
 const BASE = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
@@ -152,7 +153,7 @@ export default async function CrniPetakPage() {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
       <div className="min-h-screen bg-slate-50">
         <Header />
         <main className="max-w-7xl mx-auto px-4 py-10">

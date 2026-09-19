@@ -13,6 +13,7 @@ import {
 import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
 import { formatPrice } from "@/lib/formatPrice";
 import { displayName } from "@/lib/productDisplayName";
+import { safeJsonLd } from "@/lib/jsonLd";
 
 export const revalidate = 86400;
 
@@ -357,7 +358,7 @@ export default async function ProductSlugPage({ params }: Params) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
       <ProductPageContent product={product} similar={similar} storePrices={storePrices} reviews={reviews} aggregateRating={aggregateRating} />
     </>

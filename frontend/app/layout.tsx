@@ -11,6 +11,7 @@ import NewsletterPrompt from "@/components/NewsletterPrompt";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
+import { safeJsonLd } from "@/lib/jsonLd";
 
 // Variable font: one file covers all weights instead of 5 separate requests
 const dmSans = DM_Sans({
@@ -134,7 +135,7 @@ export default async function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
+            __html: safeJsonLd({
               "@context": "https://schema.org",
               "@type": "Organization",
               name: "Proteinoteka",
@@ -153,7 +154,7 @@ export default async function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
+            __html: safeJsonLd({
               "@context": "https://schema.org",
               "@type": "WebSite",
               name: "Proteinoteka",

@@ -8,6 +8,7 @@ import GuideDisclaimer from "@/components/GuideDisclaimer";
 import { fetchTopProducts } from "@/lib/seo-data";
 import { Product } from "@/types/product";
 import { productUrl } from "@/lib/productUrl";
+import { safeJsonLd } from "@/lib/jsonLd";
 
 export const revalidate = 86400;
 
@@ -115,7 +116,7 @@ export default async function Page() {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
       <div className="min-h-screen bg-slate-50">
         <Header />
         <main className="max-w-3xl mx-auto px-4 py-10">

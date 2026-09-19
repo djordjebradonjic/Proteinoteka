@@ -5,6 +5,7 @@ const IS_HR = CURRENT_MARKET === "hr";
 import { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
+import { safeJsonLd } from "@/lib/jsonLd";
 
 export const revalidate = 86400;
 
@@ -179,7 +180,7 @@ export default function Page() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
       <div className="min-h-screen bg-slate-50">
         <Header />
