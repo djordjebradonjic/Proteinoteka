@@ -40,7 +40,12 @@ public interface StoreScraper {
     // one target per family (see ListingTarget); ScraperService runs them in a single browser context
     // and proxy session, and keeps stale-product tracking separate per type.
     default List<ListingTarget> listingTargets() {
-        return List.of(ListingTarget.html(getProductType(), getBaseUrl(), this::buildPageUrl));
+        return List.of(primaryListingTarget());
+    }
+
+    // The listing getBaseUrl()/buildPageUrl() describe, for scrapers that add further targets to it.
+    default ListingTarget primaryListingTarget() {
+        return ListingTarget.html(getProductType(), getBaseUrl(), this::buildPageUrl);
     }
 
     // Type-aware variant of scrape() for HtmlPaged targets. `profile` is the family being scraped:

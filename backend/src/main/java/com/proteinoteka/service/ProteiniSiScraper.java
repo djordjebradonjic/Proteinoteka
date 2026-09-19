@@ -13,6 +13,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
+import com.proteinoteka.service.producttype.ProductTypes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -98,6 +99,13 @@ public class ProteiniSiScraper implements StoreScraper {
 
     @Override
     public String getBaseUrl() { return BASE_URL; }
+
+    // Creatine comes from the WooCommerce Store API (whole category in one small JSON request),
+    // not from a browser walk over listing and detail pages.
+    @Override
+    public List<ListingTarget> listingTargets() {
+        return List.of(primaryListingTarget(), ListingTarget.woo(ProductTypes.CREATINE, "https://proteinisi.rs", "kreatin"));
+    }
 
     @Override
     public boolean hasNextPage(Document doc) {

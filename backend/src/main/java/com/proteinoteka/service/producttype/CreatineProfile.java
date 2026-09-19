@@ -24,7 +24,8 @@ public class CreatineProfile implements ProductTypeProfile {
     // plus bundles/promos whose price is not the price of the creatine. "protein" must be a whole
     // word: the store "Proteini.si" sells its own "100% PURE CREATINE".
     private static final Pattern OTHER_FAMILY = Pattern.compile(
-            "\\b(pre-?\\s?workout|whey|izolat\\p{L}*|isolate|gainer\\p{L}*|casein|kazein\\p{L}*|protein|bcaa|"
+            "\\b(pre-?\\s?work\\s?-?\\s?out|whey|izolat\\p{L}*|isolate|gainer\\p{L}*|mass\\s?tech|serious\\s?mass|"
+                    + "casein|kazein\\p{L}*|protein|bcaa|argi\\p{L}*|"
                     + "amino\\p{L}*|multivit\\p{L}*|vitamin\\p{L}*|omega|glutamin\\p{L}*|citrulin\\p{L}*|"
                     + "carnitin\\p{L}*|karnitin\\p{L}*|beta-?\\s?alanin\\p{L}*|fat\\s?burn\\p{L}*|burn|"
                     + "termogen\\p{L}*|paket\\p{L}*|bundle|combo|set|gratis|poklon\\p{L}*|shaker\\p{L}*|"
@@ -34,7 +35,9 @@ public class CreatineProfile implements ProductTypeProfile {
     private static final Pattern CREATINE_KEYWORD = Pattern.compile(
             "kreatin\\p{L}*|creatin\\p{L}*|creapure|kre-?alkalyn|\\bcrea\\b", FLAGS);
 
-    private static final double MAX_DOSE_GRAMS = 30.0;
+    // 20 g is the loading-phase daily total; a per-serving "dose" above it is a serving of a mixed
+    // product (creatine + carbohydrates), not creatine (real: Nutrend Creaport parsed as 30 g).
+    private static final double MAX_DOSE_GRAMS = 20.0;
     private static final int MAX_COUNT = 1000;
 
     @Override

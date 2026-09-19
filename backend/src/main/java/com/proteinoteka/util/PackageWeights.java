@@ -15,8 +15,10 @@ public final class PackageWeights {
     private static final int FLAGS = Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
             | Pattern.UNICODE_CHARACTER_CLASS;
 
+    // The number must not be the tail of a longer one ("2,27 kg" must not also match at "27"), but a
+    // comma right after a word is only punctuation: "MONOHYDRATE,300g" is 300 g.
     private static final Pattern GRAMS = Pattern.compile(
-            "(?<![\\d.,])(\\d{1,4}(?:[.,]\\d{1,3})?)\\s*(kg|kilogram\\p{L}*|gram\\p{L}*|gr|g)(?![\\p{L}\\d])", FLAGS);
+            "(?<!\\d)(?<!\\d[.,])(\\d{1,4}(?:[.,]\\d{1,3})?)\\s*(kg|kilogram\\p{L}*|gram\\p{L}*|gr|g)(?![\\p{L}\\d])", FLAGS);
 
     private static final double MAX_PLAUSIBLE_GRAMS = 20_000;
 

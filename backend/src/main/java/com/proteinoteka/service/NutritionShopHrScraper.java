@@ -10,6 +10,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
+import com.proteinoteka.service.producttype.ProductTypes;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -64,6 +65,13 @@ public class NutritionShopHrScraper implements StoreScraper {
     @Override public String getMarket()                 { return "hr"; }
     @Override public String getCurrency()               { return "EUR"; }
     @Override public boolean usePlaywrightForListing()  { return false; }
+
+    // Creatine comes from the WooCommerce Store API: the whole category in one small JSON request.
+    // The category also holds gainers, pre-workouts and arginine; CreatineProfile rejects those.
+    @Override
+    public List<ListingTarget> listingTargets() {
+        return List.of(primaryListingTarget(), ListingTarget.woo(ProductTypes.CREATINE, SITE_ORIGIN, "kreatin"));
+    }
 
     @Override
     public String buildPageUrl(int page) {

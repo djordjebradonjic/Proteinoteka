@@ -34,6 +34,25 @@ class CreatineProfileTest {
     }
 
     @Test
+    void gainersPreWorkoutsAndArginineFiledUnderCreatineAreRejected() {
+        // real titles from the "kreatin" category of nutrition-shop.hr, 2026-09-19
+        for (String name : new String[]{
+                "MUSCLETECH MASS TECH Performance series, 3180g",
+                "OPTIMUM GOLD STANDARD PRE-WORK OUT, 330g",
+                "OLIMP ARGI POWER 1500, 120 kapsula",
+                "Serious Mass 5.4kg"}) {
+            assertTrue(profile.rejectReason(named(name), true).isPresent(), name);
+        }
+        for (String name : new String[]{
+                "OLIMP CREATINE MONOHYDRATE POWDER,250g",
+                "IRONMAXX KREA7 SUPERALKALIN, 180 tableta",
+                "NUTREND CREATINE MONOHYDRATE, 300g",
+                "Creatine Monohydrate kapsule"}) {
+            assertTrue(profile.rejectReason(named(name), true).isEmpty(), name);
+        }
+    }
+
+    @Test
     void brandCoinedCreatineNamesAreAcceptedInsideTheCategory() {
         for (String name : new String[]{
                 "CreaMASS – Yamamoto, 147 porcija",
@@ -82,6 +101,21 @@ class CreatineProfileTest {
         assertEquals(120, p.getUnitCount());
         assertNull(p.getCreatineGramsPerServing(), "45 g is not a creatine dose");
         assertNull(p.getServingsPerContainer());
+    }
+
+    @Test
+    void aServingAboveTheLoadingPhaseTotalIsAMixedProductNotACreatineDose() {
+        // Nutrend Creaport (creatine + carbohydrates) was parsed as a 30 g dose
+        Product mix = named("NUTREND CREAPORT, 600g ORANGE FLAVOUR");
+        mix.setCreatineGramsPerServing(30.0);
+        Product loading = named("Creatine Monohydrate 500g");
+        loading.setCreatineGramsPerServing(20.0);
+
+        profile.sanitize(mix, "TestStore");
+        profile.sanitize(loading, "TestStore");
+
+        assertNull(mix.getCreatineGramsPerServing());
+        assertEquals(20.0, loading.getCreatineGramsPerServing());
     }
 
     // ------------------------------------------------------------------ merge / completeness / price

@@ -14,7 +14,10 @@ import org.jsoup.parser.Parser;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.math.BigDecimal;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -102,7 +105,7 @@ public class WooStoreApiSource {
             double price = minorUnitPrice(parent.path("prices"));
             if (price <= 0 || price == Double.MAX_VALUE) return List.of();
             Product p = base(parent, name, permalink, eur, price);
-            applySize(p, null);
+            applySize(p, null, parent);
             rows.add(p);
             return rows;
         }
@@ -125,7 +128,7 @@ public class WooStoreApiSource {
         }
         for (Map.Entry<String, JsonNode> e : cheapestBySize.entrySet()) {
             Product p = base(parent, name, urlBySize.get(e.getKey()), eur, minorUnitPrice(e.getValue().path("prices")));
-            applySize(p, labelBySize.get(e.getKey()));
+            applySize(p, labelBySize.get(e.getKey()), parent);
             rows.add(p);
         }
         return rows;
@@ -150,15 +153,37 @@ public class WooStoreApiSource {
         return p;
     }
 
-    /** Pack weight in grams (from the size label, else the title) plus the raw label for the type parsers. */
-    private void applySize(Product p, String label) {
-        p.setVariantLabel(label);
+    /**
+     * Pack weight in grams (from the variation's size label, else the title, else the size the product
+     * states once for all its variations) plus the raw label for the type parsers ("60 tableta" carries
+     * a count, not a weight).
+     */
+    private void applySize(Product p, String label, JsonNode parent) {
+        String statedSize = label == null ? parentSizeLabel(parent) : null;
+        p.setVariantLabel(label != null ? label : statedSize);
         Double grams = PackageWeights.grams(label);
         if (grams == null) grams = PackageWeights.grams(p.getName());
+        if (grams == null) grams = PackageWeights.grams(statedSize);
         if (grams != null) {
             p.setPrimaryWeightGrams(grams);
             p.getPackage_weight().add(PackageWeights.label(grams));
         }
+    }
+
+    /**
+     * A size attribute with a single term ("Pakiranje: 500g") describes the whole product. Proteini
+     * Outlet publishes its pack size this way, and its variations only differ by flavour, so without this
+     * none of its products would have a weight.
+     */
+    private static String parentSizeLabel(JsonNode parent) {
+        for (JsonNode attr : parent.path("attributes")) {
+            if (!SIZE_ATTRIBUTE.matcher(attr.path("name").asText("")).find()) continue;
+            JsonNode terms = attr.path("terms");
+            if (terms.size() != 1) continue;
+            String label = unescape(terms.path(0).path("name").asText("")).trim();
+            if (!label.isBlank()) return label;
+        }
+        return null;
     }
 
     private record SizeKey(String key, String label, String url) {}
@@ -244,17 +269,41 @@ public class WooStoreApiSource {
 
     // ---------------------------------------------------------------- transport
 
+    // A creatine listing that fails is not retried by the scheduler (a retry would double proxy traffic),
+    // so one timed-out request would leave the store without creatine for a whole week. One more attempt
+    // covers a passing network hiccup; an HTTP error or a bot challenge is an answer, not a hiccup, and
+    // is never repeated.
+    private static final int TRANSPORT_ATTEMPTS = 2;
+    long retryDelayMs = 3000;
+
+    private Connection.Response execute(String url, boolean useProxy) throws IOException {
+        for (int attempt = 1; ; attempt++) {
+            try {
+                return httpClient.connection(url, useProxy)
+                        .ignoreContentType(true)
+                        .ignoreHttpErrors(true)
+                        .maxBodySize(MAX_BODY_BYTES)
+                        .header("Accept", "application/json")
+                        .method(Connection.Method.GET)
+                        .execute();
+            } catch (SocketTimeoutException | SocketException e) {
+                if (attempt >= TRANSPORT_ATTEMPTS) throw e;
+                log.warn("Store API request failed ({}), retrying in {} ms: {}", e.getMessage(), retryDelayMs, url);
+                try {
+                    Thread.sleep(retryDelayMs);
+                } catch (InterruptedException interrupted) {
+                    Thread.currentThread().interrupt();
+                    throw new InterruptedIOException("interrupted while waiting to retry " + url);
+                }
+            }
+        }
+    }
+
     private List<JsonNode> fetchAll(String url, boolean useProxy, ProxyUsageMeter meter) throws IOException {
         List<JsonNode> all = new ArrayList<>();
         int totalPages = 1;
         for (int page = 1; page <= totalPages && page <= MAX_PAGES; page++) {
-            Connection.Response res = httpClient.connection(url + "&page=" + page, useProxy)
-                    .ignoreContentType(true)
-                    .ignoreHttpErrors(true)
-                    .maxBodySize(MAX_BODY_BYTES)
-                    .header("Accept", "application/json")
-                    .method(Connection.Method.GET)
-                    .execute();
+            Connection.Response res = execute(url + "&page=" + page, useProxy);
             if (useProxy && meter != null) meter.addResponse(res);
             if (res.statusCode() != 200) {
                 throw new IOException("Store API " + res.statusCode() + " for " + url);

@@ -1,0 +1,158 @@
+[
+  {
+    "id": 21370,
+    "name": "Animal Creatine",
+    "slug": "kreatin-monohidrat-4",
+    "parent": 21369,
+    "type": "variation",
+    "variation": "Okus: Bez okusa",
+    "permalink": "https://www.proteini-outlet.com/proizvod/animal-kreatin-500g-prah/?attribute_pa_okus=bez-okusa",
+    "sku": "ANM Creat500g-unflav",
+    "short_description": "",
+    "description": "",
+    "on_sale": false,
+    "prices": {
+      "price": "4500",
+      "regular_price": "4500",
+      "sale_price": "4500",
+      "price_range": null,
+      "currency_code": "EUR",
+      "currency_symbol": "€",
+      "currency_minor_unit": 2,
+      "currency_decimal_separator": ",",
+      "currency_thousand_separator": ".",
+      "currency_prefix": "",
+      "currency_suffix": " €"
+    },
+    "images": [
+      {
+        "id": 21371,
+        "src": "https://www.proteini-outlet.com/wp-content/uploads/2026/08/animal-creatin-500g-prah-proteini-outlet-1.jpg",
+        "thumbnail": "https://www.proteini-outlet.com/wp-content/uploads/2026/08/animal-creatin-500g-prah-proteini-outlet-1-600x600.jpg",
+        "srcset": "https://www.proteini-outlet.com/wp-content/uploads/2026/08/animal-creatin-500g-prah-proteini-outlet-1.jpg 800w, https://www.proteini-outlet.com/wp-content/uploads/2026/08/animal-creatin-500g-prah-proteini-outlet-1-300x300.jpg 300w, https://www.proteini-outlet.com/wp-content/uploads/2026/08/animal-creatin-500g-prah-proteini-outlet-1-150x150.jpg 150w, https://www.proteini-outlet.com/wp-content/uploads/2026/08/animal-creatin-500g-prah-proteini-outlet-1-768x768.jpg 768w, https://www.proteini-outlet.com/wp-content/uploads/2026/08/animal-creatin-500g-prah-proteini-outlet-1-600x600.jpg 600w, https://www.proteini-outlet.com/wp-content/uploads/2026/08/animal-creatin-500g-prah-proteini-outlet-1-100x100.jpg 100w, https://www.proteini-outlet.com/wp-content/uploads/2026/08/animal-creatin-500g-prah-proteini-outlet-1-200x200.jpg 200w",
+        "sizes": "(max-width: 800px) 100vw, 800px",
+        "name": "animal-creatin-500g-prah-proteini-outlet",
+        "alt": "animal kreatin 500g prah"
+      }
+    ],
+    "categories": [],
+    "brands": [],
+    "attributes": [],
+    "variations": [],
+    "grouped_products": [],
+    "has_options": false,
+    "is_purchasable": true,
+    "is_in_stock": true,
+    "is_on_backorder": false,
+    "low_stock_remaining": null,
+    "stock_availability": {
+      "text": "Na zalihi",
+      "class": "in-stock"
+    },
+    "sold_individually": false
+  },
+  {
+    "id": 17652,
+    "name": "CreaVolution® (kreatin monohidrat)",
+    "slug": "pure-creatine-monohydrate-3",
+    "parent": 17651,
+    "type": "variation",
+    "variation": "Okus: Bez okusa",
+    "permalink": "https://www.proteini-outlet.com/proizvod/creavolution-kreatin-monohidrat/?attribute_pa_okus=bez-okusa",
+    "sku": "SS CreaVol300g-nat",
+    "short_description": "",
+    "description": "",
+    "on_sale": false,
+    "prices": {
+      "price": "2800",
+      "regular_price": "2800",
+      "sale_price": "2800",
+      "price_range": null,
+      "currency_code": "EUR",
+      "currency_symbol": "€",
+      "currency_minor_unit": 2,
+      "currency_decimal_separator": ",",
+      "currency_thousand_separator": ".",
+      "currency_prefix": "",
+      "currency_suffix": " €"
+    },
+    "images": [
+      {
+        "id": 17653,
+        "src": "https://www.proteini-outlet.com/wp-content/uploads/2025/11/swedish-supplements-creavolution-300g-proteini-outlet.jpg",
+        "thumbnail": "https://www.proteini-outlet.com/wp-content/uploads/2025/11/swedish-supplements-creavolution-300g-proteini-outlet-600x600.jpg",
+        "srcset": "https://www.proteini-outlet.com/wp-content/uploads/2025/11/swedish-supplements-creavolution-300g-proteini-outlet.jpg 800w, https://www.proteini-outlet.com/wp-content/uploads/2025/11/swedish-supplements-creavolution-300g-proteini-outlet-300x300.jpg 300w, https://www.proteini-outlet.com/wp-content/uploads/2025/11/swedish-supplements-creavolution-300g-proteini-outlet-150x150.jpg 150w, https://www.proteini-outlet.com/wp-content/uploads/2025/11/swedish-supplements-creavolution-300g-proteini-outlet-768x768.jpg 768w, https://www.proteini-outlet.com/wp-content/uploads/2025/11/swedish-supplements-creavolution-300g-proteini-outlet-600x600.jpg 600w, https://www.proteini-outlet.com/wp-content/uploads/2025/11/swedish-supplements-creavolution-300g-proteini-outlet-100x100.jpg 100w, https://www.proteini-outlet.com/wp-content/uploads/2025/11/swedish-supplements-creavolution-300g-proteini-outlet-400x400.jpg 400w",
+        "sizes": "(max-width: 800px) 100vw, 800px",
+        "name": "swedish-supplements-creavolution-300g-proteini-outlet",
+        "alt": ""
+      }
+    ],
+    "categories": [],
+    "brands": [],
+    "attributes": [],
+    "variations": [],
+    "grouped_products": [],
+    "has_options": false,
+    "is_purchasable": true,
+    "is_in_stock": true,
+    "is_on_backorder": false,
+    "low_stock_remaining": null,
+    "stock_availability": {
+      "text": "Na zalihi",
+      "class": "in-stock"
+    },
+    "sold_individually": false
+  },
+  {
+    "id": 14294,
+    "name": "Platinum Creatine",
+    "slug": "pure-creatine-monohydrate-2",
+    "parent": 14293,
+    "type": "variation",
+    "variation": "Okus: Bez okusa",
+    "permalink": "https://www.proteini-outlet.com/proizvod/platinum-creatine/?attribute_pa_okus=bez-okusa",
+    "sku": "PO PlatCreatMono400g-bez-okusa",
+    "short_description": "",
+    "description": "",
+    "on_sale": true,
+    "prices": {
+      "price": "1870",
+      "regular_price": "2200",
+      "sale_price": "1870",
+      "price_range": null,
+      "currency_code": "EUR",
+      "currency_symbol": "€",
+      "currency_minor_unit": 2,
+      "currency_decimal_separator": ",",
+      "currency_thousand_separator": ".",
+      "currency_prefix": "",
+      "currency_suffix": " €"
+    },
+    "images": [
+      {
+        "id": 14306,
+        "src": "https://www.proteini-outlet.com/wp-content/uploads/2024/09/platinum-creatine-400g-proteini-outlet-austria-vegan.jpg",
+        "thumbnail": "https://www.proteini-outlet.com/wp-content/uploads/2024/09/platinum-creatine-400g-proteini-outlet-austria-vegan-600x600.jpg",
+        "srcset": "https://www.proteini-outlet.com/wp-content/uploads/2024/09/platinum-creatine-400g-proteini-outlet-austria-vegan.jpg 800w, https://www.proteini-outlet.com/wp-content/uploads/2024/09/platinum-creatine-400g-proteini-outlet-austria-vegan-600x600.jpg 600w, https://www.proteini-outlet.com/wp-content/uploads/2024/09/platinum-creatine-400g-proteini-outlet-austria-vegan-100x100.jpg 100w, https://www.proteini-outlet.com/wp-content/uploads/2024/09/platinum-creatine-400g-proteini-outlet-austria-vegan-300x300.jpg 300w, https://www.proteini-outlet.com/wp-content/uploads/2024/09/platinum-creatine-400g-proteini-outlet-austria-vegan-150x150.jpg 150w, https://www.proteini-outlet.com/wp-content/uploads/2024/09/platinum-creatine-400g-proteini-outlet-austria-vegan-768x768.jpg 768w, https://www.proteini-outlet.com/wp-content/uploads/2024/09/platinum-creatine-400g-proteini-outlet-austria-vegan-400x400.jpg 400w",
+        "sizes": "(max-width: 800px) 100vw, 800px",
+        "name": "platinum-creatine-400g-proteini-outlet-austria-vegan",
+        "alt": ""
+      }
+    ],
+    "categories": [],
+    "brands": [],
+    "attributes": [],
+    "variations": [],
+    "grouped_products": [],
+    "has_options": false,
+    "is_purchasable": true,
+    "is_in_stock": true,
+    "is_on_backorder": false,
+    "low_stock_remaining": null,
+    "stock_availability": {
+      "text": "Na zalihi",
+      "class": "in-stock"
+    },
+    "sold_individually": false
+  }
+]

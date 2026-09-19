@@ -3,12 +3,16 @@ package com.proteinoteka.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.proteinoteka.model.Product;
+import com.proteinoteka.model.Store;
 import com.proteinoteka.service.producttype.CreatineProfile;
+import org.jsoup.Connection;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.stubbing.OngoingStubbing;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -16,8 +20,12 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.RETURNS_SELF;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -162,6 +170,54 @@ class WooStoreApiSourceTest {
         assertTrue(creatine.rejectReason(byName(rows, "PhD Creatine"), true).isEmpty());
     }
 
+    // ------------------------------------------------------------ Croatian stores (EUR), captured 2026-09-19
+
+    @Test
+    void aSizeStatedOnceForTheWholeProductGivesTheWeightWhenVariationsOnlyDifferByFlavour() throws IOException {
+        // proteini-outlet.com: "Pakiranje: 500g" is a plain attribute, the variations are flavours only.
+        // Before this fallback none of its products had a weight.
+        List<Product> rows = mapAll("proteinoutlet_kreatin_products.json", "proteinoutlet_kreatin_variations.json", true);
+
+        Product animal = byName(rows, "Animal Creatine");
+        assertEquals(500.0, animal.getPrimaryWeightGrams());
+        assertEquals("Universal-Animal", animal.getBrand(), "brand comes from the 'Brandovi' attribute");
+        assertEquals("45", animal.getPrice());
+        assertEquals(300.0, byName(rows, "CreaVolution").getPrimaryWeightGrams());
+        assertEquals(400.0, byName(rows, "Platinum Creatine").getPrimaryWeightGrams(), "'400 g' with a space");
+        assertEquals("18.7", byName(rows, "Platinum Creatine").getPrice(), "EUR keeps its cents");
+    }
+
+    @Test
+    void aCountAsThePackSizeIsKeptForTheTypeParserInsteadOfBecomingAWeight() throws IOException {
+        List<Product> rows = mapAll("proteinoutlet_kreatin_products.json", "proteinoutlet_kreatin_variations.json", true);
+
+        Product tablets = byName(rows, "Creapure");
+        assertNull(tablets.getPrimaryWeightGrams(), "'60 tableta za žvakanje' is a count, not grams");
+        creatine.sanitize(tablets, "Proteini Outlet");
+        assertEquals(60, tablets.getUnitCount());
+        assertEquals("tablet", tablets.getProductForm());
+
+        Product capsules = byName(rows, "kapsule");
+        creatine.sanitize(capsules, "Proteini Outlet");
+        assertEquals(220, capsules.getUnitCount());
+        assertEquals("capsule", capsules.getProductForm());
+    }
+
+    @Test
+    void aWeightRightAfterACommaIsReadFromTheTitleWhenTheStoreHasNoBrandOrSizeFields() throws IOException {
+        // nutrition-shop.hr: no brand field, no size attribute, "MONOHYDRATE,300g" without a space
+        List<Product> rows = mapAll("nutritionshophr_kreatin_products.json", null, true);
+
+        assertEquals(250.0, byName(rows, "OLIMP CREATINE").getPrimaryWeightGrams());
+        assertEquals("21.2", byName(rows, "OLIMP CREATINE").getPrice());
+        assertEquals(300.0, byName(rows, "DORIAN YATES").getPrimaryWeightGrams());
+        assertEquals(300.0, byName(rows, "NUTREND CREATINE").getPrimaryWeightGrams());
+        Product tablets = byName(rows, "KREA7");
+        assertNull(tablets.getPrimaryWeightGrams());
+        creatine.sanitize(tablets, "Nutrition Shop HR");
+        assertEquals(90, tablets.getUnitCount(), "the count comes from the title when there is no size label");
+    }
+
     @Test
     void priceUnits() {
         assertEquals(2450.0, WooStoreApiSource.minorUnitPrice(prices("245000", 2)));
@@ -173,5 +229,74 @@ class WooStoreApiSourceTest {
 
     private static JsonNode prices(String price, int minorUnit) {
         return JSON.createObjectNode().put("price", price).put("currency_minor_unit", minorUnit);
+    }
+
+    // ------------------------------------------------------------ transport: retry a hiccup, never a block
+
+    private static final ListingTarget.WooStoreApi CATEGORY = new ListingTarget.WooStoreApi("https://shop.test", "kreatin");
+
+    /** A source whose every request is answered by {@code connection}; retries wait 0 ms. */
+    private static WooStoreApiSource sourceAnsweredBy(Connection connection) {
+        ProxyAwareHttpClient http = mock(ProxyAwareHttpClient.class);
+        when(http.connection(anyString(), anyBoolean())).thenReturn(connection);
+        WooStoreApiSource s = new WooStoreApiSource(http, JSON, mock(BrandNormalizerService.class));
+        s.retryDelayMs = 0;
+        return s;
+    }
+
+    /** A fluent Connection that, on successive execute() calls, throws or returns the given outcomes in order. */
+    private static Connection connectionGiving(Object... outcomes) throws IOException {
+        Connection conn = mock(Connection.class, RETURNS_SELF);
+        OngoingStubbing<Connection.Response> stub = when(conn.execute());
+        for (Object outcome : outcomes) {
+            stub = outcome instanceof Throwable t ? stub.thenThrow(t) : stub.thenReturn((Connection.Response) outcome);
+        }
+        return conn;
+    }
+
+    private static Connection.Response answer(int status, String contentType, String body) {
+        Connection.Response r = mock(Connection.Response.class);
+        when(r.statusCode()).thenReturn(status);
+        when(r.contentType()).thenReturn(contentType);
+        when(r.body()).thenReturn(body);
+        return r;
+    }
+
+    private static Store aStore() {
+        Store store = new Store();
+        store.setName("Test store");
+        store.setCurrency("RSD");
+        return store;
+    }
+
+    @Test
+    void aTimedOutRequestIsRetriedOnce() throws IOException {
+        Connection conn = connectionGiving(new SocketTimeoutException("Read timed out"),
+                answer(200, "application/json", "[]"));
+
+        List<Product> rows = sourceAnsweredBy(conn).fetch(CATEGORY, aStore(), false, null);
+
+        assertTrue(rows.isEmpty());
+        verify(conn, times(2)).execute();
+    }
+
+    @Test
+    void twoTimeoutsInARowFailTheTarget() throws IOException {
+        Connection conn = connectionGiving(new SocketTimeoutException("Read timed out"),
+                new SocketTimeoutException("Read timed out"));
+
+        assertThrows(SocketTimeoutException.class, () -> sourceAnsweredBy(conn).fetch(CATEGORY, aStore(), false, null));
+        verify(conn, times(2)).execute();
+    }
+
+    @Test
+    void anHttpErrorOrABotChallengeIsAnAnswerAndIsNeverRepeated() throws IOException {
+        Connection blocked = connectionGiving(answer(403, "text/html", "Forbidden"));
+        assertThrows(IOException.class, () -> sourceAnsweredBy(blocked).fetch(CATEGORY, aStore(), false, null));
+        verify(blocked, times(1)).execute();
+
+        Connection challenge = connectionGiving(answer(200, "text/html", "<html>Just a moment...</html>"));
+        assertThrows(IOException.class, () -> sourceAnsweredBy(challenge).fetch(CATEGORY, aStore(), false, null));
+        verify(challenge, times(1)).execute();
     }
 }
