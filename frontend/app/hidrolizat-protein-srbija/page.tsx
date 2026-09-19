@@ -1,42 +1,48 @@
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { CURRENT_MARKET } from "@/lib/marketConfig";
 import { Metadata } from "next";
 import { fetchTopProducts } from "@/lib/seo-data";
 import { SEOLandingPage } from "@/components/seo/SEOLandingPage";
+import { formatPrice } from "@/lib/formatPrice";
+import { rsPageMetadata } from "@/lib/seo-meta";
 
 export const revalidate = 86400;
 
-export const metadata: Metadata = {
-  title: { absolute: "Hidrolizat Proteina u Srbiji 2026 — Cene i Poređenje | Proteinoteka" },
-  description:
-    "Hidrolizovani whey protein u Srbiji — cene od ~5.000 do ~12.000 RSD/kg. Najbrža apsorpcija, premium segment. Dymatize ISO100, ON Platinum — poredimo sve.",
-  alternates: { canonical: "https://proteinoteka.rs/hidrolizat-protein-srbija" },
-  openGraph: {
-    title: "Hidrolizat Proteina u Srbiji 2026 | Proteinoteka",
+const loadHydrolysates = cache(() =>
+  fetchTopProducts({ category: "hydrolysate", sortBy: "valueScore", limit: 20 }),
+);
+
+// Everything numeric on this page comes from the live list, so the copy can't drift from the table.
+function priceRange(products: { numericPrice: number }[]): { min: number; max: number } | null {
+  const prices = products.map((p) => p.numericPrice).filter((v) => v > 0);
+  return prices.length > 0 ? { min: Math.min(...prices), max: Math.max(...prices) } : null;
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const range = priceRange(await loadHydrolysates());
+  return rsPageMetadata({
+    path: "/hidrolizat-protein-srbija",
+    title: range ? `Hidrolizat proteina cena u Srbiji, od ${formatPrice(Math.round(range.min))}` : "Hidrolizat proteina cena u Srbiji",
     description:
-      "Aktuelne cene hidrolizovanih proteina u srpskim prodavnicama. Koji hidrolizat nudi best value — Dymatize ISO100 ili ON Platinum Hydrowhey?",
-    url: "https://proteinoteka.rs/hidrolizat-protein-srbija",
-    siteName: "Proteinoteka",
-    locale: "sr_RS",
-    type: "website",
-    images: [{ url: "https://proteinoteka.rs/opengraph-image", width: 1200, height: 630, alt: "Proteinoteka" }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    images: ["https://proteinoteka.rs/opengraph-image"],
-  },
-};
+      "Hidrolizovani whey protein u srpskim prodavnicama: cene, cena po gramu proteina i value score. Poređenje svih hidrolizata koje pratimo, uključujući ISO-100 i Platinum Hydrowhey.",
+    ogTitle: "Hidrolizat proteina u Srbiji 2026 | Proteinoteka",
+  });
+}
 
 export default async function Page() {
   if (CURRENT_MARKET !== 'rs') notFound();
-  const products = await fetchTopProducts({ category: "hydrolysate", sortBy: "valueScore", limit: 20 });
+  const products = await loadHydrolysates();
+  const range = priceRange(products);
+  const rangeText = range ? `od ${formatPrice(Math.round(range.min))} do ${formatPrice(Math.round(range.max))}` : null;
 
   const top = products[0];
-  const cheapest = [...products].sort((a, b) => (a.numericPrice ?? 0) - (b.numericPrice ?? 0))[0];
 
-  const quickAnswer = top
-    ? `Hidrolizat je najskuplji tip proteina zbog procesa enzimske razgradnje koji ubrzava apsorpciju. Trenutno best value hidrolizat u bazi je ${top.name}. Cene u Srbiji kreću se od ~5.000 do ~12.000+ RSD za standardna pakovanja. Za rekreativce koji treniraju jednom dnevno, razlika u oporavku u poređenju sa isolate-om je minimalna.`
-    : "Hidrolizat je najskuplji tip proteina zbog procesa enzimske razgradnje koji ubrzava apsorpciju. Cene u Srbiji kreću se od ~5.000 do ~12.000+ RSD za standardna pakovanja.";
+  const quickAnswer =
+    "Hidrolizat je najskuplji tip proteina zbog procesa enzimske razgradnje koji ubrzava apsorpciju." +
+    (top ? ` Trenutno best value hidrolizat u bazi je ${top.name}.` : "") +
+    (rangeText ? ` Pratimo ${products.length} ${products.length === 1 ? "ponudu" : "ponuda"}, cene su ${rangeText} za pojedinačna pakovanja.` : "") +
+    " Za rekreativce koji treniraju jednom dnevno, razlika u oporavku u poređenju sa isolate-om je minimalna.";
 
   return (
     <SEOLandingPage
@@ -59,7 +65,9 @@ export default async function Page() {
         },
         {
           q: "Koji hidrolizat proteina je best value u Srbiji?",
-          a: "Dymatize ISO100 je jedan od najpopularnijih hidrolizata na srpskom tržištu — 25g proteina po porciji, manje od 1g ugljenih hidrata i 0.5g masti. Optimum Nutrition Platinum Hydrowhey je drugi popularni izbor. Aktuelne cene i value score su prikazani u listi iznad.",
+          a: top
+            ? `Prema našem value score-u trenutno je najbolji „${top.name}“ (${top.valueScore?.toFixed(1)}/10, prodavnica ${top.storeName}). Score uzima u obzir cenu, procenat proteina, čistoću sastava i ugled brenda, a aktuelne cene i score za sve hidrolizate su u listi iznad.`
+            : "Aktuelne cene i value score za sve hidrolizate su prikazani u listi iznad.",
         },
         {
           q: "Da li hidrolizat ima gorčinu u ukusu?",
@@ -71,7 +79,9 @@ export default async function Page() {
         },
         {
           q: "Koliko košta hidrolizat proteina u Srbiji?",
-          a: "Cene se kreću od ~5.000 do ~12.000+ RSD za standardna pakovanja (600–900g), zavisno od brenda i prodavnice. Veća pakovanja (1.5–2kg) su isplativija po gramu. Aktuelne cene su prikazane u tabeli iznad — uvek gledaj cenu po gramu proteina, ne ukupnu cenu pakovanja.",
+          a: rangeText
+            ? `Trenutno pratimo ${products.length} ${products.length === 1 ? "ponudu" : "ponuda"} hidrolizata, sa cenama ${rangeText} za pojedinačna pakovanja. Raspon je širok jer se pakovanja razlikuju po veličini, pa uvek gledaj cenu po gramu proteina, a ne ukupnu cenu pakovanja.`
+            : "Aktuelne cene su prikazane u tabeli iznad; uvek gledaj cenu po gramu proteina, ne ukupnu cenu pakovanja.",
         },
       ]}
     />
