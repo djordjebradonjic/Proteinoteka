@@ -7,11 +7,16 @@ import org.springframework.stereotype.Component;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
+import java.io.InputStream;
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
+import java.security.KeyStore;
 import java.security.SecureRandom;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.List;
 
 /**
  * Builds Jsoup connections, optionally routed through the configured iProyal proxy.
@@ -28,6 +33,11 @@ import java.security.cert.X509Certificate;
  * is presented directly to the client, so normal certificate validation works fine.
  * However, on some Railway JVM images the CA bundle is incomplete; we bypass SSL verification
  * when the proxy is active to avoid PKIX failures that have nothing to do with the target site.
+ *
+ * Direct (non-proxy) connections keep full certificate validation, but against the JVM's default
+ * roots plus {@link #EXTRA_ROOT_CERTS}. Root CAs that browsers trust but the JDK's cacerts
+ * doesn't ship yet make otherwise valid sites fail with PKIX errors — proteka.hr chains to
+ * "Sectigo Public Server Authentication Root R46", absent from JDK 21.0.11.
  */
 @Component
 public class ProxyAwareHttpClient {
@@ -48,6 +58,13 @@ public class ProxyAwareHttpClient {
     private String proxyPassword;
 
     private static final javax.net.ssl.SSLSocketFactory TRUST_ALL_FACTORY = buildTrustAllFactory();
+
+    // Public root CAs missing from the JDK trust store. Add the PEM under src/main/resources/certs/
+    // (verify it against the CA's published fingerprint) and list it here.
+    private static final List<String> EXTRA_ROOT_CERTS = List.of(
+            "certs/sectigo-public-server-authentication-root-r46.pem");
+
+    private static final javax.net.ssl.SSLSocketFactory EXTENDED_TRUST_FACTORY = buildExtendedTrustFactory();
 
     // Defaults to no proxy. Callers that don't actually need a residential IP (the vast
     // majority — plain server-rendered listing/detail pages) should stay on this so they
@@ -85,8 +102,53 @@ public class ProxyAwareHttpClient {
             if (TRUST_ALL_FACTORY != null) {
                 conn = conn.sslSocketFactory(TRUST_ALL_FACTORY);
             }
+        } else if (EXTENDED_TRUST_FACTORY != null) {
+            conn = conn.sslSocketFactory(EXTENDED_TRUST_FACTORY);
         }
         return conn;
+    }
+
+    private static javax.net.ssl.SSLSocketFactory buildExtendedTrustFactory() {
+        try {
+            SSLContext ctx = SSLContext.getInstance("TLS");
+            ctx.init(null, new TrustManager[]{buildExtendedTrustManager()}, new SecureRandom());
+            return ctx.getSocketFactory();
+        } catch (Exception e) {
+            // Fall back to the JVM defaults rather than break every direct fetch
+            return null;
+        }
+    }
+
+    /** Standard PKIX trust manager over the JVM's default roots plus {@link #EXTRA_ROOT_CERTS}. */
+    static X509TrustManager buildExtendedTrustManager() throws Exception {
+        TrustManagerFactory defaults = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        defaults.init((KeyStore) null);
+
+        KeyStore roots = KeyStore.getInstance(KeyStore.getDefaultType());
+        roots.load(null, null);
+        int n = 0;
+        for (TrustManager tm : defaults.getTrustManagers()) {
+            if (tm instanceof X509TrustManager x509) {
+                for (X509Certificate issuer : x509.getAcceptedIssuers()) {
+                    roots.setCertificateEntry("default-" + n++, issuer);
+                }
+            }
+        }
+
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+        for (String resource : EXTRA_ROOT_CERTS) {
+            try (InputStream in = ProxyAwareHttpClient.class.getClassLoader().getResourceAsStream(resource)) {
+                if (in == null) throw new IllegalStateException("Missing root certificate resource " + resource);
+                roots.setCertificateEntry("extra-" + n++, cf.generateCertificate(in));
+            }
+        }
+
+        TrustManagerFactory merged = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        merged.init(roots);
+        for (TrustManager tm : merged.getTrustManagers()) {
+            if (tm instanceof X509TrustManager x509) return x509;
+        }
+        throw new IllegalStateException("No X509TrustManager available");
     }
 
     private static javax.net.ssl.SSLSocketFactory buildTrustAllFactory() {
