@@ -14,59 +14,59 @@ public interface DataQualityRepository extends JpaRepository<Product, Long> {
     // market = null → both markets combined, "rs"/"hr" → filtered (same (:market IS NULL OR ...)
     // convention as ClickEventRepository/TrackingEventRepository)
 
-    @Query("SELECT COUNT(p) FROM products p WHERE (:market IS NULL OR p.market = :market)")
+    @Query("SELECT COUNT(p) FROM products p WHERE (:market IS NULL OR p.market = :market) AND p.productType = 'protein'")
     int countTotal(@Param("market") String market);
 
     // Nutrition
-    @Query("SELECT COUNT(p) FROM products p WHERE p.proteinPer100g IS NULL AND (:market IS NULL OR p.market = :market)")
+    @Query("SELECT COUNT(p) FROM products p WHERE p.proteinPer100g IS NULL AND (:market IS NULL OR p.market = :market) AND p.productType = 'protein'")
     int countWithoutProtein(@Param("market") String market);
 
     // Value Score
-    @Query("SELECT COUNT(p) FROM products p WHERE (p.valueScore IS NULL OR p.valueScore = 0) AND (:market IS NULL OR p.market = :market)")
+    @Query("SELECT COUNT(p) FROM products p WHERE (p.valueScore IS NULL OR p.valueScore = 0) AND (:market IS NULL OR p.market = :market) AND p.productType = 'protein'")
     int countWithoutValueScore(@Param("market") String market);
 
     // Images
-    @Query("SELECT COUNT(p) FROM products p WHERE p.imageUrl IS NOT NULL AND p.imageUrl != '' AND (:market IS NULL OR p.market = :market)")
+    @Query("SELECT COUNT(p) FROM products p WHERE p.imageUrl IS NOT NULL AND p.imageUrl != '' AND (:market IS NULL OR p.market = :market) AND p.productType = 'protein'")
     int countWithImage(@Param("market") String market);
 
     // numericPrice problemi
-    @Query("SELECT COUNT(p) FROM products p WHERE p.numericPrice IS NULL AND (:market IS NULL OR p.market = :market)")
+    @Query("SELECT COUNT(p) FROM products p WHERE p.numericPrice IS NULL AND (:market IS NULL OR p.market = :market) AND p.productType = 'protein'")
     int countNullNumericPrice(@Param("market") String market);
 
-    @Query("SELECT COUNT(p) FROM products p WHERE p.numericPrice = 0 AND (:market IS NULL OR p.market = :market)")
+    @Query("SELECT COUNT(p) FROM products p WHERE p.numericPrice = 0 AND (:market IS NULL OR p.market = :market) AND p.productType = 'protein'")
     int countZeroNumericPrice(@Param("market") String market);
 
-    @Query("SELECT COUNT(p) FROM products p WHERE p.numericPrice > 100000 AND (:market IS NULL OR p.market = :market)")
+    @Query("SELECT COUNT(p) FROM products p WHERE p.numericPrice > 100000 AND (:market IS NULL OR p.market = :market) AND p.productType = 'protein'")
     int countSuspiciouslyHighPrice(@Param("market") String market);
 
-    @Query("SELECT COUNT(p) FROM products p WHERE p.numericPrice > 0 AND p.numericPrice <= 100000 AND (:market IS NULL OR p.market = :market)")
+    @Query("SELECT COUNT(p) FROM products p WHERE p.numericPrice > 0 AND p.numericPrice <= 100000 AND (:market IS NULL OR p.market = :market) AND p.productType = 'protein'")
     int countValidNumericPrice(@Param("market") String market);
 
     // String price null/prazan (originalni scraped string)
-    @Query("SELECT COUNT(p) FROM products p WHERE (p.price IS NULL OR p.price = '') AND (:market IS NULL OR p.market = :market)")
+    @Query("SELECT COUNT(p) FROM products p WHERE (p.price IS NULL OR p.price = '') AND (:market IS NULL OR p.market = :market) AND p.productType = 'protein'")
     int countEmptyPriceString(@Param("market") String market);
 
     // Bez prodavnice
-    @Query("SELECT COUNT(p) FROM products p WHERE p.store IS NULL AND (:market IS NULL OR p.market = :market)")
+    @Query("SELECT COUNT(p) FROM products p WHERE p.store IS NULL AND (:market IS NULL OR p.market = :market) AND p.productType = 'protein'")
     int countWithoutStore(@Param("market") String market);
 
-    @Query("SELECT COUNT(p) FROM products p WHERE p.sugarPer100g IS NULL AND (:market IS NULL OR p.market = :market)")
+    @Query("SELECT COUNT(p) FROM products p WHERE p.sugarPer100g IS NULL AND (:market IS NULL OR p.market = :market) AND p.productType = 'protein'")
     int countWithoutSugar(@Param("market") String market);
 
     // Fat
-    @Query("SELECT COUNT(p) FROM products p WHERE p.fatPer100g IS NULL AND (:market IS NULL OR p.market = :market)")
+    @Query("SELECT COUNT(p) FROM products p WHERE p.fatPer100g IS NULL AND (:market IS NULL OR p.market = :market) AND p.productType = 'protein'")
     int countWithoutFat(@Param("market") String market);
 
     // Calories
-    @Query("SELECT COUNT(p) FROM products p WHERE p.caloriePer100g IS NULL AND (:market IS NULL OR p.market = :market)")
+    @Query("SELECT COUNT(p) FROM products p WHERE p.caloriePer100g IS NULL AND (:market IS NULL OR p.market = :market) AND p.productType = 'protein'")
     int countWithoutCalories(@Param("market") String market);
 
     // Protein source
-    @Query("SELECT COUNT(p) FROM products p WHERE (p.proteinSource IS NULL OR p.proteinSource = '') AND (:market IS NULL OR p.market = :market)")
+    @Query("SELECT COUNT(p) FROM products p WHERE (p.proteinSource IS NULL OR p.proteinSource = '') AND (:market IS NULL OR p.market = :market) AND p.productType = 'protein'")
     int countWithoutProteinSource(@Param("market") String market);
 
     // Primary weight grams
-    @Query("SELECT COUNT(p) FROM products p WHERE (p.primaryWeightGrams IS NULL OR p.primaryWeightGrams = 0) AND (:market IS NULL OR p.market = :market)")
+    @Query("SELECT COUNT(p) FROM products p WHERE (p.primaryWeightGrams IS NULL OR p.primaryWeightGrams = 0) AND (:market IS NULL OR p.market = :market) AND p.productType = 'protein'")
     int countWithoutPrimaryWeight(@Param("market") String market);
 
     // Duplikati po imenu
@@ -74,7 +74,7 @@ public interface DataQualityRepository extends JpaRepository<Product, Long> {
             SELECT COUNT(*) FROM (
             SELECT LOWER(TRIM(name))
             FROM products
-            WHERE (:market IS NULL OR market = :market)
+            WHERE (:market IS NULL OR market = :market) AND product_type = 'protein'
             GROUP BY LOWER(TRIM(name))
             HAVING COUNT(*) > 1
         ) AS dups
@@ -84,7 +84,7 @@ public interface DataQualityRepository extends JpaRepository<Product, Long> {
     @Query(value = """
     SELECT MIN(name) as name, COUNT(*) as cnt
     FROM products
-    WHERE (:market IS NULL OR market = :market)
+    WHERE (:market IS NULL OR market = :market) AND product_type = 'protein'
     GROUP BY LOWER(TRIM(name))
     HAVING COUNT(*) > 1
     ORDER BY cnt DESC
@@ -98,7 +98,7 @@ public interface DataQualityRepository extends JpaRepository<Product, Long> {
         SELECT p.id, s.name AS store, p.name, p.protein_per_100g
         FROM products p JOIN stores s ON p.store_id = s.id
         WHERE p.protein_per_100g > 95
-          AND (:market IS NULL OR p.market = :market)
+          AND (:market IS NULL OR p.market = :market) AND p.product_type = 'protein'
         ORDER BY p.protein_per_100g DESC
         """, nativeQuery = true)
     List<Object[]> findHighProteinOutliers(@Param("market") String market);
@@ -107,7 +107,7 @@ public interface DataQualityRepository extends JpaRepository<Product, Long> {
         SELECT p.id, s.name AS store, p.name, p.protein_per_100g
         FROM products p JOIN stores s ON p.store_id = s.id
         WHERE p.protein_per_100g < 20
-          AND (:market IS NULL OR p.market = :market)
+          AND (:market IS NULL OR p.market = :market) AND p.product_type = 'protein'
         ORDER BY p.protein_per_100g
         """, nativeQuery = true)
     List<Object[]> findLowProteinOutliers(@Param("market") String market);
@@ -118,7 +118,7 @@ public interface DataQualityRepository extends JpaRepository<Product, Long> {
         WHERE p.calorie_per_100g IS NOT NULL
           AND p.protein_per_100g IS NOT NULL
           AND p.calorie_per_100g < p.protein_per_100g * 4 * 0.95
-          AND (:market IS NULL OR p.market = :market)
+          AND (:market IS NULL OR p.market = :market) AND p.product_type = 'protein'
         ORDER BY p.calorie_per_100g
         """, nativeQuery = true)
     List<Object[]> findCalorieTooLowOutliers(@Param("market") String market);
@@ -127,7 +127,7 @@ public interface DataQualityRepository extends JpaRepository<Product, Long> {
         SELECT p.id, s.name AS store, p.name, p.calorie_per_100g
         FROM products p JOIN stores s ON p.store_id = s.id
         WHERE p.calorie_per_100g > 600
-          AND (:market IS NULL OR p.market = :market)
+          AND (:market IS NULL OR p.market = :market) AND p.product_type = 'protein'
         ORDER BY p.calorie_per_100g DESC
         """, nativeQuery = true)
     List<Object[]> findCalorieTooHighOutliers(@Param("market") String market);
@@ -136,7 +136,7 @@ public interface DataQualityRepository extends JpaRepository<Product, Long> {
         SELECT p.id, s.name AS store, p.name, p.fat_per_100g
         FROM products p JOIN stores s ON p.store_id = s.id
         WHERE p.fat_per_100g > 50
-          AND (:market IS NULL OR p.market = :market)
+          AND (:market IS NULL OR p.market = :market) AND p.product_type = 'protein'
         ORDER BY p.fat_per_100g DESC
         """, nativeQuery = true)
     List<Object[]> findHighFatOutliers(@Param("market") String market);
@@ -145,7 +145,7 @@ public interface DataQualityRepository extends JpaRepository<Product, Long> {
         SELECT p.id, s.name AS store, p.name, p.sugar_per_100g
         FROM products p JOIN stores s ON p.store_id = s.id
         WHERE p.sugar_per_100g > 30
-          AND (:market IS NULL OR p.market = :market)
+          AND (:market IS NULL OR p.market = :market) AND p.product_type = 'protein'
         ORDER BY p.sugar_per_100g DESC
         """, nativeQuery = true)
     List<Object[]> findHighSugarOutliers(@Param("market") String market);
@@ -156,7 +156,7 @@ public interface DataQualityRepository extends JpaRepository<Product, Long> {
         SELECT p.id, s.name AS store, p.name, p.primary_weight_grams
         FROM products p JOIN stores s ON p.store_id = s.id
         WHERE p.primary_weight_grams IS NOT NULL AND p.primary_weight_grams < 150
-          AND (:market IS NULL OR p.market = :market)
+          AND (:market IS NULL OR p.market = :market) AND p.product_type = 'protein'
         ORDER BY p.primary_weight_grams
         """, nativeQuery = true)
     List<Object[]> findImplausiblyLowWeightOutliers(@Param("market") String market);
@@ -167,7 +167,7 @@ public interface DataQualityRepository extends JpaRepository<Product, Long> {
         SELECT p.id, s.name AS store, p.name, p.last_updated
         FROM products p JOIN stores s ON p.store_id = s.id
         WHERE p.last_updated < :cutoff
-          AND (:market IS NULL OR p.market = :market)
+          AND (:market IS NULL OR p.market = :market) AND p.product_type = 'protein'
         ORDER BY p.last_updated
         """, nativeQuery = true)
     List<Object[]> findStaleProducts(@Param("cutoff") java.time.LocalDateTime cutoff, @Param("market") String market);

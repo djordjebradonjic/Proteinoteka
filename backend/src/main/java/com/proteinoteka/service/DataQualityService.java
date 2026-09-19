@@ -3,6 +3,7 @@ package com.proteinoteka.service;
 
 import com.proteinoteka.dto.DataQualityReport;
 import com.proteinoteka.model.BrandReputation;
+import com.proteinoteka.service.producttype.ProductTypes;
 import com.proteinoteka.repository.BrandReputationRepository;
 import com.proteinoteka.repository.DataQualityRepository;
 import com.proteinoteka.repository.ProductGroupRepository;
@@ -270,7 +271,10 @@ public class DataQualityService {
     }
 
     private List<com.proteinoteka.model.Product> loadProducts(String market) {
+        // These audits check protein data (macros, protein source, value score inputs); other product
+        // families get their own audit rather than showing up here as "missing protein".
         return productRepository.findAll().stream()
+                .filter(p -> ProductTypes.PROTEIN.equals(p.getProductType()))
                 .filter(p -> market == null || market.equalsIgnoreCase(p.getMarket()))
                 .toList();
     }

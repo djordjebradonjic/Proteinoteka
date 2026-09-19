@@ -1,6 +1,7 @@
 package com.proteinoteka.service;
 
 import com.proteinoteka.model.Product;
+import com.proteinoteka.service.producttype.ProductTypes;
 import com.proteinoteka.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +33,7 @@ public class AiDescriptionJob {
         }
 
         try {
-            List<Product> products = productRepository.findByAiDescriptionIsNull();
+            List<Product> products = productRepository.findByAiDescriptionIsNullAndProductType(ProductTypes.PROTEIN);
             log.info("AI description job started — {} products to process", products.size());
 
             int success = 0;

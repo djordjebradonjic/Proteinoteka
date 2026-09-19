@@ -25,6 +25,8 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
     Page<Product> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
+    Page<Product> findByNameContainingIgnoreCaseAndProductType(String name, String productType, Pageable pageable);
+
     Optional<Product> findByUrl(String url);
     Page<Product> findAll(Pageable pageable);
 
@@ -63,6 +65,37 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @Query(value = "SELECT DISTINCT flavour FROM product_flavours WHERE flavour IS NOT NULL ORDER BY flavour ASC", nativeQuery = true)
     List<String> findAllUniqueFlavours();
 
+    // Brand / flavour lists of one product family — the protein filters must not list creatine-only
+    // brands or flavours and vice versa.
+    @Query(value = """
+            SELECT DISTINCT brand FROM products
+            WHERE brand IS NOT NULL
+              AND market = :market
+              AND product_type = :productType
+              AND brand NOT LIKE '%RSD%'
+              AND brand NOT LIKE '%Kategorij%'
+              AND brand NOT LIKE '%Dodaj%'
+              AND brand NOT LIKE '%stanju%'
+              AND brand NOT LIKE '%korpu%'
+              AND brand NOT LIKE '%kom.%'
+              AND LENGTH(brand) <= 60
+            ORDER BY brand ASC
+            """, nativeQuery = true)
+    List<String> findAllUniqueBrandsByMarketAndType(@Param("market") String market,
+                                                    @Param("productType") String productType);
+
+    @Query(value = """
+            SELECT DISTINCT pf.flavour
+            FROM product_flavours pf
+            JOIN products p ON pf.product_id = p.id
+            WHERE pf.flavour IS NOT NULL
+              AND p.market = :market
+              AND p.product_type = :productType
+            ORDER BY pf.flavour ASC
+            """, nativeQuery = true)
+    List<String> findAllUniqueFlavoursByMarketAndType(@Param("market") String market,
+                                                      @Param("productType") String productType);
+
     // Brands a specific store currently carries — used by the store competitive report to
     // work out which trending-search brands the store is NOT stocking (missed opportunity).
     @Query(value = """
@@ -84,6 +117,10 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
     @Query("SELECT p FROM products p WHERE p.proteinPer100g IS NULL")
     List<Product> findByProteinPer100gIsNull();
+
+    // Creatine has no protein content by nature, so a null protein there is not "missing data".
+    @Query("SELECT p FROM products p WHERE p.proteinPer100g IS NULL AND p.productType = :productType")
+    List<Product> findByProteinPer100gIsNullAndProductType(@Param("productType") String productType);
 
     @Query("SELECT p.url FROM products p WHERE p.store.name = :storeName")
     List<String> findUrlsByStoreName(@Param("storeName") String storeName);
@@ -129,6 +166,10 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
     @Query("SELECT p FROM products p WHERE p.aiDescription IS NULL")
     List<Product> findByAiDescriptionIsNull();
+
+    // The AI description prompt is written for whey protein; creatine rows would get whey-protein copy.
+    @Query("SELECT p FROM products p WHERE p.aiDescription IS NULL AND p.productType = :productType")
+    List<Product> findByAiDescriptionIsNullAndProductType(@Param("productType") String productType);
 
     List<Product> findByGroupId(Long groupId);
 

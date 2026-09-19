@@ -43,4 +43,12 @@ export interface Product {
   groupId?: number | null;
   groupCanonicalId?: number | null;
   valueBreakdown?: ValueScoreBreakdown | null;
+  // Product family ("protein" by default, "creatine", ...). The list endpoints answer for one family
+  // at a time, so protein pages never see the rest; the fields below are only set for non-protein rows.
+  productType?: string | null;
+  productForm?: string | null;
+  unitCount?: number | null;
+  creatineGramsPerServing?: number | null;
+  servingsPerContainer?: number | null;
+  creatineType?: string | null;
 }

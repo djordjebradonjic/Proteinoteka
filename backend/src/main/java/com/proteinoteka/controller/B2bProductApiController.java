@@ -3,6 +3,8 @@ package com.proteinoteka.controller;
 import com.proteinoteka.dto.B2bProductDTO;
 import com.proteinoteka.model.Product;
 import com.proteinoteka.repository.ProductRepository;
+import com.proteinoteka.ProductSpecifications;
+import com.proteinoteka.service.producttype.ProductTypes;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -57,8 +59,10 @@ public class B2bProductApiController {
         int safeSize = Math.min(size, 200);
         log.info("B2B API — uspešan pristup (ključ: {}), page={} size={}", keyPreview, page, safeSize);
 
+        // B2B customers buy protein data; other product families would arrive with null protein fields
+        // and no way to tell them apart, so they are not part of this feed.
         Page<B2bProductDTO> result = productRepository
-                .findAll(PageRequest.of(page, safeSize))
+                .findAll(ProductSpecifications.hasProductType(ProductTypes.PROTEIN), PageRequest.of(page, safeSize))
                 .map(this::toB2bDTO);
 
         return ResponseEntity.ok(result);

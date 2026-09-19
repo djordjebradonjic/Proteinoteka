@@ -3,6 +3,7 @@ package com.proteinoteka.service;
 
 import com.proteinoteka.dto.NutritionDataDTO;
 import com.proteinoteka.model.Product;
+import com.proteinoteka.service.producttype.ProductTypes;
 import com.proteinoteka.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +20,7 @@ public class NutritionEnrichmentJob {
     private final AiNutritionService aiNutritionService;
 
     public void enrichMissingNutrition() {
-        List<Product> products = productRepository.findByProteinPer100gIsNull();
+        List<Product> products = productRepository.findByProteinPer100gIsNullAndProductType(ProductTypes.PROTEIN);
 
         log.info("Found {} products with missing nutrition data", products.size());
 
@@ -72,7 +73,9 @@ public class NutritionEnrichmentJob {
     }
 
     public void enrichAllProducts() {
-        List<Product> products = productRepository.findAll();
+        List<Product> products = productRepository.findAll().stream()
+                .filter(p -> ProductTypes.PROTEIN.equals(p.getProductType()))
+                .toList();
 
         log.info("Enriching all {} products with full nutrition data", products.size());
 

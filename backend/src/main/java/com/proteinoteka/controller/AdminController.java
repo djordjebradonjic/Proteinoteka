@@ -21,6 +21,7 @@ import com.proteinoteka.service.ShopbuilderScraper;
 import com.proteinoteka.service.StoreScraper;
 import com.proteinoteka.service.SupplementStoreScraper;
 import com.proteinoteka.service.producttype.ProductTypeRegistry;
+import com.proteinoteka.service.producttype.ProductTypes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.CacheManager;
 import org.springframework.http.ResponseEntity;
@@ -405,16 +406,21 @@ public class AdminController {
             p.setValueScore(newScore);
             p.setProteinPerRsd(scraperService.computeProteinPerRsd(p.getNumericPrice(), p));
         }
-        // Compute percentile ranks based on value score
-        List<Product> withScore = all.stream()
-                .filter(p -> p.getValueScore() != null)
-                .sorted(java.util.Comparator.comparingDouble(Product::getValueScore))
-                .toList();
+        // Percentile ranks are computed within a product type: a creatine's price-per-gram score says
+        // nothing about where a whey sits among wheys, and ranking them together would skew both.
         all.stream().filter(p -> p.getValueScore() == null).forEach(p -> p.setPercentileRank(null));
-        for (int i = 0; i < withScore.size(); i++) {
-            int pct = (int) Math.round((double) i / withScore.size() * 100);
-            withScore.get(i).setPercentileRank(pct);
-        }
+        all.stream()
+                .filter(p -> p.getValueScore() != null)
+                .collect(Collectors.groupingBy(Product::getProductType))
+                .values()
+                .forEach(sameType -> {
+                    List<Product> sorted = sameType.stream()
+                            .sorted(java.util.Comparator.comparingDouble(Product::getValueScore))
+                            .toList();
+                    for (int i = 0; i < sorted.size(); i++) {
+                        sorted.get(i).setPercentileRank((int) Math.round((double) i / sorted.size() * 100));
+                    }
+                });
 
         productRepository.saveAll(all);
         List.of("products", "products-meta", "products-search").forEach(name -> {
@@ -466,6 +472,8 @@ public class AdminController {
     @PostMapping("/enrich-nutrition")
     public ResponseEntity<String> enrichNutrition() {
         List<Product> candidates = productRepository.findAll().stream()
+                // the AI prompt extracts protein macros; running it over creatine would only invent them
+                .filter(p -> ProductTypes.PROTEIN.equals(p.getProductType()))
                 .filter(p -> (p.getSugarPer100g() == null || p.getFatPer100g() == null)
                         && p.getDescription() != null && !p.getDescription().isBlank())
                 .toList();
