@@ -352,6 +352,9 @@ public class ProductController {
                     if (recentPrices.size() < 2) return null;
                     double avg90d = recentPrices.stream().mapToDouble(Double::doubleValue).average().orElse(0);
                     if (avg90d <= 0 || p.getNumericPrice() >= avg90d) return null;
+                    // A "discount" beyond the credibility cap means the row held another product
+                    // during part of the window, not a real sale.
+                    if (!PriceIntegrity.isCredibleChange(avg90d, p.getNumericPrice())) return null;
                     return toProductDTO(p, avg90d);
                 })
                 .filter(java.util.Objects::nonNull)
