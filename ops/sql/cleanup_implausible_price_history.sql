@@ -9,10 +9,12 @@
 -- The code now treats a move of more than 50% between the most recent history row and the current
 -- price as not credible (PriceIntegrity.isCredibleChange) and stops writing such history. This
 -- script removes what is already stored, using exactly that rule:
---   for each product whose MOST RECENT history row differs from the current price by more than 50%
---   (relative to the history price), delete ALL of its history rows and clear the drop/increase
---   columns. A row that was re-pointed has no trustworthy history at all, so a partial delete
---   would leave older prices of the previous item behind.
+--   for each product whose current price is more than 50% BELOW its most recent history row, delete
+--   ALL of its history rows and clear the drop/increase columns. A row that was re-pointed has no
+--   trustworthy history at all, so a partial delete would leave older prices of the previous item
+--   behind.
+--   Only DROPS are cleaned. A >50% increase (verified 2026-09-19 on 9 products, e.g. USN Blue Lab
+--   HR 44.51 -> 69.62) is an ended promotion: the history is true, it is just never shown as a drop.
 --
 -- Safe by default:
 --   * STEP 1 is read-only — review it. Anything that is a genuine >50% sale you want to keep can be
@@ -44,7 +46,7 @@ FROM latest l
 JOIN products p ON p.id = l.product_id
 LEFT JOIN stores s ON s.id = p.store_id
 WHERE p.numeric_price > 0
-  AND ABS(p.numeric_price - l.prev_price) / l.prev_price > 0.5
+  AND (l.prev_price - p.numeric_price) / l.prev_price > 0.5
 ORDER BY change_pct;
 
 -- ---------------------------------------------------------------------------------------------
@@ -63,7 +65,7 @@ SELECT p.id AS product_id
 FROM latest l
 JOIN products p ON p.id = l.product_id
 WHERE p.numeric_price > 0
-  AND ABS(p.numeric_price - l.prev_price) / l.prev_price > 0.5
+  AND (l.prev_price - p.numeric_price) / l.prev_price > 0.5
   AND p.id NOT IN (0);   -- <- add ids of genuine >50% sales you want to keep
 
 DELETE FROM price_history WHERE product_id IN (SELECT product_id FROM implausible);
@@ -82,6 +84,6 @@ SELECT (SELECT COUNT(*) FROM implausible) AS products_cleaned,
                  ORDER BY product_id, timestamp DESC, id DESC) l
           JOIN products p ON p.id = l.product_id
          WHERE p.numeric_price > 0
-           AND ABS(p.numeric_price - l.prev_price) / l.prev_price > 0.5) AS still_implausible;
+           AND (l.prev_price - p.numeric_price) / l.prev_price > 0.5) AS still_implausible;
 
 ROLLBACK;   -- <- change to COMMIT after reviewing the output above

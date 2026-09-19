@@ -43,11 +43,14 @@ public final class PriceChangeAudit {
                         .ifPresent(last -> {
                             if (p.getNumericPrice() != null && p.getNumericPrice() > 0
                                     && !PriceIntegrity.isCredibleChange(last.getNumericPrice(), p.getNumericPrice())) {
+                                boolean drop = p.getNumericPrice() < last.getNumericPrice();
                                 issues.add(String.format(Locale.ROOT,
-                                        "PRICE_CHANGE_IMPLAUSIBLE — %s last history price %.2f vs current %.2f (%.0f%%) — "
-                                                + "probably a different product/pack on the same row; delete its price_history",
+                                        "PRICE_CHANGE_IMPLAUSIBLE — %s last history price %.2f vs current %.2f (%.0f%%) — %s",
                                         tag, last.getNumericPrice(), p.getNumericPrice(),
-                                        (p.getNumericPrice() - last.getNumericPrice()) / last.getNumericPrice() * 100));
+                                        (p.getNumericPrice() - last.getNumericPrice()) / last.getNumericPrice() * 100,
+                                        drop
+                                                ? "probably a different product/pack on the same row; run ops/sql/cleanup_implausible_price_history.sql"
+                                                : "usually an ended promotion (history is true, never shown as a drop); verify on the store page"));
                             }
                         });
             }
@@ -63,7 +66,9 @@ public final class PriceChangeAudit {
 
             if (p.getCanonicalSlug() != null && !p.getCanonicalSlug().isBlank() && !history.isEmpty()
                     && !ProductLineMatcher.sameProductLine(
-                            p.getName(), p.getBrand(), p.getCanonicalSlug().replace('-', ' '), p.getBrand())) {
+                            // The slug is ASCII-folded ("govedi"), so fold the name the same way ("goveđi").
+                            ScraperService.slugify(p.getName()).replace('-', ' '), p.getBrand(),
+                            p.getCanonicalSlug().replace('-', ' '), p.getBrand())) {
                 issues.add(String.format("IDENTITY_DRIFT — %s name no longer matches its creation-time slug '%s' — "
                         + "the row was probably re-pointed at another product; its price history and nutrition may belong to the old one",
                         tag, p.getCanonicalSlug()));

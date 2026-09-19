@@ -93,4 +93,13 @@ class PriceChangeAuditTest {
         p.setLastPriceIncreasePct(100.0 / 1500.0);
         assertFalse(has(PriceChangeAudit.run(List.of(p)), "IDENTITY_DRIFT"));
     }
+
+    @Test
+    void diacriticsInTheNameDoNotCauseDrift() {
+        // Slugs are ASCII-folded at creation ("govedi"), names keep their diacritics ("goveđi").
+        Product p = withHistory(product("100 % goveđi protein - Nutrend", "100-govedi-protein-nutrend-900g", 5000.0), 4800.0, "2026-07-25T15:12:00");
+        p.setBrand("Nutrend");
+        p.setLastPriceIncreasePct(200.0 / 4800.0);
+        assertFalse(has(PriceChangeAudit.run(List.of(p)), "IDENTITY_DRIFT"));
+    }
 }
