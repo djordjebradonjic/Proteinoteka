@@ -2,7 +2,9 @@ package com.proteinoteka.controller;
 
 import com.proteinoteka.repository.AlertJobRepository;
 import lombok.RequiredArgsConstructor;
+import com.proteinoteka.util.RedirectAllowlist;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.CacheControl;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +31,9 @@ public class AlertTrackingController {
 
     private final AlertJobRepository alertJobRepo;
 
+    @Value("${app.frontend-url:https://proteinoteka.rs}")
+    private String frontendUrl;
+
     /**
      * Email open tracking pixel.
      * Called automatically when email client loads images.
@@ -52,7 +57,9 @@ public class AlertTrackingController {
     /**
      * Click tracking redirect.
      * All CTA links in alert emails point here first, then redirect to the real URL.
-     * Records the first click time, then 302 to the destination.
+     * Records the first click time, then 302 to the destination. The destination comes from the
+     * query string, so it is only honoured for our own storefront hosts; anything else falls
+     * back to the frontend home page (otherwise this would be an open redirect).
      */
     @GetMapping("/click")
     @Transactional
@@ -67,8 +74,12 @@ public class AlertTrackingController {
                 log.info("[AlertTracking] Email clicked: job={}", job);
             }
         });
+        String destination = RedirectAllowlist.safeOrFallback(redirect, frontendUrl, frontendUrl);
+        if (!destination.equals(redirect)) {
+            log.warn("[AlertTracking] Blocked redirect to non-storefront URL: job={}", job);
+        }
         return ResponseEntity.status(302)
-                .location(URI.create(redirect))
+                .location(URI.create(destination))
                 .build();
     }
 }
