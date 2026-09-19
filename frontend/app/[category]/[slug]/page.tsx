@@ -12,6 +12,7 @@ import {
 } from "@/lib/productUrl";
 import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
 import { formatPrice } from "@/lib/formatPrice";
+import { displayName } from "@/lib/productDisplayName";
 
 export const revalidate = 86400;
 
@@ -133,7 +134,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     if (canonicalProduct) canonical = `${BASE_URL}${productUrl(canonicalProduct)}`;
   }
 
-  const title       = buildProductTitle(product.name);
+  const shownName   = displayName(product);
+  const title       = buildProductTitle(shownName);
 
   const descParts: string[] = [];
   if (product.proteinPer100g != null) descParts.push(`${product.proteinPer100g}g proteina/100g`);
@@ -155,8 +157,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       : null;
 
   const description = priceHint
-    ? `${product.name}${nutritionHint} — ${priceHint} ${MARKET_STRINGS[CURRENT_MARKET].descSuffix}`
-    : `${product.name}${nutritionHint} ${MARKET_STRINGS[CURRENT_MARKET].descSuffix}`;
+    ? `${shownName}${nutritionHint} — ${priceHint} ${MARKET_STRINGS[CURRENT_MARKET].descSuffix}`
+    : `${shownName}${nutritionHint} ${MARKET_STRINGS[CURRENT_MARKET].descSuffix}`;
 
   return {
     title:       { absolute: title },

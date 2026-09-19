@@ -25,6 +25,7 @@ import ValueScoreCard from "@/components/ValueScoreCard";
 import { formatPrice } from "@/lib/formatPrice";
 import { getScoreColor, getScoreLabel } from "@/lib/scoreColor";
 import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
+import { displayName } from "@/lib/productDisplayName";
 
 const IS_HR = CURRENT_MARKET === "hr";
 const MARKET = MARKET_CONFIG[CURRENT_MARKET];
@@ -657,7 +658,7 @@ export default function ProductPageContent({ product, similar, storePrices, revi
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 leading-tight">
-              {product.name}
+              {displayName(product)}
             </h1>
 
             <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
