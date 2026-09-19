@@ -47,6 +47,7 @@ export default async function Page() {
       listHeading="Hidrolizat proteini — sortirani po vrednosti za novac"
       tableCaption="Pregled cena hidrolizovanih proteina u Srbiji 2026"
       currentSlug="hidrolizat-protein-srbija"
+      extraLinks={[{ href: "/amino-whey-hydro-cena", label: "🧪 Amino Whey Hydro cena" }]}
       faqs={[
         {
           q: "Šta je hidrolizat proteina i kako se razlikuje od isolate-a?",

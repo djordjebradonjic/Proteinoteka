@@ -36,6 +36,7 @@ const BRAND_PAGE_SLUGS: Record<string, string> = IS_HR ? {} : {
   "Dymatize Nutrition": "/dymatize-proteini",
   "BioTech USA":        "/biotech-usa-proteini",
   "Biotech":            "/biotech-usa-proteini",
+  "Tesla Nutrition":    "/tesla-nutrition-proteini",
   "GymBeam":            "/gymbeam-proteini",
   "MyProtein":          "/myprotein-proteini",
   "Ultimate Nutrition": "/ultimate-nutrition-proteini",

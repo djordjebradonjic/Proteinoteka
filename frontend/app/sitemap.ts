@@ -130,6 +130,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/najbolji-whey-protein-srbija`, changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/najjeftiniji-whey-protein`,    changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/whey-protein-cena`,            changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
+    { url: `${BASE}/gde-kupiti-protein-srbija`,    changeFrequency: "daily"  as const, priority: 0.9,  lastModified: now },
     { url: `${BASE}/whey-isolate-srbija`,          changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/protein-za-masu`,              changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/whey-protein-do-3000-dinara`,  changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
@@ -143,6 +144,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/scitec-nutrition-proteini`,  changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/dymatize-proteini`,          changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/biotech-usa-proteini`,       changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
+    { url: `${BASE}/tesla-nutrition-proteini`,   changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
+    { url: `${BASE}/amino-whey-hydro-cena`,      changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/ultimate-nutrition-proteini`, changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     // Store pages
     { url: `${BASE}/ogistrashop-proteini`,       changeFrequency: "weekly" as const, priority: 0.8, lastModified: now },
