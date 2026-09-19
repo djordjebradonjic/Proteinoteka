@@ -108,10 +108,20 @@ const BASE_URL = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
 
 // Long-form landing pages that go deeper than the category listing. Linked from the category
 // page so the listing's authority (it already ranks) flows to the page targeting the same cluster.
-const DEEP_DIVE: Record<string, Record<"rs" | "hr", { href: string; label: string }>> = {
+const DEEP_DIVE: Record<string, Partial<Record<"rs" | "hr", { href: string; label: string }[]>>> = {
   whey_isolate: {
-    rs: { href: "/whey-protein-izolat", label: "✨ Whey izolat: cene po gramu proteina i vodič" },
-    hr: { href: "/whey-protein-izolat-hrvatska", label: "✨ Whey izolat: cijene po gramu proteina i vodič" },
+    rs: [
+      { href: "/whey-protein-izolat", label: "✨ Whey izolat: cene po gramu proteina i vodič" },
+      { href: "/gde-kupiti-protein-srbija", label: "🏪 Gde kupiti: poređenje prodavnica" },
+    ],
+    hr: [{ href: "/whey-protein-izolat-hrvatska", label: "✨ Whey izolat: cijene po gramu proteina i vodič" }],
+  },
+  whey_concentrate: {
+    rs: [{ href: "/gde-kupiti-protein-srbija", label: "🏪 Gde kupiti: poređenje prodavnica" }],
+  },
+  // Amino Whey Hydro is stored as a whey concentrate, so its model page is linked from both.
+  hydrolysate: {
+    rs: [{ href: "/amino-whey-hydro-cena", label: "🧪 Amino Whey Hydro: cena po pakovanju" }],
   },
 };
 
@@ -242,7 +252,7 @@ export default async function KategorijaPage({ params }: Props) {
   ) : null;
 
   const deepDive = DEEP_DIVE[cat.value]?.[CURRENT_MARKET];
-  const guideLinks = [...(deepDive ? [deepDive] : []), ...(content?.guides ?? [])];
+  const guideLinks = [...(deepDive ?? []), ...(content?.guides ?? [])];
 
   const categoryFaq = content ? (
     <div className="max-w-7xl mx-auto px-4 pb-10 space-y-8">

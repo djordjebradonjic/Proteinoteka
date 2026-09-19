@@ -146,6 +146,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/biotech-usa-proteini`,       changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/tesla-nutrition-proteini`,   changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/amino-whey-hydro-cena`,      changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
+    { url: `${BASE}/nutriversum-proteini`,       changeFrequency: "weekly" as const, priority: 0.8,  lastModified: now },
+    { url: `${BASE}/amix-proteini`,              changeFrequency: "weekly" as const, priority: 0.8,  lastModified: now },
+    { url: `${BASE}/maximalium-proteini`,        changeFrequency: "weekly" as const, priority: 0.8,  lastModified: now },
+    { url: `${BASE}/vitalikum-proteini`,         changeFrequency: "weekly" as const, priority: 0.8,  lastModified: now },
     { url: `${BASE}/ultimate-nutrition-proteini`, changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     // Store pages
     { url: `${BASE}/ogistrashop-proteini`,       changeFrequency: "weekly" as const, priority: 0.8, lastModified: now },
