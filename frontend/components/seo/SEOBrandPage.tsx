@@ -304,10 +304,12 @@ export interface SEOBrandPageProps {
   currentSlug: string;
   faqs: { q: string; a: string }[];
   extraGuideLinks?: { label: string; href: string }[];
+  /** Optional block rendered between the decision cards and the ranked product list. */
+  insightsSection?: React.ReactNode;
 }
 
 export function SEOBrandPage({
-  h1, brandName, intro, products, currentSlug, faqs, extraGuideLinks,
+  h1, brandName, intro, products, currentSlug, faqs, extraGuideLinks, insightsSection,
 }: SEOBrandPageProps) {
   const sorted = [...products].sort((a, b) => (b.valueScore ?? 0) - (a.valueScore ?? 0));
   const topCompareIds = sorted.slice(0, 3).map(p => p.id).join(",");
@@ -387,6 +389,8 @@ export function SEOBrandPage({
         <Disclaimer brandName={brandName} />
 
         {sorted.length > 0 && <DecisionSummary products={sorted} />}
+
+        {insightsSection}
 
         {sorted.length > 0 && (
           <section>
