@@ -73,6 +73,7 @@ function CompareShortcut({ products }: { products: Product[] }) {
               <div className="w-20 h-20 mb-2 flex items-center justify-center bg-white/10 rounded-lg p-1">
                 <Image
                   src={p.imageUrl}
+                  unoptimized
                   alt={p.name}
                   width={80}
                   height={80}
@@ -220,6 +221,7 @@ function DecisionSummary({ products }: { products: Product[] }) {
                 <div className="w-16 h-16 shrink-0 flex items-center justify-center bg-slate-50 rounded-lg border border-slate-100 p-1">
                   <Image
                     src={product.imageUrl}
+                    unoptimized
                     alt={product.name}
                     width={64}
                     height={64}

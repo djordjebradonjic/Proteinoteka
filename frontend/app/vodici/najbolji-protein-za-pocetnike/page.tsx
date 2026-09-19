@@ -226,6 +226,7 @@ export default async function Page() {
                         {product.imageUrl ? (
                           <Image
                             src={product.imageUrl}
+                            unoptimized
                             alt={product.name}
                             width={64}
                             height={64}
@@ -286,6 +287,7 @@ export default async function Page() {
                                 {p.imageUrl ? (
                                   <Image
                                     src={p.imageUrl}
+                                    unoptimized
                                     alt={p.name}
                                     width={40}
                                     height={40}
