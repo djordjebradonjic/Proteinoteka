@@ -960,22 +960,33 @@ public class ScraperService {
             String oldPrice = existing.getPrice();
             if (oldNumericPrice != null && numericPrice != null
                     && Math.abs(oldNumericPrice - numericPrice) > 0.01) {
-                log.info("[{}] Price change for '{}': {} -> {} {}",
-                        store.getName(), existing.getName(),
-                        oldNumericPrice, numericPrice, store.getCurrency());
-                PriceHistory history = new PriceHistory();
-                history.setProduct(existing);
-                history.setPrice(oldPrice);
-                history.setNumericPrice(oldNumericPrice);
-                history.setTimestamp(LocalDateTime.now());
-                priceHistoryRepository.save(history);
-                existing.setLastPriceChangeAt(history.getTimestamp());
-                if (numericPrice < oldNumericPrice) {
-                    existing.setLastPriceDropPct((oldNumericPrice - numericPrice) / oldNumericPrice);
-                    existing.setLastPriceIncreasePct(null);
+                if (PriceIntegrity.isCredibleChange(oldNumericPrice, numericPrice)) {
+                    log.info("[{}] Price change for '{}': {} -> {} {}",
+                            store.getName(), existing.getName(),
+                            oldNumericPrice, numericPrice, store.getCurrency());
+                    PriceHistory history = new PriceHistory();
+                    history.setProduct(existing);
+                    history.setPrice(oldPrice);
+                    history.setNumericPrice(oldNumericPrice);
+                    history.setTimestamp(LocalDateTime.now());
+                    priceHistoryRepository.save(history);
+                    existing.setLastPriceChangeAt(history.getTimestamp());
+                    if (numericPrice < oldNumericPrice) {
+                        existing.setLastPriceDropPct((oldNumericPrice - numericPrice) / oldNumericPrice);
+                        existing.setLastPriceIncreasePct(null);
+                    } else {
+                        existing.setLastPriceDropPct(null);
+                        existing.setLastPriceIncreasePct((numericPrice - oldNumericPrice) / oldNumericPrice);
+                    }
                 } else {
+                    // A move this large is a different product/pack on the same row, not a repricing:
+                    // take the new price but don't fabricate a "drop" (or keep an older one that no
+                    // longer describes this price).
+                    log.warn("[{}] Implausible price move for '{}': {} -> {} {} — updating price without recording a price change",
+                            store.getName(), existing.getName(),
+                            oldNumericPrice, numericPrice, store.getCurrency());
                     existing.setLastPriceDropPct(null);
-                    existing.setLastPriceIncreasePct((numericPrice - oldNumericPrice) / oldNumericPrice);
+                    existing.setLastPriceIncreasePct(null);
                 }
             }
 

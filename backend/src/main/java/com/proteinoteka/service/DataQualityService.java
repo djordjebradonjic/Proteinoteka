@@ -10,6 +10,7 @@ import com.proteinoteka.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -188,6 +189,9 @@ public class DataQualityService {
      * Detects products with physically impossible or suspicious nutrition values.
      * Returns a list of human-readable issue strings and logs them as warnings.
      */
+    // Read-only tx: the price-change audit walks each product's lazy priceHistories, and the
+    // scheduler calls this outside any web request (no open-in-view session).
+    @Transactional(readOnly = true)
     public List<String> checkOutliers(String market) {
         List<String> issues = new ArrayList<>();
 
@@ -254,6 +258,7 @@ public class DataQualityService {
         List<com.proteinoteka.model.Product> products = loadProducts(market);
         issues.addAll(checkValueScoreIntegrity(products));
         issues.addAll(checkProductGroupIntegrity(products));
+        issues.addAll(checkPriceChangeIntegrity(products));
 
         if (issues.isEmpty()) {
             log.info("[DataQuality] Outlier check passed — no suspicious values found.");
@@ -300,6 +305,16 @@ public class DataQualityService {
                 .filter(g -> markets.contains(g.getMarket() == null ? "rs" : g.getMarket()))
                 .toList();
         List<String> issues = ProductGroupAudit.run(groups, products);
+        issues.forEach(i -> log.warn("[DataQuality] {}", i));
+        return issues;
+    }
+
+    /**
+     * Flapping/implausible price history and stale drop percentages behind the "biggest price
+     * drop" sort, /price-drops and the newsletter digest. See {@link PriceChangeAudit}.
+     */
+    private List<String> checkPriceChangeIntegrity(List<com.proteinoteka.model.Product> products) {
+        List<String> issues = PriceChangeAudit.run(products);
         issues.forEach(i -> log.warn("[DataQuality] {}", i));
         return issues;
     }

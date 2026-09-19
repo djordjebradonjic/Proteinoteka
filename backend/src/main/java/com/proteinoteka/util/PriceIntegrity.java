@@ -1,5 +1,6 @@
 package com.proteinoteka.util;
 
+import com.proteinoteka.model.PriceHistory;
 import com.proteinoteka.model.Product;
 
 import java.time.Duration;
@@ -35,6 +36,15 @@ public final class PriceIntegrity {
      */
     public static final double MAX_REPOINT_PRICE_DEVIATION = 0.10;
 
+    /**
+     * A price move bigger than this (relative to the old price) is not shown as a drop/increase.
+     * Real protein-supplement repricings and sales stay well below it; moves beyond it are
+     * practically always one DB row switching to a different product or pack size, whose old
+     * price says nothing about the new one (e.g. GymBeam "Mutant Whey" 7190 → "Mutant Mass" 3490
+     * on the same row). Unlike flapping these can be weeks apart, so the timing guard misses them.
+     */
+    public static final double MAX_CREDIBLE_PRICE_CHANGE = 0.50;
+
     /** Two history rows closer than this can't be two real repricings — see hasUnstablePriceHistory. */
     public static final Duration UNSTABLE_HISTORY_WINDOW = Duration.ofHours(1);
 
@@ -51,6 +61,58 @@ public final class PriceIntegrity {
             return true;
         }
         return Math.abs(scrapedPrice - existingPrice) / existingPrice <= MAX_REPOINT_PRICE_DEVIATION;
+    }
+
+    /**
+     * @return true if going from {@code from} to {@code to} is a believable repricing of one and
+     *         the same item (see {@link #MAX_CREDIBLE_PRICE_CHANGE}); false when either price is
+     *         unusable or the move is too large to be anything but an identity change
+     */
+    public static boolean isCredibleChange(Double from, Double to) {
+        if (from == null || from <= 0 || to == null || to <= 0) return false;
+        return Math.abs(to - from) / from <= MAX_CREDIBLE_PRICE_CHANGE;
+    }
+
+    /** What {@code products.last_price_drop_pct / last_price_increase_pct} may hold (both null = neither). */
+    public record LastChange(Double dropPct, Double increasePct) {
+        public static final LastChange NONE = new LastChange(null, null);
+
+        /** Percentages are doubles computed in SQL (V52/V53) and Java, so compare with a tolerance. */
+        private static final double EPSILON = 1e-6;
+
+        /** @return true if the stored columns already hold what this change implies */
+        public boolean matches(Double storedDropPct, Double storedIncreasePct) {
+            return close(dropPct, storedDropPct) && close(increasePct, storedIncreasePct);
+        }
+
+        private static boolean close(Double a, Double b) {
+            if (a == null || b == null) return a == null && b == null;
+            return Math.abs(a - b) < EPSILON;
+        }
+    }
+
+    /**
+     * Derives the denormalised "last price change" columns from the stored history the way the
+     * scraper would have written them, but only when the change is trustworthy: the history must
+     * not be flapping ({@link #hasUnstablePriceHistory}) and the move from the most recent history
+     * row to the current price must be credible ({@link #isCredibleChange}). Used to repair
+     * columns populated before those guards existed.
+     */
+    public static LastChange lastChange(Double currentPrice, Collection<PriceHistory> history) {
+        if (currentPrice == null || currentPrice <= 0 || history == null) return LastChange.NONE;
+        List<PriceHistory> valid = history.stream()
+                .filter(h -> h.getTimestamp() != null && h.getNumericPrice() != null && h.getNumericPrice() > 0)
+                .sorted(java.util.Comparator.comparing(PriceHistory::getTimestamp)
+                        .thenComparing(h -> h.getId() == null ? 0L : h.getId()))
+                .toList();
+        if (valid.isEmpty()) return LastChange.NONE;
+        if (hasUnstablePriceHistory(valid.stream().map(PriceHistory::getTimestamp).toList())) return LastChange.NONE;
+
+        double prev = valid.get(valid.size() - 1).getNumericPrice();
+        if (!isCredibleChange(prev, currentPrice)) return LastChange.NONE;
+        if (currentPrice < prev) return new LastChange((prev - currentPrice) / prev, null);
+        if (currentPrice > prev) return new LastChange(null, (currentPrice - prev) / prev);
+        return LastChange.NONE;
     }
 
     /**

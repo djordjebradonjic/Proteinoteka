@@ -1,5 +1,6 @@
 package com.proteinoteka.util;
 
+import com.proteinoteka.model.PriceHistory;
 import com.proteinoteka.model.Product;
 import org.junit.jupiter.api.Test;
 
@@ -142,5 +143,105 @@ class PriceIntegrityTest {
     void unsortedInputIsHandled() {
         LocalDateTime t = LocalDateTime.parse("2026-09-05T13:00:00");
         assertTrue(PriceIntegrity.hasUnstablePriceHistory(List.of(t.plusDays(7), t, t.plusMinutes(3))));
+    }
+
+    // ── isCredibleChange ─────────────────────────────────────────────────────────
+
+    @Test
+    void crossProductMovesAreNotCredible() {
+        // GymBeam RS "Mutant Whey" 7190 -> "Mutant Mass" 3490 on the same row (-51%).
+        assertFalse(PriceIntegrity.isCredibleChange(7190.0, 3490.0));
+        // GymBeam HR the same pair: 63.95 -> 28.95 EUR (-55%).
+        assertFalse(PriceIntegrity.isCredibleChange(63.95, 28.95));
+        // Soy Isolate history 4490 -> 1600 (-64%).
+        assertFalse(PriceIntegrity.isCredibleChange(4490.0, 1600.0));
+    }
+
+    @Test
+    void ordinaryRepricingsAreCredible() {
+        assertTrue(PriceIntegrity.isCredibleChange(4390.0, 3390.0));   // -23%
+        assertTrue(PriceIntegrity.isCredibleChange(35.95, 25.15));     // -30% sale
+        assertTrue(PriceIntegrity.isCredibleChange(5000.0, 7500.0));   // +50% boundary
+        assertTrue(PriceIntegrity.isCredibleChange(5000.0, 2500.0));   // -50% boundary
+    }
+
+    @Test
+    void justBeyondFiftyPercentIsNotCredible() {
+        assertFalse(PriceIntegrity.isCredibleChange(5000.0, 2499.0));
+        assertFalse(PriceIntegrity.isCredibleChange(5000.0, 7501.0));
+    }
+
+    @Test
+    void unusableInputsAreNotCredible() {
+        assertFalse(PriceIntegrity.isCredibleChange(null, 100.0));
+        assertFalse(PriceIntegrity.isCredibleChange(100.0, null));
+        assertFalse(PriceIntegrity.isCredibleChange(0.0, 100.0));
+        assertFalse(PriceIntegrity.isCredibleChange(100.0, -1.0));
+    }
+
+    // ── lastChange ───────────────────────────────────────────────────────────────
+
+    private static PriceHistory row(long id, double price, String ts) {
+        PriceHistory h = new PriceHistory();
+        h.setId(id);
+        h.setNumericPrice(price);
+        h.setTimestamp(LocalDateTime.parse(ts));
+        return h;
+    }
+
+    @Test
+    void lastChangeReportsCredibleDrop() {
+        PriceIntegrity.LastChange c = PriceIntegrity.lastChange(3390.0, List.of(row(1, 4390.0, "2026-06-24T11:07:00")));
+        assertEquals(1000.0 / 4390.0, c.dropPct(), 1e-9);
+        assertEquals(null, c.increasePct());
+    }
+
+    @Test
+    void lastChangeReportsCredibleIncrease() {
+        PriceIntegrity.LastChange c = PriceIntegrity.lastChange(5000.0, List.of(row(1, 4000.0, "2026-06-24T11:07:00")));
+        assertEquals(null, c.dropPct());
+        assertEquals(0.25, c.increasePct(), 1e-9);
+    }
+
+    @Test
+    void lastChangeUsesMostRecentHistoryRow() {
+        PriceIntegrity.LastChange c = PriceIntegrity.lastChange(3500.0, List.of(
+                row(2, 4200.0, "2026-08-18T13:41:00"),
+                row(1, 3000.0, "2026-07-01T10:00:00")));
+        assertEquals(700.0 / 4200.0, c.dropPct(), 1e-9);
+    }
+
+    @Test
+    void lastChangeIsEmptyForImplausibleMove() {
+        // Row re-pointed from "Mutant Whey" (7190) to "Mutant Mass" (3490): weeks apart, so only the cap catches it.
+        assertEquals(PriceIntegrity.LastChange.NONE,
+                PriceIntegrity.lastChange(3490.0, List.of(row(1, 7190.0, "2026-08-22T14:28:00"))));
+    }
+
+    @Test
+    void lastChangeIsEmptyForFlappingHistory() {
+        assertEquals(PriceIntegrity.LastChange.NONE, PriceIntegrity.lastChange(7400.0, List.of(
+                row(1, 10900.0, "2026-08-06T12:01:00"),
+                row(2, 7400.0, "2026-08-06T12:02:00"),
+                row(3, 10900.0, "2026-08-13T13:47:00"))));
+    }
+
+    @Test
+    void lastChangeIsEmptyWithoutHistoryOrPrice() {
+        assertEquals(PriceIntegrity.LastChange.NONE, PriceIntegrity.lastChange(100.0, List.of()));
+        assertEquals(PriceIntegrity.LastChange.NONE, PriceIntegrity.lastChange(null, List.of(row(1, 90.0, "2026-08-22T14:28:00"))));
+        assertEquals(PriceIntegrity.LastChange.NONE, PriceIntegrity.lastChange(100.0, List.of(row(1, 100.0, "2026-08-22T14:28:00"))));
+    }
+
+    @Test
+    void lastChangeMatchesStoredValuesWithinRoundingTolerance() {
+        PriceIntegrity.LastChange c = PriceIntegrity.lastChange(3390.0, List.of(row(1, 4390.0, "2026-06-24T11:07:00")));
+        assertTrue(c.matches(1000.0 / 4390.0, null));
+        assertTrue(c.matches(1000.0 / 4390.0 + 1e-9, null));
+        assertFalse(c.matches(0.228, null));        // rounded by hand: 0.2277904... is not 0.228
+        assertFalse(c.matches(null, null));
+        assertFalse(c.matches(1000.0 / 4390.0, 0.1));
+        assertTrue(PriceIntegrity.LastChange.NONE.matches(null, null));
+        assertFalse(PriceIntegrity.LastChange.NONE.matches(0.3, null));
     }
 }

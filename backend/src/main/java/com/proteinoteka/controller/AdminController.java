@@ -9,6 +9,7 @@ import com.proteinoteka.repository.AlertJobRepository;
 import com.proteinoteka.repository.AlertUnsubscribeRepository;
 import com.proteinoteka.repository.BrandReputationRepository;
 import com.proteinoteka.service.ValueScoreCalculator;
+import com.proteinoteka.util.PriceIntegrity;
 import com.proteinoteka.repository.ProductRepository;
 import com.proteinoteka.repository.WishlistItemRepository;
 import com.proteinoteka.scheduler.ScrapingSchedulerService;
@@ -391,6 +392,36 @@ public class AdminController {
         });
         invalidateFrontendCache();
         return ResponseEntity.ok("Updated " + updated + " products, cleared score on " + cleared);
+    }
+
+    /**
+     * Rebuilds products.last_price_drop_pct / last_price_increase_pct from price_history using the
+     * same credibility rules the scraper now applies (PriceIntegrity.lastChange): flapping history
+     * and implausibly large moves (a row re-pointed at another product) yield no drop at all.
+     * Repairs values written before those guards existed; run once after deploying them. Does not
+     * touch price_history itself.
+     */
+    @PostMapping("/recalculate-price-changes")
+    public ResponseEntity<String> recalculatePriceChanges() {
+        int cleared = 0;
+        int changed = 0;
+        List<Product> toSave = new java.util.ArrayList<>();
+        for (Product p : productRepository.findAll()) {
+            PriceIntegrity.LastChange lc = PriceIntegrity.lastChange(p.getNumericPrice(), p.getPriceHistories());
+            if (lc.matches(p.getLastPriceDropPct(), p.getLastPriceIncreasePct())) continue;
+            if (lc.dropPct() == null && p.getLastPriceDropPct() != null) cleared++;
+            changed++;
+            p.setLastPriceDropPct(lc.dropPct());
+            p.setLastPriceIncreasePct(lc.increasePct());
+            toSave.add(p);
+        }
+        productRepository.saveAll(toSave);
+        List.of("products", "products-meta", "products-search", "price-drops", "black-friday").forEach(name -> {
+            var cache = cacheManager.getCache(name);
+            if (cache != null) cache.clear();
+        });
+        invalidateFrontendCache();
+        return ResponseEntity.ok("Updated " + changed + " products, removed a stored price drop from " + cleared);
     }
 
     @GetMapping("/data-quality")

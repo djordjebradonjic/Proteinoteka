@@ -58,6 +58,9 @@ public class ProductController {
     private static final java.util.Set<String> NULLABLE_SORT_COLS =
             java.util.Set.of("valueScore", "proteinPerRsd", "lastPriceChangeAt", "lastPriceDropPct", "lastPriceIncreasePct");
 
+    private static final java.util.Set<String> PERCENT_SORT_COLS =
+            java.util.Set.of("lastPriceDropPct", "lastPriceIncreasePct");
+
     @GetMapping
     public Page<ProductDTO> getProducts(
             @RequestParam(required = false) String name,
@@ -80,6 +83,12 @@ public class ProductController {
             if (NULLABLE_SORT_COLS.contains(order.getProperty())) {
                 final String prop = order.getProperty();
                 spec = spec.and((root, q, cb) -> cb.isNotNull(root.get(prop)));
+                // Stored drop/increase values above the credibility cap come from a row that switched
+                // to another product (or predate the scraper guard) — never rank them as "biggest".
+                if (PERCENT_SORT_COLS.contains(prop)) {
+                    spec = spec.and((root, q, cb) ->
+                            cb.lessThanOrEqualTo(root.<Double>get(prop), PriceIntegrity.MAX_CREDIBLE_PRICE_CHANGE));
+                }
             }
         }
 
@@ -294,7 +303,8 @@ public class ProductController {
         // Find all products that have ever changed price (2+ history entries).
         // convertToDTO already sets previousPrice = most-recent history entry
         // (the old price saved right before the current price was applied).
-        // If previousPrice > numericPrice the price dropped — no time window needed.
+        // If previousPrice > numericPrice the price dropped — no time window needed. convertToDTO
+        // nulls previousPrice when the gap is implausibly large, so those never make the list.
         return priceHistoryRepository.findProductsWithMultiplePriceEntries().stream()
                 .filter(p -> p.getNumericPrice() != null && p.getNumericPrice() > 0)
                 .filter(p -> effectiveMarket.equals(p.getMarket()))
@@ -462,6 +472,12 @@ public class ProductController {
                 .map(PriceHistory::getNumericPrice)
                 .findFirst()
                 .orElse(null);
+
+        // An implausibly large gap to the current price means the row was re-pointed at another
+        // product/pack since that history entry was written — it is not a "previous price".
+        if (!PriceIntegrity.isCredibleChange(prevPrice, product.getNumericPrice())) {
+            prevPrice = null;
+        }
 
         return toProductDTO(product, prevPrice, includeBreakdown);
     }

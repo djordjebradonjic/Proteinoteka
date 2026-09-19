@@ -92,12 +92,7 @@ SELECT (SELECT COUNT(*) FROM noise_rows) AS rows_deleted,
 ROLLBACK;   -- <- change to COMMIT after reviewing the output above
 
 -- ---------------------------------------------------------------------------------------------
--- OPTIONAL, MANUAL — not part of the run above.
--- GymBeam RS "Protein Soy Isolate" 1000g (product 562): history holds 4090 (2026-07-11) and 4490
--- (2026-07-25) while the store lists 1600 RSD as the regular price (no strike-through) and the HR
--- twin cost 15.95 EUR (~1.870 RSD). Those two rows look like a scrape of a wrong variant, and they
--- produce a fake -64% "drop". Verify in the DB, then delete them by hand:
---   DELETE FROM price_history WHERE product_id = 562 AND numeric_price IN (4090, 4490);
---   UPDATE products SET last_price_change_at = NULL, last_price_drop_pct = NULL,
---                       last_price_increase_pct = NULL WHERE id = 562;
+-- Not covered here: rows whose history is weeks apart but belongs to a DIFFERENT product (e.g.
+-- GymBeam RS Soy Isolate 562: 4490 -> 1600, Mutant Mass 834/989). Run
+-- cleanup_implausible_price_history.sql for those.
 -- ---------------------------------------------------------------------------------------------
