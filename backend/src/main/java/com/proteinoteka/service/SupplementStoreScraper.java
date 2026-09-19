@@ -43,13 +43,15 @@ public class SupplementStoreScraper implements StoreScraper {
 
     @Override
     public boolean hasNextPage(Document doc) {
-        // All products load on one page via ?limit=100
-        return false;
+        // ?limit=100 caps a page at 100 products and the category has more (114 at the time of
+        // writing); the theme renders a "next" link in ul.pagination only while pages remain.
+        return doc.selectFirst("ul.pagination a.next") != null;
     }
 
     @Override
     public String buildPageUrl(int page) {
-        return LISTING_URL;
+        // ScraperService pages are 0-indexed, the site's ?page= is 1-indexed
+        return page == 0 ? LISTING_URL : LISTING_URL + "&page=" + (page + 1);
     }
 
     @Override

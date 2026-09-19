@@ -112,6 +112,26 @@ public class SupplementStoreScraperTest {
                 });
     }
 
+    // ── Pagination ───────────────────────────────────────────────────────────────
+
+    @Test
+    void shouldPaginateWhenNextLinkPresent() {
+        assertTrue(scraper.hasNextPage(listingDoc), "Prva strana listinga ima link na sledeću stranu");
+    }
+
+    @Test
+    void shouldStopOnLastPage() {
+        Document lastPage = Jsoup.parse("<ul class=\"pagination\"><li><a class=\"prev\" href=\"/x\">&lt;</a></li>"
+                + "<li><a href=\"/x\">1</a></li><li class=\"active\"><span>2</span></li></ul>");
+        assertFalse(scraper.hasNextPage(lastPage));
+    }
+
+    @Test
+    void shouldBuildPageUrlsWithOneIndexedPageParam() {
+        assertEquals("https://supplementstore.rs/kategorije/proteini?limit=100", scraper.buildPageUrl(0));
+        assertEquals("https://supplementstore.rs/kategorije/proteini?limit=100&page=2", scraper.buildPageUrl(1));
+    }
+
     // ── Detail page ──────────────────────────────────────────────────────────────
 
     @Test
