@@ -1,0 +1,114 @@
+package com.proteinoteka.service.producttype;
+
+import com.proteinoteka.model.Product;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
+import java.util.Optional;
+import java.util.regex.Pattern;
+
+/**
+ * Creatine in every form (powder, capsules, tablets, gummies, sachets, shots). Creatine has no
+ * protein content, so none of the protein gates apply; instead an item must not look like another
+ * product family, and its form / type / dose / pack size are parsed from the listing text.
+ */
+@Component
+@Slf4j
+public class CreatineProfile implements ProductTypeProfile {
+
+    private static final int FLAGS = Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+            | Pattern.UNICODE_CHARACTER_CLASS;
+
+    // Things that show up inside a store's creatine category but are not a creatine product
+    // (real examples: "PhD Pre-Workout Burn", "Back to Gym XXL paket", a whey isolate, a multivitamin)
+    // plus bundles/promos whose price is not the price of the creatine. "protein" must be a whole
+    // word: the store "Proteini.si" sells its own "100% PURE CREATINE".
+    private static final Pattern OTHER_FAMILY = Pattern.compile(
+            "\\b(pre-?\\s?workout|whey|izolat\\p{L}*|isolate|gainer\\p{L}*|casein|kazein\\p{L}*|protein|bcaa|"
+                    + "amino\\p{L}*|multivit\\p{L}*|vitamin\\p{L}*|omega|glutamin\\p{L}*|citrulin\\p{L}*|"
+                    + "carnitin\\p{L}*|karnitin\\p{L}*|beta-?\\s?alanin\\p{L}*|fat\\s?burn\\p{L}*|burn|"
+                    + "termogen\\p{L}*|paket\\p{L}*|bundle|combo|set|gratis|poklon\\p{L}*|shaker\\p{L}*|"
+                    + "majic\\p{L}*|bars?)\\b", FLAGS);
+
+    // Outside a creatine category the name must actually say creatine (or one of its brand names).
+    private static final Pattern CREATINE_KEYWORD = Pattern.compile(
+            "kreatin\\p{L}*|creatin\\p{L}*|creapure|kre-?alkalyn|\\bcrea\\b", FLAGS);
+
+    private static final double MAX_DOSE_GRAMS = 30.0;
+    private static final int MAX_COUNT = 1000;
+
+    @Override
+    public String code() {
+        return ProductTypes.CREATINE;
+    }
+
+    @Override
+    public Optional<String> rejectReason(Product scraped, boolean categoryTrusted) {
+        String name = scraped.getName();
+        if (name == null || name.isBlank()) return Optional.of("no name");
+        if (OTHER_FAMILY.matcher(name).find()) {
+            return Optional.of("name matches another product family or a bundle");
+        }
+        boolean hasSignal = CREATINE_KEYWORD.matcher(name).find()
+                || (scraped.getCreatineGramsPerServing() != null && scraped.getCreatineGramsPerServing() > 0);
+        if (!categoryTrusted && !hasSignal) {
+            return Optional.of("no creatine keyword or dosing data outside a creatine category");
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    public void sanitize(Product scraped, String storeName) {
+        CreatineParser.enrich(scraped, scraped.getVariantLabel());
+        Double grams = scraped.getCreatineGramsPerServing();
+        if (grams != null && (grams <= 0 || grams > MAX_DOSE_GRAMS)) {
+            log.warn("[{}] Implausible creatine dose for '{}': {}g — setting null", storeName, scraped.getName(), grams);
+            scraped.setCreatineGramsPerServing(null);
+        }
+        Integer servings = scraped.getServingsPerContainer();
+        if (servings != null && (servings < 1 || servings > MAX_COUNT)) {
+            scraped.setServingsPerContainer(null);
+        }
+        Integer units = scraped.getUnitCount();
+        if (units != null && (units < 1 || units > MAX_COUNT)) {
+            scraped.setUnitCount(null);
+        }
+    }
+
+    // Small creatine tubs start around 700 RSD; anything under this is a single-serving sachet.
+    @Override
+    public double minPrice(String currency) {
+        return "EUR".equals(currency) ? 4.0 : 500.0;
+    }
+
+    // Nothing to restore: creatine has no protein data to fall back on, and dose/servings are merged
+    // by mergeInto (never overwritten with null).
+    @Override
+    public boolean restoreFromStored(Product scraped, Optional<Product> stored, String storeName) {
+        return true;
+    }
+
+    @Override
+    public void mergeInto(Product existing, Product scraped) {
+        // A listing-only scrape has no description, so the parser can only default to "powder";
+        // don't let that overwrite a capsule/tablet form learned earlier.
+        if (scraped.getProductForm() != null
+                && (existing.getProductForm() == null || !ProductForm.POWDER.code().equals(scraped.getProductForm()))) {
+            existing.setProductForm(scraped.getProductForm());
+        }
+        if (scraped.getUnitCount() != null) existing.setUnitCount(scraped.getUnitCount());
+        if (existing.getCreatineGramsPerServing() == null && scraped.getCreatineGramsPerServing() != null)
+            existing.setCreatineGramsPerServing(scraped.getCreatineGramsPerServing());
+        if (existing.getServingsPerContainer() == null && scraped.getServingsPerContainer() != null)
+            existing.setServingsPerContainer(scraped.getServingsPerContainer());
+        if (existing.getCreatineType() == null && scraped.getCreatineType() != null)
+            existing.setCreatineType(scraped.getCreatineType());
+    }
+
+    // The form is always set once the parser has seen a description, so a stored form means the
+    // detail page was already parsed. Re-opening it would not change what the regexes find.
+    @Override
+    public boolean isDetailComplete(Product stored, boolean nutritionInImages) {
+        return stored.getProductForm() != null;
+    }
+}

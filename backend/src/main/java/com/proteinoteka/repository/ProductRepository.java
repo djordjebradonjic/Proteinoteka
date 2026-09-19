@@ -96,10 +96,10 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     List<String> findUrlsByStoreNameAndProductType(@Param("storeName") String storeName,
                                                     @Param("productType") String productType);
 
-    @Query("SELECT p FROM products p WHERE p.store.name = :storeName AND " +
-           "((p.productType = 'protein' AND p.proteinPer100g IS NOT NULL AND p.fatPer100g IS NOT NULL) " +
-           " OR p.productType = 'creatine')")
-    List<Product> findNutritionStatusByStoreName(@Param("storeName") String storeName);
+    // Every stored row of a store, any product type — ScraperService asks each type's profile which
+    // of them already have everything a detail-page visit could add.
+    @Query("SELECT p FROM products p WHERE p.store.name = :storeName")
+    List<Product> findAllByStoreName(@Param("storeName") String storeName);
 
     @Modifying
     @Transactional
@@ -140,18 +140,24 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @Query("SELECT MIN(p.id) FROM products p WHERE p.groupId = :groupId")
     Long findMinIdByGroupId(@Param("groupId") Long groupId);
 
+    // Scoped to one product type: a 500 g creatine and a 500 g protein of the same store must never be
+    // taken for the same row when a URL changes.
     @Query("SELECT p FROM products p WHERE LOWER(TRIM(p.name)) = LOWER(TRIM(:name)) " +
            "AND p.store = :store " +
+           "AND p.productType = :productType " +
            "AND p.primaryWeightGrams IS NOT NULL " +
            "AND ABS(p.primaryWeightGrams - :weight) < 10")
     Optional<Product> findByNameAndStoreAndWeight(@Param("name") String name,
                                                   @Param("store") Store store,
-                                                  @Param("weight") Double weight);
+                                                  @Param("weight") Double weight,
+                                                  @Param("productType") String productType);
 
     // Broader candidate pool for fuzzy name matching when both URL and exact name changed at once
     // (e.g. a store re-platforms and rewrites its listing copy in the same pass).
     @Query("SELECT p FROM products p WHERE p.store = :store " +
+           "AND p.productType = :productType " +
            "AND p.primaryWeightGrams IS NOT NULL " +
            "AND ABS(p.primaryWeightGrams - :weight) < 10")
-    List<Product> findByStoreAndWeight(@Param("store") Store store, @Param("weight") Double weight);
+    List<Product> findByStoreAndWeight(@Param("store") Store store, @Param("weight") Double weight,
+                                       @Param("productType") String productType);
 }

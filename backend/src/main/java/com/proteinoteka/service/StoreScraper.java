@@ -2,6 +2,7 @@ package com.proteinoteka.service;
 
 import com.microsoft.playwright.Page;
 import com.proteinoteka.model.Product;
+import com.proteinoteka.service.producttype.ProductTypeProfile;
 import org.jsoup.nodes.Document;
 
 import java.util.List;
@@ -31,6 +32,23 @@ public interface StoreScraper {
 
     default List<Product> scrape(Page page, Document doc, Set<String> skipUrls) {
         return scrape(page, doc);
+    }
+
+    // The listings this store is walked through in ONE scrape run, primary type first. The default is
+    // the single protein listing every scraper already describes with getBaseUrl()/buildPageUrl(), so
+    // scrapers that don't cover a second product family need no change. A scraper that does returns
+    // one target per family (see ListingTarget); ScraperService runs them in a single browser context
+    // and proxy session, and keeps stale-product tracking separate per type.
+    default List<ListingTarget> listingTargets() {
+        return List.of(ListingTarget.html(getProductType(), getBaseUrl(), this::buildPageUrl));
+    }
+
+    // Type-aware variant of scrape() for HtmlPaged targets. `profile` is the family being scraped:
+    // a scraper that serves more than one family must use profile.rejectReason(...) instead of the
+    // protein-only BaseScraperEnricher.isNonProteinProduct(...), and skip protein nutrition parsing.
+    default List<Product> scrape(ListingTarget target, ProductTypeProfile profile,
+                                 Page page, Document doc, Set<String> skipUrls) {
+        return scrape(page, doc, skipUrls);
     }
 
     boolean hasNextPage(Document doc);

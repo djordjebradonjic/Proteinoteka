@@ -64,7 +64,20 @@ public class Product {
     private Integer servingsPerContainer;
 
     @Column(name = "creatine_type")
-    private String creatineType; // "monohydrate", "hcl", "micronized", "buffered", "blend"
+    private String creatineType; // "monohydrate", "creapure", "hcl", "buffered", "malate", "ethyl_ester", "nitrate", "blend"
+
+    // Physical form: "powder", "capsule", "tablet", "gummy", "liquid", "other". Null for protein.
+    @Column(name = "product_form")
+    private String productForm;
+
+    // Units per pack for counted forms (capsules / tablets / gummies / sachets).
+    @Column(name = "unit_count")
+    private Integer unitCount;
+
+    // Size/flavour label of a variant row as the store lists it ("60 porcija", "500g"). Scrape-time
+    // context for the product-type parsers only — never persisted.
+    @Transient
+    private String variantLabel;
 
 
     @ElementCollection

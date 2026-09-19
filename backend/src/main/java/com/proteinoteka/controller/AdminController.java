@@ -20,6 +20,7 @@ import com.proteinoteka.service.PolleoSportScraper;
 import com.proteinoteka.service.ShopbuilderScraper;
 import com.proteinoteka.service.StoreScraper;
 import com.proteinoteka.service.SupplementStoreScraper;
+import com.proteinoteka.service.producttype.ProductTypeRegistry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.CacheManager;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +29,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -57,6 +60,7 @@ public class AdminController {
     private final List<StoreScraper> scrapers;
     private final ProductRepository productRepository;
     private final ScrapingSchedulerService schedulerService;
+    private final ProductTypeRegistry productTypes;
     private final BrandReputationRepository brandReputationRepository;
     private final CacheManager cacheManager;
     private final AlertJobRepository alertJobRepository;
@@ -83,6 +87,33 @@ public class AdminController {
             @RequestParam(defaultValue = "false") boolean testMode) {
         runAsync("scraper-all", () -> scraperService.scrapeAll(testMode));
         return ResponseEntity.accepted().body("All scrapers started in background" + (testMode ? " [TEST MODE]" : ""));
+    }
+
+    // Runs only the given product types on one store: POST /scrape/store?name=Proteinbox&types=creatine
+    // (no types = a normal full run). The cheap way to test or backfill one product family without
+    // re-scraping the others — for a proxied store a creatine-only run is a few dozen KB of proxy traffic.
+    @PostMapping("/scrape/store")
+    public ResponseEntity<String> scrapeStoreTypes(@RequestParam String name,
+                                                   @RequestParam(required = false) String types) {
+        if (!schedulerService.isKnownStore(name)) {
+            return ResponseEntity.badRequest().body("Unknown store: " + name);
+        }
+        Set<String> onlyTypes = null;
+        if (types != null && !types.isBlank()) {
+            onlyTypes = new LinkedHashSet<>(Arrays.asList(types.trim().split("\\s*,\\s*")));
+            for (String type : onlyTypes) {
+                if (!productTypes.isKnown(type)) {
+                    return ResponseEntity.badRequest().body("Unknown product type: " + type);
+                }
+            }
+        }
+        Set<String> selected = onlyTypes;
+        runAsync("scraper-" + name, () -> {
+            if (selected == null) schedulerService.scrapeStoreNow(name);
+            else schedulerService.scrapeStoreNow(name, selected);
+        });
+        return ResponseEntity.accepted().body(name + " scraping started in background"
+                + (selected == null ? "" : " [types: " + String.join(",", selected) + "]"));
     }
 
     @PostMapping("/scrape/pansport")

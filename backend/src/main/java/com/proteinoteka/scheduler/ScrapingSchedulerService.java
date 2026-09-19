@@ -188,6 +188,20 @@ public class ScrapingSchedulerService {
         return executeWithLogging(scraper);
     }
 
+    /**
+     * Manual run of only the given product types on one store — e.g. {@code Set.of("creatine")} to test
+     * or backfill creatine without re-scraping the store's protein (for a proxied store that is the
+     * difference between a full run and a few dozen KB of traffic).
+     */
+    public ScrapeLog scrapeStoreNow(String storeName, Set<String> onlyTypes) {
+        StoreScraper scraper = findScraper(storeName);
+        return executeWithLogging(scraper, onlyTypes);
+    }
+
+    public boolean isKnownStore(String storeName) {
+        return scrapers.stream().anyMatch(s -> s.getStoreName().equalsIgnoreCase(storeName));
+    }
+
     // ── Status ────────────────────────────────────────────────────────────────
 
     public List<Map<String, Object>> getStatus() {
@@ -241,17 +255,41 @@ public class ScrapingSchedulerService {
     }
 
     private ScrapeLog executeWithLogging(StoreScraper scraper) {
-        ScrapeLog entry = new ScrapeLog(scraper.getStoreName());
+        return executeWithLogging(scraper, null);
+    }
+
+    // onlyTypes == null is a normal full run of the store. A partial-type run is logged under its own
+    // name ("GymBeam [creatine]"): it must not count as the store's run for the catch-up check, nor
+    // become the "last SUCCESS" baseline that later full runs are judged against, and it never schedules
+    // a retry (a manual run is watched by the person who started it).
+    private ScrapeLog executeWithLogging(StoreScraper scraper, Set<String> onlyTypes) {
+        if (scraperService.selectedTypes(scraper, onlyTypes).isEmpty()) {
+            log.info("[Scheduler] {} has no enabled listing target (types {}) — skipping",
+                    scraper.getStoreName(), onlyTypes == null ? "per config" : onlyTypes);
+            return null;
+        }
+        boolean fullRun = onlyTypes == null;
+        String logName = fullRun ? scraper.getStoreName()
+                : scraper.getStoreName() + " [" + String.join(",", new TreeSet<>(onlyTypes)) + "]";
+        ScrapeLog entry = new ScrapeLog(logName);
         scrapeLogRepository.save(entry);
 
         try {
-            log.info("[Scheduler] Starting scrape: {}", scraper.getStoreName());
-            List<com.proteinoteka.model.Product> products = scraperService.scrapeStore(scraper);
+            log.info("[Scheduler] Starting scrape: {}", logName);
+            ScraperService.ScrapeOutcome outcome = scraperService.scrapeStoreOutcome(scraper, false, onlyTypes);
 
-            entry.setProductsFound(products.size());
-            entry.setStatus(classifyStatus(scraper.getStoreName(), products.size()));
-            log.info("[Scheduler] Finished scrape: {} — {} products ({})",
-                    scraper.getStoreName(), products.size(), entry.getStatus());
+            // The status is judged on the primary type alone, so a failing creatine listing can never
+            // make a healthy protein run look PARTIAL (which would schedule a retry — and double the
+            // proxy traffic of a proxied store).
+            int found = outcome.primaryFound();
+            entry.setProductsFound(found);
+            entry.setProductTypeCounts(outcome.typeCounts());
+            entry.setProxyBytes(outcome.proxyBytes());
+            if (outcome.removed() > 0) entry.setProductsRemoved(outcome.removed());
+            entry.setStatus(fullRun ? classifyStatus(scraper.getStoreName(), found)
+                    : (found == 0 ? ScrapeStatus.BLOCKED : ScrapeStatus.SUCCESS));
+            log.info("[Scheduler] Finished scrape: {} — {} products ({}), saved {}", logName, found,
+                    entry.getStatus(), outcome.typeCounts());
 
             // BLOCKED runs finish "cleanly" (no exception), so errorMessage is otherwise
             // empty. Surface the diagnostic ScraperService captured (page title, URL,
@@ -271,7 +309,7 @@ public class ScrapingSchedulerService {
                 dataQualityService.checkOutliers(null);
             }
 
-            if (entry.getStatus() == ScrapeStatus.PARTIAL || entry.getStatus() == ScrapeStatus.BLOCKED) {
+            if (fullRun && (entry.getStatus() == ScrapeStatus.PARTIAL || entry.getStatus() == ScrapeStatus.BLOCKED)) {
                 maybeScheduleRetry(scraper);
             }
 
@@ -280,7 +318,7 @@ public class ScrapingSchedulerService {
             entry.setErrorMessage(e.getMessage() != null
                     ? e.getMessage().substring(0, Math.min(e.getMessage().length(), 500))
                     : "Unknown error");
-            log.error("[Scheduler] Scrape FAILED for {}: {}", scraper.getStoreName(), e.getMessage());
+            log.error("[Scheduler] Scrape FAILED for {}: {}", logName, e.getMessage());
         } finally {
             entry.setFinishedAt(LocalDateTime.now());
             scrapeLogRepository.save(entry);
