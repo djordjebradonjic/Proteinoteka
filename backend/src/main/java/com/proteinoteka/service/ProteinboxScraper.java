@@ -45,7 +45,21 @@ public class ProteinboxScraper implements StoreScraper {
 
     @Override
     public boolean hasNextPage(Document doc) {
-        return doc.selectFirst("a.next.page-numbers") != null;
+        if (doc.selectFirst("a.next.page-numbers") != null) return true;
+        // The Elementor archive pagination has no "next" link — only numbered pages
+        // (1 2 3 4 5), so a higher-numbered link than the current page means more to scrape.
+        Element current = doc.selectFirst("nav.woocommerce-pagination .page-numbers.current");
+        if (current == null) return false;
+        int currentPage = parsePageNumber(current.text());
+        for (Element a : doc.select("nav.woocommerce-pagination a.page-numbers")) {
+            if (parsePageNumber(a.text()) > currentPage) return true;
+        }
+        return false;
+    }
+
+    private static int parsePageNumber(String text) {
+        try { return Integer.parseInt(text.trim()); }
+        catch (NumberFormatException e) { return -1; }
     }
 
     @Override
