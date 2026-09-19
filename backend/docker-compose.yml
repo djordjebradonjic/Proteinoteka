@@ -4,7 +4,9 @@ services:
     container_name: proteinoteka_db
     environment:
       POSTGRES_USER: proteinoteka_2026
-      POSTGRES_PASSWORD: proteinoteka_19032026
+      # Same variable and dev default as application.yml, so `docker-compose up` + `mvnw spring-boot:run`
+      # work together. Only applies when the volume is first created.
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-proteinoteka_dev_local}
       POSTGRES_DB: proteinoteka
     ports:
       - "5435:5432"
