@@ -5,6 +5,7 @@ import { fetchTopProducts, fetchTopValueProducts, fetchPriceDropProducts } from 
 import { productUrl } from "@/lib/productUrl";
 import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
 import { hreflangAlternates } from "@/lib/hreflang";
+import { safeJsonLd } from "@/lib/jsonLd";
 
 // useSearchParams() now lives only inside ProductSection (wrapped in its own Suspense)
 // and inside mini SearchSync/CategorySync components (each in their own Suspense).
@@ -131,7 +132,7 @@ export default async function Home() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(itemListJsonLd) }}
       />
       <Suspense fallback={<div className="min-h-screen" />}>
         <HomeContent

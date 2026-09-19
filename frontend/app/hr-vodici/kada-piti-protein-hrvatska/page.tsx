@@ -5,6 +5,7 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import GuideToc, { TocSection } from "@/components/GuideToc";
 import GuideDisclaimer from "@/components/GuideDisclaimer";
+import { safeJsonLd } from "@/lib/jsonLd";
 
 export const metadata: Metadata = {
   title: { absolute: "Kada piti protein — prije, poslije treninga ili ujutro? | Proteinoteka" },
@@ -100,7 +101,7 @@ export default function Page() {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
       <div className="min-h-screen bg-slate-50">
         <Header />
         <main className="max-w-3xl mx-auto px-4 py-10">

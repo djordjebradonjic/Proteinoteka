@@ -3,6 +3,7 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
 import { hreflangAlternates } from "@/lib/hreflang";
+import { safeJsonLd } from "@/lib/jsonLd";
 
 export const revalidate = 86400;
 
@@ -83,7 +84,7 @@ export default function Page() {
   if (isHR) {
     return (
       <>
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
         <div className="min-h-screen bg-slate-50">
           <Header />
           <main className="max-w-2xl mx-auto px-4 py-10">
@@ -254,7 +255,7 @@ export default function Page() {
   // RS version
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
       <div className="min-h-screen bg-slate-50">
         <Header />
         <main className="max-w-2xl mx-auto px-4 py-10">

@@ -3,6 +3,7 @@ import { CURRENT_MARKET, MARKET_CONFIG } from '@/lib/marketConfig';
 import { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
+import { safeJsonLd } from "@/lib/jsonLd";
 
 export const metadata: Metadata = {
   title: { absolute: "Vodiči o proteinima i suplementaciji | Proteinoteka" },
@@ -252,7 +253,7 @@ export default function VodiciPage() {
   if (CURRENT_MARKET !== 'rs') notFound();
   return (
     <div className="min-h-screen bg-slate-50">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
       <Header />
       <main className="max-w-3xl mx-auto px-4 py-10">
 

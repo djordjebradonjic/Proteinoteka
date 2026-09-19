@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import { SEOProductCard } from "./SEOProductCard";
 import { getScoreColor } from "@/lib/scoreColor";
 import { CURRENT_MARKET } from "@/lib/marketConfig";
+import { safeJsonLd } from "@/lib/jsonLd";
 
 const IS_HR = CURRENT_MARKET === "hr";
 const BASE_URL = IS_HR ? "https://proteinoteka.com.hr" : "https://proteinoteka.rs";
@@ -300,16 +301,16 @@ export function SEOStorePage({
     <div className="min-h-screen bg-slate-50">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(faqJsonLd) }}
       />
       {itemListJsonLd && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(itemListJsonLd) }}
         />
       )}
       <Header />

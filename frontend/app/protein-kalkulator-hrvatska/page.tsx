@@ -4,6 +4,7 @@ import { Metadata } from "next";
 import Header from "@/components/Header";
 import Link from "next/link";
 import { ProteinCalculator } from "@/components/seo/ProteinCalculator";
+import { safeJsonLd } from "@/lib/jsonLd";
 
 export const revalidate = 21600;
 
@@ -88,9 +89,9 @@ export default function Page() {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(howToJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbJsonLd) }} />
       <Header />
 
       {/* Hero */}

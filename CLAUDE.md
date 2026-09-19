@@ -120,7 +120,7 @@ RESEND_API_KEY=re_...
 ```
 DATABASE_URL=jdbc:postgresql://localhost:5432/proteinoteka
 DATABASE_USERNAME=proteinoteka_2026
-DATABASE_PASSWORD=proteinoteka_19032026
+DATABASE_PASSWORD=...             # never commit real values; local dev default is in application.yml
 ANTHROPIC_API_KEY=...
 PLAYWRIGHT_EXECUTABLE_PATH=...   # optional, for scraper browser
 ```

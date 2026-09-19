@@ -55,6 +55,8 @@ public class ProductController {
     private final ProductGroupService productGroupService;
     private final ScraperService scraperService;
 
+    private static final int MAX_SEARCH_SIZE = 50;
+
     private static final java.util.Set<String> NULLABLE_SORT_COLS =
             java.util.Set.of("valueScore", "proteinPerRsd", "lastPriceChangeAt", "lastPriceDropPct", "lastPriceIncreasePct");
 
@@ -140,7 +142,8 @@ public class ProductController {
 
         if (query == null || query.trim().length() < 2) return List.of();
 
-        Pageable pageable = PageRequest.of(0, size);
+        // Autocomplete never needs more than a screenful; an unbounded size would let anyone page the whole table.
+        Pageable pageable = PageRequest.of(0, Math.max(1, Math.min(size, MAX_SEARCH_SIZE)));
 
         return productRepository
                 .findByNameContainingIgnoreCase(query.trim(), pageable)  // ← već postoji!

@@ -8,6 +8,7 @@ import { CATEGORY_CONTENT } from "@/lib/category-content";
 import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
 import { hreflangAlternates } from "@/lib/hreflang";
 import { cheapestPricePerKg, fetchMarketCatalog, type TypeSource } from "@/lib/whey-price-stats";
+import { safeJsonLd } from "@/lib/jsonLd";
 
 export const revalidate = 86400;
 
@@ -280,12 +281,12 @@ export default async function KategorijaPage({ params }: Props) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbJsonLd) }}
       />
       {faqJsonLd && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(faqJsonLd) }}
         />
       )}
       <Suspense fallback={<div>Loading...</div>}>

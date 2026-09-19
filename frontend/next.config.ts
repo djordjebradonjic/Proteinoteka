@@ -176,9 +176,10 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "ogistra-nutrition-shop.com" },
       { protocol: "https", hostname: "**.fitlab.rs" },
       { protocol: "https", hostname: "fitlab.rs" },
-      // fallback for any other store added later
-      { protocol: "https", hostname: "**" },
-      { protocol: "http", hostname: "**" },
+      // No catch-all ("**") entries on purpose: they turned /_next/image into an open image
+      // proxy (anyone could make our server fetch arbitrary URLs and burn the image quota).
+      // Product images are rendered `unoptimized` and never go through the optimizer, so a new
+      // store only needs an entry here if its images are ever served via next/image optimization.
     ],
     formats: ["image/webp"],
     // Scraped product images change at most weekly; 30-day cache minimizes re-optimization

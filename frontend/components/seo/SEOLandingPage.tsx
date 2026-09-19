@@ -7,6 +7,7 @@ import Header from "@/components/Header";
 import { SEOProductCard } from "./SEOProductCard";
 import { getScoreColor } from "@/lib/scoreColor";
 import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
+import { safeJsonLd } from "@/lib/jsonLd";
 
 const IS_HR = CURRENT_MARKET === "hr";
 const BASE_URL_CONST = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
@@ -360,18 +361,18 @@ export function SEOLandingPage({
     <div className="min-h-screen bg-slate-50">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbJsonLd) }}
       />
       {faqJsonLd && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(faqJsonLd) }}
         />
       )}
       {itemListJsonLd && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(itemListJsonLd) }}
         />
       )}
       <Header />
