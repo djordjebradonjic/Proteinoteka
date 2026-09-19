@@ -8,14 +8,14 @@ import GuideToc, { TocSection } from "@/components/GuideToc";
 import GuideDisclaimer from "@/components/GuideDisclaimer";
 
 export const metadata: Metadata = {
-  title: { absolute: "Kada Piti Protein? Mit o 30-Minutnom Prozoru | Proteinoteka" },
+  title: { absolute: "Kada piti protein: pre ili posle treninga? | Proteinoteka" },
   description:
-    "Anabolički prozor traje 4–6 sati, ne 30 minuta. Kad tajming zaista ima efekat, a kad je potpuno nebitan — konkretan raspored za trening i dan odmora.",
+    "Kratak odgovor: ukupan dnevni unos je važniji od tajminga, a anabolički prozor traje 4–6 sati, ne 30 minuta. Raspored za dan treninga i dan odmora.",
   alternates: { canonical: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/vodici/kada-piti-protein` },
   openGraph: {
-    title: "Kada Piti Protein? Mit o 30-Minutnom Prozoru | Proteinoteka",
+    title: "Kada piti protein: pre ili posle treninga? | Proteinoteka",
     description:
-      "Anabolički prozor traje 4–6 sati, ne 30 minuta. Kad tajming zaista ima efekat, a kad je potpuno nebitan — konkretan raspored za trening i dan odmora.",
+      "Kratak odgovor: ukupan dnevni unos je važniji od tajminga, a anabolički prozor traje 4–6 sati, ne 30 minuta. Raspored za dan treninga i dan odmora.",
     url: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/vodici/kada-piti-protein`,
     siteName: "Proteinoteka",
     locale: MARKET_CONFIG[CURRENT_MARKET].ogLocale,

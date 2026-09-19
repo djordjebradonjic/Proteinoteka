@@ -11,12 +11,12 @@ import ProteinCalculator from "@/components/ProteinCalculator";
 export const metadata: Metadata = {
   title: { absolute: "Koliko Proteina Dnevno? Kalkulator + Tabela | Proteinoteka" },
   description:
-    "Unesi težinu — kalkulator odmah izračuna tačan dnevni unos proteina. Tabela za svaki cilj: rekreacija, masa, mršavljenje, 50+. Zasnovano na ISSN preporukama.",
+    "1.6–2.2 g proteina po kg telesne mase za trenirajuće, 1.2–1.6 g za rekreativce. Unesi težinu i dobij tačan cilj; tabela za masu, mršavljenje i 50+ (ISSN).",
   alternates: { canonical: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/vodici/koliko-proteina-dnevno` },
   openGraph: {
     title: "Koliko Proteina Dnevno? Kalkulator + Tabela | Proteinoteka",
     description:
-      "Unesi težinu — kalkulator odmah izračuna tačan dnevni unos proteina. Tabela za svaki cilj: rekreacija, masa, mršavljenje, 50+. Zasnovano na ISSN preporukama.",
+      "1.6–2.2 g proteina po kg telesne mase za trenirajuće, 1.2–1.6 g za rekreativce. Unesi težinu i dobij tačan cilj; tabela za masu, mršavljenje i 50+ (ISSN).",
     url: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/vodici/koliko-proteina-dnevno`,
     siteName: "Proteinoteka",
     locale: MARKET_CONFIG[CURRENT_MARKET].ogLocale,
@@ -137,6 +137,10 @@ export default function Page() {
           <GuideToc sections={tocSections} />
 
           <ProteinCalculator />
+
+          <p className="mb-8 text-sm text-slate-600">
+            Znaš svoj cilj u gramima? <Link href="/protein-kalkulator" className="font-semibold text-[#FF9900] hover:underline">Pogledaj koliko te mesečno košta</Link> da ga pokriješ i koji protein iz srpske ponude je najjeftiniji za taj unos.
+          </p>
 
           {/* Section 1 */}
           <section className="mb-10">

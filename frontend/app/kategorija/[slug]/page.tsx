@@ -105,6 +105,15 @@ const META: Record<string, { rs: { title: string; description: string }; hr: { t
 
 const BASE_URL = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
 
+// Long-form landing pages that go deeper than the category listing. Linked from the category
+// page so the listing's authority (it already ranks) flows to the page targeting the same cluster.
+const DEEP_DIVE: Record<string, Record<"rs" | "hr", { href: string; label: string }>> = {
+  whey_isolate: {
+    rs: { href: "/whey-protein-izolat", label: "✨ Whey izolat: cene po gramu proteina i vodič" },
+    hr: { href: "/whey-protein-izolat-hrvatska", label: "✨ Whey izolat: cijene po gramu proteina i vodič" },
+  },
+};
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const cat = getCategoryBySlug(slug);
@@ -198,13 +207,16 @@ export default async function KategorijaPage({ params }: Props) {
     </div>
   ) : null;
 
+  const deepDive = DEEP_DIVE[cat.value]?.[CURRENT_MARKET];
+  const guideLinks = [...(deepDive ? [deepDive] : []), ...(content?.guides ?? [])];
+
   const categoryFaq = content ? (
     <div className="max-w-7xl mx-auto px-4 pb-10 space-y-8">
-      {content.guides && content.guides.length > 0 && (
+      {guideLinks.length > 0 && (
         <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
           <h2 className="text-base font-bold text-slate-800 mb-3">Relevantni vodiči</h2>
           <div className="flex flex-wrap gap-2">
-            {content.guides.map(guide => (
+            {guideLinks.map(guide => (
               <Link
                 key={guide.href}
                 href={guide.href}
