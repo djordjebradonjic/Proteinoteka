@@ -13,10 +13,12 @@ const BASE_URL_CONST = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
 
 const RS_SEO_PAGES = [
   { slug: "crni-petak",                   label: "🔥 Crni petak"           },
+  { slug: "proteini-srbija",              label: "📋 Svi proteini"          },
+  { slug: "protein-kalkulator",           label: "🧮 Kalkulator proteina"   },
   { slug: "najbolji-whey-protein-srbija",  label: "🥇 Najbolji Whey"        },
   { slug: "najjeftiniji-whey-protein",     label: "💰 Najjeftiniji Whey (po kg)" },
   { slug: "whey-protein-cena",             label: "📊 Whey Protein Cena"     },
-  { slug: "whey-isolate-srbija",           label: "✨ Whey Izolat"           },
+  { slug: "whey-protein-izolat",           label: "✨ Whey Izolat"           },
   { slug: "protein-za-masu",              label: "💪 Protein za Masu"       },
   { slug: "whey-protein-do-3000-dinara",  label: "🏷️ Whey do 3000 RSD"     },
   { slug: "whey-protein-do-5000-dinara",  label: "🏷️ Whey do 5000 RSD"     },
@@ -24,6 +26,8 @@ const RS_SEO_PAGES = [
 
 const HR_SEO_PAGES = [
   { slug: "crni-petak",                                  label: "🔥 Black Friday"       },
+  { slug: "proteini-hrvatska",                           label: "📋 Svi proteini"        },
+  { slug: "protein-kalkulator-hrvatska",                 label: "🧮 Kalkulator proteina" },
   { slug: "najbolji-whey-protein-hrvatska",              label: "🥇 Najbolji Whey"       },
   { slug: "najjeftiniji-whey-protein-hrvatska",          label: "💰 Najjeftiniji Whey (po kg)" },
   { slug: "najjeftiniji-whey-protein-hrvatska-do-500g",    label: "📦 Whey do 500g"      },
@@ -32,7 +36,7 @@ const HR_SEO_PAGES = [
   { slug: "najjeftiniji-whey-protein-hrvatska-3500g-4500g", label: "📦 Whey 4kg"         },
   { slug: "najjeftiniji-whey-protein-hrvatska-4500g-plus",  label: "📦 Whey 5kg+"        },
   { slug: "whey-protein-cijena",                         label: "📊 Whey Protein Cijena" },
-  { slug: "whey-isolate-hrvatska",                       label: "✨ Whey Izolat"         },
+  { slug: "whey-protein-izolat-hrvatska",                label: "✨ Whey Izolat"         },
   { slug: "biljni-protein-hrvatska",                     label: "🌿 Biljni Protein"      },
   { slug: "whey-protein-do-20-eura",                     label: "🏷️ Whey do 20 EUR"     },
   { slug: "whey-protein-do-40-eura",                     label: "🏷️ Whey do 40 EUR"     },

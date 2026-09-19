@@ -124,6 +124,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       now,
     ),
     // SEO landing pages
+    { url: `${BASE}/proteini-srbija`,              changeFrequency: "daily"  as const, priority: 0.9,  lastModified: now },
+    { url: `${BASE}/whey-protein-izolat`,          changeFrequency: "weekly" as const, priority: 0.9,  lastModified: now },
+    { url: `${BASE}/protein-kalkulator`,           changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/najbolji-whey-protein-srbija`, changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/najjeftiniji-whey-protein`,    changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/whey-protein-cena`,            changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
@@ -184,6 +187,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       now,
     ),
     // SEO landing pages
+    { url: `${BASE}/proteini-hrvatska`,                  changeFrequency: "daily"  as const, priority: 0.9,  lastModified: now },
+    { url: `${BASE}/whey-protein-izolat-hrvatska`,       changeFrequency: "weekly" as const, priority: 0.9,  lastModified: now },
+    { url: `${BASE}/protein-kalkulator-hrvatska`,        changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/najbolji-whey-protein-hrvatska`,     changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/najjeftiniji-whey-protein-hrvatska`, changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/whey-protein-cijena`,                changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
