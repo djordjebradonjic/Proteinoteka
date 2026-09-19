@@ -315,3 +315,20 @@ export function topByValueScore(catalog: Product[], source: TypeSource, limit: n
 export const getWheyPriceStats = cache(async (): Promise<WheyPriceStats> =>
   computeWheyPriceStats(await fetchMarketCatalog()),
 );
+
+const MIN_PACK_G = 500; // keeps sachets and sample packs out of "from X per kg"
+
+/**
+ * Lowest price per kg among real retail packs of one protein type, for "from X/kg" in titles.
+ * Returns null when there is no trustworthy figure: too few listings, or a minimum so far
+ * below the median that it is more likely a data error than a deal.
+ */
+export function cheapestPricePerKg(catalog: Product[], source: TypeSource): number | null {
+  const perKg = catalog
+    .filter((p) => usable(p) && hasPlausibleProtein(p) && p.proteinSource === source && p.primaryWeightGrams! >= MIN_PACK_G)
+    .map(pricePerKg)
+    .sort((a, b) => a - b);
+  if (perKg.length < 5) return null;
+  if (perKg[0] < 0.5 * quantile(perKg, 0.5)) return null;
+  return perKg[0];
+}

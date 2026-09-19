@@ -7,6 +7,7 @@ import { CATEGORIES, getCategoryBySlug } from "@/lib/categories";
 import { CATEGORY_CONTENT } from "@/lib/category-content";
 import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
 import { hreflangAlternates } from "@/lib/hreflang";
+import { cheapestPricePerKg, fetchMarketCatalog, type TypeSource } from "@/lib/whey-price-stats";
 
 export const revalidate = 86400;
 
@@ -114,31 +115,64 @@ const DEEP_DIVE: Record<string, Record<"rs" | "hr", { href: string; label: strin
   },
 };
 
+// Categories whose title gets a live "from X/kg" hook (the two with real search volume).
+// Kept short on purpose: the layout template appends " | Proteinoteka" and Google cuts near 60 chars.
+const PRICE_TITLE: Partial<Record<TypeSource, Record<"rs" | "hr", (price: string) => string>>> = {
+  whey_isolate: {
+    rs: (price) => `Whey Isolate cene u Srbiji: od ${price}`,
+    hr: (price) => `Whey Isolate cijene u Hrvatskoj: od ${price}`,
+  },
+  whey_concentrate: {
+    rs: (price) => `Whey Concentrate cene u Srbiji: od ${price}`,
+    hr: (price) => `Whey Concentrate cijene u Hrvatskoj: od ${price}`,
+  },
+};
+
+// Builds the title from the cheapest real pack price per kg in the live catalog. Any failure
+// returns null so the static title is used — a missing price must never break metadata.
+async function priceTitle(categoryValue: string): Promise<string | null> {
+  const build = PRICE_TITLE[categoryValue as TypeSource]?.[CURRENT_MARKET];
+  if (!build) return null;
+  try {
+    const perKg = cheapestPricePerKg(await fetchMarketCatalog(), categoryValue as TypeSource);
+    if (perKg == null) return null;
+    const rounded = Math.round(perKg);
+    return build(
+      CURRENT_MARKET === "rs"
+        ? `${rounded.toLocaleString("sr-RS")} din/kg`
+        : `${rounded.toLocaleString("hr-HR")} €/kg`,
+    );
+  } catch {
+    return null;
+  }
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const cat = getCategoryBySlug(slug);
   if (!cat) return {};
 
   const m = META[cat.value][CURRENT_MARKET];
+  const title = (await priceTitle(cat.value)) ?? m.title;
   return {
-    title: m.title,
+    title,
     description: m.description,
     alternates: {
       canonical: `${BASE_URL}/kategorija/${slug}`,
       languages: hreflangAlternates(`/kategorija/${slug}`),
     },
     openGraph: {
-      title: m.title,
+      title,
       description: m.description,
       url: `${BASE_URL}/kategorija/${slug}`,
       siteName: "Proteinoteka",
       locale: MARKET_CONFIG[CURRENT_MARKET].ogLocale,
       type: "website",
-      images: [{ url: `${BASE_URL}/opengraph-image`, width: 1200, height: 630, alt: m.title }],
+      images: [{ url: `${BASE_URL}/opengraph-image`, width: 1200, height: 630, alt: title }],
     },
     twitter: {
       card: "summary_large_image",
-      title: m.title,
+      title,
       description: m.description,
       images: [`${BASE_URL}/opengraph-image`],
     },
