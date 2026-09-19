@@ -125,6 +125,67 @@ class ProductGroupServiceTest {
         assertFalse(ProductGroupService.fitsGroup(hr, g, members));
     }
 
+    // ------------------------------------------------------------------ product families
+
+    static Product creatine(String name, String brand, double grams, String form, String type, Store store) {
+        Product p = product(name, brand, grams, null, store);
+        p.setProductType("creatine");
+        p.setProductForm(form);
+        p.setCreatineType(type);
+        return p;
+    }
+
+    @Test
+    void aCreatineNeverJoinsAProteinGroup() {
+        ProductGroup g = group(1, "MyProtein", 500);
+        List<Product> members = List.of(product("MyProtein Impact 500g", "MyProtein", 500, "whey_concentrate", store(1, "A")));
+        // same brand, size, source and name on purpose: only the family can tell these apart
+        Product listing = product("MyProtein Impact 500g", "MyProtein", 500, "whey_concentrate", store(2, "B"));
+        assertTrue(ProductGroupService.fitsGroup(listing, g, members));
+
+        listing.setProductType("creatine");
+        assertFalse(ProductGroupService.fitsGroup(listing, g, members));
+    }
+
+    @Test
+    void creatineFormAndTypeSeparateOnlyWhenBothAreKnown() {
+        Store a = store(1, "A"), b = store(2, "B");
+        String name = "Applied Nutrition Creatine Monohydrate 250g";
+        ProductGroup g = group(1, "Applied Nutrition", 250);
+        List<Product> powder = List.of(creatine(name, "Applied Nutrition", 250, "powder", "monohydrate", a));
+
+        assertTrue(ProductGroupService.fitsGroup(creatine(name, "Applied Nutrition", 250, "powder", "monohydrate", b), g, powder));
+        assertFalse(ProductGroupService.fitsGroup(creatine(name, "Applied Nutrition", 250, "capsule", "monohydrate", b), g, powder));
+        assertFalse(ProductGroupService.fitsGroup(creatine(name, "Applied Nutrition", 250, "powder", "hcl", b), g, powder));
+        // unknown is not a value: a listing the parser could not classify still groups with the rest
+        assertTrue(ProductGroupService.fitsGroup(creatine(name, "Applied Nutrition", 250, null, null, b), g, powder));
+    }
+
+    @Test
+    void autoGenerateBuildsOneGroupFromSameFamilyListings() {
+        Product a = product("MyProtein Impact 500g", "MyProtein", 500, "whey_concentrate", store(1, "A"));
+        Product b = product("MyProtein Impact 500g", "MyProtein", 500, "whey_concentrate", store(2, "B"));
+        when(productRepository.findAll()).thenReturn(List.of(a, b));
+        when(productGroupRepository.save(any(ProductGroup.class))).thenAnswer(inv -> {
+            ProductGroup saved = inv.getArgument(0);
+            saved.setId(99L);
+            return saved;
+        });
+
+        assertEquals(1, service.autoGenerateGroups().get("groupsCreated"));
+    }
+
+    @Test
+    void autoGenerateNeverBuildsAGroupAcrossFamilies() {
+        Product whey = product("MyProtein Impact 500g", "MyProtein", 500, "whey_concentrate", store(1, "A"));
+        Product creatine = product("MyProtein Impact 500g", "MyProtein", 500, "whey_concentrate", store(2, "B"));
+        creatine.setProductType("creatine");
+        when(productRepository.findAll()).thenReturn(List.of(whey, creatine));
+
+        assertEquals(0, service.autoGenerateGroups().get("groupsCreated"));
+        verify(productGroupRepository, never()).save(any(ProductGroup.class));
+    }
+
     // ------------------------------------------------------------------ groupingSource
 
     @Test

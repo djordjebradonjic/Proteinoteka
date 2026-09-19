@@ -5,6 +5,7 @@ import com.proteinoteka.model.Product;
 import com.proteinoteka.model.ProductGroup;
 import com.proteinoteka.repository.ProductGroupRepository;
 import com.proteinoteka.repository.ProductRepository;
+import com.proteinoteka.service.producttype.ProductTypes;
 import com.proteinoteka.util.ProductLineMatcher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -38,6 +39,16 @@ public class ProductGroupService {
         return normalizeSource(ValueScoreCalculator.effectiveSource(p));
     }
 
+    /** Product family ("protein", "creatine", ...); legacy rows without one are protein. */
+    private static String familyOf(Product p) {
+        return p.getProductType() != null ? p.getProductType() : ProductTypes.PROTEIN;
+    }
+
+    /** Two known values that disagree. An unknown (null) value never separates products: unknown is not a value. */
+    private static boolean knownAndDifferent(String a, String b) {
+        return a != null && b != null && !a.equalsIgnoreCase(b);
+    }
+
     /** Average of the members' real weights (never the group's stored weight, which goes stale). */
     public static double averageWeight(List<Product> members) {
         return members.stream()
@@ -64,6 +75,13 @@ public class ProductGroupService {
         if (avg <= 0 || Math.abs(p.getPrimaryWeightGrams() - avg) / avg > WEIGHT_TOLERANCE) return false;
 
         if (!groupingSource(p).equals(groupingSource(members.get(0)))) return false;
+
+        // A creatine never joins a protein group, and a capsule never a powder one (nor monohydrate an
+        // HCl one), however much brand, size and name they share.
+        Product first = members.get(0);
+        if (!familyOf(p).equals(familyOf(first))
+                || knownAndDifferent(p.getProductForm(), first.getProductForm())
+                || knownAndDifferent(p.getCreatineType(), first.getCreatineType())) return false;
 
         if (p.getStore() != null && members.stream().anyMatch(m ->
                 m.getStore() != null && m.getStore().getId().equals(p.getStore().getId()))) return false;
@@ -139,7 +157,9 @@ public class ProductGroupService {
             if (p.getBrand() == null || p.getPrimaryWeightGrams() == null) continue;
             if (p.getGroupId() != null) continue;
             String market = p.getMarket() != null ? p.getMarket() : "rs";
-            String key = market + "|" + p.getBrand().toLowerCase().trim() + "|" + groupingSource(p);
+            // family/form/creatine type are part of the key so a fresh group is always one fitsGroup accepts
+            String key = market + "|" + familyOf(p) + "|" + p.getBrand().toLowerCase().trim() + "|" + groupingSource(p)
+                    + "|" + Objects.toString(p.getProductForm(), "") + "|" + Objects.toString(p.getCreatineType(), "");
             byBrandSource.computeIfAbsent(key, k -> new ArrayList<>()).add(p);
         }
 
