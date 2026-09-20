@@ -26,9 +26,14 @@ export default function robots(): MetadataRoute.Robots {
           '/*?*minPrice=',
           '/*?*maxPrice=',
           '/*?*page=',
+          '/*?*oblik=',
+          '/*?*tip=',
         ],
       },
     ],
-    sitemap: `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/sitemap.xml`,
+    sitemap: [
+      `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/sitemap.xml`,
+      `https://${MARKET_CONFIG[CURRENT_MARKET].domain}/kreatin/sitemap.xml`,
+    ],
   };
 }

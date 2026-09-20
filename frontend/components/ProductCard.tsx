@@ -21,6 +21,8 @@ import { productUrl } from "@/lib/productUrl";
 import { hasAlert, loadAlerts } from "@/lib/alerts";
 import PriceAlertModal from "@/components/PriceAlertModal";
 import { getScoreColor, getScoreBg, getScoreLabel } from "@/lib/scoreColor";
+import CreatinePriceMeta from "@/components/creatine/CreatinePriceMeta";
+import { FORM_LABELS, isCreatine, packLabel } from "@/lib/creatine";
 
 interface ProductCardProps {
   product: Product;
@@ -93,6 +95,9 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
   };
 
   const productHref = product.id ? productUrl(product) : "/";
+  // A creatine card shows the pack (g or pieces), the form and the price per 100 g / serving instead of
+  // protein content, and has no compare button (the compare page is built around protein).
+  const creatine = isCreatine(product);
 
   const vs  = product.valueScore;
   const pct = product.percentileRank;
@@ -101,7 +106,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
     : { bg: getScoreColor(vs), label: getScoreLabel(vs) };
   const vsPercentile =
     pct != null && pct >= 10
-      ? `Bolje od ${pct}% proteina`
+      ? `Bolje od ${pct}% ${creatine ? "kreatina" : "proteina"}`
       : null;
 
   const saveScroll = () => {
@@ -159,7 +164,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
         )}
 
         {/* Gornji levi — Compare */}
-        <button
+        {!creatine && <button
           onClick={toggleCompare}
           className={`absolute top-2 left-2 z-10 flex items-center gap-1 px-1.5 py-1 rounded text-[10px] font-semibold transition-all border-2 ${
             isComparing
@@ -181,7 +186,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             )}
           </span>
           <span className="text-[10px]">Uporedi</span>
-        </button>
+        </button>}
 
         {/* Gornji desni — Wishlist */}
         <button
@@ -214,7 +219,20 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           {product.name}
         </h3>
 
-        {product.primaryWeightGrams && (
+        {creatine ? (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {packLabel(product) && (
+              <span className="text-xs font-black text-[#1B2B4B] bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full w-fit">
+                {packLabel(product)}
+              </span>
+            )}
+            {product.productForm && FORM_LABELS[product.productForm] && (
+              <span className="text-[10px] font-semibold text-[#5A6478] bg-[#F5F5F5] px-2 py-0.5 rounded-full">
+                {FORM_LABELS[product.productForm]}
+              </span>
+            )}
+          </div>
+        ) : product.primaryWeightGrams && (
           <span className="text-xs font-black text-[#1B2B4B] bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full w-fit">
             {product.primaryWeightGrams >= 1000
               ? `${(product.primaryWeightGrams / 1000 % 1 === 0 ? product.primaryWeightGrams / 1000 : (product.primaryWeightGrams / 1000).toFixed(1))} kg`
@@ -254,11 +272,15 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
         </div>
 
         <div className="mb-1">
-          <PricePerGramBadge
-            numericPrice={product.numericPrice}
-            proteinPer100g={product.proteinPer100g}
-            primaryWeightGrams={product.primaryWeightGrams}
-          />
+          {creatine ? (
+            <CreatinePriceMeta product={product} />
+          ) : (
+            <PricePerGramBadge
+              numericPrice={product.numericPrice}
+              proteinPer100g={product.proteinPer100g}
+              primaryWeightGrams={product.primaryWeightGrams}
+            />
+          )}
         </div>
         <div className="h-4">
           {product.proteinPer100g && (
