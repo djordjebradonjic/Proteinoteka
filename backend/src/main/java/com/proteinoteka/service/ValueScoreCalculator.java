@@ -432,20 +432,21 @@ public final class ValueScoreCalculator {
     // whey sources have), so unlike the protein formula this is just a single price-per-gram-of-
     // product score.
     //
-    // The benchmark is the market median price per gram of pack for powders, measured 2026-09-19 from
-    // live store listings: RS 9.95 RSD/g (17 rows, 2 stores; quartiles 7.98-11.96), HR 0.083 EUR/g
-    // (20 rows, 2 stores; quartiles 0.063-0.094). The two markets agree (0.083 EUR is ~9.75 RSD).
-    // The first estimate (2 RSD/g) was five times too low and scored every real listing near zero.
-    // Two stores per market is a thin base: re-derive from the wider catalogue with the audit's median
-    // report once more stores carry creatine, then run recalculate-scores.
-    private static final double CREATINE_BENCHMARK_RSD_PER_G = 10.0;
-    private static final double CREATINE_BENCHMARK_EUR_PER_G = 0.085;
-    // Above this a listing is a data error or not creatine at all (highest real one: a 29 RSD/g GAA blend).
+    // The benchmark is the market median price per gram of pack for powders, measured 2026-09-20 from the
+    // live listings of 17 stores (every store that carries creatine, 490 listings): RS 7.61 RSD/g (248
+    // powders with a weight, 11 stores; quartiles 6.38-8.97), HR 0.0759 EUR/g (96, 6 stores; quartiles
+    // 0.060-0.094). HR runs ~17% dearer than RS in RSD terms, so each market has its own. The first
+    // estimate (2 RSD/g) was five times too low; the second (10 RSD/g, 2 stores per market) was 30% too high.
+    // Re-derive it with the audit's BENCHMARK_DRIFT report when the market moves, then run recalculate-scores.
+    private static final double CREATINE_BENCHMARK_RSD_PER_G = 7.6;
+    private static final double CREATINE_BENCHMARK_EUR_PER_G = 0.076;
+    // Above this a listing is a data error or not creatine at all (highest real one: a 29 RSD/g GAA blend,
+    // 3.8x the median).
     private static final double CREATINE_MAX_TO_BENCHMARK = 4.0;
-    // Below this it is not (only) creatine: carbohydrate mixes sold under a creatine name (Nutrend Creaport,
-    // Amix VitarGO + Kre-Alkalyn) cost 0.26-0.31x the median per gram and would otherwise top the ranking,
-    // while the cheapest real powders measured 0.55x. Same idea as the protein price floor.
-    private static final double CREATINE_MIN_TO_BENCHMARK = 0.35;
+    // Below this the price or weight is wrong. Real bulk creatine goes down to 0.31x (GymBeam's own 1-1.5 kg
+    // bags, 2.4 RSD/g); the carbohydrate mixes that used to sit below 0.35x cost the same per gram as those
+    // bags, so they are rejected by name in CreatineProfile and the price no longer has to catch them.
+    private static final double CREATINE_MIN_TO_BENCHMARK = 0.2;
 
     /** The per-gram price of a creatine powder (pack grams) that scores 1.0 against the market, in {@code currency}. */
     public static double creatineBenchmark(String currency) {

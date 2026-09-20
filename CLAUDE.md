@@ -95,7 +95,7 @@ Filtering is implemented via JPA `Specification` chaining in `ProductSpecificati
 
 ### Value score
 
-All scoring logic lives in `ValueScoreCalculator` (pure, unit-tested; `ScraperService.calculateValueScore` and the admin recalculation only delegate). A product that can't be fairly scored gets `valueScore = null` with a `SkipReason` (bar/meal replacement/gainer, protein % contradicting the protein type or >95%, implausible price per gram, weight in name contradicting stored weight, missing data) — callers must store that null, never keep an older score. Beef/collagen: full penalty only when it is the protein source (name/`proteinSource`); a small one when it is just an ingredient (regex needs the `(?<!\p{L})` word boundary). Category benchmarks are calibrated to market medians; `GET /api/admin/data-quality` (`ValueScoreAudit`) reports stale scores, price/weight/protein outliers, cross-store inconsistency, unknown brands and benchmark drift — check it after big scrapes and re-run `POST /api/admin/recalculate-scores` after changing any scoring rule. New brands need a `brand_reputation` migration (unknown brands silently default to 4.5). Creatine is scored as a single price-per-gram-of-pack value against the measured market median (10 RSD/g, 0.085 EUR/g on 2026-09-19 from two stores per market; floor 0.35x, cap 4x): re-derive it from the wider catalogue once more stores carry creatine. Creatine sold by the piece (capsule, tablet, gummy) is never scored (`SkipReason.COUNTED_FORM`): its price per gram of creatine needs servings × dose, which stores almost never state (0 of the first 24 counted listings had both), so any benchmark would be a guess; `ValueScoreAudit` reports the gap once (`CREATINE_UNSCORED_COUNTED_FORMS`) and now audits creatine like protein (stale/implausible scores, `PRICE_OUTLIER`, `BENCHMARK_DRIFT` per market). Carbohydrate mixes under a creatine name (dextrose, Vitargo, Creaport) cost the same per gram as real bulk creatine, so `CreatineProfile` rejects them by name, not by price.
+All scoring logic lives in `ValueScoreCalculator` (pure, unit-tested; `ScraperService.calculateValueScore` and the admin recalculation only delegate). A product that can't be fairly scored gets `valueScore = null` with a `SkipReason` (bar/meal replacement/gainer, protein % contradicting the protein type or >95%, implausible price per gram, weight in name contradicting stored weight, missing data) — callers must store that null, never keep an older score. Beef/collagen: full penalty only when it is the protein source (name/`proteinSource`); a small one when it is just an ingredient (regex needs the `(?<!\p{L})` word boundary). Category benchmarks are calibrated to market medians; `GET /api/admin/data-quality` (`ValueScoreAudit`) reports stale scores, price/weight/protein outliers, cross-store inconsistency, unknown brands and benchmark drift — check it after big scrapes and re-run `POST /api/admin/recalculate-scores` after changing any scoring rule. New brands need a `brand_reputation` migration (unknown brands silently default to 4.5). Creatine is scored as a single price-per-gram-of-pack value against the measured market median (RS 7.6 RSD/g, HR 0.076 EUR/g on 2026-09-20 from 17 stores and 490 listings; floor 0.2x, cap 4x): `ValueScoreAudit`'s `BENCHMARK_DRIFT` says when the market has moved, then re-derive it and run `recalculate-scores`. Creatine sold by the piece (capsule, tablet, gummy) is never scored (`SkipReason.COUNTED_FORM`): its price per gram of creatine needs servings × dose, which stores almost never state (0 of the first 24 counted listings had both), so any benchmark would be a guess; `ValueScoreAudit` reports the gap once (`CREATINE_UNSCORED_COUNTED_FORMS`) and now audits creatine like protein (stale/implausible scores, `PRICE_OUTLIER`, `BENCHMARK_DRIFT` per market). Carbohydrate mixes under a creatine name (dextrose, Vitargo, Creaport) cost the same per gram as real bulk creatine, so `CreatineProfile` rejects them by name, not by price.
 
 ### Product groups (cross-store comparison)
 
@@ -118,6 +118,7 @@ Available at `http://localhost:8080/swagger-ui.html` when running locally.
 ```
 NEXT_PUBLIC_API_URL=http://localhost:8080
 RESEND_API_KEY=re_...
+RATE_LIMIT_BYPASS_TOKEN=...   # server-only; same value as on the backend (see Backend env)
 ```
 
 ### Backend (`application.yml` / environment)
@@ -128,7 +129,11 @@ DATABASE_USERNAME=proteinoteka_2026
 DATABASE_PASSWORD=...             # never commit real values; local dev default is in application.yml
 ANTHROPIC_API_KEY=...
 PLAYWRIGHT_EXECUTABLE_PATH=...   # optional, for scraper browser
+RATE_LIMIT_BYPASS_TOKEN=...      # lets the Next.js server (shared Vercel IPs) skip the per-IP limit; empty = no bypass
+RATE_LIMIT_ENABLED / RATE_LIMIT_PER_MINUTE / RATE_LIMIT_BURST / RATE_LIMIT_PROXY_HOPS  # RateLimitFilter, defaults true/120/60/1
 ```
+
+`RateLimitFilter` throttles `/api/v1/**` per client IP (rightmost `X-Forwarded-For` entry). Server-side fetches in the frontend must go through `lib/apiFetch.ts`, otherwise ISR/sitemap calls from Vercel get 429s.
 
 ---
 

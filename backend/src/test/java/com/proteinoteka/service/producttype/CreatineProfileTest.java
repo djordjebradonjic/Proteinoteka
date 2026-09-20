@@ -73,13 +73,15 @@ class CreatineProfileTest {
                 "Creatine + Dextrose 1 kg",
                 "NUTREND CREAPORT, 600g ORANGE FLAVOUR",
                 "Amix VitarGO + Kre-Alkalyn 2 kg",
-                "Creatine with Maltodextrin 500g"}) {
+                "Creatine with Maltodextrin 500g",
+                "USN CREATINE ANABOLIC 5000, 900g"}) {
             assertTrue(profile.rejectReason(named(name), true).isPresent(), name);
         }
         for (String name : new String[]{
                 "100% Kreatin Monohidrat - GymBeam",
                 "Creatine Monohydrate 1000g",
-                "Kreatin Monohidrat Creapure 500g"}) {
+                "Kreatin Monohidrat Creapure 500g",
+                "Anabolic Crea 10, 207g"}) {
             assertTrue(profile.rejectReason(named(name), true).isEmpty(), name);
         }
     }

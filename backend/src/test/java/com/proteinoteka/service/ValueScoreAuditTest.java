@@ -152,9 +152,9 @@ class ValueScoreAuditTest {
 
     @Test
     void anImplausibleCreatinePriceIsReportedForReview() {
-        // 5 RSD for a 500 g tub is a scraping error (or not creatine); 50000 RSD likewise
+        // 1 RSD/g for a 500 g tub is a scraping error (or not creatine); 100 RSD/g likewise
         List<String> issues = ValueScoreAudit.run(List.of(
-                creatine("Creatine Monohydrate", "powder", 500.0, 900),
+                creatine("Creatine Monohydrate", "powder", 500.0, 500),
                 creatine("Creatine Monohydrate", "powder", 500.0, 50000)), BRANDS);
 
         assertEquals(2, issues.stream().filter(i -> i.startsWith("VALUE_SCORE_SKIPPED")).count(), issues.toString());
