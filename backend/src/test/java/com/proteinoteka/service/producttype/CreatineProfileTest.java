@@ -3,6 +3,7 @@ package com.proteinoteka.service.producttype;
 import com.proteinoteka.model.Product;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -30,6 +31,53 @@ class CreatineProfileTest {
                 "Verviavita Creatine Monohydrate 900g 2+1 gratis",
                 "Whey Protein 2kg + Creatine 300g"}) {
             assertTrue(profile.rejectReason(named(name), true).isPresent(), name);
+        }
+    }
+
+    // Real titles from the HTML stores' creatine categories (fitlab.rs, proteini.si/hr, myprotein.rs/.hr, 2026-09-20)
+    @Test
+    void bundlesAndOtherFamiliesSeenInHtmlStoreCategoriesAreRejected() {
+        for (String name : new String[]{
+                "Supernova 258g/30serv - BioTechUSA",
+                "BATTERY CREATINE (FLAVOURED) - 1+1 PACK (-20%)",
+                "BATTERY CREATINE - POWER & RECHARGE, LIMITED PACK",
+                "MAX Promo Paket - Maximalium",
+                "Whey Isolate 2kg + Creatin 300g - 5stars/Body Attack",
+                "CreaPOWDER 500g + BCAA 8:1:1 300g - Yamamoto",
+                "Creatine Monohydrate 500g (+Citrulin/ Beta-alanin/ Taurin/ Arginin) - Maximalium",
+                "Paket Gainer"}) {
+            assertTrue(profile.rejectReason(named(name), true).isPresent(), name);
+        }
+    }
+
+    @Test
+    void creatineProductsWithUnusualNamesSeenInHtmlStoreCategoriesAreAccepted() {
+        for (String name : new String[]{
+                "Krealka MAX (Krealkalin) 120cap - Superior",
+                "Creafast 120 tableta",
+                "CREAPOWDER 500G - YAMAMOTO NUTRITION",
+                "Myprotein, Impact Creatine Stick Packs, 6g (Boxes)",
+                "Krea-Genic Maximum 554g/70serv - Weider",
+                "Beta K 200cap - Ultimate Nutrition",
+                "VAST CREATINE ULTRA PURE CAPS, 300 kapsula"}) {
+            assertTrue(profile.rejectReason(named(name), true).isEmpty(), name);
+        }
+    }
+
+    // MyProtein files an electrolyte drink and a vitamin pack under its creatine category.
+    @Test
+    void mixedCategoryItemsWithoutACreatineKeywordAreRejected() {
+        for (String name : new String[]{"THE Electrofuel", "THE ElectroPower", "Paket Vitamina"}) {
+            assertTrue(profile.rejectReason(named(name), false).isPresent(), name);
+        }
+        for (String name : new String[]{
+                "Impact Creatine - aroma lizalica Chupa Chups sa ukusom lubenice",
+                "Kreatin Monohidrat Elite",
+                "Kreatin Gumije",
+                "Kremaste žvakaće bombone s kreatinom bez šećera",
+                "THE Creatine | Creapure® tablete za žvakanje",
+                "Myprotein PRO Creapure Stick Pack (Sample)"}) {
+            assertTrue(profile.rejectReason(named(name), false).isEmpty(), name);
         }
     }
 
@@ -101,6 +149,60 @@ class CreatineProfileTest {
         assertEquals(120, p.getUnitCount());
         assertNull(p.getCreatineGramsPerServing(), "45 g is not a creatine dose");
         assertNull(p.getServingsPerContainer());
+    }
+
+    // ------------------------------------------------------------------ sachet packs
+
+    // Store scrapers take the first gram figure of a title as the pack weight; in "(5g Kesica) 20kesica"
+    // that figure is ONE sachet (FitLab stored the pack as 5 g).
+    @Test
+    void aSachetWeightIsNotThePackWeight() {
+        Product p = named("CREA PRO - Kreatin (5g Kesica) 20kesica - Basic Supplements");
+        p.getPackage_weight().add("5g");
+        p.setPrimaryWeightGrams(5.0);
+
+        profile.sanitize(p, "TestStore");
+
+        assertEquals(List.of("100g"), p.getPackage_weight(), "20 sachets of 5 g");
+        assertEquals(100.0, p.getPrimaryWeightGrams());
+        assertEquals(20, p.getUnitCount());
+    }
+
+    @Test
+    void withoutASachetCountThePackWeightIsUnknownRatherThanOneSachet() {
+        Product p = named("BS CreaPro 5g kesice");
+        p.getPackage_weight().add("5g");
+        p.setPrimaryWeightGrams(5.0);
+
+        profile.sanitize(p, "TestStore");
+
+        assertTrue(p.getPackage_weight().isEmpty());
+        assertNull(p.getPrimaryWeightGrams());
+    }
+
+    @Test
+    void aStatedPackWeightBesideTheSachetWeightIsLeftAlone() {
+        Product p = named("CREA PRO -Kreatin /100 grama (5g Kesica) BASIC SUPPLEMENTS");
+        p.getPackage_weight().add("100g");
+        p.getPackage_weight().add("5g");
+        p.setPrimaryWeightGrams(100.0);
+
+        profile.sanitize(p, "TestStore");
+
+        assertEquals(List.of("100g", "5g"), p.getPackage_weight());
+        assertEquals(100.0, p.getPrimaryWeightGrams());
+    }
+
+    @Test
+    void aTitleWithoutASachetWeightKeepsItsWeight() {
+        Product p = named("Creatine Monohydrate 300g");
+        p.getPackage_weight().add("300g");
+        p.setPrimaryWeightGrams(300.0);
+
+        profile.sanitize(p, "TestStore");
+
+        assertEquals(List.of("300g"), p.getPackage_weight());
+        assertEquals(300.0, p.getPrimaryWeightGrams());
     }
 
     @Test

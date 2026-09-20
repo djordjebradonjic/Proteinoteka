@@ -2,6 +2,8 @@ package com.proteinoteka.service;
 
 import com.microsoft.playwright.Page;
 import com.proteinoteka.model.Product;
+import com.proteinoteka.service.producttype.ProductTypeProfile;
+import com.proteinoteka.service.producttype.ProductTypes;
 import com.proteinoteka.util.HtmlCleaner;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
@@ -31,12 +34,15 @@ public class ProteiniSiHrScraper implements StoreScraper {
 
     private static final String STORE_NAME = "Proteini.si HR";
     private static final String BASE_URL = "https://www.proteini.si/hr/proteini/";
+    private static final String CREATINE_URL = "https://www.proteini.si/hr/kreatin/";
+    private static final String CREATINE_URL_SEGMENT = "/kreatin/";
     private static final String SITE_ORIGIN = "https://www.proteini.si";
     private static final int PRODUCTS_PER_PAGE = 20;
 
-    // URL path segments that indicate non-supplement product categories
+    // URL path segments that indicate non-supplement product categories (and, in the protein listing,
+    // creatine products that turn up there — those are scraped from the creatine listing instead)
     private static final Set<String> SKIP_URL_SEGMENTS = Set.of(
-            "/grickalice/", "/namazi/", "/gotovi-napitci/", "/pudinzi/", "/muesli/", "/kreatin/"
+            "/grickalice/", "/namazi/", "/gotovi-napitci/", "/pudinzi/", "/muesli/", CREATINE_URL_SEGMENT
     );
 
     // Name/URL fragments that indicate bundle kits (no meaningful per-unit nutrition)
@@ -63,9 +69,20 @@ public class ProteiniSiHrScraper implements StoreScraper {
         return doc.select("a.product-box").size() >= PRODUCTS_PER_PAGE;
     }
 
+    private static String pageUrl(String baseUrl, int page) {
+        return page == 0 ? baseUrl : baseUrl + "?page=" + (page + 1);
+    }
+
     @Override
     public String buildPageUrl(int page) {
-        return page == 0 ? BASE_URL : BASE_URL + "?page=" + (page + 1);
+        return pageUrl(BASE_URL, page);
+    }
+
+    @Override
+    public List<ListingTarget> listingTargets() {
+        return List.of(
+                primaryListingTarget(),
+                ListingTarget.html(ProductTypes.CREATINE, CREATINE_URL, page -> pageUrl(CREATINE_URL, page)));
     }
 
     @Override
@@ -75,6 +92,16 @@ public class ProteiniSiHrScraper implements StoreScraper {
 
     @Override
     public List<Product> scrape(Page page, Document doc, Set<String> skipUrls) {
+        return scrapeListing(doc, skipUrls, ListingFamily.PROTEIN);
+    }
+
+    @Override
+    public List<Product> scrape(ListingTarget target, ProductTypeProfile profile,
+                                Page page, Document doc, Set<String> skipUrls) {
+        return scrapeListing(doc, skipUrls, ListingFamily.of(target, profile));
+    }
+
+    private List<Product> scrapeListing(Document doc, Set<String> skipUrls, ListingFamily family) {
         List<Product> products = new ArrayList<>();
 
         Elements elements = doc.select("a.product-box");
@@ -82,23 +109,23 @@ public class ProteiniSiHrScraper implements StoreScraper {
 
         for (Element el : elements) {
             if (el.hasClass("block-disabled")) continue;
-            Product p = parseElement(el);
+            Product p = parseElement(el, family);
             if (p != null) products.add(p);
         }
 
-        enrichWithDetails(products, skipUrls);
+        enrichWithDetails(products, skipUrls, family);
         return products;
     }
 
     // -------------------- Listing parsing --------------------
 
-    private Product parseElement(Element el) {
+    private Product parseElement(Element el, ListingFamily family) {
         try {
             String href = el.attr("href");
             if (href.isBlank()) return null;
 
             // Skip non-supplement categories and bundle kits
-            if (isSkippedUrl(href)) {
+            if (isSkippedUrl(href, family)) {
                 log.debug("[{}] Skipping non-supplement URL: {}", STORE_NAME, href);
                 return null;
             }
@@ -137,11 +164,14 @@ public class ProteiniSiHrScraper implements StoreScraper {
         }
     }
 
-    private boolean isSkippedUrl(String href) {
+    private boolean isSkippedUrl(String href, ListingFamily family) {
+        if (BUNDLE_PATTERN.matcher(href).find()) return true;
+        // The creatine category page also lists stacks and pre-workouts filed under other categories
+        if (family.isCreatine()) return !href.contains(CREATINE_URL_SEGMENT);
         for (String seg : SKIP_URL_SEGMENTS) {
             if (href.contains(seg)) return true;
         }
-        return BUNDLE_PATTERN.matcher(href).find();
+        return false;
     }
 
     // Handles three weight formats found on this store:
@@ -179,12 +209,13 @@ public class ProteiniSiHrScraper implements StoreScraper {
 
     // -------------------- Detail page enrichment (JSoup only) --------------------
 
-    private void enrichWithDetails(List<Product> products, Set<String> skipUrls) {
+    private void enrichWithDetails(List<Product> products, Set<String> skipUrls, ListingFamily family) {
         int count = 0;
         for (Product p : products) {
             if (p.getUrl() == null || p.getUrl().isBlank()) continue;
-            if (baseEnricher.isNonProteinProduct(p.getName())) {
-                log.info("[{}] Skipping '{}' — not a protein product", STORE_NAME, p.getName());
+            Optional<String> rejected = family.rejectReason(p, baseEnricher);
+            if (rejected.isPresent()) {
+                log.info("[{}] Skipping '{}' — {}", STORE_NAME, p.getName(), rejected.get());
                 continue;
             }
             if (skipUrls.contains(p.getUrl())) {
@@ -202,17 +233,24 @@ public class ProteiniSiHrScraper implements StoreScraper {
 
                 enrichFlavours(doc, p);
                 enrichDescription(doc, p);
-                enrichNutrition(doc, p);
+                if (family.isCreatine()) {
+                    baseEnricher.enrichCreatineFromDescription(doc, p, STORE_NAME);
+                    log.info("[{}] Enriched '{}' -> flavours={}, creatine form={}, dose={}g, servings={}",
+                            STORE_NAME, p.getName(), p.getFlavours().size(), p.getProductForm(),
+                            p.getCreatineGramsPerServing(), p.getServingsPerContainer());
+                } else {
+                    enrichNutrition(doc, p);
 
-                // Resolve "48 doza" weight from nutrition table serving size
-                if (p.getPackage_weight().isEmpty()) {
-                    resolveDozeWeight(p);
+                    // Resolve "48 doza" weight from nutrition table serving size
+                    if (p.getPackage_weight().isEmpty()) {
+                        resolveDozeWeight(p);
+                    }
+
+                    log.info("[{}] Enriched '{}' -> flavours={}, protein={}, fat={}, sugar={}, cal={}",
+                            STORE_NAME, p.getName(), p.getFlavours().size(),
+                            p.getProteinPer100g(), p.getFatPer100g(),
+                            p.getSugarPer100g(), p.getCaloriePer100g());
                 }
-
-                log.info("[{}] Enriched '{}' -> flavours={}, protein={}, fat={}, sugar={}, cal={}",
-                        STORE_NAME, p.getName(), p.getFlavours().size(),
-                        p.getProteinPer100g(), p.getFatPer100g(),
-                        p.getSugarPer100g(), p.getCaloriePer100g());
 
                 count++;
                 if (count % 10 == 0) {

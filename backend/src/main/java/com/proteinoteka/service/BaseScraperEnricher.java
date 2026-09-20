@@ -2,6 +2,7 @@ package com.proteinoteka.service;
 
 import com.proteinoteka.dto.NutritionDataDTO;
 import com.proteinoteka.model.Product;
+import com.proteinoteka.service.producttype.CreatineParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Document;
@@ -78,6 +79,17 @@ public class BaseScraperEnricher {
         } catch (Exception e) {
             log.error("[{}] '{}' -> AI enrichment failed: {}", storeName, p.getName(), e.getMessage());
         }
+    }
+
+    /**
+     * The creatine counterpart of a store's "nutrition table → regex → AI" chain, for scrapers that
+     * serve creatine as a second listing. Creatine has no nutrition table: the form, type, dose and
+     * servings come from the name and description text, and only what that leaves open is asked of the
+     * AI. Call it after the store has set the description; never run the protein chain on a creatine row.
+     */
+    public void enrichCreatineFromDescription(Document doc, Product p, String storeName) {
+        CreatineParser.enrich(p, p.getVariantLabel());
+        enrichCreatineWithAiIfNeeded(doc, p, storeName);
     }
 
     /**

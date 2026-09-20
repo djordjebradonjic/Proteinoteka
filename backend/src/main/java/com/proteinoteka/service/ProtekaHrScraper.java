@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.playwright.Page;
 import com.proteinoteka.model.Product;
+import com.proteinoteka.service.producttype.ProductTypeProfile;
+import com.proteinoteka.service.producttype.ProductTypes;
 import com.proteinoteka.util.ProductNameCleaner;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
@@ -37,6 +40,7 @@ public class ProtekaHrScraper implements StoreScraper {
 
     private static final String STORE_NAME  = "Proteka";
     private static final String BASE_URL    = "https://www.proteka.hr/c/proteini";
+    private static final String CREATINE_URL = "https://www.proteka.hr/c/sportska-prehrana/kreatini";
     private static final String SITE_ORIGIN = "https://www.proteka.hr";
 
     private static final int MAX_DETAIL_FETCH_RETRIES = 3;
@@ -72,6 +76,14 @@ public class ProtekaHrScraper implements StoreScraper {
     @Override public boolean hasNextPage(Document doc) { return false; }
     @Override public String buildPageUrl(int page)     { return BASE_URL; }
 
+    // One page holds the whole (small) creatine category, like the protein one.
+    @Override
+    public List<ListingTarget> listingTargets() {
+        return List.of(
+                primaryListingTarget(),
+                ListingTarget.html(ProductTypes.CREATINE, CREATINE_URL, page -> CREATINE_URL));
+    }
+
     @Override
     public List<Product> scrape(Page page, Document doc) {
         return scrape(page, doc, java.util.Collections.emptySet());
@@ -79,13 +91,23 @@ public class ProtekaHrScraper implements StoreScraper {
 
     @Override
     public List<Product> scrape(Page page, Document doc, Set<String> skipUrls) {
+        return scrapeListing(doc, skipUrls, ListingFamily.PROTEIN);
+    }
+
+    @Override
+    public List<Product> scrape(ListingTarget target, ProductTypeProfile profile,
+                                Page page, Document doc, Set<String> skipUrls) {
+        return scrapeListing(doc, skipUrls, ListingFamily.of(target, profile));
+    }
+
+    private List<Product> scrapeListing(Document doc, Set<String> skipUrls, ListingFamily family) {
         List<Product> stubs = new ArrayList<>();
 
         Elements cards = doc.select("div[data-filterable-item]");
-        log.info("[{}] Found {} product cards on listing page", STORE_NAME, cards.size());
+        log.info("[{}] Found {} {} product cards on listing page", STORE_NAME, cards.size(), family.productType());
 
         for (Element card : cards) {
-            Product p = parseCard(card);
+            Product p = parseCard(card, family);
             if (p != null) stubs.add(p);
         }
 
@@ -93,12 +115,12 @@ public class ProtekaHrScraper implements StoreScraper {
                 STORE_NAME, stubs.size(),
                 stubs.stream().filter(s -> skipUrls.contains(s.getUrl())).count());
 
-        return enrichWithDetails(stubs, skipUrls);
+        return enrichWithDetails(stubs, skipUrls, family);
     }
 
     // ── Listing page parsing ───────────────────────────────────────────────────
 
-    private Product parseCard(Element card) {
+    private Product parseCard(Element card, ListingFamily family) {
         try {
             // Name and URL from the product-title anchor
             Element nameAnchor = card.selectFirst("h5.product-title a, .product-title a");
@@ -111,9 +133,9 @@ public class ProtekaHrScraper implements StoreScraper {
             if (href.isBlank()) return null;
             String url = href.startsWith("http") ? href : SITE_ORIGIN + href;
 
-            // Early category filter — avoids detail page fetch for non-protein products
+            // Early category filter — avoids detail page fetch for products of another family
             String category = card.attr("data-category").trim().toLowerCase();
-            if (isNonProteinCategory(category)) {
+            if (family.isCreatine() ? !isCreatineCategory(category) : isNonProteinCategory(category)) {
                 log.debug("[{}] Skipping '{}' — category '{}'", STORE_NAME, name, category);
                 return null;
             }
@@ -186,6 +208,11 @@ public class ProtekaHrScraper implements StoreScraper {
         }
     }
 
+    // A card without a category attribute is not judged by it (the name check still applies)
+    private boolean isCreatineCategory(String cat) {
+        return cat.isBlank() || cat.contains("kreatin");
+    }
+
     private boolean isNonProteinCategory(String cat) {
         return cat.contains("gainer") || cat.contains("masa") || cat.contains("bar")
                 || cat.contains("kreatin") || cat.contains("vitamin") || cat.contains("omega")
@@ -194,14 +221,15 @@ public class ProtekaHrScraper implements StoreScraper {
 
     // ── Detail page enrichment ─────────────────────────────────────────────────
 
-    private List<Product> enrichWithDetails(List<Product> stubs, Set<String> skipUrls) {
+    private List<Product> enrichWithDetails(List<Product> stubs, Set<String> skipUrls, ListingFamily family) {
         List<Product> result = new ArrayList<>();
         int consecutiveFailures = 0;
 
         for (Product stub : stubs) {
             if (stub.getUrl() == null || stub.getUrl().isBlank()) continue;
-            if (baseEnricher.isNonProteinProduct(stub.getName())) {
-                log.info("[{}] Skipping '{}' — not a protein product", STORE_NAME, stub.getName());
+            Optional<String> rejected = family.rejectReason(stub, baseEnricher);
+            if (rejected.isPresent()) {
+                log.info("[{}] Skipping '{}' — {}", STORE_NAME, stub.getName(), rejected.get());
                 continue;
             }
 
@@ -224,9 +252,13 @@ public class ProtekaHrScraper implements StoreScraper {
             consecutiveFailures = 0;
 
             try {
-                enrichProduct(doc, stub);
+                enrichProduct(doc, stub, family);
                 result.add(stub);
-                log.info("[{}] Enriched '{}' protein={}g/100g", STORE_NAME, stub.getName(), stub.getProteinPer100g());
+                if (family.isCreatine()) {
+                    log.info("[{}] Enriched '{}' creatine form={}", STORE_NAME, stub.getName(), stub.getProductForm());
+                } else {
+                    log.info("[{}] Enriched '{}' protein={}g/100g", STORE_NAME, stub.getName(), stub.getProteinPer100g());
+                }
             } catch (Exception e) {
                 log.error("[{}] Error enriching '{}': {}", STORE_NAME, stub.getName(), e.getMessage());
             }
@@ -237,7 +269,7 @@ public class ProtekaHrScraper implements StoreScraper {
         return result;
     }
 
-    private void enrichProduct(Document doc, Product p) {
+    private void enrichProduct(Document doc, Product p, ListingFamily family) {
         // Brand fallback from the "Proizvođač" info table if not set from listing
         if (p.getBrand() == null || p.getBrand().isBlank()) {
             for (Element row : doc.select("table.table tr")) {
@@ -262,6 +294,10 @@ public class ProtekaHrScraper implements StoreScraper {
             }
         }
 
+        if (family.isCreatine()) {
+            baseEnricher.enrichCreatineFromDescription(doc, p, STORE_NAME);
+            return;
+        }
         extractNutritionFromTable(doc, p);
         baseEnricher.enrichWithAiIfNeeded(doc, p, STORE_NAME);
     }

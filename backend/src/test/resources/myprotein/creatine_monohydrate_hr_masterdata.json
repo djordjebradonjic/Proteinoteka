@@ -1,0 +1,370 @@
+{
+ "pageTitle": "Kreatin Monohidrat",
+ "brand": "Myprotein",
+ "variants": [
+  {
+   "inStock": true,
+   "sku": 12456627,
+   "choices": [
+    {
+     "optionKey": "Flavour",
+     "title": "Bez okusa"
+    },
+    {
+     "optionKey": "Amount",
+     "title": "1kg"
+    }
+   ],
+   "price": {
+    "price": {
+     "amount": "57.99"
+    }
+   },
+   "product": {
+    "images": [
+     {
+      "original": "https://static.thcdn.com/productimg/original/12456626-1775344551897936.jpg"
+     }
+    ]
+   }
+  },
+  {
+   "inStock": true,
+   "sku": 12456628,
+   "choices": [
+    {
+     "optionKey": "Flavour",
+     "title": "Tropski"
+    },
+    {
+     "optionKey": "Amount",
+     "title": "1KG - 277Porcija"
+    }
+   ],
+   "price": {
+    "price": {
+     "amount": "57.99"
+    }
+   },
+   "product": {
+    "images": [
+     {
+      "original": "https://static.thcdn.com/productimg/original/12456626-1775344551897936.jpg"
+     }
+    ]
+   }
+  },
+  {
+   "inStock": true,
+   "sku": 12456631,
+   "choices": [
+    {
+     "optionKey": "Flavour",
+     "title": "Bez okusa"
+    },
+    {
+     "optionKey": "Amount",
+     "title": "250g - 73Porcija"
+    }
+   ],
+   "price": {
+    "price": {
+     "amount": "19.99"
+    }
+   },
+   "product": {
+    "images": [
+     {
+      "original": "https://static.thcdn.com/productimg/original/12456626-1775344551897936.jpg"
+     }
+    ]
+   }
+  },
+  {
+   "inStock": true,
+   "sku": 12456632,
+   "choices": [
+    {
+     "optionKey": "Flavour",
+     "title": "Plava malina"
+    },
+    {
+     "optionKey": "Amount",
+     "title": "250g - 54Porcija"
+    }
+   ],
+   "price": {
+    "price": {
+     "amount": "19.99"
+    }
+   },
+   "product": {
+    "images": [
+     {
+      "original": "https://static.thcdn.com/productimg/original/12456626-1775344551897936.jpg"
+     }
+    ]
+   }
+  },
+  {
+   "inStock": true,
+   "sku": 12456633,
+   "choices": [
+    {
+     "optionKey": "Flavour",
+     "title": "Tropski"
+    },
+    {
+     "optionKey": "Amount",
+     "title": "250g - 56Porcija"
+    }
+   ],
+   "price": {
+    "price": {
+     "amount": "19.99"
+    }
+   },
+   "product": {
+    "images": [
+     {
+      "original": "https://static.thcdn.com/productimg/original/12456626-1775344551897936.jpg"
+     }
+    ]
+   }
+  },
+  {
+   "inStock": true,
+   "sku": 12456634,
+   "choices": [
+    {
+     "optionKey": "Flavour",
+     "title": "Berry Burst"
+    },
+    {
+     "optionKey": "Amount",
+     "title": "250g - 55Porcija"
+    }
+   ],
+   "price": {
+    "price": {
+     "amount": "19.99"
+    }
+   },
+   "product": {
+    "images": [
+     {
+      "original": "https://static.thcdn.com/productimg/original/12456626-1775344551897936.jpg"
+     }
+    ]
+   }
+  },
+  {
+   "inStock": true,
+   "sku": 12456635,
+   "choices": [
+    {
+     "optionKey": "Flavour",
+     "title": "Bez okusa"
+    },
+    {
+     "optionKey": "Amount",
+     "title": "500g - 147Porcija"
+    }
+   ],
+   "price": {
+    "price": {
+     "amount": "33.99"
+    }
+   },
+   "product": {
+    "images": [
+     {
+      "original": "https://static.thcdn.com/productimg/original/12456626-1775344551897936.jpg"
+     }
+    ]
+   }
+  },
+  {
+   "inStock": true,
+   "sku": 12456636,
+   "choices": [
+    {
+     "optionKey": "Flavour",
+     "title": "Tropski"
+    },
+    {
+     "optionKey": "Amount",
+     "title": "500g - 113Porcija"
+    }
+   ],
+   "price": {
+    "price": {
+     "amount": "33.99"
+    }
+   },
+   "product": {
+    "images": [
+     {
+      "original": "https://static.thcdn.com/productimg/original/12456626-1775344551897936.jpg"
+     }
+    ]
+   }
+  },
+  {
+   "inStock": true,
+   "sku": 12456637,
+   "choices": [
+    {
+     "optionKey": "Flavour",
+     "title": "Plava malina"
+    },
+    {
+     "optionKey": "Amount",
+     "title": "500g - 125Porcija"
+    }
+   ],
+   "price": {
+    "price": {
+     "amount": "33.99"
+    }
+   },
+   "product": {
+    "images": [
+     {
+      "original": "https://static.thcdn.com/productimg/original/12456626-1775344551897936.jpg"
+     }
+    ]
+   }
+  },
+  {
+   "inStock": true,
+   "sku": 12456638,
+   "choices": [
+    {
+     "optionKey": "Flavour",
+     "title": "Berry Burst"
+    },
+    {
+     "optionKey": "Amount",
+     "title": "500g - 111Porcija"
+    }
+   ],
+   "price": {
+    "price": {
+     "amount": "33.99"
+    }
+   },
+   "product": {
+    "images": [
+     {
+      "original": "https://static.thcdn.com/productimg/original/12456626-1775344551897936.jpg"
+     }
+    ]
+   }
+  },
+  {
+   "inStock": true,
+   "sku": 15010898,
+   "choices": [
+    {
+     "optionKey": "Flavour",
+     "title": "Bez okusa"
+    },
+    {
+     "optionKey": "Amount",
+     "title": "100g - 29Porcija"
+    }
+   ],
+   "price": {
+    "price": {
+     "amount": "9.99"
+    }
+   },
+   "product": {
+    "images": [
+     {
+      "original": "https://static.thcdn.com/productimg/original/12456626-1775344551897936.jpg"
+     }
+    ]
+   }
+  },
+  {
+   "inStock": true,
+   "sku": 15381178,
+   "choices": [
+    {
+     "optionKey": "Flavour",
+     "title": "Tropski"
+    },
+    {
+     "optionKey": "Amount",
+     "title": "100g - 22Porcija"
+    }
+   ],
+   "price": {
+    "price": {
+     "amount": "9.99"
+    }
+   },
+   "product": {
+    "images": [
+     {
+      "original": "https://static.thcdn.com/productimg/original/12456626-1775344551897936.jpg"
+     }
+    ]
+   }
+  },
+  {
+   "inStock": true,
+   "sku": 16302001,
+   "choices": [
+    {
+     "optionKey": "Flavour",
+     "title": "Chupa Chups - Watermelon Lollipop"
+    },
+    {
+     "optionKey": "Amount",
+     "title": "250g - 54Porcija"
+    }
+   ],
+   "price": {
+    "price": {
+     "amount": "19.99"
+    }
+   },
+   "product": {
+    "images": [
+     {
+      "original": "https://static.thcdn.com/productimg/original/12456626-1775344551897936.jpg"
+     }
+    ]
+   }
+  },
+  {
+   "inStock": true,
+   "sku": 17586065,
+   "choices": [
+    {
+     "optionKey": "Flavour",
+     "title": "Unflavoured (Informed Sport)"
+    },
+    {
+     "optionKey": "Amount",
+     "title": "1KG - 294Porcija"
+    }
+   ],
+   "price": {
+    "price": {
+     "amount": "59.99"
+    }
+   },
+   "product": {
+    "images": [
+     {
+      "original": "https://static.thcdn.com/productimg/original/12456626-1775344551897936.jpg"
+     }
+    ]
+   }
+  }
+ ]
+}

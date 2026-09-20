@@ -1,6 +1,7 @@
 package com.proteinoteka.service.producttype;
 
 import com.proteinoteka.model.Product;
+import com.proteinoteka.util.PackageWeights;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -20,16 +21,17 @@ public class CreatineProfile implements ProductTypeProfile {
             | Pattern.UNICODE_CHARACTER_CLASS;
 
     // Things that show up inside a store's creatine category but are not a creatine product
-    // (real examples: "PhD Pre-Workout Burn", "Back to Gym XXL paket", a whey isolate, a multivitamin)
-    // plus bundles/promos whose price is not the price of the creatine. "protein" must be a whole
-    // word: the store "Proteini.si" sells its own "100% PURE CREATINE".
+    // (real examples: "PhD Pre-Workout Burn", "Back to Gym XXL paket", a whey isolate, a multivitamin,
+    // BioTech's "Supernova" pre-workout) plus bundles/promos whose price is not the price of the
+    // creatine ("2+1 gratis", "1+1 PACK", "LIMITED PACK"). "protein" must be a whole word: the store
+    // "Proteini.si" sells its own "100% PURE CREATINE".
     private static final Pattern OTHER_FAMILY = Pattern.compile(
-            "\\b(pre-?\\s?work\\s?-?\\s?out|whey|izolat\\p{L}*|isolate|gainer\\p{L}*|mass\\s?tech|serious\\s?mass|"
-                    + "casein|kazein\\p{L}*|protein|bcaa|argi\\p{L}*|"
+            "\\b(pre-?\\s?work\\s?-?\\s?out|supernova|whey|izolat\\p{L}*|isolate|gainer\\p{L}*|mass\\s?tech|"
+                    + "serious\\s?mass|casein|kazein\\p{L}*|protein|bcaa|argi\\p{L}*|"
                     + "amino\\p{L}*|multivit\\p{L}*|vitamin\\p{L}*|omega|glutamin\\p{L}*|citrulin\\p{L}*|"
                     + "carnitin\\p{L}*|karnitin\\p{L}*|beta-?\\s?alanin\\p{L}*|fat\\s?burn\\p{L}*|burn|"
                     + "termogen\\p{L}*|paket\\p{L}*|bundle|combo|set|gratis|poklon\\p{L}*|shaker\\p{L}*|"
-                    + "majic\\p{L}*|bars?)\\b", FLAGS);
+                    + "majic\\p{L}*|bars?|limited\\s+pack|\\d\\s?\\+\\s?\\d)\\b", FLAGS);
 
     // Outside a creatine category the name must actually say creatine (or one of its brand names).
     private static final Pattern CREATINE_KEYWORD = Pattern.compile(
@@ -76,6 +78,34 @@ public class CreatineProfile implements ProductTypeProfile {
         if (units != null && (units < 1 || units > MAX_COUNT)) {
             scraped.setUnitCount(null);
         }
+        correctSachetPackWeight(scraped);
+    }
+
+    // Store scrapers take the first gram figure of a title as the pack weight, but in
+    // "CREA PRO (5g Kesica) 20kesica" it is ONE sachet: the pack is sachets × grams (arithmetic on
+    // stated figures), and without a stated count the pack weight is unknown, not 5 g. A pack weight
+    // stated beside it ("100g (5g kesica)") is never touched.
+    private static void correctSachetPackWeight(Product p) {
+        Double perSachet = CreatineParser.gramsPerSachet(p.getName());
+        if (perSachet == null) return;
+
+        boolean listHoldsOnlyTheSachet = p.getPackage_weight().stream().allMatch(w -> isSachetWeight(PackageWeights.grams(w), perSachet));
+        boolean primaryIsTheSachet = p.getPrimaryWeightGrams() == null || isSachetWeight(p.getPrimaryWeightGrams(), perSachet);
+        boolean hasAWeight = !p.getPackage_weight().isEmpty() || p.getPrimaryWeightGrams() != null;
+        if (!hasAWeight || !listHoldsOnlyTheSachet || !primaryIsTheSachet) return;
+
+        p.getPackage_weight().clear();
+        p.setPrimaryWeightGrams(null);
+        Integer count = p.getUnitCount();
+        if (count != null && count > 1) {
+            double total = perSachet * count;
+            p.setPrimaryWeightGrams(total);
+            p.getPackage_weight().add(total % 1000 == 0 ? (int) (total / 1000) + "kg" : Math.round(total) + "g");
+        }
+    }
+
+    private static boolean isSachetWeight(Double grams, double perSachet) {
+        return grams != null && Math.abs(grams - perSachet) < 0.01;
     }
 
     // Small creatine tubs start around 700 RSD; anything under this is a single-serving sachet.

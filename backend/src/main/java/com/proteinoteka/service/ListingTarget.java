@@ -26,7 +26,17 @@ public record ListingTarget(String productType, ListingSource source, boolean ca
     public record WooStoreApi(String origin, String categorySlug) implements ListingSource {}
 
     public static ListingTarget html(String productType, String baseUrl, IntFunction<String> pageUrl) {
-        return new ListingTarget(productType, new HtmlPaged(baseUrl, pageUrl), true);
+        return html(productType, baseUrl, pageUrl, true);
+    }
+
+    /**
+     * @param categoryTrusted false for a category that also holds other families (MyProtein files an
+     *                        electrolyte drink and a vitamin pack under creatine): an item must then say
+     *                        the family's keyword in its name.
+     */
+    public static ListingTarget html(String productType, String baseUrl, IntFunction<String> pageUrl,
+                                     boolean categoryTrusted) {
+        return new ListingTarget(productType, new HtmlPaged(baseUrl, pageUrl), categoryTrusted);
     }
 
     public static ListingTarget woo(String productType, String origin, String categorySlug) {

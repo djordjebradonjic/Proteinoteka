@@ -1,0 +1,138 @@
+{
+ "pageTitle": "Kremaste žvakaće bombone s kreatinom bez šećera",
+ "brand": "Myprotein",
+ "variants": [
+  {
+   "inStock": true,
+   "sku": 17954303,
+   "choices": [
+    {
+     "optionKey": "Flavour",
+     "title": "Lemonade"
+    },
+    {
+     "optionKey": "Amount",
+     "title": "90 GUMMIES - 30Porcija"
+    }
+   ],
+   "price": {
+    "price": {
+     "amount": "41.49"
+    }
+   },
+   "product": {
+    "images": []
+   }
+  },
+  {
+   "inStock": true,
+   "sku": 17954304,
+   "choices": [
+    {
+     "optionKey": "Flavour",
+     "title": "Malina"
+    },
+    {
+     "optionKey": "Amount",
+     "title": "30 Gummies - 10Porcija"
+    }
+   ],
+   "price": {
+    "price": {
+     "amount": "9.99"
+    }
+   },
+   "product": {
+    "images": []
+   }
+  },
+  {
+   "inStock": true,
+   "sku": 17954305,
+   "choices": [
+    {
+     "optionKey": "Flavour",
+     "title": "Lemonade"
+    },
+    {
+     "optionKey": "Amount",
+     "title": "30 Gummies - 10Porcija"
+    }
+   ],
+   "price": {
+    "price": {
+     "amount": "9.99"
+    }
+   },
+   "product": {
+    "images": []
+   }
+  },
+  {
+   "inStock": true,
+   "sku": 17954306,
+   "choices": [
+    {
+     "optionKey": "Flavour",
+     "title": "Malina"
+    },
+    {
+     "optionKey": "Amount",
+     "title": "90 GUMMIES - 30Porcija"
+    }
+   ],
+   "price": {
+    "price": {
+     "amount": "41.49"
+    }
+   },
+   "product": {
+    "images": []
+   }
+  },
+  {
+   "inStock": true,
+   "sku": 17954307,
+   "choices": [
+    {
+     "optionKey": "Flavour",
+     "title": "Višnja"
+    },
+    {
+     "optionKey": "Amount",
+     "title": "30 Gummies - 10Porcija"
+    }
+   ],
+   "price": {
+    "price": {
+     "amount": "9.99"
+    }
+   },
+   "product": {
+    "images": []
+   }
+  },
+  {
+   "inStock": true,
+   "sku": 17954310,
+   "choices": [
+    {
+     "optionKey": "Flavour",
+     "title": "Višnja"
+    },
+    {
+     "optionKey": "Amount",
+     "title": "90 GUMMIES - 30Porcija"
+    }
+   ],
+   "price": {
+    "price": {
+     "amount": "41.49"
+    }
+   },
+   "product": {
+    "images": []
+   }
+  }
+ ]
+}

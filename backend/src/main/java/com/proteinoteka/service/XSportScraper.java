@@ -4,6 +4,8 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.WaitUntilState;
 import com.proteinoteka.model.Product;
 import com.proteinoteka.repository.ProductRepository;
+import com.proteinoteka.service.producttype.ProductTypeProfile;
+import com.proteinoteka.service.producttype.ProductTypes;
 import com.proteinoteka.util.PriceParser;
 import com.proteinoteka.util.WeightParser;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +38,7 @@ public class XSportScraper implements StoreScraper {
     private static final String STORE_NAME  = "XSport";
     private static final String BASE_URL    = "https://www.xsport.rs";
     private static final String LISTING_URL = BASE_URL + "/grupa/proteini";
+    private static final String CREATINE_LISTING_URL = BASE_URL + "/grupa/kreatin";
 
     private final NutritionParserService nutritionParser;
     private final BaseScraperEnricher    baseEnricher;
@@ -47,9 +50,21 @@ public class XSportScraper implements StoreScraper {
     @Override public String  getBaseUrl()              { return LISTING_URL; }
     @Override public boolean usePlaywrightForListing() { return false; }
 
+    private static String pageUrl(String listingUrl, int page) {
+        return listingUrl + "?page=" + (page + 1);
+    }
+
     @Override
     public String buildPageUrl(int page) {
-        return LISTING_URL + "?page=" + (page + 1);
+        return pageUrl(LISTING_URL, page);
+    }
+
+    @Override
+    public List<ListingTarget> listingTargets() {
+        return List.of(
+                primaryListingTarget(),
+                ListingTarget.html(ProductTypes.CREATINE, CREATINE_LISTING_URL,
+                        page -> pageUrl(CREATINE_LISTING_URL, page)));
     }
 
     @Override
@@ -79,6 +94,16 @@ public class XSportScraper implements StoreScraper {
 
     @Override
     public List<Product> scrape(Page page, Document doc, Set<String> skipUrls) {
+        return scrapeListing(page, doc, skipUrls, ListingFamily.PROTEIN);
+    }
+
+    @Override
+    public List<Product> scrape(ListingTarget target, ProductTypeProfile profile,
+                                Page page, Document doc, Set<String> skipUrls) {
+        return scrapeListing(page, doc, skipUrls, ListingFamily.of(target, profile));
+    }
+
+    private List<Product> scrapeListing(Page page, Document doc, Set<String> skipUrls, ListingFamily family) {
         List<Product> products = new ArrayList<>();
 
         Elements items = doc.select("div.product-list-item");
@@ -90,7 +115,7 @@ public class XSportScraper implements StoreScraper {
         }
 
         if (page != null && !products.isEmpty()) {
-            enrichWithDetails(page, products, skipUrls);
+            enrichWithDetails(page, products, skipUrls, family);
         }
 
         return products;
@@ -210,13 +235,14 @@ public class XSportScraper implements StoreScraper {
 
     // ── Detail page enrichment ───────────────────────────────────────────────────
 
-    private void enrichWithDetails(Page page, List<Product> products, Set<String> skipUrls) {
+    private void enrichWithDetails(Page page, List<Product> products, Set<String> skipUrls, ListingFamily family) {
         int count = 0;
 
         for (Product p : products) {
             if (p.getUrl() == null || p.getUrl().isBlank()) continue;
-            if (baseEnricher.isNonProteinProduct(p.getName())) {
-                log.info("[{}] Skipping '{}' — not a protein product", STORE_NAME, p.getName());
+            Optional<String> rejected = family.rejectReason(p, baseEnricher);
+            if (rejected.isPresent()) {
+                log.info("[{}] Skipping '{}' — {}", STORE_NAME, p.getName(), rejected.get());
                 continue;
             }
             if (skipUrls.contains(p.getUrl())) {
@@ -246,12 +272,19 @@ public class XSportScraper implements StoreScraper {
 
                 enrichImageFromDetail(doc, p);
                 enrichDescriptionFromDetail(doc, p);
-                enrichNutrition(doc, p);
-
-                log.info("[{}] Enriched '{}' → price={}, protein={}, fat={}, sugar={}, cal={}",
-                        STORE_NAME, p.getName(), p.getPrice(),
-                        p.getProteinPer100g(), p.getFatPer100g(),
-                        p.getSugarPer100g(), p.getCaloriePer100g());
+                if (family.isCreatine()) {
+                    enrichPackFromDetail(doc, p);
+                    baseEnricher.enrichCreatineFromDescription(doc, p, STORE_NAME);
+                    log.info("[{}] Enriched '{}' → price={}, creatine form={}, dose={}g, servings={}",
+                            STORE_NAME, p.getName(), p.getPrice(), p.getProductForm(),
+                            p.getCreatineGramsPerServing(), p.getServingsPerContainer());
+                } else {
+                    enrichNutrition(doc, p);
+                    log.info("[{}] Enriched '{}' → price={}, protein={}, fat={}, sugar={}, cal={}",
+                            STORE_NAME, p.getName(), p.getPrice(),
+                            p.getProteinPer100g(), p.getFatPer100g(),
+                            p.getSugarPer100g(), p.getCaloriePer100g());
+                }
 
                 count++;
                 if (count % 10 == 0) {
@@ -317,6 +350,35 @@ public class XSportScraper implements StoreScraper {
                 if (!text.isBlank()) p.setDescription(text);
             }
         }
+    }
+
+    // The listing title often says nothing about the pack ("AMIX KreAlkalyn"), but the detail page has an
+    // info block of label/value rows: "Pakovanje: 120 kap." / "300 g" and "Broj serviranja: 60". The
+    // creatine parser reads the form and unit count from them; a gram weight fills a pack weight the
+    // title did not state.
+    void enrichPackFromDetail(Document doc, Product p) {
+        String pack = infoRowValue(doc, "Pakovanje");
+        if (pack == null || pack.isBlank()) return;
+        String servings = infoRowValue(doc, "Broj serviranja");
+        p.setVariantLabel(servings != null && !servings.isBlank() ? pack + ", " + servings + " serviranja" : pack);
+
+        if (p.getPrimaryWeightGrams() == null && p.getPackage_weight().isEmpty()) {
+            Double grams = parseWeightToGrams(pack);
+            if (grams != null && grams > 0) {
+                p.setPrimaryWeightGrams(grams);
+                p.getPackage_weight().add(grams % 1000 == 0 ? (int) (grams / 1000) + "kg" : Math.round(grams) + "g");
+            }
+        }
+    }
+
+    // <div class="row"><label>Pakovanje:</label><div class="col-sm-8">120 kap.</div></div>
+    private String infoRowValue(Document doc, String label) {
+        for (Element l : doc.select("label")) {
+            if (!l.text().trim().startsWith(label)) continue;
+            Element value = l.nextElementSibling();
+            if (value != null) return value.text().trim();
+        }
+        return null;
     }
 
     // ── Nutrition extraction ─────────────────────────────────────────────────────

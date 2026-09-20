@@ -2,6 +2,8 @@ package com.proteinoteka.service;
 
 import com.microsoft.playwright.Page;
 import com.proteinoteka.model.Product;
+import com.proteinoteka.service.producttype.ProductTypeProfile;
+import com.proteinoteka.service.producttype.ProductTypes;
 import com.proteinoteka.util.ProductNameCleaner;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,7 +13,10 @@ import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -23,6 +28,7 @@ public class FitLabScraper implements StoreScraper {
 
     private static final String STORE_NAME = "FitLab";
     private static final String BASE_URL = "https://fitlab.rs/sr/suplementi/proteini";
+    private static final String CREATINE_URL = "https://fitlab.rs/sr/suplementi/kreatin";
     private static final int MAX_DETAIL_FETCH_RETRIES = 3;
     private static final int MAX_CONSECUTIVE_FAILURES = 5;
     private static final Pattern LD_JSON_BRAND = Pattern.compile("\"brand\"\\s*:\\s*\\{[^}]*\"name\"\\s*:\\s*\"([^\"]+)\"");
@@ -44,9 +50,21 @@ public class FitLabScraper implements StoreScraper {
     @Override
     public boolean usePlaywrightForListing() { return false; }
 
+    private static String pageUrl(String baseUrl, int page) {
+        return page == 0 ? baseUrl : baseUrl + "?page=" + (page + 1);
+    }
+
     @Override
     public String buildPageUrl(int page) {
-        return page == 0 ? BASE_URL : BASE_URL + "?page=" + (page + 1);
+        return pageUrl(BASE_URL, page);
+    }
+
+    // Creatine is a category of its own with the same markup and pagination as the protein one.
+    @Override
+    public List<ListingTarget> listingTargets() {
+        return List.of(
+                primaryListingTarget(),
+                ListingTarget.html(ProductTypes.CREATINE, CREATINE_URL, page -> pageUrl(CREATINE_URL, page)));
     }
 
     @Override
@@ -63,11 +81,31 @@ public class FitLabScraper implements StoreScraper {
 
     @Override
     public List<Product> scrape(Page page, Document doc) {
-        return scrape(page, doc, java.util.Collections.emptySet());
+        return scrape(page, doc, Collections.emptySet());
     }
 
     @Override
-    public List<Product> scrape(Page page, Document doc, java.util.Set<String> skipUrls) {
+    public List<Product> scrape(Page page, Document doc, Set<String> skipUrls) {
+        return scrapeListing(doc, skipUrls, ListingFamily.PROTEIN);
+    }
+
+    @Override
+    public List<Product> scrape(ListingTarget target, ProductTypeProfile profile,
+                                Page page, Document doc, Set<String> skipUrls) {
+        return scrapeListing(doc, skipUrls, ListingFamily.of(target, profile));
+    }
+
+    private List<Product> scrapeListing(Document doc, Set<String> skipUrls, ListingFamily family) {
+        List<Product> products = parseListing(doc);
+
+        if (!products.isEmpty()) {
+            enrichWithDetails(products, skipUrls, family);
+        }
+
+        return products;
+    }
+
+    List<Product> parseListing(Document doc) {
         List<Product> products = new ArrayList<>();
 
         Elements elements = doc.select("div[data-index]");
@@ -77,11 +115,6 @@ public class FitLabScraper implements StoreScraper {
             Product p = parseElement(elements.get(i));
             if (p != null) products.add(p);
         }
-
-        if (!products.isEmpty()) {
-            enrichWithDetails(products, skipUrls);
-        }
-
         return products;
     }
 
@@ -128,7 +161,11 @@ public class FitLabScraper implements StoreScraper {
                 p.setImageUrl(imgUrl);
             }
 
-            Element priceEl = el.selectFirst("span:contains(RSD)");
+            // A discounted card shows the old price (struck through) before the current one.
+            Element priceEl = null;
+            for (Element span : el.select("span:contains(RSD)")) {
+                if (!span.hasClass("line-through")) { priceEl = span; break; }
+            }
             if (priceEl == null) return null;
 
             String price = priceEl.text()
@@ -141,6 +178,7 @@ public class FitLabScraper implements StoreScraper {
                 double numericPrice = Double.parseDouble(
                         price.replace(".", "").replace(",", ".").replaceAll("[^0-9.]", "")
                 );
+                // Below the lowest floor of any family (creatine 500 RSD; protein's own is 1000)
                 if (numericPrice < 500) {
                     log.debug("[{}] Skipping '{}' - price {}RSD < 500RSD", STORE_NAME, p.getName(), numericPrice);
                     return null;
@@ -179,13 +217,14 @@ public class FitLabScraper implements StoreScraper {
 
     // -------------------- Detail page enrichment --------------------
 
-    private void enrichWithDetails(List<Product> products, java.util.Set<String> skipUrls) {
+    private void enrichWithDetails(List<Product> products, Set<String> skipUrls, ListingFamily family) {
         int consecutiveFailures = 0;
 
         for (Product p : products) {
             if (p.getUrl() == null || p.getUrl().isBlank()) continue;
-            if (baseEnricher.isNonProteinProduct(p.getName())) {
-                log.info("[{}] Skipping '{}' - not a protein product", STORE_NAME, p.getName());
+            Optional<String> rejected = family.rejectReason(p, baseEnricher);
+            if (rejected.isPresent()) {
+                log.info("[{}] Skipping '{}' - {}", STORE_NAME, p.getName(), rejected.get());
                 continue;
             }
             if (skipUrls.contains(p.getUrl())) {
@@ -209,11 +248,17 @@ public class FitLabScraper implements StoreScraper {
             enrichFlavours(doc, p);
             enrichPackageWeights(doc, p);
             enrichDescription(doc, p);
-            enrichNutrition(doc, p);
-
-            log.info("[{}] Enriched '{}' -> protein={}g, fat={}g, sugar={}g, cal={}",
-                    STORE_NAME, p.getName(), p.getProteinPer100g(),
-                    p.getFatPer100g(), p.getSugarPer100g(), p.getCaloriePer100g());
+            if (family.isCreatine()) {
+                baseEnricher.enrichCreatineFromDescription(doc, p, STORE_NAME);
+                log.info("[{}] Enriched '{}' -> creatine form={}, dose={}g, servings={}",
+                        STORE_NAME, p.getName(), p.getProductForm(),
+                        p.getCreatineGramsPerServing(), p.getServingsPerContainer());
+            } else {
+                enrichNutrition(doc, p);
+                log.info("[{}] Enriched '{}' -> protein={}g, fat={}g, sugar={}g, cal={}",
+                        STORE_NAME, p.getName(), p.getProteinPer100g(),
+                        p.getFatPer100g(), p.getSugarPer100g(), p.getCaloriePer100g());
+            }
 
             safeSleep(3000 + ThreadLocalRandom.current().nextLong(3000));
         }

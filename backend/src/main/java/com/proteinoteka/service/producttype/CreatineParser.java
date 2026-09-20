@@ -33,20 +33,36 @@ public final class CreatineParser {
 
     // ---------------------------------------------------------------- form
 
-    private static final Pattern CAPSULE = Pattern.compile("\\b(kapsul\\p{L}*|capsules?|caps|kaps)\\b", FLAGS);
-    private static final Pattern TABLET = Pattern.compile("\\b(tablet\\p{L}*|tabs?|tbl)\\b", FLAGS);
-    private static final Pattern GUMMY = Pattern.compile("\\b(gumen\\p{L}*|gumm\\p{L}*|bombon\\p{L}*)\\b", FLAGS);
-    // A sachet pack is still a powder; it is checked before LIQUID so "Crea Shot, 20 kesica" stays a powder.
-    private static final Pattern SACHET = Pattern.compile("\\b(kesic\\p{L}*|sachets?|sticks?)\\b", FLAGS);
-    private static final Pattern LIQUID = Pattern.compile("\\b(shots?|liquid|te[cč]n\\p{L}*|ampul\\p{L}*)\\b", FLAGS);
+    // The unit word may be glued to its count ("150cap", "120kap", "90tb", "20kesica"), and there is no
+    // \b between a digit and a letter, so the edges are "not next to another letter" instead. That also
+    // keeps "Captain" and "Table" from reading as capsules/tablets.
+    private static final String UNIT_START = "(?<!\\p{L})";
+    private static final String UNIT_END = "(?!\\p{L})";
 
-    // "120 kapsula", "90 tableta", "60 gumenih bombona", "30 kesica"
+    private static final String CAPSULE_WORDS = "kapsul\\p{L}*|capsul\\p{L}*|caps?|kaps?";
+    private static final String TABLET_WORDS = "tablet\\p{L}*|tabl?s?|tbl|tb";
+    private static final String GUMMY_WORDS = "gumen\\p{L}*|gumm\\p{L}*|bombon\\p{L}*";
+    private static final String SACHET_WORDS = "kesic\\p{L}*|sachets?|sticks?";
+
+    private static final Pattern CAPSULE = Pattern.compile(UNIT_START + "(" + CAPSULE_WORDS + ")" + UNIT_END, FLAGS);
+    private static final Pattern TABLET = Pattern.compile(UNIT_START + "(" + TABLET_WORDS + ")" + UNIT_END, FLAGS);
+    private static final Pattern GUMMY = Pattern.compile(UNIT_START + "(" + GUMMY_WORDS + ")" + UNIT_END, FLAGS);
+    // A sachet pack is still a powder; it is checked before LIQUID so "Crea Shot, 20 kesica" stays a powder.
+    private static final Pattern SACHET = Pattern.compile(UNIT_START + "(" + SACHET_WORDS + ")" + UNIT_END, FLAGS);
+    private static final Pattern LIQUID = Pattern.compile(
+            UNIT_START + "(shots?|liquid|te[cč]n\\p{L}*|ampul\\p{L}*)" + UNIT_END, FLAGS);
+
+    // "120 kapsula", "150cap", "90 tableta", "60tb", "60 gumenih bombona", "30 kesica"
     private static final Pattern UNITS = Pattern.compile(
-            "(?<![\\d.,])(\\d{1,4})\\s*(kapsul\\p{L}*|capsules?|caps|kaps|tablet\\p{L}*|tabs?"
-                    + "|gumen\\p{L}*|gumm\\p{L}*|bombon\\p{L}*|kesic\\p{L}*|sachets?|sticks?)(?!\\p{L})", FLAGS);
+            "(?<![\\d.,])(\\d{1,4})\\s*(" + CAPSULE_WORDS + "|" + TABLET_WORDS + "|" + GUMMY_WORDS
+                    + "|" + SACHET_WORDS + ")" + UNIT_END, FLAGS);
 
     /** A pack of at least this many pieces described only in the text is strong evidence of the form. */
     private static final int DESCRIPTION_MIN_UNITS = 30;
+
+    // "5g Kesica", "3,5 g sachets": the weight of ONE sachet, as opposed to the count ("20 kesica")
+    private static final Pattern SACHET_WEIGHT = Pattern.compile(
+            "(?<![\\d.,])(\\d+[.,]?\\d*)\\s*(?:g|gr|grama?)\\s*(?:" + SACHET_WORDS + ")" + UNIT_END, FLAGS);
 
     // ---------------------------------------------------------------- type
 
@@ -180,6 +196,13 @@ public final class CreatineParser {
         return PackageWeights.grams(text);
     }
 
+    /** Grams in ONE sachet when the title states it ("5g Kesica"); {@code null} otherwise, also for a plain count. */
+    public static Double gramsPerSachet(String name) {
+        if (name == null) return null;
+        Matcher m = SACHET_WEIGHT.matcher(name);
+        return m.find() ? doseInRange(parseDecimal(m.group(1))) : null;
+    }
+
     /** Pack size in servings from a title; {@code null} for a multi-size title ("60 i 100 porcija"). */
     public static Integer servingsFromName(String name) {
         if (name == null || SERVINGS_MULTI.matcher(name).find()) return null;
@@ -233,8 +256,8 @@ public final class CreatineParser {
 
     private static ProductForm formOfUnitWord(String word) {
         String w = word.toLowerCase(Locale.ROOT);
-        if (w.startsWith("kaps") || w.startsWith("cap")) return ProductForm.CAPSULE;
-        if (w.startsWith("tab")) return ProductForm.TABLET;
+        if (w.startsWith("kap") || w.startsWith("cap")) return ProductForm.CAPSULE;
+        if (w.startsWith("tab") || w.startsWith("tb")) return ProductForm.TABLET;
         if (w.startsWith("gum") || w.startsWith("bombon")) return ProductForm.GUMMY;
         return ProductForm.POWDER; // sachets / sticks
     }

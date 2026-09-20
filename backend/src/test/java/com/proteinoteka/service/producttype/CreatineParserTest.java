@@ -58,6 +58,64 @@ class CreatineParserTest {
         assertEquals(ProductForm.TABLET, parse("Creatine 1000 mg, 90 tableta").form());
     }
 
+    // FitLab, SupplementStore and XSport glue an abbreviated unit word onto the count ("150cap",
+    // "120kap", "90tb") — there is no word boundary between the digit and the letter.
+    @Test
+    void abbreviatedCapsuleCountsGluedToTheNumber() {
+        for (String[] c : new String[][]{
+                {"Creatine HCl 2400 150cap - OstroVit", "150"},
+                {"Mega Creatine, 120kap", "120"},
+                {"Creatine PH-X 210cap - BioTechUSA", "210"},
+                {"YAMAMOTO Kre-Alkalyn 240kap.", "240"},
+                {"Kre-Alkalyn 2500 MEGACAPS 120cap - Olimp", "120"},
+                {"OSTROVIT Creatine HCl 2400 mg 150kapsula", "150"}}) {
+            CreatineParser.Info i = parse(c[0]);
+            assertEquals(ProductForm.CAPSULE, i.form(), c[0]);
+            assertEquals(Integer.parseInt(c[1]), i.unitCount(), c[0]);
+        }
+    }
+
+    @Test
+    void abbreviatedTabletCountsGluedToTheNumber() {
+        for (String[] c : new String[][]{
+                {"Creatine Monohidrate 3000, 120tab", "120"},
+                {"Krea7 superkrealkaline 90tb - IronMaxx", "90"},
+                {"Black Line Creatine Creapure 2500mg/60tb - Amix™", "60"},
+                {"Creatine šumeće tablete Zero 18tb - BioTechUSA", "18"}}) {
+            CreatineParser.Info i = parse(c[0]);
+            assertEquals(ProductForm.TABLET, i.form(), c[0]);
+            assertEquals(Integer.parseInt(c[1]), i.unitCount(), c[0]);
+        }
+    }
+
+    @Test
+    void anAdjectiveBetweenTheCountAndTheUnitLeavesTheCountUnknown() {
+        CreatineParser.Info i = parse("AMIX Performance Creatine 2500 mg (60 Chewable Tabs)");
+        assertEquals(ProductForm.TABLET, i.form());
+        assertNull(i.unitCount(), "no guessing: the count is only read when it sits right before the unit");
+    }
+
+    @Test
+    void aMilligramDoseGluedToTabsIsNotAUnitCount() {
+        // "3000tabs" is a 3000 mg tablet, not 3000 pieces — above the plausible pack size, so unknown
+        CreatineParser.Info i = parse("OstroVit Creatine Monohydrate 3000tabs");
+        assertEquals(ProductForm.TABLET, i.form());
+        assertNull(i.unitCount());
+    }
+
+    @Test
+    void unitWordsInsideOtherWordsAreNotAForm() {
+        assertEquals(ProductForm.POWDER, parse("Captain Creatine Monohydrate 300g").form());
+        assertEquals(ProductForm.POWDER, parse("Creatine Table Powder 500g").form());
+    }
+
+    @Test
+    void sachetCountGluedToTheNumberKeepsAShotAPowder() {
+        CreatineParser.Info i = parse("CREA PRO - Kreatin (5g Kesica) 20kesica - Basic Supplements");
+        assertEquals(ProductForm.POWDER, i.form());
+        assertEquals(20, i.unitCount());
+    }
+
     @Test
     void plainTitleDefaultsToPowder() {
         assertEquals(ProductForm.POWDER, parse("Creatine Monohydrate Basic – Nutriversum").form());
@@ -115,6 +173,15 @@ class CreatineParserTest {
         assertEquals(250.0, CreatineParser.packageGrams("Creatine 250 gr"));
         assertNull(CreatineParser.packageGrams("Creatine 5000mg 120 kapsula"));
         assertNull(CreatineParser.packageGrams("CreaMASS – Yamamoto, 147 porcija"));
+    }
+
+    @Test
+    void sachetWeightIsReadOnlyWhenTheTitleStatesIt() {
+        assertEquals(5.0, CreatineParser.gramsPerSachet("CREA PRO - Kreatin (5g Kesica) 20kesica - Basic Supplements"));
+        assertEquals(5.0, CreatineParser.gramsPerSachet("BS CreaPro 5g kesice"));
+        assertEquals(3.5, CreatineParser.gramsPerSachet("Creatine 3,5 g sachets, 30 servings"));
+        assertNull(CreatineParser.gramsPerSachet("Creatine Monohydrate 500g"));
+        assertNull(CreatineParser.gramsPerSachet("Crea Shot 2.0 – ActivLab, 20 kesica"), "a count, not a weight");
     }
 
     // ------------------------------------------------------------------ servings

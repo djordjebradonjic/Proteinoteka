@@ -3,6 +3,8 @@ package com.proteinoteka.service;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.WaitUntilState;
 import com.proteinoteka.model.Product;
+import com.proteinoteka.service.producttype.ProductTypeProfile;
+import com.proteinoteka.service.producttype.ProductTypes;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -12,7 +14,10 @@ import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,6 +29,7 @@ public class OgistraScraper implements StoreScraper {
 
     private static final String STORE_NAME = "Ogistrashop";
     private static final String BASE_URL = "https://www.ogistra-nutrition-shop.com/12-proteini";
+    private static final String CREATINE_URL = "https://www.ogistra-nutrition-shop.com/25-kreatini";
 
     private final NutritionParserService nutritionParser;
     private final BaseScraperEnricher baseEnricher;
@@ -34,9 +40,21 @@ public class OgistraScraper implements StoreScraper {
     @Override
     public String getBaseUrl() { return BASE_URL; }
 
+    private static String pageUrl(String baseUrl, int page) {
+        return page == 0 ? baseUrl : baseUrl + "?page=" + (page + 1);
+    }
+
     @Override
     public String buildPageUrl(int page) {
-        return page == 0 ? BASE_URL : BASE_URL + "?page=" + (page + 1);
+        return pageUrl(BASE_URL, page);
+    }
+
+    // /64-… is a subcategory of /25-kreatini, so the parent category already lists everything.
+    @Override
+    public List<ListingTarget> listingTargets() {
+        return List.of(
+                primaryListingTarget(),
+                ListingTarget.html(ProductTypes.CREATINE, CREATINE_URL, page -> pageUrl(CREATINE_URL, page)));
     }
 
     @Override
@@ -53,11 +71,21 @@ public class OgistraScraper implements StoreScraper {
 
     @Override
     public List<Product> scrape(Page page, Document doc) {
-        return scrape(page, doc, java.util.Collections.emptySet());
+        return scrape(page, doc, Collections.emptySet());
     }
 
     @Override
-    public List<Product> scrape(Page page, Document doc, java.util.Set<String> skipUrls) {
+    public List<Product> scrape(Page page, Document doc, Set<String> skipUrls) {
+        return scrapeListing(page, doc, skipUrls, ListingFamily.PROTEIN);
+    }
+
+    @Override
+    public List<Product> scrape(ListingTarget target, ProductTypeProfile profile,
+                                Page page, Document doc, Set<String> skipUrls) {
+        return scrapeListing(page, doc, skipUrls, ListingFamily.of(target, profile));
+    }
+
+    private List<Product> scrapeListing(Page page, Document doc, Set<String> skipUrls, ListingFamily family) {
         List<Product> products = new ArrayList<>();
 
         Elements elements = doc.select("article.product-miniature");
@@ -70,7 +98,7 @@ public class OgistraScraper implements StoreScraper {
         }
 
         if (page != null && !products.isEmpty()) {
-            enrichWithDetails(page, products, skipUrls);
+            enrichWithDetails(page, products, skipUrls, family);
         }
 
         return products;
@@ -111,6 +139,7 @@ public class OgistraScraper implements StoreScraper {
                     double numericPrice = Double.parseDouble(
                             price.replace(".", "").replace(",", ".").replaceAll("[^0-9.]", "")
                     );
+                    // Below the lowest floor of any family (creatine 500 RSD; protein's own is 1000)
                     if (numericPrice < 500) {
                         log.debug("[{}] Skipping '{}' - price {}RSD < 500RSD", STORE_NAME, p.getName(), numericPrice);
                         return null;
@@ -152,12 +181,13 @@ public class OgistraScraper implements StoreScraper {
 
     // -------------------- Detail page enrichment --------------------
 
-    private void enrichWithDetails(Page page, List<Product> products, java.util.Set<String> skipUrls) {
+    private void enrichWithDetails(Page page, List<Product> products, Set<String> skipUrls, ListingFamily family) {
         int count = 0;
         for (Product p : products) {
             if (p.getUrl() == null || p.getUrl().isBlank()) continue;
-            if (baseEnricher.isNonProteinProduct(p.getName())) {
-                log.info("[{}] Skipping '{}' - not a protein product", STORE_NAME, p.getName());
+            Optional<String> rejected = family.rejectReason(p, baseEnricher);
+            if (rejected.isPresent()) {
+                log.info("[{}] Skipping '{}' - {}", STORE_NAME, p.getName(), rejected.get());
                 continue;
             }
             if (skipUrls.contains(p.getUrl())) {
@@ -188,12 +218,18 @@ public class OgistraScraper implements StoreScraper {
                 enrichBrand(doc, p);
                 enrichFlavours(doc, p);
                 enrichDescription(doc, p);
-                enrichNutrition(doc, p);
-
-                log.info("[{}] Enriched '{}' -> brand={}, protein={}, fat={}, sugar={}, cal={}",
-                        STORE_NAME, p.getName(), p.getBrand(),
-                        p.getProteinPer100g(), p.getFatPer100g(),
-                        p.getSugarPer100g(), p.getCaloriePer100g());
+                if (family.isCreatine()) {
+                    baseEnricher.enrichCreatineFromDescription(doc, p, STORE_NAME);
+                    log.info("[{}] Enriched '{}' -> brand={}, creatine form={}, dose={}g, servings={}",
+                            STORE_NAME, p.getName(), p.getBrand(), p.getProductForm(),
+                            p.getCreatineGramsPerServing(), p.getServingsPerContainer());
+                } else {
+                    enrichNutrition(doc, p);
+                    log.info("[{}] Enriched '{}' -> brand={}, protein={}, fat={}, sugar={}, cal={}",
+                            STORE_NAME, p.getName(), p.getBrand(),
+                            p.getProteinPer100g(), p.getFatPer100g(),
+                            p.getSugarPer100g(), p.getCaloriePer100g());
+                }
 
                 count++;
                 if (count % 15 == 0) {
