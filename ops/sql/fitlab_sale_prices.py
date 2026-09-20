@@ -16,7 +16,9 @@ the price the way a scraper run would (price text, numeric_price, last_updated) 
 history and NO drop percentage: nothing changed in the shop, the catalogue was wrong.
 
 Sales start and end, so the output is a snapshot: generate it right before applying it
-(apply-fitlab-sale-prices.sh does). Usage: python3 fitlab_sale_prices.py > fitlab_sale_prices.sql
+(apply-fitlab-sale-prices.sh does), and apply it AFTER the fixed scraper is deployed, before FitLab's
+next scheduled scrape (the old scraper would put the struck-through price back).
+Usage: python3 fitlab_sale_prices.py > fitlab_sale_prices.sql
 """
 import re
 import sys

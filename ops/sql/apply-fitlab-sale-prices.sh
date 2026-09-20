@@ -8,7 +8,11 @@
 #
 # The SQL is generated from the live fitlab.rs listing every time (sales start and end, so a saved copy would go
 # stale): fitlab_sale_prices.py only READS the website. The UPDATE is guarded by the URL and the exact old
-# price, so a second run changes 0 rows. Run it right before the deploy / before enabling the next FitLab scrape.
+# price, so a second run changes 0 rows.
+#
+# WHEN: right AFTER the backend with the fixed FitLabScraper is deployed, before FitLab's next scheduled scrape
+# (cycle day 2, 13-16 h). Not before the deploy: the still-deployed scraper would write the struck-through price
+# back on its next FitLab run, and that sale -> regular jump would land in price_history.
 # Reads DATABASE_URL, PROD_API_URL and ADMIN_TOKEN from ops/health-check/.env; secrets are never printed.
 # Before writing, the FitLab rows are saved to ~/Desktop/proteinoteka-backups/fitlab-sale-prices-<date>/.
 set -euo pipefail
