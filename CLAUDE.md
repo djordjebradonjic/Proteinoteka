@@ -113,6 +113,7 @@ Available at `http://localhost:8080/swagger-ui.html` when running locally.
 ```
 NEXT_PUBLIC_API_URL=http://localhost:8080
 RESEND_API_KEY=re_...
+RATE_LIMIT_BYPASS_TOKEN=...   # server-only; same value as on the backend (see Backend env)
 ```
 
 ### Backend (`application.yml` / environment)
@@ -123,7 +124,11 @@ DATABASE_USERNAME=proteinoteka_2026
 DATABASE_PASSWORD=...             # never commit real values; local dev default is in application.yml
 ANTHROPIC_API_KEY=...
 PLAYWRIGHT_EXECUTABLE_PATH=...   # optional, for scraper browser
+RATE_LIMIT_BYPASS_TOKEN=...      # lets the Next.js server (shared Vercel IPs) skip the per-IP limit; empty = no bypass
+RATE_LIMIT_ENABLED / RATE_LIMIT_PER_MINUTE / RATE_LIMIT_BURST / RATE_LIMIT_PROXY_HOPS  # RateLimitFilter, defaults true/120/60/1
 ```
+
+`RateLimitFilter` throttles `/api/v1/**` per client IP (rightmost `X-Forwarded-For` entry). Server-side fetches in the frontend must go through `lib/apiFetch.ts`, otherwise ISR/sitemap calls from Vercel get 429s.
 
 ---
 

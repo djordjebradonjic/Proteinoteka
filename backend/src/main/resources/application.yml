@@ -57,6 +57,16 @@ anthropic:
 admin:
   token: ${ADMIN_TOKEN:}
 
+ratelimit:
+  # Per-IP limit on the public /api/v1 endpoints (see RateLimitFilter).
+  enabled: ${RATE_LIMIT_ENABLED:true}
+  requests-per-minute: ${RATE_LIMIT_PER_MINUTE:120}
+  burst: ${RATE_LIMIT_BURST:60}
+  # Shared secret the Next.js server sends as X-Internal-Token; empty = no bypass.
+  bypass-token: ${RATE_LIMIT_BYPASS_TOKEN:}
+  # Proxies in front of the app; the client IP is that many entries from the right of X-Forwarded-For.
+  trusted-proxy-hops: ${RATE_LIMIT_PROXY_HOPS:1}
+
 b2b:
   api:
     # Comma-separated list of valid B2B API keys. Set via env var B2B_API_KEYS.

@@ -1,4 +1,5 @@
 import { notFound, permanentRedirect } from "next/navigation";
+import { apiFetch } from "@/lib/apiFetch";
 import { Metadata } from "next";
 import { Product } from "@/types/product";
 import ProductPageContent from "@/app/product/[id]/ProductPageContent";
@@ -29,7 +30,7 @@ interface Params { params: Promise<{ category: string; slug: string }> }
 
 async function fetchProduct(id: number): Promise<Product | null> {
   try {
-    const res = await fetch(`${API}/api/v1/products/${id}`, { next: { revalidate: 86400, tags: ["products"] } });
+    const res = await apiFetch(`${API}/api/v1/products/${id}`, { next: { revalidate: 86400, tags: ["products"] } });
     if (!res.ok) return null;
     return res.json();
   } catch { return null; }
@@ -37,7 +38,7 @@ async function fetchProduct(id: number): Promise<Product | null> {
 
 async function fetchSimilar(category: string, excludeId: number): Promise<Product[]> {
   try {
-    const res = await fetch(`${API}/api/v1/products?category=${category}&size=7&market=${CURRENT_MARKET}`, { next: { revalidate: 86400, tags: ["products"] } });
+    const res = await apiFetch(`${API}/api/v1/products?category=${category}&size=7&market=${CURRENT_MARKET}`, { next: { revalidate: 86400, tags: ["products"] } });
     if (!res.ok) return [];
     const data = await res.json();
     return (data.content as Product[]).filter((p) => p.id !== excludeId).slice(0, 6);
@@ -46,7 +47,7 @@ async function fetchSimilar(category: string, excludeId: number): Promise<Produc
 
 async function fetchStorePrices(productId: number): Promise<StorePrice[]> {
   try {
-    const res = await fetch(`${API}/api/v1/products/${productId}/store-prices`, { next: { revalidate: 86400, tags: ["products"] } });
+    const res = await apiFetch(`${API}/api/v1/products/${productId}/store-prices`, { next: { revalidate: 86400, tags: ["products"] } });
     if (!res.ok) return [];
     return res.json();
   } catch { return []; }
@@ -54,7 +55,7 @@ async function fetchStorePrices(productId: number): Promise<StorePrice[]> {
 
 async function fetchReviews(productId: number): Promise<ReviewDTO[]> {
   try {
-    const res = await fetch(`${API}/api/v1/products/${productId}/reviews`, { next: { revalidate: 3600, tags: ["reviews"] } });
+    const res = await apiFetch(`${API}/api/v1/products/${productId}/reviews`, { next: { revalidate: 3600, tags: ["reviews"] } });
     if (!res.ok) return [];
     return res.json();
   } catch { return []; }
@@ -62,7 +63,7 @@ async function fetchReviews(productId: number): Promise<ReviewDTO[]> {
 
 async function fetchAggregateRating(productId: number): Promise<AggregateRatingDTO | null> {
   try {
-    const res = await fetch(`${API}/api/v1/products/${productId}/reviews/aggregate`, { next: { revalidate: 3600, tags: ["reviews"] } });
+    const res = await apiFetch(`${API}/api/v1/products/${productId}/reviews/aggregate`, { next: { revalidate: 3600, tags: ["reviews"] } });
     if (!res.ok) return null;
     const data: AggregateRatingDTO = await res.json();
     return data.reviewCount > 0 ? data : null;
