@@ -64,6 +64,26 @@ class CreatineProfileTest {
         }
     }
 
+    // Carbohydrate mixes sold under a creatine name cost 0.015-0.022 EUR/g, the same as GymBeam's real
+    // 100% creatine in 1-1.5 kg bags, so the price cannot tell them apart: the name has to.
+    @Test
+    void carbohydrateMixesAreRejectedButBulkPureCreatineIsNot() {
+        for (String name : new String[]{
+                "Kreatin + Dekstroza - GymBeam",
+                "Creatine + Dextrose 1 kg",
+                "NUTREND CREAPORT, 600g ORANGE FLAVOUR",
+                "Amix VitarGO + Kre-Alkalyn 2 kg",
+                "Creatine with Maltodextrin 500g"}) {
+            assertTrue(profile.rejectReason(named(name), true).isPresent(), name);
+        }
+        for (String name : new String[]{
+                "100% Kreatin Monohidrat - GymBeam",
+                "Creatine Monohydrate 1000g",
+                "Kreatin Monohidrat Creapure 500g"}) {
+            assertTrue(profile.rejectReason(named(name), true).isEmpty(), name);
+        }
+    }
+
     // MyProtein files an electrolyte drink and a vitamin pack under its creatine category.
     @Test
     void mixedCategoryItemsWithoutACreatineKeywordAreRejected() {

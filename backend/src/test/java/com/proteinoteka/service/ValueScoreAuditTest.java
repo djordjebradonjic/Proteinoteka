@@ -117,4 +117,101 @@ class ValueScoreAuditTest {
         }
         assertTrue(has(ValueScoreAudit.run(ps, BRANDS), "BENCHMARK_DRIFT"));
     }
+
+    // ------------------------------------------------------------------ creatine
+
+    private static Product creatine(String name, String form, Double grams, double price) {
+        Product p = new Product();
+        p.setId(nextId++);
+        p.setName(name);
+        p.setBrand("Known");
+        p.setProductType("creatine");
+        p.setProductForm(form);
+        p.setPrimaryWeightGrams(grams);
+        p.setNumericPrice(price);
+        p.setCurrency("RSD");
+        p.setMarket("rs");
+        return p;
+    }
+
+    private static Product scoredCreatine(Product p) {
+        p.setValueScore(ValueScoreCalculator.score(p.getNumericPrice(), p, 7.0));
+        return p;
+    }
+
+    // Creatine used to be dropped from the audit altogether ("not supported yet").
+    @Test
+    void aCleanCreatineCatalogueProducesNoIssues() {
+        List<Product> ps = new ArrayList<>();
+        for (int i = 0; i < 8; i++) ps.add(scoredCreatine(creatine("Creatine Monohydrate " + i, "powder", 500.0, 3200 + i * 100)));
+
+        List<String> issues = ValueScoreAudit.run(ps, BRANDS);
+
+        assertTrue(issues.isEmpty(), issues.toString());
+    }
+
+    @Test
+    void anImplausibleCreatinePriceIsReportedForReview() {
+        // 5 RSD for a 500 g tub is a scraping error (or not creatine); 50000 RSD likewise
+        List<String> issues = ValueScoreAudit.run(List.of(
+                creatine("Creatine Monohydrate", "powder", 500.0, 900),
+                creatine("Creatine Monohydrate", "powder", 500.0, 50000)), BRANDS);
+
+        assertEquals(2, issues.stream().filter(i -> i.startsWith("VALUE_SCORE_SKIPPED")).count(), issues.toString());
+    }
+
+    @Test
+    void aStaleCreatineScoreIsReported() {
+        Product tub = creatine("Creatine Monohydrate", "powder", 500.0, 3200);
+        tub.setValueScore(1.0); // stored before the benchmark moved
+
+        assertTrue(has(ValueScoreAudit.run(List.of(tub), BRANDS), "VALUE_SCORE_STALE"));
+    }
+
+    @Test
+    void aCreatinePriceFarFromTheMarketMedianIsAnOutlier() {
+        List<Product> ps = new ArrayList<>();
+        for (int i = 0; i < 8; i++) ps.add(scoredCreatine(creatine("Creatine " + i, "powder", 500.0, 3300 + i * 20)));
+        // 18 RSD/g against a ~6.7 median (2.7x): dear, but inside the believable range of a scored listing
+        ps.add(scoredCreatine(creatine("Creatine premium", "powder", 500.0, 9000)));
+
+        List<String> issues = ValueScoreAudit.run(ps, BRANDS);
+
+        assertTrue(has(issues, "PRICE_OUTLIER"), issues.toString());
+    }
+
+    @Test
+    void aDriftedCreatineBenchmarkIsReportedOnceTheSampleIsBigEnough() {
+        // twenty tubs at 4 RSD/g while the benchmark says 10: the market moved, recalibrate
+        List<Product> ps = new ArrayList<>();
+        for (int i = 0; i < 20; i++) ps.add(scoredCreatine(creatine("Creatine " + i, "powder", 500.0, 2000 + i * 10)));
+
+        assertTrue(has(ValueScoreAudit.run(ps, BRANDS), "BENCHMARK_DRIFT"));
+        assertFalse(has(ValueScoreAudit.run(ps.subList(0, 5), BRANDS), "BENCHMARK_DRIFT"), "too few rows to judge");
+    }
+
+    @Test
+    void piecePacksAreNeverScoredAndTheGapIsReportedOnce() {
+        Product capsules = creatine("Kre-Alkalyn 120cap", "capsule", null, 3400);
+        Product gummies = creatine("Creatine gummies", "gummy", 300.0, 2800); // even with a weight: mostly sugar
+
+        assertFalse(ValueScoreCalculator.evaluate(3400.0, capsules, 7.0).scored());
+        assertEquals(ValueScoreCalculator.SkipReason.COUNTED_FORM,
+                ValueScoreCalculator.evaluate(2800.0, gummies, 7.0).skipReason());
+
+        List<String> issues = ValueScoreAudit.run(List.of(capsules, gummies), BRANDS);
+        assertEquals(1, issues.stream().filter(i -> i.startsWith("CREATINE_UNSCORED_COUNTED_FORMS")).count(), issues.toString());
+        assertTrue(issues.stream().anyMatch(i -> i.contains("2 ")), issues.toString());
+    }
+
+    @Test
+    void creatineDoesNotDisturbTheProteinMedians() {
+        List<Product> ps = new ArrayList<>();
+        for (int i = 0; i < 8; i++) ps.add(scored(product("Whey " + i, "Known", 80, 1000, "whey_concentrate", 4400 + i * 100)));
+        for (int i = 0; i < 8; i++) ps.add(scoredCreatine(creatine("Creatine " + i, "powder", 500.0, 3300 + i * 20)));
+
+        List<String> issues = ValueScoreAudit.run(ps, BRANDS);
+
+        assertTrue(issues.isEmpty(), issues.toString());
+    }
 }

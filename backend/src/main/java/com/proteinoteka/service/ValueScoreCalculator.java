@@ -2,6 +2,7 @@ package com.proteinoteka.service;
 
 import com.proteinoteka.dto.ValueScoreBreakdown;
 import com.proteinoteka.model.Product;
+import com.proteinoteka.service.producttype.ProductForm;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -66,7 +67,13 @@ public final class ValueScoreCalculator {
         /** Price per gram of protein is outside any believable range for the category. */
         IMPLAUSIBLE_PRICE,
         /** Weight in the product name contradicts the stored weight, so price per gram is unreliable. */
-        CONFLICTING_WEIGHT
+        CONFLICTING_WEIGHT,
+        /**
+         * Creatine sold by the piece (capsules, tablets, gummies): what a pack costs per gram of creatine
+         * needs servings x dose, which the stores rarely state, and a per-gram-of-pack price says nothing
+         * about it (a gummy is mostly sugar). Unscored rather than guessed.
+         */
+        COUNTED_FORM
     }
 
     public enum BeefContent { NONE, INGREDIENT, PRIMARY }
@@ -440,14 +447,21 @@ public final class ValueScoreCalculator {
     // while the cheapest real powders measured 0.55x. Same idea as the protein price floor.
     private static final double CREATINE_MIN_TO_BENCHMARK = 0.35;
 
+    /** The per-gram price of a creatine powder (pack grams) that scores 1.0 against the market, in {@code currency}. */
+    public static double creatineBenchmark(String currency) {
+        return "EUR".equals(currency) ? CREATINE_BENCHMARK_EUR_PER_G : CREATINE_BENCHMARK_RSD_PER_G;
+    }
+
     private static Evaluation evaluateCreatine(Double numericPrice, Product p, double brandScore) {
         if (numericPrice == null || numericPrice <= 0) return skip(SkipReason.MISSING_DATA);
+        if (ProductForm.isCountedCode(p.getProductForm())) {
+            return skip(SkipReason.COUNTED_FORM);
+        }
         double packageGrams = extractPackageGrams(p);
         if (packageGrams <= 0) return skip(SkipReason.MISSING_DATA);
 
-        boolean eur = "EUR".equals(p.getCurrency());
         double pricePerGram = numericPrice / packageGrams;
-        double marketBenchmark = eur ? CREATINE_BENCHMARK_EUR_PER_G : CREATINE_BENCHMARK_RSD_PER_G;
+        double marketBenchmark = creatineBenchmark(p.getCurrency());
         if (pricePerGram > marketBenchmark * CREATINE_MAX_TO_BENCHMARK
                 || pricePerGram < marketBenchmark * CREATINE_MIN_TO_BENCHMARK) {
             return skip(SkipReason.IMPLAUSIBLE_PRICE);

@@ -23,15 +23,18 @@ public class CreatineProfile implements ProductTypeProfile {
     // Things that show up inside a store's creatine category but are not a creatine product
     // (real examples: "PhD Pre-Workout Burn", "Back to Gym XXL paket", a whey isolate, a multivitamin,
     // BioTech's "Supernova" pre-workout) plus bundles/promos whose price is not the price of the
-    // creatine ("2+1 gratis", "1+1 PACK", "LIMITED PACK"). "protein" must be a whole word: the store
-    // "Proteini.si" sells its own "100% PURE CREATINE".
+    // creatine ("2+1 gratis", "1+1 PACK", "LIMITED PACK"), and carbohydrate mixes sold under a creatine name
+    // (dextrose, Vitargo, Nutrend Creaport) — those cost the same per gram as real bulk creatine, so only the
+    // name can tell them apart. "protein" must be a whole word: the store "Proteini.si" sells its own
+    // "100% PURE CREATINE".
     private static final Pattern OTHER_FAMILY = Pattern.compile(
             "\\b(pre-?\\s?work\\s?-?\\s?out|supernova|whey|izolat\\p{L}*|isolate|gainer\\p{L}*|mass\\s?tech|"
                     + "serious\\s?mass|casein|kazein\\p{L}*|protein|bcaa|argi\\p{L}*|"
                     + "amino\\p{L}*|multivit\\p{L}*|vitamin\\p{L}*|omega|glutamin\\p{L}*|citrulin\\p{L}*|"
                     + "carnitin\\p{L}*|karnitin\\p{L}*|beta-?\\s?alanin\\p{L}*|fat\\s?burn\\p{L}*|burn|"
                     + "termogen\\p{L}*|paket\\p{L}*|bundle|combo|set|gratis|poklon\\p{L}*|shaker\\p{L}*|"
-                    + "majic\\p{L}*|bars?|limited\\s+pack|\\d\\s?\\+\\s?\\d)\\b", FLAGS);
+                    + "majic\\p{L}*|bars?|limited\\s+pack|\\d\\s?\\+\\s?\\d|"
+                    + "dekstroz\\p{L}*|dextros\\p{L}*|maltodextrin\\p{L}*|vitargo|creaport)\\b", FLAGS);
 
     // Outside a creatine category the name must actually say creatine (or one of its brand names).
     private static final Pattern CREATINE_KEYWORD = Pattern.compile(
