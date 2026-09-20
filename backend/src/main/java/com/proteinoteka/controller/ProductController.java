@@ -82,9 +82,13 @@ public class ProductController {
             @RequestParam(required = false) String weightRange,
             @RequestParam(required = false) String market,
             @RequestParam(required = false) String productType,
+            @RequestParam(required = false) String productForm,
+            @RequestParam(required = false) String creatineType,
             Pageable pageable) {
 
-        Specification<Product> spec = buildSpec(name, storeName, brand, flavour, category, minPrice, maxPrice, weightRange, market, productType);
+        Specification<Product> spec = buildSpec(name, storeName, brand, flavour, category, minPrice, maxPrice, weightRange, market, productType)
+                .and(ProductSpecifications.hasProductForm(productForm))
+                .and(ProductSpecifications.hasCreatineType(creatineType));
 
         // JPA Criteria API doesn't support NULLS LAST — exclude nulls via spec instead.
         // Products with no valueScore/proteinPerRsd are irrelevant when sorting by those fields.

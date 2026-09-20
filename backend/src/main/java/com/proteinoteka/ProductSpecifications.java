@@ -40,6 +40,29 @@ public class ProductSpecifications {
         };
     }
 
+    /** One or several ("powder,capsule") physical forms of a supplement; empty = any. */
+    public static Specification<Product> hasProductForm(String forms) {
+        return anyOf("productForm", forms);
+    }
+
+    /** One or several ("monohydrate,creapure") creatine chemistries; empty = any. */
+    public static Specification<Product> hasCreatineType(String types) {
+        return anyOf("creatineType", types);
+    }
+
+    private static Specification<Product> anyOf(String attribute, String commaSeparated) {
+        return (root, query, cb) -> {
+            if (commaSeparated == null || commaSeparated.isEmpty()) return cb.conjunction();
+            Predicate[] predicates = Arrays.stream(commaSeparated.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .map(s -> cb.equal(cb.lower(root.get(attribute)), s.toLowerCase()))
+                    .toArray(Predicate[]::new);
+            return predicates.length == 0 ? cb.conjunction()
+                    : predicates.length == 1 ? predicates[0] : cb.or(predicates);
+        };
+    }
+
     public static Specification<Product> priceGreaterThan(Double minPrice) {
         return (root, query, cb) -> minPrice == null ?
                 cb.conjunction() : cb.greaterThanOrEqualTo(root.get("numericPrice"), minPrice);
