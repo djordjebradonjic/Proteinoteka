@@ -17,6 +17,7 @@ const RS_SEO_PAGES = [
   { slug: "proteini-srbija",              label: "📋 Svi proteini"          },
   { slug: "protein-kalkulator",           label: "🧮 Kalkulator proteina"   },
   { slug: "gde-kupiti-protein-srbija",    label: "🏪 Gde kupiti"            },
+  { slug: "izvestaj-o-cenama-proteina",   label: "📈 Izveštaj o cenama"     },
   { slug: "najbolji-whey-protein-srbija",  label: "🥇 Najbolji Whey"        },
   { slug: "najjeftiniji-whey-protein",     label: "💰 Najjeftiniji Whey (po kg)" },
   { slug: "whey-protein-cena",             label: "📊 Whey Protein Cena"     },

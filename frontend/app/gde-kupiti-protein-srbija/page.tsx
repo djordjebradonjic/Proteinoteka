@@ -279,6 +279,7 @@ export default async function Page() {
             {[
               { label: "💰 Najjeftiniji whey (po kg)", href: "/najjeftiniji-whey-protein" },
               { label: "📋 Svi proteini u Srbiji", href: "/proteini-srbija" },
+              { label: "📈 Izveštaj o cenama proteina", href: "/izvestaj-o-cenama-proteina" },
               { label: "📊 Whey protein cena", href: "/whey-protein-cena" },
               { label: "🥇 Najbolji whey", href: "/najbolji-whey-protein-srbija" },
             ].map((l) => (

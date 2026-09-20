@@ -132,6 +132,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/najjeftiniji-whey-protein`,    changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/whey-protein-cena`,            changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/gde-kupiti-protein-srbija`,    changeFrequency: "daily"  as const, priority: 0.9,  lastModified: now },
+    // Monthly report: lastModified is the edition date, bump it together with lib/price-reports/<edition>.ts
+    { url: `${BASE}/izvestaj-o-cenama-proteina`,   changeFrequency: "monthly" as const, priority: 0.9,  lastModified: d("2026-09-19") },
     { url: `${BASE}/whey-isolate-srbija`,          changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/protein-za-masu`,              changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },
     { url: `${BASE}/whey-protein-do-3000-dinara`,  changeFrequency: "weekly" as const, priority: 0.85, lastModified: now },

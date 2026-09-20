@@ -328,6 +328,7 @@ export default async function Page() {
       listHeading="Whey proteini (pakovanja od 900g) sortirani po ceni po gramu proteina"
       tableCaption="Pregled cena whey proteina u Srbiji 2026 — po ceni po gramu proteina"
       currentSlug="whey-protein-cena"
+      extraLinks={[{ href: "/izvestaj-o-cenama-proteina", label: "📈 Kako su se cene menjale za 3 meseca" }]}
       showPricePerGramProtein
       middleSection={
         <>

@@ -74,6 +74,7 @@ const nextConfig: NextConfig = {
       '/maximalium-proteini',
       '/vitalikum-proteini',
       '/gde-kupiti-protein-srbija',
+      '/izvestaj-o-cenama-proteina',
       '/ultimate-nutrition-proteini',
       '/ogistrashop-proteini',
       '/supplementshop-proteini',
