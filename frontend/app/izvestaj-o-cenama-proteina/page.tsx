@@ -92,6 +92,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title: "Cene proteina u Srbiji: šta se promenilo za tri meseca",
       description: `Cene proteina u Srbiji, ${longDate(R.baseline, false)} naspram ${longDate(R.end, false)}: ${sameShare}% ponuda bez promene, ${upShare}% poskupelo u proseku ${pct(o.riserMean)}. Kategorije i brendovi.`,
       ogTitle: "Cene proteina u Srbiji: šta se promenilo za tri meseca | Proteinoteka",
+      ogType: "article",
     }),
   };
 }
@@ -154,7 +155,6 @@ export default async function Page() {
     headline: "Cene proteina u Srbiji: šta se promenilo za tri meseca",
     description: `Analiza kretanja cena proteina u Srbiji od ${longDate(R.baseline)} do ${longDate(R.end)}: po kategorijama, brendovima i vremenu.`,
     datePublished: R.end,
-    dateModified: R.end,
     inLanguage: "sr-RS",
     image: "https://proteinoteka.rs/opengraph-image",
     mainEntityOfPage: `https://proteinoteka.rs${PATH}`,

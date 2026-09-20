@@ -27,6 +27,8 @@ export function rsPageMetadata(opts: {
   description: string;
   ogTitle?: string;
   ogDescription?: string;
+  /** Open Graph type; "article" for dated editorial pages, "website" (default) for landing pages. */
+  ogType?: "website" | "article";
 }): Metadata {
   const url = `${SITE}${opts.path}`;
   const title = fitTitle(opts.title);
@@ -41,7 +43,7 @@ export function rsPageMetadata(opts: {
       url,
       siteName: "Proteinoteka",
       locale: "sr_RS",
-      type: "website",
+      type: opts.ogType ?? "website",
       images: [{ url: `${SITE}/opengraph-image`, width: 1200, height: 630, alt: "Proteinoteka" }],
     },
     twitter: { card: "summary_large_image", images: [`${SITE}/opengraph-image`] },
