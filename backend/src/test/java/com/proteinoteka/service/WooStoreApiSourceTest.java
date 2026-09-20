@@ -82,6 +82,40 @@ class WooStoreApiSourceTest {
         assertNull(p.getVariantLabel());
     }
 
+    // Real Proteinbox titles state servings, not grams ("Crea Pro – Basic Supplements / 200 porcija"), while
+    // the product's own URL carries the pack ("…-1000gr-…"): 14 of its 30 creatine powders had no weight.
+    private List<Product> mapSimple(String name, String permalink) throws IOException {
+        JsonNode parent = JSON.readTree("{\"id\":1,\"type\":\"simple\",\"name\":\"" + name + "\",\"permalink\":\""
+                + permalink + "\",\"is_in_stock\":true,\"prices\":{\"price\":\"505000\",\"currency_minor_unit\":2},"
+                + "\"attributes\":[],\"brands\":[]}");
+        return source.mapProduct(parent, List.of(), false);
+    }
+
+    @Test
+    void aSimpleProductWithNoWeightInItsTitleTakesItFromItsUrl() throws IOException {
+        Product p = mapSimple("Crea Pro – Basic Supplements / 200 porcija",
+                "https://proteinbox.rs/p/crea-pro-1000gr-kreatin-basic-supplements/").get(0);
+
+        assertEquals(1000.0, p.getPrimaryWeightGrams());
+        assertEquals(List.of("1kg"), p.getPackage_weight());
+
+        assertEquals(225.0, mapSimple("Kre-Alkalyn OneRaw® – Zoomad Labs, 75 porcija",
+                "https://proteinbox.rs/p/oneraw-kre-alkalyn-creatine-225-g/").get(0).getPrimaryWeightGrams());
+        assertEquals(400.0, mapSimple("Creatine Monohydrate – Genius Nutrition, 133 porcije",
+                "https://proteinbox.rs/p/kreatin-monohidrat-400gr-genius-nutriton/").get(0).getPrimaryWeightGrams());
+    }
+
+    @Test
+    void anUrlWithoutAWeightOrWithAStatedTitleWeightIsLeftAlone() throws IOException {
+        assertNull(mapSimple("Creatine Powder Micronized – Optimum Nutrition / 88 porcija",
+                "https://proteinbox.rs/p/optimum-nutrition-creatine-powder-micronized/").get(0).getPrimaryWeightGrams());
+        // the title wins over a different figure in the URL
+        assertEquals(300.0, mapSimple("Domaći kreatin 300g", "https://proteinbox.rs/p/domaci-kreatin-500g/")
+                .get(0).getPrimaryWeightGrams());
+        // a milligram dose in the URL is not a pack weight
+        assertNull(mapSimple("Creatine Caps", "https://proteinbox.rs/p/creatine-3000mg-caps/").get(0).getPrimaryWeightGrams());
+    }
+
     @Test
     void htmlEntitiesInTheTitleAreDecodedAndTheBrandIsReadFromTheTitleShape() throws IOException {
         List<Product> rows = mapAll("proteinbox_kreatin_products.json", "proteinbox_kreatin_variations.json", false);

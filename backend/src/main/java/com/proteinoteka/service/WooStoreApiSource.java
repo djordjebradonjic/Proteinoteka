@@ -164,10 +164,24 @@ public class WooStoreApiSource {
         Double grams = PackageWeights.grams(label);
         if (grams == null) grams = PackageWeights.grams(p.getName());
         if (grams == null) grams = PackageWeights.grams(statedSize);
+        // Last resort for a single-size product: the store's own URL ("…/crea-pro-1000gr-kreatin-…/") often
+        // carries the pack when the title only counts servings.
+        if (grams == null && label == null) grams = weightInSlug(parent.path("permalink").asText(""));
         if (grams != null) {
             p.setPrimaryWeightGrams(grams);
             p.getPackage_weight().add(PackageWeights.label(grams));
         }
+    }
+
+    // A pack weight below this in a URL is a dose or a sachet, not the pack
+    private static final double MIN_SLUG_WEIGHT_GRAMS = 50;
+
+    /** The weight written in the last path segment of a product URL ("…-1000gr-…", "…-225-g/"), or null. */
+    private static Double weightInSlug(String permalink) {
+        String path = permalink.replaceAll("[?#].*$", "").replaceAll("/+$", "");
+        String slug = path.substring(path.lastIndexOf('/') + 1).replace('-', ' ');
+        Double grams = PackageWeights.grams(slug);
+        return grams != null && grams >= MIN_SLUG_WEIGHT_GRAMS ? grams : null;
     }
 
     /**
