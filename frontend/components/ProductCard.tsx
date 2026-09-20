@@ -137,7 +137,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
               sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 300px"
               className="object-contain transition-transform duration-200 group-hover:scale-105"
               priority={priority}
-              referrerPolicy="no-referrer-when-downgrade"
+              referrerPolicy="no-referrer"
               onError={() => setImgError(true)}
               unoptimized
             />

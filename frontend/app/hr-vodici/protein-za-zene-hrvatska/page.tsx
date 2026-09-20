@@ -348,7 +348,7 @@ export default async function Page() {
                       >
                         {p.imageUrl && (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={p.imageUrl} alt={p.name} className="w-12 h-12 object-contain rounded shrink-0" />
+                          <img src={p.imageUrl} referrerPolicy="no-referrer" alt={p.name} className="w-12 h-12 object-contain rounded shrink-0" />
                         )}
                         <div className="min-w-0 flex-1">
                           <p className="text-[14px] font-semibold text-slate-900 truncate">{p.name}</p>
@@ -381,7 +381,7 @@ export default async function Page() {
                       >
                         {p.imageUrl && (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={p.imageUrl} alt={p.name} className="w-12 h-12 object-contain rounded shrink-0" />
+                          <img src={p.imageUrl} referrerPolicy="no-referrer" alt={p.name} className="w-12 h-12 object-contain rounded shrink-0" />
                         )}
                         <div className="min-w-0 flex-1">
                           <p className="text-[14px] font-semibold text-slate-900 truncate">{p.name}</p>

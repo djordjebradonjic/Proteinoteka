@@ -31,7 +31,7 @@ export function SEOProductCard({ product, rank, priority = false }: { product: P
       {product.imageUrl && (
         <div className="shrink-0 w-14 h-14 bg-slate-50 rounded-lg overflow-hidden flex items-center justify-center border border-slate-100">
           <Image
-            src={product.imageUrl}
+            src={product.imageUrl} referrerPolicy="no-referrer"
             unoptimized
             alt={product.name}
             width={56}

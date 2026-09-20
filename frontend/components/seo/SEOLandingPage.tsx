@@ -80,7 +80,7 @@ function CompareShortcut({ products }: { products: Product[] }) {
                   width={80}
                   height={80}
                   className="w-full h-full object-contain"
-                  referrerPolicy="no-referrer-when-downgrade"
+                  referrerPolicy="no-referrer"
                 />
               </div>
             ) : (
@@ -228,7 +228,7 @@ function DecisionSummary({ products }: { products: Product[] }) {
                     width={64}
                     height={64}
                     className="w-full h-full object-contain"
-                    referrerPolicy="no-referrer-when-downgrade"
+                    referrerPolicy="no-referrer"
                   />
                 </div>
               ) : (

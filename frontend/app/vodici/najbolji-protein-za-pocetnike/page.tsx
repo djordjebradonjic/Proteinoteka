@@ -232,7 +232,7 @@ export default async function Page() {
                             width={64}
                             height={64}
                             className="w-full h-full object-contain"
-                            referrerPolicy="no-referrer-when-downgrade"
+                            referrerPolicy="no-referrer"
                           />
                         ) : (
                           <span className="text-2xl">{emoji}</span>
@@ -293,7 +293,7 @@ export default async function Page() {
                                     width={40}
                                     height={40}
                                     className="w-full h-full object-contain"
-                                    referrerPolicy="no-referrer-when-downgrade"
+                                    referrerPolicy="no-referrer"
                                   />
                                 ) : null}
                               </Link>

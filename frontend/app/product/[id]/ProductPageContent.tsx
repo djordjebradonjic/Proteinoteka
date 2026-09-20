@@ -602,7 +602,7 @@ export default function ProductPageContent({ product, similar, storePrices, revi
           <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-8 flex items-center justify-center h-64 sm:h-80 md:aspect-square md:h-auto shadow-sm">
             {product.imageUrl && !imgError ? (
               <Image
-                src={product.imageUrl}
+                src={product.imageUrl} referrerPolicy="no-referrer"
                 alt={product.name}
                 width={400}
                 height={400}
@@ -1017,7 +1017,7 @@ export default function ProductPageContent({ product, similar, storePrices, revi
                 >
                   {p.imageUrl && (
                     <div className="aspect-square bg-slate-50 rounded-lg mb-2 overflow-hidden relative">
-                      <Image src={p.imageUrl} alt={p.name} fill sizes="176px" className="object-contain p-2" unoptimized />
+                      <Image src={p.imageUrl} referrerPolicy="no-referrer" alt={p.name} fill sizes="176px" className="object-contain p-2" unoptimized />
                     </div>
                   )}
                   <p className="text-xs font-semibold text-slate-800 leading-tight line-clamp-2 mb-1">{p.name}</p>

@@ -362,7 +362,7 @@ export default async function Page() {
                         className="flex items-center gap-3 bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:border-[#FF9900] transition-colors"
                       >
                         {p.imageUrl && (
-                          <img src={p.imageUrl} alt={p.name} className="w-12 h-12 object-contain rounded shrink-0" />
+                          <img src={p.imageUrl} referrerPolicy="no-referrer" alt={p.name} className="w-12 h-12 object-contain rounded shrink-0" />
                         )}
                         <div className="min-w-0 flex-1">
                           <p className="text-[14px] font-semibold text-slate-900 truncate">{p.name}</p>
@@ -398,7 +398,7 @@ export default async function Page() {
                         className="flex items-center gap-3 bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:border-[#FF9900] transition-colors"
                       >
                         {p.imageUrl && (
-                          <img src={p.imageUrl} alt={p.name} className="w-12 h-12 object-contain rounded shrink-0" />
+                          <img src={p.imageUrl} referrerPolicy="no-referrer" alt={p.name} className="w-12 h-12 object-contain rounded shrink-0" />
                         )}
                         <div className="min-w-0 flex-1">
                           <p className="text-[14px] font-semibold text-slate-900 truncate">{p.name}</p>
