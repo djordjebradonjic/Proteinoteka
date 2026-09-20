@@ -329,6 +329,7 @@ const STORES_BY_MARKET: Record<string, string[]> = {
     "Proteini.si",
     "Proteinbox",
     "Supplementshop",
+    "SupplementStore",
     "FitLab",
     "Ogistrashop",
     "GymBeam",

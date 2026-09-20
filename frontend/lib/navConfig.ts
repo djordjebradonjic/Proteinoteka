@@ -47,6 +47,7 @@ export const HEADER_NAV_LINKS: NavLink[] =
 const RS_FOOTER_STORES: NavLink[] = [
   { label: "Ogistrashop",    href: "/ogistrashop-proteini"    },
   { label: "Supplementshop", href: "/supplementshop-proteini" },
+  { label: "SupplementStore", href: "/supplement-store-proteini" },
   { label: "Pansport",       href: "/pansport-proteini"       },
   { label: "FitLab",         href: "/fitlab-proteini"         },
   { label: "GymBeam",        href: "/gymbeam-proteini"        },
