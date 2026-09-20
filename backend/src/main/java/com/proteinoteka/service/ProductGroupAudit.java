@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -81,21 +82,24 @@ public final class ProductGroupAudit {
             out.add(String.format("GROUP_MIXED_SOURCE — %s mixes protein types %s (ids %s)", tag, sources, ids(members)));
         }
 
-        List<Double> weights = members.stream().map(Product::getPrimaryWeightGrams)
-                .filter(w -> w != null && w > 0).toList();
+        // Pack size: grams, or pieces for a group of capsules/tablets/gummies (see ProductGroupService.sizeOf)
+        List<Double> weights = members.stream().map(ProductGroupService::sizeOf)
+                .filter(Objects::nonNull).toList();
         if (!weights.isEmpty()) {
+            String unit = unitOf(members);
             double min = weights.stream().mapToDouble(Double::doubleValue).min().orElse(0);
             double max = weights.stream().mapToDouble(Double::doubleValue).max().orElse(0);
-            if (max / min > 1 + ProductGroupService.WEIGHT_TOLERANCE) {
+            if (max / min > 1 + ProductGroupService.sizeTolerance(members.get(0))) {
                 out.add(String.format(Locale.ROOT,
-                        "GROUP_WEIGHT_SPREAD — %s spans %.0f–%.0f g (%.0f%%); different pack sizes are not comparable (ids %s)",
-                        tag, min, max, (max / min - 1) * 100, ids(members)));
+                        "GROUP_WEIGHT_SPREAD — %s spans %.0f–%.0f %s (%.0f%%); different pack sizes are not comparable (ids %s)",
+                        tag, min, max, unit, (max / min - 1) * 100, ids(members)));
             }
-            double avg = ProductGroupService.averageWeight(members);
+            double avg = ProductGroupService.averageSize(members);
             if (g.getWeightGrams() == null || Math.abs(g.getWeightGrams() - avg) / avg > STALE_WEIGHT_TOLERANCE) {
                 out.add(String.format(Locale.ROOT,
-                        "GROUP_STALE_METADATA — %s stored weight %s g but members average %.0f g (POST /api/admin/groups/refresh)",
-                        tag, g.getWeightGrams() == null ? "null" : String.format(Locale.ROOT, "%.0f", g.getWeightGrams()), avg));
+                        "GROUP_STALE_METADATA — %s stored size %s %s but members average %.0f %s (POST /api/admin/groups/refresh)",
+                        tag, g.getWeightGrams() == null ? "null" : String.format(Locale.ROOT, "%.0f", g.getWeightGrams()),
+                        unit, avg, unit));
             }
         }
 
@@ -154,7 +158,9 @@ public final class ProductGroupAudit {
                 if (ma.isEmpty() || mb.isEmpty()) continue;
                 if (a.getBrand() == null || b.getBrand() == null || !a.getBrand().equalsIgnoreCase(b.getBrand())) continue;
                 if (!String.valueOf(a.getMarket()).equalsIgnoreCase(String.valueOf(b.getMarket()))) continue;
-                double wa = ProductGroupService.averageWeight(ma), wb = ProductGroupService.averageWeight(mb);
+                // grams and pieces are different units: a capsule group is never a duplicate of a powder one
+                if (ProductGroupService.isPieceSized(ma.get(0)) != ProductGroupService.isPieceSized(mb.get(0))) continue;
+                double wa = ProductGroupService.averageSize(ma), wb = ProductGroupService.averageSize(mb);
                 if (wa <= 0 || wb <= 0 || Math.abs(wa - wb) / Math.min(wa, wb) > DUPLICATE_WEIGHT_WINDOW) continue;
                 if (!ProductGroupService.groupingSource(ma.get(0)).equals(ProductGroupService.groupingSource(mb.get(0)))) continue;
                 if (proteinsDiffer(ma, mb)) continue;
@@ -162,8 +168,8 @@ public final class ProductGroupAudit {
                 // look identical: at least half of each group's members must match the other group.
                 if (matchShare(ma, mb) < 0.5 || matchShare(mb, ma) < 0.5) continue;
                 out.add(String.format(Locale.ROOT,
-                        "DUPLICATE_GROUPS — groups %d '%s' (%.0f g) and %d '%s' (%.0f g) may be the same product (same brand, pack size and line) — review, then merge if so",
-                        a.getId(), a.getCanonicalName(), wa, b.getId(), b.getCanonicalName(), wb));
+                        "DUPLICATE_GROUPS — groups %d '%s' (%.0f %s) and %d '%s' (%.0f %s) may be the same product (same brand, pack size and line) — review, then merge if so",
+                        a.getId(), a.getCanonicalName(), wa, unitOf(ma), b.getId(), b.getCanonicalName(), wb, unitOf(mb)));
             }
         }
         return out;
@@ -189,8 +195,8 @@ public final class ProductGroupAudit {
         Map<Long, ProductGroup> byId = new HashMap<>();
         groups.forEach(g -> byId.put(g.getId(), g));
         for (Product p : products) {
-            if (p.getGroupId() != null || "creatine".equals(p.getProductType())) continue;
-            if (p.getBrand() == null || p.getPrimaryWeightGrams() == null) continue;
+            if (p.getGroupId() != null) continue;
+            if (p.getBrand() == null || ProductGroupService.sizeOf(p) == null) continue;
             List<ProductGroup> fits = groups.stream()
                     .filter(g -> ProductGroupService.fitsGroup(p, g, byGroup.getOrDefault(g.getId(), List.of())))
                     .toList();
@@ -204,6 +210,11 @@ public final class ProductGroupAudit {
             }
         }
         return out;
+    }
+
+    /** "pcs" for a group of capsules/tablets/gummies, "g" otherwise. */
+    private static String unitOf(List<Product> members) {
+        return ProductGroupService.isPieceSized(members.get(0)) ? "pcs" : "g";
     }
 
     private static String ids(List<Product> ps) {

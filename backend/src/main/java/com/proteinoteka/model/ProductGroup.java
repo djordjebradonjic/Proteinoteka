@@ -19,6 +19,7 @@ public class ProductGroup {
 
     private String brand;
 
+    // Pack size of the members: grams, or pieces for a capsule/tablet/gummy group (see ProductGroupService.sizeOf).
     @Column(name = "weight_grams")
     private Double weightGrams;
 
