@@ -1,4 +1,5 @@
 import HomeContent from "@/components/HomeContent";
+import { apiFetch } from "@/lib/apiFetch";
 import { Metadata } from "next";
 import { Suspense } from "react";
 import { fetchTopProducts, fetchTopValueProducts, fetchPriceDropProducts } from "@/lib/seo-data";
@@ -90,7 +91,7 @@ async function getInitialProducts() {
   // keep serving the last successfully generated page and retry on the next request — see
   // node_modules/next/dist/docs/01-app/02-guides/incremental-static-regeneration.md
   // ("Handling uncaught exceptions").
-  const res = await fetch(
+  const res = await apiFetch(
     `${process.env.NEXT_PUBLIC_API_URL}/api/v1/products?page=0&size=12&sort=random&market=${process.env.NEXT_PUBLIC_MARKET ?? 'rs'}`,
     { next: { revalidate: 21600, tags: ["products"] } },
   );

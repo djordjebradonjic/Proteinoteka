@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { apiFetch } from "@/lib/apiFetch";
 import sharp from "sharp";
 import { extractProductId } from "@/lib/productUrl";
 import { getScoreColor, getScoreLabel } from "@/lib/scoreColor";
@@ -23,7 +24,7 @@ interface Product {
 
 async function fetchProduct(id: number): Promise<Product | null> {
   try {
-    const res = await fetch(`${API}/api/v1/products/${id}`, {
+    const res = await apiFetch(`${API}/api/v1/products/${id}`, {
       next: { revalidate: 86400 },
     });
     if (!res.ok) return null;

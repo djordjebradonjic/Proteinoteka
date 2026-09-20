@@ -1,4 +1,5 @@
 import { MetadataRoute } from "next";
+import { apiFetch } from "@/lib/apiFetch";
 import fs from "fs";
 import path from "path";
 import { CATEGORIES } from "@/lib/categories";
@@ -232,7 +233,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // instead of caching the failure).
   const products: Product[] = [];
   for (let page = 0; page < 25; page++) {
-    const res = await fetch(
+    const res = await apiFetch(
       `${process.env.NEXT_PUBLIC_API_URL}/api/v1/products?size=2000&page=${page}&sort=id,asc&market=${CURRENT_MARKET}`,
       { next: { revalidate: 86400, tags: ["products"] } },
     );

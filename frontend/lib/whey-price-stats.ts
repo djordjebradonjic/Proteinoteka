@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { apiFetch } from "@/lib/apiFetch";
 import type { Product } from "@/types/product";
 import { CURRENT_MARKET } from "@/lib/marketConfig";
 
@@ -42,7 +43,7 @@ export const fetchMarketCatalog = cache(async (): Promise<Product[]> => {
 
   const byId = new Map<number, Product>();
   for (let page = 0; page < MAX_PAGES; page++) {
-    const res = await fetch(
+    const res = await apiFetch(
       `${API}/api/v1/products?market=${CURRENT_MARKET}&size=${PAGE_SIZE}&page=${page}`,
       { next: { revalidate: 21600, tags: ["products"] } },
     );

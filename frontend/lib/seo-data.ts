@@ -1,4 +1,5 @@
 import { Product } from "@/types/product";
+import { apiFetch } from "@/lib/apiFetch";
 import { formatPrice } from "@/lib/formatPrice";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "";
@@ -17,7 +18,7 @@ export async function fetchTopProducts(params: {
     if (params.limit)    url.searchParams.set("limit",    String(params.limit));
     url.searchParams.set("market", MARKET);
 
-    const res = await fetch(url.toString(), { next: { revalidate: 21600, tags: ["products"] } });
+    const res = await apiFetch(url.toString(), { next: { revalidate: 21600, tags: ["products"] } });
     if (!res.ok) return [];
     return res.json();
   } catch {
@@ -38,7 +39,7 @@ export async function fetchPriceRangeProducts(params: {
     url.searchParams.set("page", "0");
     url.searchParams.set("market", MARKET);
 
-    const res = await fetch(url.toString(), { next: { revalidate: 86400, tags: ["products"] } });
+    const res = await apiFetch(url.toString(), { next: { revalidate: 86400, tags: ["products"] } });
     if (!res.ok) return [];
     const data = await res.json();
     return data.content ?? [];
@@ -53,7 +54,7 @@ export async function fetchTopValueProducts(limit = 5): Promise<Product[]> {
     const url = new URL(`${API}/api/v1/products/top-value`);
     url.searchParams.set("limit", String(limit));
     url.searchParams.set("market", MARKET);
-    const res = await fetch(url.toString(), { next: { revalidate: 21600, tags: ["products"] } });
+    const res = await apiFetch(url.toString(), { next: { revalidate: 21600, tags: ["products"] } });
     if (!res.ok) return [];
     return res.json();
   } catch {
@@ -67,7 +68,7 @@ export async function fetchPriceDropProducts(limit = 8): Promise<Product[]> {
     const url = new URL(`${API}/api/v1/products/price-drops`);
     url.searchParams.set("limit", String(limit));
     url.searchParams.set("market", MARKET);
-    const res = await fetch(url.toString(), { next: { revalidate: 21600, tags: ["products"] } });
+    const res = await apiFetch(url.toString(), { next: { revalidate: 21600, tags: ["products"] } });
     if (!res.ok) return [];
     return res.json();
   } catch {
@@ -81,7 +82,7 @@ export async function fetchBlackFridayProducts(limit = 20): Promise<Product[]> {
     const url = new URL(`${API}/api/v1/products/black-friday`);
     url.searchParams.set("limit", String(limit));
     url.searchParams.set("market", MARKET);
-    const res = await fetch(url.toString(), { next: { revalidate: 21600, tags: ["products"] } });
+    const res = await apiFetch(url.toString(), { next: { revalidate: 21600, tags: ["products"] } });
     if (!res.ok) return [];
     return res.json();
   } catch {
@@ -103,7 +104,7 @@ export async function fetchStoreProducts(params: {
     url.searchParams.set("page", "0");
     url.searchParams.set("market", MARKET);
 
-    const res = await fetch(url.toString(), { next: { revalidate: 86400, tags: ["products"] } });
+    const res = await apiFetch(url.toString(), { next: { revalidate: 86400, tags: ["products"] } });
     if (!res.ok) return [];
     const data = await res.json();
     return data.content ?? [];
@@ -127,7 +128,7 @@ export async function fetchProductsByQuery(params: {
     url.searchParams.set("page", "0");
     url.searchParams.set("market", MARKET);
 
-    const res = await fetch(url.toString(), { next: { revalidate: 86400, tags: ["products"] } });
+    const res = await apiFetch(url.toString(), { next: { revalidate: 86400, tags: ["products"] } });
     if (!res.ok) return [];
     const data = await res.json();
     return data.content ?? [];
@@ -149,7 +150,7 @@ export async function fetchBrandProducts(params: {
     url.searchParams.set("page", "0");
     url.searchParams.set("market", MARKET);
 
-    const res = await fetch(url.toString(), { next: { revalidate: 86400, tags: ["products"] } });
+    const res = await apiFetch(url.toString(), { next: { revalidate: 86400, tags: ["products"] } });
     if (!res.ok) return [];
     const data = await res.json();
     return data.content ?? [];

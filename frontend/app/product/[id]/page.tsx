@@ -1,4 +1,5 @@
 import { notFound, permanentRedirect } from "next/navigation";
+import { apiFetch } from "@/lib/apiFetch";
 import { Product } from "@/types/product";
 import { productUrl } from "@/lib/productUrl";
 
@@ -6,7 +7,7 @@ const API = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 async function fetchProduct(id: string): Promise<Product | null> {
   try {
-    const res = await fetch(`${API}/api/v1/products/${id}`, { next: { revalidate: 86400 } });
+    const res = await apiFetch(`${API}/api/v1/products/${id}`, { next: { revalidate: 86400 } });
     if (!res.ok) return null;
     return res.json();
   } catch { return null; }
