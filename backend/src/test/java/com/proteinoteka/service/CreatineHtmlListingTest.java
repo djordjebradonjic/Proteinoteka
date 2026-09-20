@@ -124,6 +124,59 @@ class CreatineHtmlListingTest {
         assertEquals(List.of("500g"), p.getPackage_weight());
     }
 
+    // ------------------------------------------------------------------ Pansport
+
+    private PansportScraper pansport() {
+        return new PansportScraper(null, mock(BaseScraperEnricher.class), null, null, new com.proteinoteka.util.WeightParser());
+    }
+
+    // Real teasers of pansport.rs/kreatin (2026-09-20). A pack counted in pieces ("120 kapsula") has no
+    // gram weight; on the creatine listing it is a product, on the protein listing a sachet-like option.
+    @Test
+    void pansportCreatineKeepsPiecePacksAndSmallTubs() throws IOException {
+        Document doc = html("pansport_creatine_listing.html");
+
+        List<Product> products = pansport().scrape(CREATINE, creatineProfile, null, doc, Set.of());
+
+        assertEquals(5, products.size(), products.stream().map(p -> p.getName() + " " + p.getVariantLabel()).toList().toString());
+        Product tablets = products.stream().filter(p -> p.getName().equals("Creatine Zero")).findFirst().orElseThrow();
+        assertEquals("18 tableta", tablets.getVariantLabel());
+        assertNull(tablets.getPrimaryWeightGrams());
+        assertTrue(tablets.getPackage_weight().isEmpty(), "a piece count is not a package weight");
+        Product capsules = products.stream().filter(p -> p.getName().equals("Creatine 3000")).findFirst().orElseThrow();
+        assertEquals("120 kapsula", capsules.getVariantLabel());
+
+        Product tub = products.stream().filter(p -> p.getName().startsWith("Tri")).findFirst().orElseThrow();
+        assertEquals(200.0, tub.getPrimaryWeightGrams());
+    }
+
+    // Only the selected size carries a price on the listing; the other one needs the detail page.
+    @Test
+    void pansportMultiSizeProductGivesOneVariantPerSizeWithAPriceOnlyOnTheSelectedOne() throws IOException {
+        Document doc = html("pansport_creatine_listing.html");
+
+        List<Product> sizes = pansport().scrape(CREATINE, creatineProfile, null, doc, Set.of()).stream()
+                .filter(p -> p.getName().equals("Creatine Monohydrate")).toList();
+
+        assertEquals(2, sizes.size());
+        Product selected = sizes.stream().filter(p -> p.getPrimaryWeightGrams() == 500.0).findFirst().orElseThrow();
+        Product other = sizes.stream().filter(p -> p.getPrimaryWeightGrams() == 300.0).findFirst().orElseThrow();
+        assertNotNull(selected.getPrice());
+        assertNull(other.getPrice());
+        assertNotEquals(selected.getUrl(), other.getUrl());
+    }
+
+    @Test
+    void pansportProteinListingStillDropsPiecePacksAndSachetOptions() throws IOException {
+        Document doc = html("pansport_creatine_listing.html");
+
+        List<Product> products = pansport().scrape(null, doc, Set.of());
+
+        // the 200 g tub and the two sizes of the monohydrate; both piece packs are dropped as before
+        assertEquals(3, products.size(), products.stream().map(Product::getName).toList().toString());
+        assertTrue(products.stream().allMatch(p -> p.getPrimaryWeightGrams() != null && p.getPrimaryWeightGrams() >= 100));
+    }
+
     // ------------------------------------------------------------------ Proteini.si HR
 
     private ProteiniSiHrScraper proteiniSiHr() {

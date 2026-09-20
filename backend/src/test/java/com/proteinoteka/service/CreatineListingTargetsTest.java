@@ -117,15 +117,21 @@ class CreatineListingTargetsTest {
         assertCreatineHtmlListing(MyProteinHrScraper.class, hr, hr, hr + "?pageNumber=2", false);
     }
 
-    // Proteinbox and Pansport go through the paid IPRoyal proxy. Their creatine is wired only after the
-    // Store API transport has been tried from the production host, so until then they stay protein-only.
+    // Pansport is proxied too, and has no API: its creatine category is walked like the protein one
+    // (0-based Drupal pager), the browser being needed for the size dropdowns.
     @Test
-    void proxiedStoresAreNotWiredYet() {
-        for (Class<? extends StoreScraper> type : List.of(ProteinboxScraper.class, PansportScraper.class)) {
-            List<ListingTarget> targets = targetsOf(type);
-            assertEquals(1, targets.size(), type.getSimpleName());
-            assertEquals("protein", targets.get(0).productType(), type.getSimpleName());
-        }
+    void pansportWalksItsCreatineCategoryThroughTheProxiedBrowser() {
+        String url = "https://www.pansport.rs/kreatin";
+        assertCreatineHtmlListing(PansportScraper.class, url, url, url + "?page=1", true);
+        assertTrue(mock(PansportScraper.class, CALLS_REAL_METHODS).requiresProxy());
+    }
+
+    // Proteinbox sits behind the paid IPRoyal proxy, so its creatine comes from the Store API (a few dozen
+    // KB per run) rather than a browser walk.
+    @Test
+    void proteinboxReadsItsCreatineCategoryFromTheStoreApiThroughTheProxy() {
+        assertProteinListingThenWooCreatine(targetsOf(ProteinboxScraper.class), "https://proteinbox.rs");
+        assertTrue(mock(ProteinboxScraper.class, CALLS_REAL_METHODS).requiresProxy());
     }
 
     // Polleo Sport is broken and out of scope by decision; Shopbuilder sells only Scitec (no creatine

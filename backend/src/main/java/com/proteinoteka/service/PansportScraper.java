@@ -5,6 +5,9 @@ import com.microsoft.playwright.options.LoadState;
 import com.microsoft.playwright.options.WaitUntilState;
 import com.proteinoteka.model.Product;
 import com.proteinoteka.repository.ProductRepository;
+import com.proteinoteka.service.producttype.CreatineParser;
+import com.proteinoteka.service.producttype.ProductTypeProfile;
+import com.proteinoteka.service.producttype.ProductTypes;
 import com.proteinoteka.util.PriceParser;
 import com.proteinoteka.util.WeightParser;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +28,10 @@ public class PansportScraper implements StoreScraper {
 
     private static final String STORE_NAME = "Pansport";
     private static final String BASE_URL = "https://www.pansport.rs/proteini";
+    private static final String CREATINE_URL = "https://www.pansport.rs/kreatin";
     private static final double MIN_WEIGHT_GRAMS = 100.0; // skip sachets
+    // Creatine tubs start at 100-200 g; 60 g still excludes single-serving sachets
+    private static final double MIN_WEIGHT_GRAMS_CREATINE = 60.0;
 
     private final NutritionParserService nutritionParser;
     private final BaseScraperEnricher baseEnricher;
@@ -53,9 +59,23 @@ public class PansportScraper implements StoreScraper {
         return doc.selectFirst("li.pager__item--next a") != null;
     }
 
+    // Drupal's pager is 0-based: the category itself is page 0, ?page=1 the second one
+    private static String pageUrl(String baseUrl, int page) {
+        return page == 0 ? baseUrl : baseUrl + "?page=" + page;
+    }
+
     @Override
     public String buildPageUrl(int page) {
-        return page == 0 ? BASE_URL : BASE_URL + "?page=" + page;
+        return pageUrl(BASE_URL, page);
+    }
+
+    // Creatine is walked through the same browser session as protein. Single-variant products whose
+    // price is unchanged are skipped from the second run on (canSkipGroup), so the steady-state cost is
+    // the few multi-size products (their dropdown has to be switched to read every price).
+    @Override
+    public List<ListingTarget> listingTargets() {
+        return List.of(primaryListingTarget(),
+                ListingTarget.html(ProductTypes.CREATINE, CREATINE_URL, page -> pageUrl(CREATINE_URL, page)));
     }
 
     @Override
@@ -65,13 +85,23 @@ public class PansportScraper implements StoreScraper {
 
     @Override
     public List<Product> scrape(Page page, Document doc, Set<String> skipUrls) {
+        return scrapeListing(page, doc, skipUrls, ListingFamily.PROTEIN);
+    }
+
+    @Override
+    public List<Product> scrape(ListingTarget target, ProductTypeProfile profile,
+                                Page page, Document doc, Set<String> skipUrls) {
+        return scrapeListing(page, doc, skipUrls, ListingFamily.of(target, profile));
+    }
+
+    private List<Product> scrapeListing(Page page, Document doc, Set<String> skipUrls, ListingFamily family) {
         List<Product> products = new ArrayList<>();
 
         Elements elements = doc.select("div.product-teaser");
         log.info("[{}] Found {} products on page", STORE_NAME, elements.size());
 
         for (Element el : elements) {
-            List<Product> variants = parseVariants(el);
+            List<Product> variants = parseVariants(el, family);
             products.addAll(variants);
             if (!variants.isEmpty()) {
                 log.info("[{}] '{}' → {} pakovanje varijanti",
@@ -80,7 +110,7 @@ public class PansportScraper implements StoreScraper {
         }
 
         if (page != null && !products.isEmpty()) {
-            enrichWithDetails(page, products, skipUrls);
+            enrichWithDetails(page, products, skipUrls, family);
         }
 
         return products;
@@ -88,7 +118,7 @@ public class PansportScraper implements StoreScraper {
 
     // ── Listing parsing ─────────────────────────────────────────────────────────
 
-    private List<Product> parseVariants(Element element) {
+    private List<Product> parseVariants(Element element, ListingFamily family) {
         List<Product> variants = new ArrayList<>();
 
         Element titleEl = element.selectFirst("h4.node__title a");
@@ -137,18 +167,29 @@ public class PansportScraper implements StoreScraper {
         } else {
             for (Element opt : weightOptions) {
                 String skuValue = opt.attr("value");
-                String weightText = normalizeWeight(opt.text().trim());
+                String label = opt.text().trim();
+                String weightText = normalizeWeight(label);
                 Double weightGrams = parseWeightToGrams(weightText);
+                double minGrams = family.isCreatine() ? MIN_WEIGHT_GRAMS_CREATINE : MIN_WEIGHT_GRAMS;
 
-                if (weightGrams == null || weightGrams < MIN_WEIGHT_GRAMS) {
+                // "120 kapsula", "18 tableta": a creatine pack counted in pieces has no gram weight, but
+                // it is a product (kept unscored, like on the other stores), not a sachet option.
+                boolean countedPack = family.isCreatine() && weightGrams == null
+                        && CreatineParser.parse(label, null).unitCount() != null;
+
+                if (!countedPack && (weightGrams == null || weightGrams < minGrams)) {
                     log.debug("[{}] Skipping sachet option '{}' for '{}'", STORE_NAME, weightText, name);
                     continue;
                 }
 
                 String variantUrl = baseProductUrl + "?sku=" + skuValue;
                 Product p = buildProduct(name, variantUrl, imageUrl, description, flavours);
-                p.setPrimaryWeightGrams(weightGrams);
-                p.getPackage_weight().add(weightText);
+                // the option label is the only place that says the pack ("120 kapsula", "500 g")
+                p.setVariantLabel(label);
+                if (!countedPack) {
+                    p.setPrimaryWeightGrams(weightGrams);
+                    p.getPackage_weight().add(weightText);
+                }
 
                 // Pre-fill price for the selected variant — others need detail page
                 if (opt.hasAttr("selected")) {
@@ -184,7 +225,7 @@ public class PansportScraper implements StoreScraper {
 
     // ── Detail page enrichment ──────────────────────────────────────────────────
 
-    private void enrichWithDetails(Page page, List<Product> products, Set<String> skipUrls) {
+    private void enrichWithDetails(Page page, List<Product> products, Set<String> skipUrls, ListingFamily family) {
         // Group variants by base URL — navigate once per product, switch variants via dropdown
         Map<String, List<Product>> byBase = new LinkedHashMap<>();
         for (Product p : products) {
@@ -236,8 +277,9 @@ public class PansportScraper implements StoreScraper {
                 for (int i = 0; i < ordered.size(); i++) {
                     Product p = ordered.get(i);
                     if (p.getUrl() == null || p.getUrl().isBlank()) continue;
-                    if (baseEnricher.isNonProteinProduct(p.getName())) {
-                        log.info("[{}] Skipping '{}' — not a protein product", STORE_NAME, p.getName());
+                    Optional<String> rejected = family.rejectReason(p, baseEnricher);
+                    if (rejected.isPresent()) {
+                        log.info("[{}] Skipping '{}' — {}", STORE_NAME, p.getName(), rejected.get());
                         continue;
                     }
 
@@ -279,7 +321,18 @@ public class PansportScraper implements StoreScraper {
                         p.setBrand(nutritionDonor.getBrand());
                     }
 
-                    if (nutritionDonor != null) {
+                    if (family.isCreatine()) {
+                        // dose, chemistry and form are shared by every size of one product
+                        if (nutritionDonor != null) {
+                            copyCreatineFields(nutritionDonor, p);
+                        } else if (!skipUrls.contains(p.getUrl())) {
+                            baseEnricher.enrichCreatineFromDescription(doc, p, STORE_NAME);
+                            nutritionDonor = p;
+                        } else {
+                            restoreNutritionFromDb(p);
+                            nutritionDonor = p;
+                        }
+                    } else if (nutritionDonor != null) {
                         copyNutrition(nutritionDonor, p);
                     } else if (!skipUrls.contains(p.getUrl())) {
                         enrichNutrition(doc, p);
@@ -290,10 +343,11 @@ public class PansportScraper implements StoreScraper {
                         nutritionDonor = p;
                     }
 
-                    log.info("[{}] Enriched '{}' {}g → price={}, protein={}g/100g",
+                    log.info("[{}] Enriched '{}' {}g → price={}, {}",
                             STORE_NAME, p.getName(),
                             p.getPrimaryWeightGrams() != null ? Math.round(p.getPrimaryWeightGrams()) : "?",
-                            p.getPrice(), p.getProteinPer100g());
+                            p.getPrice(),
+                            family.isCreatine() ? "form=" + p.getProductForm() : "protein=" + p.getProteinPer100g() + "g/100g");
 
                     count++;
                     if (count % 10 == 0) {
@@ -389,6 +443,15 @@ public class PansportScraper implements StoreScraper {
                 p.setImageUrl(src);
             }
         }
+    }
+
+    // Dose, chemistry and form come from the shared description/name; servings and unit count are
+    // pack-size specific and stay per variant.
+    private void copyCreatineFields(Product from, Product to) {
+        if (to.getProductForm() == null)             to.setProductForm(from.getProductForm());
+        if (to.getCreatineGramsPerServing() == null) to.setCreatineGramsPerServing(from.getCreatineGramsPerServing());
+        if (to.getCreatineType() == null)            to.setCreatineType(from.getCreatineType());
+        if (to.getBrand() == null)                   to.setBrand(from.getBrand());
     }
 
     private void copyNutrition(Product from, Product to) {
