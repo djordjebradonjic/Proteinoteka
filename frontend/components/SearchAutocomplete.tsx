@@ -282,7 +282,7 @@ export default function SearchAutocomplete({
               >
                 {product.imageUrl ? (
                   <Image
-                    src={product.imageUrl}
+                    src={product.imageUrl} referrerPolicy="no-referrer"
                     alt={product.name}
                     width={48}
                     height={48}

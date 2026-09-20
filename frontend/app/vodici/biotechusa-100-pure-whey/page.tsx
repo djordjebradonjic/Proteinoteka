@@ -315,7 +315,7 @@ export default async function Page() {
                       >
                         {p.imageUrl && (
                           <img
-                            src={p.imageUrl}
+                            src={p.imageUrl} referrerPolicy="no-referrer"
                             alt={p.name}
                             className="w-16 h-16 object-contain rounded-lg shrink-0 bg-slate-50"
                           />
@@ -376,7 +376,7 @@ export default async function Page() {
                       >
                         {p.imageUrl && (
                           <img
-                            src={p.imageUrl}
+                            src={p.imageUrl} referrerPolicy="no-referrer"
                             alt={p.name}
                             className="w-16 h-16 object-contain rounded-lg shrink-0 bg-slate-50"
                           />

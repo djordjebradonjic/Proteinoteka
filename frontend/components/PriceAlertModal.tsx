@@ -273,7 +273,7 @@ export default function PriceAlertModal({ product, initialAlert, onClose }: Prop
                   {product.imageUrl && (
                     <div className="w-12 h-12 rounded-lg bg-white border border-slate-100 flex items-center justify-center overflow-hidden shrink-0">
                       <Image
-                        src={product.imageUrl}
+                        src={product.imageUrl} referrerPolicy="no-referrer"
                         alt={product.name}
                         width={48}
                         height={48}

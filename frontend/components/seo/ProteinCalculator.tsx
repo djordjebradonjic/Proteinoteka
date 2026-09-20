@@ -245,7 +245,7 @@ export function ProteinCalculator() {
                             width={40}
                             height={40}
                             className="object-contain w-full h-full"
-                            referrerPolicy="no-referrer-when-downgrade"
+                            referrerPolicy="no-referrer"
                             unoptimized
                           />
                         </div>

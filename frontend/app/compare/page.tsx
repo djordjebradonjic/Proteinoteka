@@ -373,7 +373,7 @@ function ComparePage() {
                     </button>
 
                     {p.imageUrl ? (
-                      <Image src={p.imageUrl} alt={p.name}
+                      <Image src={p.imageUrl} referrerPolicy="no-referrer" alt={p.name}
                         width={80} height={80} className="w-20 h-20 object-contain" unoptimized />
                     ) : (
                       <div className="w-20 h-20 bg-slate-100 rounded flex items-center justify-center">
