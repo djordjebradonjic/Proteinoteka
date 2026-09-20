@@ -985,17 +985,24 @@ public class ScraperService {
 
         // Fallback: ako URL ne matchuje (SKU se promenio), traži po imenu+prodavnici+gramazi
         if (existingOpt.isEmpty() && scraped.getPrimaryWeightGrams() != null) {
-            Optional<Product> byWeight = productRepository.findByNameAndStoreAndWeight(
+            List<Product> byWeight = productRepository.findAllByNameAndStoreAndWeight(
                     scraped.getName(), store, scraped.getPrimaryWeightGrams(), profile.code());
-            if (byWeight.isPresent()) {
-                Product match = byWeight.get();
+            if (byWeight.size() > 1) {
+                // The store lists several products under this exact title and weight (different brands
+                // behind one generic name), so which of them the item is cannot be told — and neither
+                // can the fuzzy fallback below. Nothing is re-pointed: the item becomes its own row.
+                log.warn("[{}] {} stored rows share '{}' {}g — cannot tell which one is {}, treating it as a new product",
+                        store.getName(), byWeight.size(), scraped.getName(),
+                        Math.round(scraped.getPrimaryWeightGrams()), scraped.getUrl());
+            } else if (!byWeight.isEmpty()) {
+                Product match = byWeight.get(0);
                 if (isRepointAllowed(match, numericPrice, claimedProductIds)) {
                     log.info("[{}] SKU promenjen za '{}' {}g — stari URL: {}, novi URL: {}",
                             store.getName(), scraped.getName(),
                             Math.round(scraped.getPrimaryWeightGrams()),
                             match.getUrl(), scraped.getUrl());
                     match.setUrl(scraped.getUrl());
-                    existingOpt = byWeight;
+                    existingOpt = Optional.of(match);
                 } else {
                     // Same name+weight but a different product (claimed by another item this run,
                     // or the price is too far off) — becomes a new row instead of hijacking this one.

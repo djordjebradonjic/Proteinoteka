@@ -181,16 +181,18 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     Long findMinIdByGroupId(@Param("groupId") Long groupId);
 
     // Scoped to one product type: a 500 g creatine and a 500 g protein of the same store must never be
-    // taken for the same row when a URL changes.
+    // taken for the same row when a URL changes. A list, not an Optional: a store can publish several
+    // products under one generic title and weight (SupplementStore: "Creatine Monohydrate, 300g" from
+    // three brands), and an Optional would throw on the second one.
     @Query("SELECT p FROM products p WHERE LOWER(TRIM(p.name)) = LOWER(TRIM(:name)) " +
            "AND p.store = :store " +
            "AND p.productType = :productType " +
            "AND p.primaryWeightGrams IS NOT NULL " +
            "AND ABS(p.primaryWeightGrams - :weight) < 10")
-    Optional<Product> findByNameAndStoreAndWeight(@Param("name") String name,
-                                                  @Param("store") Store store,
-                                                  @Param("weight") Double weight,
-                                                  @Param("productType") String productType);
+    List<Product> findAllByNameAndStoreAndWeight(@Param("name") String name,
+                                                 @Param("store") Store store,
+                                                 @Param("weight") Double weight,
+                                                 @Param("productType") String productType);
 
     // Broader candidate pool for fuzzy name matching when both URL and exact name changed at once
     // (e.g. a store re-platforms and rewrites its listing copy in the same pass).
