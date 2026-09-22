@@ -5,6 +5,8 @@ import com.proteinoteka.model.Product;
 import com.proteinoteka.model.ProductGroup;
 import com.proteinoteka.repository.ProductGroupRepository;
 import com.proteinoteka.repository.ProductRepository;
+import com.proteinoteka.service.producttype.ProductForm;
+import com.proteinoteka.service.producttype.ProductTypes;
 import com.proteinoteka.util.ProductLineMatcher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -38,11 +40,44 @@ public class ProductGroupService {
         return normalizeSource(ValueScoreCalculator.effectiveSource(p));
     }
 
-    /** Average of the members' real weights (never the group's stored weight, which goes stale). */
-    public static double averageWeight(List<Product> members) {
+    /** Product family ("protein", "creatine", ...); legacy rows without one are protein. */
+    private static String familyOf(Product p) {
+        return p.getProductType() != null ? p.getProductType() : ProductTypes.PROTEIN;
+    }
+
+    /** Two known values that disagree. An unknown (null) value never separates products: unknown is not a value. */
+    private static boolean knownAndDifferent(String a, String b) {
+        return a != null && b != null && !a.equalsIgnoreCase(b);
+    }
+
+    /** Capsules, tablets and gummies are sold by the piece: their pack is a count, not a gram weight. */
+    public static boolean isPieceSized(Product p) {
+        return ProductForm.isCountedCode(p.getProductForm());
+    }
+
+    /**
+     * The number that identifies a listing's pack: the piece count for a counted form (its gram weight is
+     * usually unknown and says little), the gram weight otherwise; null when that is not known. A group's
+     * stored {@code weightGrams} is this size, in the unit of its members.
+     */
+    public static Double sizeOf(Product p) {
+        if (isPieceSized(p)) return p.getUnitCount() != null && p.getUnitCount() > 0 ? p.getUnitCount().doubleValue() : null;
+        return p.getPrimaryWeightGrams() != null && p.getPrimaryWeightGrams() > 0 ? p.getPrimaryWeightGrams() : null;
+    }
+
+    /**
+     * How far two sizes of the same unit may differ and still be one pack: the gram tolerance for weights,
+     * none for pieces (120 and 110 capsules are different packs, 200 and 210 are within 5% of each other).
+     */
+    public static double sizeTolerance(Product p) {
+        return isPieceSized(p) ? 0 : WEIGHT_TOLERANCE;
+    }
+
+    /** Average of the members' real sizes (never the group's stored weight, which goes stale). */
+    public static double averageSize(List<Product> members) {
         return members.stream()
-                .map(Product::getPrimaryWeightGrams)
-                .filter(w -> w != null && w > 0)
+                .map(ProductGroupService::sizeOf)
+                .filter(Objects::nonNull)
                 .mapToDouble(Double::doubleValue)
                 .average().orElse(0);
     }
@@ -50,20 +85,30 @@ public class ProductGroupService {
     /**
      * Single source of truth for "does this product belong in this group" — used by auto-assignment
      * and by the audit so they can never disagree. Same market and brand, same pack size (against
-     * the members' actual average weight), same protein type, same product line, and no other
-     * listing from the same store (a comparison group has at most one listing per store).
+     * the members' actual average size: grams, or pieces for a capsule/tablet/gummy), same protein
+     * type, same product line, and no other listing from the same store (a comparison group has at
+     * most one listing per store).
      */
     public static boolean fitsGroup(Product p, ProductGroup g, List<Product> members) {
-        if (members.isEmpty() || p.getBrand() == null || p.getPrimaryWeightGrams() == null
-                || p.getPrimaryWeightGrams() <= 0 || g.getBrand() == null) return false;
+        Double size = sizeOf(p);
+        if (members.isEmpty() || p.getBrand() == null || size == null || g.getBrand() == null) return false;
         String market = p.getMarket() != null ? p.getMarket() : "rs";
         if (!market.equalsIgnoreCase(g.getMarket() != null ? g.getMarket() : "rs")) return false;
         if (!p.getBrand().trim().equalsIgnoreCase(g.getBrand().trim())) return false;
 
-        double avg = averageWeight(members);
-        if (avg <= 0 || Math.abs(p.getPrimaryWeightGrams() - avg) / avg > WEIGHT_TOLERANCE) return false;
+        // Pieces and grams never compare, whatever the numbers say (120 capsules vs a 120 g tub)
+        Product first = members.get(0);
+        if (isPieceSized(p) != isPieceSized(first)) return false;
+        double avg = averageSize(members);
+        if (avg <= 0 || Math.abs(size - avg) / avg > sizeTolerance(p)) return false;
 
         if (!groupingSource(p).equals(groupingSource(members.get(0)))) return false;
+
+        // A creatine never joins a protein group, and a capsule never a powder one (nor monohydrate an
+        // HCl one), however much brand, size and name they share.
+        if (!familyOf(p).equals(familyOf(first))
+                || knownAndDifferent(p.getProductForm(), first.getProductForm())
+                || knownAndDifferent(p.getCreatineType(), first.getCreatineType())) return false;
 
         if (p.getStore() != null && members.stream().anyMatch(m ->
                 m.getStore() != null && m.getStore().getId().equals(p.getStore().getId()))) return false;
@@ -127,7 +172,7 @@ public class ProductGroupService {
         // of groups that already exist.
         int attached = 0;
         for (Product p : all) {
-            if (p.getGroupId() == null && p.getBrand() != null && p.getPrimaryWeightGrams() != null) {
+            if (p.getGroupId() == null && p.getBrand() != null && sizeOf(p) != null) {
                 tryAutoAssign(p);
                 if (p.getGroupId() != null) attached++;
             }
@@ -136,10 +181,12 @@ public class ProductGroupService {
         // Group by market + brand (lowercase) + protein type
         Map<String, List<Product>> byBrandSource = new HashMap<>();
         for (Product p : all) {
-            if (p.getBrand() == null || p.getPrimaryWeightGrams() == null) continue;
+            if (p.getBrand() == null || sizeOf(p) == null) continue;
             if (p.getGroupId() != null) continue;
             String market = p.getMarket() != null ? p.getMarket() : "rs";
-            String key = market + "|" + p.getBrand().toLowerCase().trim() + "|" + groupingSource(p);
+            // family/form/creatine type are part of the key so a fresh group is always one fitsGroup accepts
+            String key = market + "|" + familyOf(p) + "|" + p.getBrand().toLowerCase().trim() + "|" + groupingSource(p)
+                    + "|" + Objects.toString(p.getProductForm(), "") + "|" + Objects.toString(p.getCreatineType(), "");
             byBrandSource.computeIfAbsent(key, k -> new ArrayList<>()).add(p);
         }
 
@@ -147,7 +194,7 @@ public class ProductGroupService {
         int skipped = 0;
 
         for (List<Product> brandSourceGroup : byBrandSource.values()) {
-            List<List<Product>> weightClusters = clusterByWeight(brandSourceGroup);
+            List<List<Product>> weightClusters = clusterBySize(brandSourceGroup);
 
             for (List<Product> weightCluster : weightClusters) {
                 // Further split by product line name (prevents Iso Cool + Iso Sensation merging)
@@ -178,8 +225,7 @@ public class ProductGroupService {
                             .max(Comparator.comparingInt(p -> p.getName().length()))
                             .map(Product::getName).orElse("Unknown");
                     String brand = deduped.get(0).getBrand();
-                    double avgWeight = deduped.stream()
-                            .mapToDouble(Product::getPrimaryWeightGrams).average().orElse(0);
+                    double avgWeight = averageSize(deduped);
 
                     String market = deduped.get(0).getMarket() != null ? deduped.get(0).getMarket() : "rs";
 
@@ -273,10 +319,7 @@ public class ProductGroupService {
                 .filter(p -> p.getBrand() != null)
                 .map(Product::getBrand)
                 .findFirst().orElse(null);
-        double avgWeight = products.stream()
-                .filter(p -> p.getPrimaryWeightGrams() != null)
-                .mapToDouble(Product::getPrimaryWeightGrams)
-                .average().orElse(0);
+        double avgWeight = averageSize(products);
         String market = products.stream()
                 .filter(p -> p.getMarket() != null)
                 .map(Product::getMarket)
@@ -310,7 +353,7 @@ public class ProductGroupService {
 
     @Transactional
     public void tryAutoAssign(Product product) {
-        if (product.getBrand() == null || product.getPrimaryWeightGrams() == null) return;
+        if (product.getBrand() == null || sizeOf(product) == null) return;
         if (product.getGroupId() != null) return;
 
         String market = product.getMarket() != null ? product.getMarket() : "rs";
@@ -365,7 +408,7 @@ public class ProductGroupService {
     }
 
     private boolean refreshWeight(ProductGroup g, List<Product> members) {
-        double avg = averageWeight(members);
+        double avg = averageSize(members);
         if (avg <= 0) return false;
         if (g.getWeightGrams() != null && Math.abs(g.getWeightGrams() - avg) / avg <= 0.005) return false;
         g.setWeightGrams(avg);
@@ -382,21 +425,21 @@ public class ProductGroupService {
         return source;
     }
 
-    private List<List<Product>> clusterByWeight(List<Product> products) {
+    private List<List<Product>> clusterBySize(List<Product> products) {
         List<Product> sorted = products.stream()
-                .sorted(Comparator.comparingDouble(p -> p.getPrimaryWeightGrams() != null ? p.getPrimaryWeightGrams() : 0))
+                .sorted(Comparator.comparingDouble(p -> sizeOf(p) != null ? sizeOf(p) : 0))
                 .toList();
 
         List<List<Product>> clusters = new ArrayList<>();
         List<Product> current = new ArrayList<>();
 
         for (Product p : sorted) {
-            if (p.getPrimaryWeightGrams() == null) continue;
+            if (sizeOf(p) == null) continue;
             if (current.isEmpty()) {
                 current.add(p);
             } else {
-                double refWeight = current.get(0).getPrimaryWeightGrams();
-                if (p.getPrimaryWeightGrams() <= refWeight * (1 + WEIGHT_TOLERANCE)) {
+                double refSize = sizeOf(current.get(0));
+                if (sizeOf(p) <= refSize * (1 + sizeTolerance(p))) {
                     current.add(p);
                 } else {
                     clusters.add(new ArrayList<>(current));

@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.WaitUntilState;
 import com.proteinoteka.model.Product;
+import com.proteinoteka.service.producttype.ProductTypeProfile;
+import com.proteinoteka.service.producttype.ProductTypes;
 import com.proteinoteka.util.ProductNameCleaner;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +21,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
@@ -32,9 +35,13 @@ public class MyProteinHrScraper implements StoreScraper {
     private static final String STORE_NAME = "MyProtein HR";
     private static final String SITE_ORIGIN = "https://www.myprotein.hr";
     private static final String BASE_URL = SITE_ORIGIN + "/c/nutrition/protein/";
+    private static final String CREATINE_URL = SITE_ORIGIN + "/c/nutrition/creatine/";
     private static final int MAX_DETAIL_FETCH_RETRIES = 3;
     private static final int MAX_CONSECUTIVE_FAILURES = 5;
     private static final double MIN_PACKAGE_GRAMS = 500;
+    // Creatine tubs start at 100-250 g. Count-only packs ("90 GUMMIES", "20servings") have no gram
+    // weight and are skipped like the protein ones: they cannot be priced per gram yet.
+    private static final double MIN_PACKAGE_GRAMS_CREATINE = 60;
     private static final String MASTER_DATA_MARKER = "const masterData = ";
 
     private static final Pattern SIBLING_FORMAT_PATTERN = Pattern.compile(
@@ -58,9 +65,27 @@ public class MyProteinHrScraper implements StoreScraper {
     @Override
     public String getCurrency() { return "EUR"; }
 
+    private static String pageUrl(String baseUrl, int page) {
+        return page == 0 ? baseUrl : baseUrl + "?pageNumber=" + (page + 1);
+    }
+
     @Override
     public String buildPageUrl(int page) {
-        return page == 0 ? BASE_URL : BASE_URL + "?pageNumber=" + (page + 1);
+        return pageUrl(BASE_URL, page);
+    }
+
+    // The creatine category also holds electrolyte drinks and bundles, so it is not trusted:
+    // an item has to say "creatine"/"kreatin" in its name.
+    @Override
+    public List<ListingTarget> listingTargets() {
+        return List.of(
+                primaryListingTarget(),
+                ListingTarget.html(ProductTypes.CREATINE, CREATINE_URL,
+                        page -> pageUrl(CREATINE_URL, page), false));
+    }
+
+    private static double minPackageGrams(ListingFamily family) {
+        return family.isCreatine() ? MIN_PACKAGE_GRAMS_CREATINE : MIN_PACKAGE_GRAMS;
     }
 
     @Override
@@ -75,6 +100,16 @@ public class MyProteinHrScraper implements StoreScraper {
 
     @Override
     public List<Product> scrape(Page page, Document doc, Set<String> skipUrls) {
+        return scrapeListing(page, doc, skipUrls, ListingFamily.PROTEIN);
+    }
+
+    @Override
+    public List<Product> scrape(ListingTarget target, ProductTypeProfile profile,
+                                Page page, Document doc, Set<String> skipUrls) {
+        return scrapeListing(page, doc, skipUrls, ListingFamily.of(target, profile));
+    }
+
+    private List<Product> scrapeListing(Page page, Document doc, Set<String> skipUrls, ListingFamily family) {
         List<Product> stubs = new ArrayList<>();
 
         Elements elements = doc.select("product-card-wrapper[data-sku]");
@@ -85,7 +120,7 @@ public class MyProteinHrScraper implements StoreScraper {
             if (p != null) stubs.add(p);
         }
 
-        return enrichWithDetails(page, stubs, skipUrls);
+        return enrichWithDetails(page, stubs, skipUrls, family);
     }
 
     // -------------------- Listing parsing --------------------
@@ -118,14 +153,16 @@ public class MyProteinHrScraper implements StoreScraper {
 
     // -------------------- Detail page enrichment + variant expansion --------------------
 
-    private List<Product> enrichWithDetails(Page page, List<Product> stubs, Set<String> skipUrls) {
+    private List<Product> enrichWithDetails(Page page, List<Product> stubs, Set<String> skipUrls,
+                                            ListingFamily family) {
         List<Product> result = new ArrayList<>();
         int consecutiveFailures = 0;
 
         for (Product stub : stubs) {
             if (stub.getUrl() == null || stub.getUrl().isBlank()) continue;
-            if (baseEnricher.isNonProteinProduct(stub.getName())) {
-                log.info("[{}] Skipping '{}' - not a protein product", STORE_NAME, stub.getName());
+            Optional<String> rejected = family.rejectReason(stub, baseEnricher);
+            if (rejected.isPresent()) {
+                log.info("[{}] Skipping '{}' - {}", STORE_NAME, stub.getName(), rejected.get());
                 continue;
             }
 
@@ -155,9 +192,10 @@ public class MyProteinHrScraper implements StoreScraper {
                     continue;
                 }
 
-                List<Product> variants = expandByVariants(masterData, stub);
+                List<Product> variants = expandByVariants(masterData, stub, minPackageGrams(family), !family.isCreatine());
                 if (variants.isEmpty()) {
-                    log.debug("[{}] '{}' -> no eligible package sizes (>=500g, in stock)", STORE_NAME, stub.getName());
+                    log.debug("[{}] '{}' -> no eligible package sizes (>={}g, in stock)",
+                            STORE_NAME, stub.getName(), (int) minPackageGrams(family));
                     safeSleep(3000 + ThreadLocalRandom.current().nextLong(3000));
                     continue;
                 }
@@ -170,12 +208,16 @@ public class MyProteinHrScraper implements StoreScraper {
                 boolean anyNeedsNutrition = variants.stream()
                         .anyMatch(v -> !skipUrls.contains(v.getUrl()));
                 if (anyNeedsNutrition) {
-                    extractNutritionFromTable(masterData, first);
-                    if (first.getProteinPer100g() == null && !first.getDescription().isBlank()) {
-                        Double protein = nutritionParser.extractProteinPer100g(first.getDescription());
-                        if (protein != null) first.setProteinPer100g(protein);
+                    if (family.isCreatine()) {
+                        baseEnricher.enrichCreatineFromDescription(descDoc, first, STORE_NAME);
+                    } else {
+                        extractNutritionFromTable(masterData, first);
+                        if (first.getProteinPer100g() == null && !first.getDescription().isBlank()) {
+                            Double protein = nutritionParser.extractProteinPer100g(first.getDescription());
+                            if (protein != null) first.setProteinPer100g(protein);
+                        }
+                        baseEnricher.enrichWithAiIfNeeded(descDoc, first, STORE_NAME);
                     }
-                    baseEnricher.enrichWithAiIfNeeded(descDoc, first, STORE_NAME);
                 }
 
                 for (int i = 1; i < variants.size(); i++) {
@@ -183,11 +225,13 @@ public class MyProteinHrScraper implements StoreScraper {
                     v.setBrand(first.getBrand());
                     v.setDescription(first.getDescription());
                     copyNutritionFields(first, v);
+                    copyCreatineFields(first, v);
                 }
 
                 for (Product v : variants) {
-                    log.info("[{}] '{}' ({}) -> price={}, protein={}",
-                            STORE_NAME, v.getName(), v.getPackage_weight(), v.getPrice(), v.getProteinPer100g());
+                    log.info("[{}] '{}' ({}) -> price={}, {}",
+                            STORE_NAME, v.getName(), v.getPackage_weight(), v.getPrice(),
+                            family.isCreatine() ? "form=" + v.getProductForm() : "protein=" + v.getProteinPer100g());
                 }
                 result.addAll(variants);
 
@@ -281,6 +325,16 @@ public class MyProteinHrScraper implements StoreScraper {
     // -------------------- Variant expansion --------------------
 
     List<Product> expandByVariants(JsonNode masterData, Product stub) {
+        return expandByVariants(masterData, stub, MIN_PACKAGE_GRAMS, true);
+    }
+
+    /**
+     * @param groupByServings protein tiers are keyed by serving count (grams vary per flavour inside a
+     *                        tier); creatine powders are the opposite — the pack size is fixed ("250g")
+     *                        while the serving count varies per flavour — so they are keyed by grams
+     */
+    List<Product> expandByVariants(JsonNode masterData, Product stub, double minPackageGrams,
+                                   boolean groupByServings) {
         List<Product> variants = new ArrayList<>();
         String cleanName = ProductNameCleaner.clean(masterData.path("pageTitle").asText(stub.getName()));
 
@@ -320,8 +374,8 @@ public class MyProteinHrScraper implements StoreScraper {
             }
 
             double grams = parseAmountToGrams(amountTitle);
-            if (grams < MIN_PACKAGE_GRAMS) {
-                log.debug("[{}] '{}' -> skipping {} (< 500g)", STORE_NAME, cleanName, amountTitle);
+            if (grams < minPackageGrams) {
+                log.debug("[{}] '{}' -> skipping {} (< {}g)", STORE_NAME, cleanName, amountTitle, (int) minPackageGrams);
                 continue;
             }
 
@@ -330,7 +384,7 @@ public class MyProteinHrScraper implements StoreScraper {
 
             // Serving count is the natural tier key MyProtein uses ("30Porcija", "90Porcija" etc.).
             // When unparseable (unusual format), fall back to grams as surrogate group key.
-            int servings = parseServingCount(amountTitle);
+            int servings = groupByServings ? parseServingCount(amountTitle) : -1;
             int groupKey = servings >= 0 ? servings : (int) grams;
 
             if (flavourTitle != null && !flavourTitle.isBlank()) {
@@ -394,11 +448,21 @@ public class MyProteinHrScraper implements StoreScraper {
             variant.getPackage_weight().add(weightLabel);
             variant.setPrimaryWeightGrams(maxGrams);
             variant.getFlavours().addAll(flavours);
+            // The title has no weight ("Kreatin Monohidrat"); the creatine parser needs it to derive servings
+            variant.setVariantLabel(weightLabel);
 
             variants.add(variant);
         }
 
         return variants;
+    }
+
+    // Dose, chemistry and form come from the shared description/name, so a size variant inherits what
+    // the AI or the parser found on the first one. Servings and unit count are pack-size specific and stay.
+    private static void copyCreatineFields(Product from, Product to) {
+        if (to.getProductForm() == null) to.setProductForm(from.getProductForm());
+        if (to.getCreatineGramsPerServing() == null) to.setCreatineGramsPerServing(from.getCreatineGramsPerServing());
+        if (to.getCreatineType() == null) to.setCreatineType(from.getCreatineType());
     }
 
     // Parses "30Porcija" or "90 Porcija" from an Amount title; returns -1 if not found.

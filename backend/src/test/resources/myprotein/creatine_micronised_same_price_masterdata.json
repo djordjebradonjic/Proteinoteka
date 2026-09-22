@@ -1,0 +1,58 @@
+{
+ "pageTitle": "Myprotein Micronised Creatine Powder",
+ "brand": "Myprotein",
+ "variants": [
+  {
+   "inStock": true,
+   "sku": 17902346,
+   "choices": [
+    {
+     "optionKey": "Flavour",
+     "title": "Bez Arome"
+    },
+    {
+     "optionKey": "Amount",
+     "title": "500g - 87servings"
+    }
+   ],
+   "price": {
+    "price": {
+     "amount": "4198.0"
+    }
+   },
+   "product": {
+    "images": [
+     {
+      "original": "https://static.thcdn.com/productimg/original/17902344-1725367082262166.jpg"
+     }
+    ]
+   }
+  },
+  {
+   "inStock": true,
+   "sku": 17902347,
+   "choices": [
+    {
+     "optionKey": "Flavour",
+     "title": "Bez Arome"
+    },
+    {
+     "optionKey": "Amount",
+     "title": "250g - 43servings"
+    }
+   ],
+   "price": {
+    "price": {
+     "amount": "4198.0"
+    }
+   },
+   "product": {
+    "images": [
+     {
+      "original": "https://static.thcdn.com/productimg/original/17902344-1725367082262166.jpg"
+     }
+    ]
+   }
+  }
+ ]
+}

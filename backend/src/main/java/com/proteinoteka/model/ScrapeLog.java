@@ -38,6 +38,14 @@ public class ScrapeLog {
     @Column(name = "error_message")
     private String errorMessage;
 
+    // "protein=86,creatine=14" — products saved per product type in this run.
+    @Column(name = "product_type_counts")
+    private String productTypeCounts;
+
+    // Estimated IPRoyal traffic (bytes) of this run; null when the store doesn't use the proxy.
+    @Column(name = "proxy_bytes")
+    private Long proxyBytes;
+
     public ScrapeLog(String storeName) {
         this.storeName = storeName;
         this.startedAt = LocalDateTime.now();

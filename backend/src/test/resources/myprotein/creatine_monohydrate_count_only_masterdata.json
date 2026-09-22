@@ -1,0 +1,50 @@
+{
+ "pageTitle": "Creatine Monohydrate",
+ "brand": "Myprotein",
+ "variants": [
+  {
+   "inStock": true,
+   "sku": 10636923,
+   "choices": [
+    {
+     "optionKey": "Amount",
+     "title": "83servings"
+    }
+   ],
+   "price": {
+    "price": {
+     "amount": "3899.0"
+    }
+   },
+   "product": {
+    "images": [
+     {
+      "original": "https://static.thcdn.com/productimg/original/10575029-1575340175681101.jpg"
+     }
+    ]
+   }
+  },
+  {
+   "inStock": true,
+   "sku": 17748970,
+   "choices": [
+    {
+     "optionKey": "Amount",
+     "title": "90TABLETS, 30servings"
+    }
+   ],
+   "price": {
+    "price": {
+     "amount": "1302.0"
+    }
+   },
+   "product": {
+    "images": [
+     {
+      "original": "https://static.thcdn.com/productimg/original/10575029-1575340175681101.jpg"
+     }
+    ]
+   }
+  }
+ ]
+}

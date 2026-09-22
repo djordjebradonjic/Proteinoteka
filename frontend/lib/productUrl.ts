@@ -60,12 +60,16 @@ export function productUrl(product: {
   name: string;
   proteinSource?: string | null;
   canonicalSlug?: string | null;
+  productType?: string | null;
 }): string {
+  const nameSlug = product.canonicalSlug || slugify(product.name);
+  // Creatine has its own section (/kreatin) and its own product page; everything else with no protein
+  // source keeps living under /suplementi.
+  if (product.productType === "creatine") return `/kreatin/${nameSlug}-${product.id}`;
   const category =
     product.proteinSource && PRODUCT_CATEGORY_SLUGS[product.proteinSource]
       ? PRODUCT_CATEGORY_SLUGS[product.proteinSource]
       : "suplementi";
-  const nameSlug = product.canonicalSlug || slugify(product.name);
   return `/${category}/${nameSlug}-${product.id}`;
 }
 

@@ -125,6 +125,128 @@ class ProductGroupServiceTest {
         assertFalse(ProductGroupService.fitsGroup(hr, g, members));
     }
 
+    // ------------------------------------------------------------------ product families
+
+    static Product creatine(String name, String brand, double grams, String form, String type, Store store) {
+        Product p = product(name, brand, grams, null, store);
+        p.setProductType("creatine");
+        p.setProductForm(form);
+        p.setCreatineType(type);
+        return p;
+    }
+
+    @Test
+    void aCreatineNeverJoinsAProteinGroup() {
+        ProductGroup g = group(1, "MyProtein", 500);
+        List<Product> members = List.of(product("MyProtein Impact 500g", "MyProtein", 500, "whey_concentrate", store(1, "A")));
+        // same brand, size, source and name on purpose: only the family can tell these apart
+        Product listing = product("MyProtein Impact 500g", "MyProtein", 500, "whey_concentrate", store(2, "B"));
+        assertTrue(ProductGroupService.fitsGroup(listing, g, members));
+
+        listing.setProductType("creatine");
+        assertFalse(ProductGroupService.fitsGroup(listing, g, members));
+    }
+
+    @Test
+    void creatineFormAndTypeSeparateOnlyWhenBothAreKnown() {
+        Store a = store(1, "A"), b = store(2, "B");
+        String name = "Applied Nutrition Creatine Monohydrate 250g";
+        ProductGroup g = group(1, "Applied Nutrition", 250);
+        List<Product> powder = List.of(creatine(name, "Applied Nutrition", 250, "powder", "monohydrate", a));
+
+        assertTrue(ProductGroupService.fitsGroup(creatine(name, "Applied Nutrition", 250, "powder", "monohydrate", b), g, powder));
+        assertFalse(ProductGroupService.fitsGroup(creatine(name, "Applied Nutrition", 250, "capsule", "monohydrate", b), g, powder));
+        assertFalse(ProductGroupService.fitsGroup(creatine(name, "Applied Nutrition", 250, "powder", "hcl", b), g, powder));
+        // unknown is not a value: a listing the parser could not classify still groups with the rest
+        assertTrue(ProductGroupService.fitsGroup(creatine(name, "Applied Nutrition", 250, null, null, b), g, powder));
+    }
+
+    // ------------------------------------------------------------------ counted forms (pieces)
+
+    /** A capsule/tablet/gummy listing: no gram weight, the pack is a piece count. */
+    static Product pieces(String name, String brand, String form, Integer units, Store store) {
+        Product p = creatine(name, brand, 0, form, null, store);
+        p.setPrimaryWeightGrams(null);
+        p.setUnitCount(units);
+        return p;
+    }
+
+    @Test
+    void capsulesGroupByExactPieceCountNotByGrams() {
+        ProductGroup g = group(1, "Amix Nutrition", 120);
+        List<Product> members = List.of(pieces("Kre-Alkalyn 120cap - Amix", "Amix Nutrition", "capsule", 120, store(1, "A")));
+
+        assertTrue(ProductGroupService.fitsGroup(
+                pieces("Kre-Alkalyn 120 kapsula AMIX", "Amix Nutrition", "capsule", 120, store(2, "B")), g, members));
+        // 5% tolerance is for gram weights; 110 vs 120 capsules is a different pack
+        assertFalse(ProductGroupService.fitsGroup(
+                pieces("Kre-Alkalyn 110 kapsula AMIX", "Amix Nutrition", "capsule", 110, store(2, "B")), g, members));
+        // 200 vs 210 is within 5% of grams but two different packs of pieces
+        ProductGroup big = group(2, "Amix Nutrition", 200);
+        List<Product> bigMembers = List.of(pieces("Kre-Alkalyn 200cap - Amix", "Amix Nutrition", "capsule", 200, store(1, "A")));
+        assertFalse(ProductGroupService.fitsGroup(
+                pieces("Kre-Alkalyn 210cap - Amix", "Amix Nutrition", "capsule", 210, store(2, "B")), big, bigMembers));
+        // a listing whose count is unknown cannot be placed
+        assertFalse(ProductGroupService.fitsGroup(
+                pieces("Kre-Alkalyn kapsule AMIX", "Amix Nutrition", "capsule", null, store(2, "B")), g, members));
+    }
+
+    @Test
+    void aPieceCountIsNeverComparedWithAGramWeight() {
+        // 120 capsules must not join a 120 g powder group, even when the powder's form was never parsed
+        ProductGroup g = group(1, "Applied Nutrition", 120);
+        List<Product> powder = List.of(creatine("Applied Nutrition Creatine 120g", "Applied Nutrition", 120, null, null, store(1, "A")));
+        Product capsules = pieces("Applied Nutrition Creatine 120 caps", "Applied Nutrition", "capsule", 120, store(2, "B"));
+
+        assertFalse(ProductGroupService.fitsGroup(capsules, g, powder));
+    }
+
+    @Test
+    void autoGenerateBuildsAGroupFromCapsulesWithoutAWeight() {
+        Product a = pieces("Kre-Alkalyn 120cap - Amix", "Amix Nutrition", "capsule", 120, store(1, "A"));
+        Product b = pieces("Kre-alkalyn 120 kapsula AMIX", "Amix Nutrition", "capsule", 120, store(2, "B"));
+        Product c = pieces("Kre-Alkalyn 240cap - Amix", "Amix Nutrition", "capsule", 240, store(3, "C"));
+        when(productRepository.findAll()).thenReturn(List.of(a, b, c));
+        List<ProductGroup> saved = new ArrayList<>();
+        when(productGroupRepository.save(any(ProductGroup.class))).thenAnswer(inv -> {
+            ProductGroup gr = inv.getArgument(0);
+            gr.setId(50L);
+            saved.add(gr);
+            return gr;
+        });
+
+        assertEquals(1, service.autoGenerateGroups().get("groupsCreated"));
+        assertEquals(120.0, saved.get(0).getWeightGrams(), 0.001, "a group's size is in pieces for a counted form");
+        assertEquals(50L, a.getGroupId());
+        assertEquals(50L, b.getGroupId());
+        assertNull(c.getGroupId(), "the 240-capsule pack is a different product size");
+    }
+
+    @Test
+    void autoGenerateBuildsOneGroupFromSameFamilyListings() {
+        Product a = product("MyProtein Impact 500g", "MyProtein", 500, "whey_concentrate", store(1, "A"));
+        Product b = product("MyProtein Impact 500g", "MyProtein", 500, "whey_concentrate", store(2, "B"));
+        when(productRepository.findAll()).thenReturn(List.of(a, b));
+        when(productGroupRepository.save(any(ProductGroup.class))).thenAnswer(inv -> {
+            ProductGroup saved = inv.getArgument(0);
+            saved.setId(99L);
+            return saved;
+        });
+
+        assertEquals(1, service.autoGenerateGroups().get("groupsCreated"));
+    }
+
+    @Test
+    void autoGenerateNeverBuildsAGroupAcrossFamilies() {
+        Product whey = product("MyProtein Impact 500g", "MyProtein", 500, "whey_concentrate", store(1, "A"));
+        Product creatine = product("MyProtein Impact 500g", "MyProtein", 500, "whey_concentrate", store(2, "B"));
+        creatine.setProductType("creatine");
+        when(productRepository.findAll()).thenReturn(List.of(whey, creatine));
+
+        assertEquals(0, service.autoGenerateGroups().get("groupsCreated"));
+        verify(productGroupRepository, never()).save(any(ProductGroup.class));
+    }
+
     // ------------------------------------------------------------------ groupingSource
 
     @Test

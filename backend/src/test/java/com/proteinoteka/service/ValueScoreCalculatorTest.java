@@ -260,17 +260,72 @@ class ValueScoreCalculatorTest {
 
     // ------------------------------------------------------------------ creatine
 
-    @Test
-    void creatineKeepsItsOwnSimplePath() {
+    private static Product creatine(String currency, double grams) {
         Product c = new Product();
         c.setProductType("creatine");
         c.setName("Creatine Monohydrate");
-        c.setCurrency("RSD");
-        c.setPrimaryWeightGrams(500.0);
-        Double score = ValueScoreCalculator.score(1000.0, c, MID_BRAND); // 2 RSD/g
-        assertNotNull(score);
-        assertTrue(score > 5 && score <= 10);
+        c.setCurrency(currency);
+        c.setPrimaryWeightGrams(grams);
+        return c;
+    }
+
+    @Test
+    void creatineIsScoredAgainstTheMeasuredMarketMedianPerGram() {
+        Product c = creatine("RSD", 500.0);
+        // market medians 2026-09-20 (17 stores): RS 7.61 RSD/g, HR 0.0759 EUR/g
+        double atMedian = ValueScoreCalculator.score(3800.0, c, MID_BRAND);     // 7.6 RSD/g
+        double cheap = ValueScoreCalculator.score(2500.0, c, MID_BRAND);        // 5 RSD/g (a bulk tub)
+        double pricey = ValueScoreCalculator.score(5700.0, c, MID_BRAND);       // 11.4 RSD/g
+
+        assertTrue(atMedian > 5 && atMedian < 8, "a median-priced listing is decent, not perfect: " + atMedian);
+        assertTrue(cheap > 8, "a clearly cheaper listing scores high: " + cheap);
+        assertTrue(cheap > atMedian && atMedian > pricey);
+        assertTrue(pricey < atMedian - 2, "50% above the median loses several points: " + pricey + " vs " + atMedian);
+    }
+
+    @Test
+    void eachMarketIsScoredAgainstItsOwnMedian() {
+        // HR is ~17% dearer than RS in RSD terms: 0.076 EUR/g and 7.6 RSD/g are both "the median"
+        double eur = ValueScoreCalculator.score(38.0, creatine("EUR", 500.0), MID_BRAND);
+        double rsd = ValueScoreCalculator.score(3800.0, creatine("RSD", 500.0), MID_BRAND);
+        assertEquals(rsd, eur, 0.01, "the same position against its own market scores the same");
+        assertEquals(7.6, ValueScoreCalculator.creatineBenchmark("RSD"));
+        assertEquals(0.076, ValueScoreCalculator.creatineBenchmark("EUR"));
+    }
+
+    @Test
+    void creatineOutsideAnyBelievablePriceOrWithoutDataIsNotScored() {
+        Product c = creatine("RSD", 500.0);
         assertNull(ValueScoreCalculator.score(null, c, MID_BRAND));
-        assertNull(ValueScoreCalculator.score(10000.0, c, MID_BRAND)); // 20 RSD/g > cap
+        assertNull(ValueScoreCalculator.score(25000.0, c, MID_BRAND), "50 RSD/g is above 4x the median");
+        assertNotNull(ValueScoreCalculator.score(14500.0, c, MID_BRAND), "29 RSD/g is a real (premium GAA blend) listing");
+        assertNull(ValueScoreCalculator.score(5000.0, creatine("RSD", 0.0), MID_BRAND), "no pack weight");
+        assertEquals(ValueScoreCalculator.SkipReason.IMPLAUSIBLE_PRICE,
+                ValueScoreCalculator.evaluate(25000.0, c, MID_BRAND).skipReason());
+    }
+
+    // Real listings, 2026-09-20: GymBeam's own 100% creatine in bulk bags is the cheapest genuine creatine
+    // on both markets (0.31x and 0.26x of the median). Carb mixes cost the same per gram, so the price cannot
+    // reject them — CreatineProfile does, by name — but a price below any real powder is still a data error.
+    @Test
+    void bulkCreatineIsScoredButAPriceBelowAnyRealPowderIsNot() {
+        assertNotNull(ValueScoreCalculator.score(3590.0, creatine("RSD", 1500.0), MID_BRAND), "GymBeam 1.5 kg, 2.39 RSD/g");
+        assertNotNull(ValueScoreCalculator.score(29.05, creatine("EUR", 1500.0), MID_BRAND), "GymBeam HR 1.5 kg, 0.0194 EUR/g");
+        assertNull(ValueScoreCalculator.score(700.0, creatine("RSD", 500.0), MID_BRAND), "1.4 RSD/g is below any real powder");
+        assertNull(ValueScoreCalculator.score(6.0, creatine("EUR", 500.0), MID_BRAND), "0.012 EUR/g is below any real powder");
+    }
+
+    @Test
+    void creatineSoldByThePieceIsNeverScoredEvenWithAGramWeight() {
+        Product gummies = creatine("RSD", 300.0);
+        gummies.setProductForm("gummy");
+        Product capsules = creatine("RSD", 0.0);
+        capsules.setProductForm("capsule");
+
+        assertNull(ValueScoreCalculator.score(2800.0, gummies, MID_BRAND), "a gummy is mostly sugar, not creatine");
+        assertEquals(ValueScoreCalculator.SkipReason.COUNTED_FORM,
+                ValueScoreCalculator.evaluate(2800.0, gummies, MID_BRAND).skipReason());
+        assertEquals(ValueScoreCalculator.SkipReason.COUNTED_FORM,
+                ValueScoreCalculator.evaluate(3400.0, capsules, MID_BRAND).skipReason());
     }
 }

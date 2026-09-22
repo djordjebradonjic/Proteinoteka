@@ -1,0 +1,391 @@
+[
+ {
+  "id": 35807,
+  "parent": 0,
+  "name": "Domaći kreatin 300g",
+  "permalink": "https://proteinbox.rs/p/domaci-kreatin-300g/",
+  "type": "simple",
+  "is_in_stock": true,
+  "prices": {
+   "price": "229000",
+   "regular_price": "229000",
+   "sale_price": "229000",
+   "price_range": null,
+   "currency_code": "RSD",
+   "currency_symbol": "RSD",
+   "currency_minor_unit": 2,
+   "currency_decimal_separator": ",",
+   "currency_thousand_separator": ".",
+   "currency_prefix": "",
+   "currency_suffix": " RSD"
+  },
+  "images": [
+   {
+    "id": 35808,
+    "src": "https://proteinbox.rs/wp-content/uploads/2026/09/Domaci_kreatin_fotografija_bocice.webp",
+    "thumbnail": "https://proteinbox.rs/wp-content/uploads/2026/09/Domaci_kreatin_fotografija_bocice.webp",
+    "srcset": "https://proteinbox.rs/wp-content/uploads/2026/09/Domaci_kreatin_fotografija_bocice.webp 525w, https://proteinbox.rs/wp-content/uploads/2026/09/Domaci_kreatin_fotografija_bocice-300x271.webp 300w, https://proteinbox.rs/wp-content/uploads/2026/09/Domaci_kreatin_fotografija_bocice-64x58.webp 64w",
+    "sizes": "(max-width: 525px) 100vw, 525px",
+    "thumbnail_srcset": "https://proteinbox.rs/wp-content/uploads/2026/09/Domaci_kreatin_fotografija_bocice.webp 525w, https://proteinbox.rs/wp-content/uploads/2026/09/Domaci_kreatin_fotografija_bocice-300x271.webp 300w, https://proteinbox.rs/wp-content/uploads/2026/09/Domaci_kreatin_fotografija_bocice-64x58.webp 64w",
+    "thumbnail_sizes": "(max-width: 525px) 100vw, 525px",
+    "name": "Domaci_kreatin_fotografija_bocice",
+    "alt": ""
+   }
+  ],
+  "brands": [],
+  "attributes": [],
+  "variations": [],
+  "variation": "",
+  "description": "<p>&nbsp;</p>\n<p>&nbsp;</p>",
+  "short_description": ""
+ },
+ {
+  "id": 33103,
+  "parent": 0,
+  "name": "CreGAAtine, 60 kesica",
+  "permalink": "https://proteinbox.rs/p/cregaatine/",
+  "type": "variable",
+  "is_in_stock": true,
+  "prices": {
+   "price": "299000",
+   "regular_price": "299000",
+   "sale_price": "299000",
+   "price_range": null,
+   "currency_code": "RSD",
+   "currency_symbol": "RSD",
+   "currency_minor_unit": 2,
+   "currency_decimal_separator": ",",
+   "currency_thousand_separator": ".",
+   "currency_prefix": "",
+   "currency_suffix": " RSD"
+  },
+  "images": [
+   {
+    "id": 33109,
+    "src": "https://proteinbox.rs/wp-content/uploads/2026/05/CreGAAtine-original-horizontalno-bez-kesica.png",
+    "thumbnail": "https://proteinbox.rs/wp-content/uploads/2026/05/CreGAAtine-original-horizontalno-bez-kesica-600x600.png",
+    "srcset": "https://proteinbox.rs/wp-content/uploads/2026/05/CreGAAtine-original-horizontalno-bez-kesica.png 1000w, https://proteinbox.rs/wp-content/uploads/2026/05/CreGAAtine-original-horizontalno-bez-kesica-300x300.png 300w, https://proteinbox.rs/wp-content/uploads/2026/05/CreGAAtine-original-horizontalno-bez-kesica-150x150.png 150w, https://proteinbox.rs/wp-content/uploads/2026/05/CreGAAtine-original-horizontalno-bez-kesica-768x768.png 768w, https://proteinbox.rs/wp-content/uploads/2026/05/CreGAAtine-original-horizontalno-bez-kesica-600x600.png 600w, https://proteinbox.rs/wp-content/uploads/2026/05/CreGAAtine-original-horizontalno-bez-kesica-100x100.png 100w, https://proteinbox.rs/wp-content/uploads/2026/05/CreGAAtine-original-horizontalno-bez-kesica-50x50.png 50w, https://proteinbox.rs/wp-content/uploads/2026/05/CreGAAtine-original-horizontalno-bez-kesica-64x64.png 64w",
+    "sizes": "(max-width: 1000px) 100vw, 1000px",
+    "thumbnail_srcset": "https://proteinbox.rs/wp-content/uploads/2026/05/CreGAAtine-original-horizontalno-bez-kesica-600x600.png 600w, https://proteinbox.rs/wp-content/uploads/2026/05/CreGAAtine-original-horizontalno-bez-kesica-300x300.png 300w, https://proteinbox.rs/wp-content/uploads/2026/05/CreGAAtine-original-horizontalno-bez-kesica-150x150.png 150w, https://proteinbox.rs/wp-content/uploads/2026/05/CreGAAtine-original-horizontalno-bez-kesica-768x768.png 768w, https://proteinbox.rs/wp-content/uploads/2026/05/CreGAAtine-original-horizontalno-bez-kesica-100x100.png 100w, https://proteinbox.rs/wp-content/uploads/2026/05/CreGAAtine-original-horizontalno-bez-kesica-50x50.png 50w, https://proteinbox.rs/wp-content/uploads/2026/05/CreGAAtine-original-horizontalno-bez-kesica-64x64.png 64w, https://proteinbox.rs/wp-content/uploads/2026/05/CreGAAtine-original-horizontalno-bez-kesica.png 1000w",
+    "thumbnail_sizes": "(max-width: 600px) 100vw, 600px",
+    "name": "CreGAAtine-original-horizontalno-bez-kesica",
+    "alt": ""
+   }
+  ],
+  "brands": [],
+  "attributes": [
+   {
+    "id": 1,
+    "name": "Ukus",
+    "taxonomy": "pa_ukus",
+    "has_variations": true,
+    "terms": [
+     {
+      "id": 85,
+      "name": "Narandža",
+      "slug": "narandza"
+     },
+     {
+      "id": 452,
+      "name": "Standard",
+      "slug": "standard"
+     }
+    ]
+   }
+  ],
+  "variations": [
+   {
+    "id": 33104,
+    "attributes": [
+     {
+      "name": "Ukus",
+      "value": "narandza"
+     }
+    ]
+   },
+   {
+    "id": 33105,
+    "attributes": [
+     {
+      "name": "Ukus",
+      "value": "standard"
+     }
+    ]
+   }
+  ],
+  "variation": "",
+  "description": "<h2>CreGAAtine (60 kesica) – Nova Generacija Suplementacije za Snagu i Fokus</h2>\n<p>Da li vam je dosta klasičnog kreatina koji vas naduje, zadržava vodu pod kožom i gubi efikasnost čim kutija povuče malo vlage iz vazduha? Vreme je za napredniji korak u fitnes rutini.</p>\n<p><strong>CreGAAtine</strong> predstavlja tehnološki i sportski napredak u svetu suplemenata. Ova jedinstvena formula kombinuje čisti kreatin-monohidrat sa njegovim direktnim organskim partnerom – <strong>GAA (guanidinosirćetnom kiselinom)</strong>. Ova sinergija omogućava vašem telu izuzetnu iskoristljivost i vrhunsku podršku za energiju, eksplozivnost i izdržljivost, bez mana koje prate tradicionalne kreatinske praškove.",
+  "short_description": "<ul>\n<li><strong>CreGAAtine</strong> je napredna formula kreatin monohidrata i GAA za podršku energiji, snazi i mentalnom fokusu.</li>\n<li>Svaka kesica sadrži <strong>1 g kreatin monohidrata</strong> i <strong>1 g GAA</strong> — guanidinosirćetne kiseline.</li>\n<li>Praktično pakovanje od <strong>60 kesica</strong> dovoljno je za mesec dana korišćenja.</li>\n<li>Preporučena upotreba: <strong>2 kesice dnevno</strong>, po jedna kesica dva puta dnevno uz obrok.</li>\n<li>Idealan izbor za sportiste, rekreativce i sve koji žele bolju podršku tokom treninga i aktivnog dana.</li>\n<li>Sertifikovano <strong>Informed Sport</strong> i <strong>WADA</strong>, bez zabranjenih supstanci.</li>\n</ul>"
+ },
+ {
+  "id": 12017,
+  "parent": 0,
+  "name": "Creatine Monohydrate Basic &#8211; Nutriversum / 60 i 100 porcija",
+  "permalink": "https://proteinbox.rs/p/creatine-monohydrate-basic/",
+  "type": "variable",
+  "is_in_stock": true,
+  "prices": {
+   "price": "240000",
+   "regular_price": "240000",
+   "sale_price": "240000",
+   "price_range": {
+    "min_amount": "240000",
+    "max_amount": "320000"
+   },
+   "currency_code": "RSD",
+   "currency_symbol": "RSD",
+   "currency_minor_unit": 2,
+   "currency_decimal_separator": ",",
+   "currency_thousand_separator": ".",
+   "currency_prefix": "",
+   "currency_suffix": " RSD"
+  },
+  "images": [
+   {
+    "id": 12110,
+    "src": "https://proteinbox.rs/wp-content/uploads/2023/11/Nutrivision-Creatine-Monohydrate-Basic-300g.jpg",
+    "thumbnail": "https://proteinbox.rs/wp-content/uploads/2023/11/Nutrivision-Creatine-Monohydrate-Basic-300g.jpg",
+    "srcset": "https://proteinbox.rs/wp-content/uploads/2023/11/Nutrivision-Creatine-Monohydrate-Basic-300g.jpg 600w, https://proteinbox.rs/wp-content/uploads/2023/11/Nutrivision-Creatine-Monohydrate-Basic-300g-100x100.jpg 100w, https://proteinbox.rs/wp-content/uploads/2023/11/Nutrivision-Creatine-Monohydrate-Basic-300g-64x64.jpg 64w, https://proteinbox.rs/wp-content/uploads/2023/11/Nutrivision-Creatine-Monohydrate-Basic-300g-300x300.jpg 300w, https://proteinbox.rs/wp-content/uploads/2023/11/Nutrivision-Creatine-Monohydrate-Basic-300g-150x150.jpg 150w, https://proteinbox.rs/wp-content/uploads/2023/11/Nutrivision-Creatine-Monohydrate-Basic-300g-50x50.jpg 50w",
+    "sizes": "(max-width: 600px) 100vw, 600px",
+    "thumbnail_srcset": "https://proteinbox.rs/wp-content/uploads/2023/11/Nutrivision-Creatine-Monohydrate-Basic-300g.jpg 600w, https://proteinbox.rs/wp-content/uploads/2023/11/Nutrivision-Creatine-Monohydrate-Basic-300g-100x100.jpg 100w, https://proteinbox.rs/wp-content/uploads/2023/11/Nutrivision-Creatine-Monohydrate-Basic-300g-64x64.jpg 64w, https://proteinbox.rs/wp-content/uploads/2023/11/Nutrivision-Creatine-Monohydrate-Basic-300g-300x300.jpg 300w, https://proteinbox.rs/wp-content/uploads/2023/11/Nutrivision-Creatine-Monohydrate-Basic-300g-150x150.jpg 150w, https://proteinbox.rs/wp-content/uploads/2023/11/Nutrivision-Creatine-Monohydrate-Basic-300g-50x50.jpg 50w",
+    "thumbnail_sizes": "(max-width: 600px) 100vw, 600px",
+    "name": "Nutrivision Creatine Monohydrate Basic &#8211; 300g",
+    "alt": "Nutrivision Creatine Monohydrate Basic - 300g"
+   }
+  ],
+  "brands": [],
+  "attributes": [
+   {
+    "id": 2,
+    "name": "Pakovanje",
+    "taxonomy": "pa_pakovanje",
+    "has_variations": true,
+    "terms": [
+     {
+      "id": 86,
+      "name": "300g",
+      "slug": "300g"
+     },
+     {
+      "id": 164,
+      "name": "500g",
+      "slug": "500g"
+     }
+    ]
+   },
+   {
+    "id": 4,
+    "name": "Cilj",
+    "taxonomy": "pa_cilj",
+    "has_variations": false,
+    "terms": [
+     {
+      "id": 436,
+      "name": "Izgradnja mišićne mase",
+      "slug": "izgradnja-misicne-mase"
+     },
+     {
+      "id": 440,
+      "name": "Poboljšanje performansi",
+      "slug": "poboljsanje-performansi"
+     }
+    ]
+   }
+  ],
+  "variations": [
+   {
+    "id": 12108,
+    "attributes": [
+     {
+      "name": "Pakovanje",
+      "value": "300g"
+     }
+    ]
+   },
+   {
+    "id": 12109,
+    "attributes": [
+     {
+      "name": "Pakovanje",
+      "value": "500g"
+     }
+    ]
+   }
+  ],
+  "variation": "",
+  "description": "<h2>Informacije o proizvodu</h2>\n<p>Creatine Monohydrate Basic brenda Nutriversum je 100% čist mikronizovani kreatin monohidrat, bez ukusa. Dostupan je u pakovanjima od 300 g i 500 g, sa dozom od 5 g po porciji, što odgovara 60, odnosno 100 porcija po pakovanju. Formula je vegan, bez šećera i bez glutena.</p>\n<h3>Kako se koristi</h3>\n<p>Sa fazom punjenja: 10 do 14 dana uzimati dnevnu dozu jednaku trećini telesne težine u gramima, ravnomerno raspoređenu tokom dana, uz dozu pre i posle treninga na dane vežbanja, odnosno pre obroka sa ugljenim hidratima na dane odmora. Od 15. dana dozu prepoloviti i nastaviti 40 do 60 dana, nakon čega sledi pauza od najmanje 2 meseca. Bez faze punjenja: uzeti 5",
+  "short_description": "<ul>\n<li>100% čist mikronizovani kreatin monohidrat, bez ukusa.</li>\n<li>Dostupan u pakovanjima od 300 g (60 porcija) i 500 g (100 porcija).</li>\n<li>Jedna doza (5 g) sadrži 5 g kreatin monohidrata.</li>\n<li>Vegan formula, bez šećera i bez glutena.</li>\n<li>Lako se rastvara u vodi ili post-trening napitku.</li>\n</ul>"
+ },
+ {
+  "id": 15954,
+  "parent": 0,
+  "name": "Creatine Germany (Creapure®) &#8211; Extrifit / 60 porcija",
+  "permalink": "https://proteinbox.rs/p/creatine-germany-creapure-300g/",
+  "type": "simple",
+  "is_in_stock": false,
+  "prices": {
+   "price": "325000",
+   "regular_price": "325000",
+   "sale_price": "325000",
+   "price_range": null,
+   "currency_code": "RSD",
+   "currency_symbol": "RSD",
+   "currency_minor_unit": 2,
+   "currency_decimal_separator": ",",
+   "currency_thousand_separator": ".",
+   "currency_prefix": "",
+   "currency_suffix": " RSD"
+  },
+  "images": [
+   {
+    "id": 15955,
+    "src": "https://proteinbox.rs/wp-content/uploads/2024/06/EXT-24-2-540x540-1.jpg",
+    "thumbnail": "https://proteinbox.rs/wp-content/uploads/2024/06/EXT-24-2-540x540-1.jpg",
+    "srcset": "https://proteinbox.rs/wp-content/uploads/2024/06/EXT-24-2-540x540-1.jpg 540w, https://proteinbox.rs/wp-content/uploads/2024/06/EXT-24-2-540x540-1-100x100.jpg 100w, https://proteinbox.rs/wp-content/uploads/2024/06/EXT-24-2-540x540-1-64x64.jpg 64w, https://proteinbox.rs/wp-content/uploads/2024/06/EXT-24-2-540x540-1-300x300.jpg 300w, https://proteinbox.rs/wp-content/uploads/2024/06/EXT-24-2-540x540-1-150x150.jpg 150w, https://proteinbox.rs/wp-content/uploads/2024/06/EXT-24-2-540x540-1-50x50.jpg 50w",
+    "sizes": "(max-width: 540px) 100vw, 540px",
+    "thumbnail_srcset": "https://proteinbox.rs/wp-content/uploads/2024/06/EXT-24-2-540x540-1.jpg 540w, https://proteinbox.rs/wp-content/uploads/2024/06/EXT-24-2-540x540-1-100x100.jpg 100w, https://proteinbox.rs/wp-content/uploads/2024/06/EXT-24-2-540x540-1-64x64.jpg 64w, https://proteinbox.rs/wp-content/uploads/2024/06/EXT-24-2-540x540-1-300x300.jpg 300w, https://proteinbox.rs/wp-content/uploads/2024/06/EXT-24-2-540x540-1-150x150.jpg 150w, https://proteinbox.rs/wp-content/uploads/2024/06/EXT-24-2-540x540-1-50x50.jpg 50w",
+    "thumbnail_sizes": "(max-width: 540px) 100vw, 540px",
+    "name": "EXT-24-2-540&#215;540",
+    "alt": ""
+   }
+  ],
+  "brands": [],
+  "attributes": [
+   {
+    "id": 4,
+    "name": "Cilj",
+    "taxonomy": "pa_cilj",
+    "has_variations": false,
+    "terms": [
+     {
+      "id": 436,
+      "name": "Izgradnja mišićne mase",
+      "slug": "izgradnja-misicne-mase"
+     },
+     {
+      "id": 440,
+      "name": "Poboljšanje performansi",
+      "slug": "poboljsanje-performansi"
+     }
+    ]
+   }
+  ],
+  "variations": [],
+  "variation": "",
+  "description": "<h2>Informacije o proizvodu</h2>\n<p>Creatine Germany (Creapure®) brenda Extrifit je 100% čist kreatin monohidrat sa Creapure® sertifikatom, poreklom iz EU. Pakovanje od 300 g sadrži 60 porcija, pri čemu jedna porcija, odnosno jedna merica, iznosi 5 g, tačnije 5.000 mg kreatina. Formula je bez glutena i laktoze, namenjena sportistima orijentisanim na snagu i brzinu.</p>\n<h3>Kako se koristi</h3>\n<p>Prvih pet dana preporučuje se doza od 15 do 20 g dnevno, a zatim se prelazi na dozu održavanja od 5 g (1 merica) dnevno, za telesnu težinu od 60 do 80 kg. Prah je potrebno temeljno rastvoriti u tečnosti — vodi, soku ili napitku posle treninga.</p>\n<h3>Napomena</h3>\n<p>Proizvod čuvati na suvom mestu ",
+  "short_description": "<ul>\n<li>100% čist kreatin monohidrat sertifikovan kao Creapure®, poreklom iz EU.</li>\n<li>Pakovanje od 300 g obezbeđuje 60 porcija po zvaničnoj dozi.</li>\n<li>Veličina porcije 5 g (1 merica) jednaka je 5.000 mg kreatina.</li>\n<li>Formula je bez glutena i laktoze.</li>\n<li>Lako se rastvara u vodi, soku ili napitku posle treninga.</li>\n</ul>"
+ },
+ {
+  "id": 19400,
+  "parent": 0,
+  "name": "Kre-Alkalyn OneRaw® &#8211; Zoomad Labs, 75 porcija",
+  "permalink": "https://proteinbox.rs/p/oneraw-kre-alkalyn-creatine-225-g/",
+  "type": "simple",
+  "is_in_stock": true,
+  "prices": {
+   "price": "599000",
+   "regular_price": "599000",
+   "sale_price": "599000",
+   "price_range": null,
+   "currency_code": "RSD",
+   "currency_symbol": "RSD",
+   "currency_minor_unit": 2,
+   "currency_decimal_separator": ",",
+   "currency_thousand_separator": ".",
+   "currency_prefix": "",
+   "currency_suffix": " RSD"
+  },
+  "images": [
+   {
+    "id": 19401,
+    "src": "https://proteinbox.rs/wp-content/uploads/2024/11/65006.jpg",
+    "thumbnail": "https://proteinbox.rs/wp-content/uploads/2024/11/65006.jpg",
+    "srcset": "https://proteinbox.rs/wp-content/uploads/2024/11/65006.jpg 390w, https://proteinbox.rs/wp-content/uploads/2024/11/65006-262x300.jpg 262w, https://proteinbox.rs/wp-content/uploads/2024/11/65006-64x73.jpg 64w",
+    "sizes": "(max-width: 390px) 100vw, 390px",
+    "thumbnail_srcset": "https://proteinbox.rs/wp-content/uploads/2024/11/65006.jpg 390w, https://proteinbox.rs/wp-content/uploads/2024/11/65006-262x300.jpg 262w, https://proteinbox.rs/wp-content/uploads/2024/11/65006-64x73.jpg 64w",
+    "thumbnail_sizes": "(max-width: 390px) 100vw, 390px",
+    "name": "OneRaw® Kre-Alkalyn® Creatine &#8211; 225 g",
+    "alt": "Kre-Alkalyn OneRaw® 225g"
+   }
+  ],
+  "brands": [],
+  "attributes": [
+   {
+    "id": 4,
+    "name": "Cilj",
+    "taxonomy": "pa_cilj",
+    "has_variations": false,
+    "terms": [
+     {
+      "id": 436,
+      "name": "Izgradnja mišićne mase",
+      "slug": "izgradnja-misicne-mase"
+     },
+     {
+      "id": 440,
+      "name": "Poboljšanje performansi",
+      "slug": "poboljsanje-performansi"
+     }
+    ]
+   }
+  ],
+  "variations": [],
+  "variation": "",
+  "description": "<h2>Informacije o proizvodu</h2>\n<p>OneRaw Kre-Alkalyn Creatine predstavlja dodatak ishrani u prahu koji koristi patentirani baferovani kreatin monohidrat sa kiselinsko-baznim pH nivoom iznad 12. Pakovanje od 225 g sadrži ukupno 75 porcija od po 3 g. Svaka porcija donosi 3000 mg čistog Kre-Alkalyn® kreatina. Zahvaljujući specifičnom pH stabilizatoru, formula pruža stabilnu strukturu praha neutralnog ukusa, bez dodatih aroma, veštačkih boja i punilaca.</p>\n<h3>Kako se koristi</h3>\n<p>Pomešati jednu mericu (3 g) sa 200–250 ml vode ili omiljenog napitka. U danima treninga uzimati jednu porciju 30 minuta pre treninga ili neposredno nakon fizičke aktivnosti. U danima odmora konzumirati jednu porc",
+  "short_description": "<ul>\n<li>Patentirani Kre-Alkalyn® baferovani kreatin monohidrat u prahu.</li>\n<li>Visoka pH vrednost (pH 12+) stabilizuje formulu pre apsorpcije.</li>\n<li>Sadrži 3000 mg čistog Kre-Alkalyn® kreatina po jednoj porciji.</li>\n<li>Pakovanje od 225 g obezbeđuje ukupno 75 pojedinačnih porcija.</li>\n<li>Formula bez dodatih aroma, veštačkih boja i konzervansa.</li>\n<li>Lako se meša sa vodom, sokom ili proteinskim šejkom.</li>\n</ul>"
+ },
+ {
+  "id": 1070,
+  "parent": 0,
+  "name": "Beta-K &#8211; Ultimate Nutrition, 50 porcija (200 kapsula)",
+  "permalink": "https://proteinbox.rs/p/ultimate-nutrition-beta-k-200kap/",
+  "type": "simple",
+  "is_in_stock": true,
+  "prices": {
+   "price": "499000",
+   "regular_price": "499000",
+   "sale_price": "499000",
+   "price_range": null,
+   "currency_code": "RSD",
+   "currency_symbol": "RSD",
+   "currency_minor_unit": 2,
+   "currency_decimal_separator": ",",
+   "currency_thousand_separator": ".",
+   "currency_prefix": "",
+   "currency_suffix": " RSD"
+  },
+  "images": [
+   {
+    "id": 2580,
+    "src": "https://proteinbox.rs/wp-content/uploads/2023/03/betak.jpg",
+    "thumbnail": "https://proteinbox.rs/wp-content/uploads/2023/03/betak-600x600.jpg",
+    "srcset": "https://proteinbox.rs/wp-content/uploads/2023/03/betak.jpg 600w, https://proteinbox.rs/wp-content/uploads/2023/03/betak-100x100.jpg 100w, https://proteinbox.rs/wp-content/uploads/2023/03/betak-64x64.jpg 64w, https://proteinbox.rs/wp-content/uploads/2023/03/betak-300x300.jpg 300w, https://proteinbox.rs/wp-content/uploads/2023/03/betak-150x150.jpg 150w, https://proteinbox.rs/wp-content/uploads/2023/03/betak-50x50.jpg 50w",
+    "sizes": "(max-width: 600px) 100vw, 600px",
+    "thumbnail_srcset": "https://proteinbox.rs/wp-content/uploads/2023/03/betak.jpg 600w, https://proteinbox.rs/wp-content/uploads/2023/03/betak-100x100.jpg 100w, https://proteinbox.rs/wp-content/uploads/2023/03/betak-64x64.jpg 64w, https://proteinbox.rs/wp-content/uploads/2023/03/betak-300x300.jpg 300w, https://proteinbox.rs/wp-content/uploads/2023/03/betak-150x150.jpg 150w, https://proteinbox.rs/wp-content/uploads/2023/03/betak-50x50.jpg 50w",
+    "thumbnail_sizes": "(max-width: 600px) 100vw, 600px",
+    "name": "betak",
+    "alt": ""
+   }
+  ],
+  "brands": [],
+  "attributes": [
+   {
+    "id": 4,
+    "name": "Cilj",
+    "taxonomy": "pa_cilj",
+    "has_variations": false,
+    "terms": [
+     {
+      "id": 440,
+      "name": "Poboljšanje performansi",
+      "slug": "poboljsanje-performansi"
+     }
+    ]
+   }
+  ],
+  "variations": [],
+  "variation": "",
+  "description": "<h2>Informacije o proizvodu</h2>\n<p>Ultimate Nutrition Beta-K predstavlja sinergetski pre-workout dodatak ishrani u kapsulama. Pakovanje od 200 kapsula obezbeđuje ukupno 50 pojedinačnih porcija. Zvanična veličina jedne porcije iznosi 4 kapsule, koje zajedno isporučuju 1500 mg beta-alanina i 1500 mg kreatin monohidrata. Ova formulacija omogućava jednostavan unos dve ključne aktivne komponente u tačno definisanom odnosu, bez potrebe za razmutivanjem i merenjem praha.</p>\n<h3>Kako se koristi</h3>\n<p>Uzimati jednu porciju (4 kapsule) sa punom čašom vode. U danima treninga uzimati jednu porciju 30 minuta pre treninga. Po potrebi ili po preporuci stručnog lica, može se uzimati jedna porcija (4 kap",
+  "short_description": "<ul>\n<li>Sinergetska kombinacija kreatin monohidrata i beta-alanina.</li>\n<li>Sadrži 1500 mg kreatina i 1500 mg beta-alanina po porciji.</li>\n<li>Zvanična veličina jedne porcije iznosi 4 kapsule.</li>\n<li>Pakovanje od 200 kapsula obezbeđuje ukupno 50 porcija.</li>\n<li>Praktičan oblik kapsula omogućava jednostavno doziranje.</li>\n<li>Bez seckanja i merenja praha pre ili posle treninga.</li>\n</ul>"
+ }
+]

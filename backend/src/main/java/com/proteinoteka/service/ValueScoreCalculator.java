@@ -2,6 +2,7 @@ package com.proteinoteka.service;
 
 import com.proteinoteka.dto.ValueScoreBreakdown;
 import com.proteinoteka.model.Product;
+import com.proteinoteka.service.producttype.ProductForm;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -66,7 +67,13 @@ public final class ValueScoreCalculator {
         /** Price per gram of protein is outside any believable range for the category. */
         IMPLAUSIBLE_PRICE,
         /** Weight in the product name contradicts the stored weight, so price per gram is unreliable. */
-        CONFLICTING_WEIGHT
+        CONFLICTING_WEIGHT,
+        /**
+         * Creatine sold by the piece (capsules, tablets, gummies): what a pack costs per gram of creatine
+         * needs servings x dose, which the stores rarely state, and a per-gram-of-pack price says nothing
+         * about it (a gummy is mostly sugar). Unscored rather than guessed.
+         */
+        COUNTED_FORM
     }
 
     public enum BeefContent { NONE, INGREDIENT, PRIMARY }
@@ -423,17 +430,45 @@ public final class ValueScoreCalculator {
 
     // Creatine monohydrate is a near-commodity ingredient (no digestibility/purity spread like
     // whey sources have), so unlike the protein formula this is just a single price-per-gram-of-
-    // product score. Benchmarks are a rough starting estimate (~2 RSD / ~0.02 EUR per gram).
+    // product score.
+    //
+    // The benchmark is the market median price per gram of pack for powders, measured 2026-09-20 from the
+    // live listings of 17 stores (every store that carries creatine, 490 listings): RS 7.61 RSD/g (248
+    // powders with a weight, 11 stores; quartiles 6.38-8.97), HR 0.0759 EUR/g (96, 6 stores; quartiles
+    // 0.060-0.094). HR runs ~17% dearer than RS in RSD terms, so each market has its own. The first
+    // estimate (2 RSD/g) was five times too low; the second (10 RSD/g, 2 stores per market) was 30% too high.
+    // Re-derive it with the audit's BENCHMARK_DRIFT report when the market moves, then run recalculate-scores.
+    private static final double CREATINE_BENCHMARK_RSD_PER_G = 7.6;
+    private static final double CREATINE_BENCHMARK_EUR_PER_G = 0.076;
+    // Above this a listing is a data error or not creatine at all (highest real one: a 29 RSD/g GAA blend,
+    // 3.8x the median).
+    private static final double CREATINE_MAX_TO_BENCHMARK = 4.0;
+    // Below this the price or weight is wrong. Real bulk creatine goes down to 0.31x (GymBeam's own 1-1.5 kg
+    // bags, 2.4 RSD/g); the carbohydrate mixes that used to sit below 0.35x cost the same per gram as those
+    // bags, so they are rejected by name in CreatineProfile and the price no longer has to catch them.
+    private static final double CREATINE_MIN_TO_BENCHMARK = 0.2;
+
+    /** The per-gram price of a creatine powder (pack grams) that scores 1.0 against the market, in {@code currency}. */
+    public static double creatineBenchmark(String currency) {
+        return "EUR".equals(currency) ? CREATINE_BENCHMARK_EUR_PER_G : CREATINE_BENCHMARK_RSD_PER_G;
+    }
+
     private static Evaluation evaluateCreatine(Double numericPrice, Product p, double brandScore) {
         if (numericPrice == null || numericPrice <= 0) return skip(SkipReason.MISSING_DATA);
+        if (ProductForm.isCountedCode(p.getProductForm())) {
+            return skip(SkipReason.COUNTED_FORM);
+        }
         double packageGrams = extractPackageGrams(p);
         if (packageGrams <= 0) return skip(SkipReason.MISSING_DATA);
 
         double pricePerGram = numericPrice / packageGrams;
-        double maxPricePerGram = "EUR".equals(p.getCurrency()) ? 0.08 : 8.0;
-        if (pricePerGram > maxPricePerGram) return skip(SkipReason.IMPLAUSIBLE_PRICE);
+        double marketBenchmark = creatineBenchmark(p.getCurrency());
+        if (pricePerGram > marketBenchmark * CREATINE_MAX_TO_BENCHMARK
+                || pricePerGram < marketBenchmark * CREATINE_MIN_TO_BENCHMARK) {
+            return skip(SkipReason.IMPLAUSIBLE_PRICE);
+        }
 
-        double benchmark = "EUR".equals(p.getCurrency()) ? 0.02 : 2.0;
+        double benchmark = marketBenchmark;
         if (brandScore >= 8.0)      benchmark *= 1.25;
         else if (brandScore >= 7.0) benchmark *= 1.12;
 

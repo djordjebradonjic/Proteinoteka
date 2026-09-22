@@ -1,0 +1,639 @@
+[
+  {
+    "id": 21369,
+    "name": "Animal Creatine",
+    "slug": "animal-kreatin-500g-prah",
+    "parent": 0,
+    "type": "variable",
+    "variation": "",
+    "permalink": "https://www.proteini-outlet.com/proizvod/animal-kreatin-500g-prah/",
+    "sku": "",
+    "short_description": "<p><strong>ANIMAL CREATINE (MICRONIZED CREATINE MONOHYDRATE)</strong><br />\nANIMAL CREATINE je dodatak prehrani u prahu na bazi 100% mikroniziranog kreatin monohidrata. Svaka porcija sadrži čisti kreatin monohidrat, bez dodanih aroma, što omogućuje jednostavno kombiniranje s vodom, sokom ili drugim napitkom po izboru.</p>",
+    "description": "<h3 class=\"PDq2pG_selectionAnchorContainer\" data-section-id=\"16d4xhv\" data-start=\"619\" data-end=\"672\">ANIMAL CREATINE (MICRONIZED CREATINE MONOHYDRATE)</h3>\n<ul data-start=\"674\" data-end=\"967\">\n<li data-section-id=\"1t5sv7l\" data-start=\"674\" data-end=\"713\">100% mikronizirani kreatin monohidrat</li>\n<li data-section-id=\"1t5sv7l\" data-start=\"674\" data-end=\"713\">dodatak taurina</li>\n<li data-section-id=\"1ud5hlb\" data-start=\"714\" data-end=\"750\">povećava tjelesne mogućnosti u uzastopnim kratkotrajnim ",
+    "on_sale": false,
+    "prices": {
+      "price": "4500",
+      "regular_price": "4500",
+      "sale_price": "4500",
+      "price_range": null,
+      "currency_code": "EUR",
+      "currency_symbol": "€",
+      "currency_minor_unit": 2,
+      "currency_decimal_separator": ",",
+      "currency_thousand_separator": ".",
+      "currency_prefix": "",
+      "currency_suffix": " €"
+    },
+    "images": [
+      {
+        "id": 21371,
+        "src": "https://www.proteini-outlet.com/wp-content/uploads/2026/08/animal-creatin-500g-prah-proteini-outlet-1.jpg",
+        "thumbnail": "https://www.proteini-outlet.com/wp-content/uploads/2026/08/animal-creatin-500g-prah-proteini-outlet-1-600x600.jpg",
+        "srcset": "https://www.proteini-outlet.com/wp-content/uploads/2026/08/animal-creatin-500g-prah-proteini-outlet-1.jpg 800w, https://www.proteini-outlet.com/wp-content/uploads/2026/08/animal-creatin-500g-prah-proteini-outlet-1-300x300.jpg 300w, https://www.proteini-outlet.com/wp-content/uploads/2026/08/animal-creatin-500g-prah-proteini-outlet-1-150x150.jpg 150w, https://www.proteini-outlet.com/wp-content/uploads/2026/08/animal-creatin-500g-prah-proteini-outlet-1-768x768.jpg 768w, https://www.proteini-outlet.com/wp-content/uploads/2026/08/animal-creatin-500g-prah-proteini-outlet-1-600x600.jpg 600w, https://www.proteini-outlet.com/wp-content/uploads/2026/08/animal-creatin-500g-prah-proteini-outlet-1-100x100.jpg 100w, https://www.proteini-outlet.com/wp-content/uploads/2026/08/animal-creatin-500g-prah-proteini-outlet-1-200x200.jpg 200w",
+        "sizes": "(max-width: 800px) 100vw, 800px",
+        "name": "animal-creatin-500g-prah-proteini-outlet",
+        "alt": "animal kreatin 500g prah"
+      }
+    ],
+    "categories": [
+      {
+        "id": 79,
+        "name": "Kreatin",
+        "slug": "kreatin",
+        "link": "https://www.proteini-outlet.com/shop/prasci-gelovi-tekucine/kreatin/"
+      },
+      {
+        "id": 276,
+        "name": "Novi proizvodi",
+        "slug": "novi-proizvodi",
+        "link": "https://www.proteini-outlet.com/shop/novi-proizvodi/"
+      },
+      {
+        "id": 73,
+        "name": "Prašci, gelovi, tekućine",
+        "slug": "prasci-gelovi-tekucine",
+        "link": "https://www.proteini-outlet.com/shop/prasci-gelovi-tekucine/"
+      },
+      {
+        "id": 253,
+        "name": "Super ponuda",
+        "slug": "super-ponuda",
+        "link": "https://www.proteini-outlet.com/shop/super-ponuda/"
+      }
+    ],
+    "brands": [],
+    "attributes": [
+      {
+        "id": 1,
+        "name": "Brandovi",
+        "taxonomy": "pa_brandovi",
+        "has_variations": false,
+        "terms": [
+          {
+            "id": 470,
+            "name": "Universal-Animal",
+            "slug": "universal-animal"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "name": "Okus",
+        "taxonomy": "pa_okus",
+        "has_variations": true,
+        "terms": [
+          {
+            "id": 52,
+            "name": "Bez okusa",
+            "slug": "bez-okusa"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "name": "Pakiranje",
+        "taxonomy": "pa_pakiranje",
+        "has_variations": false,
+        "terms": [
+          {
+            "id": 117,
+            "name": "500g",
+            "slug": "500g"
+          }
+        ]
+      }
+    ],
+    "variations": [
+      {
+        "id": 21370,
+        "attributes": [
+          {
+            "name": "Okus",
+            "value": "bez-okusa"
+          }
+        ]
+      }
+    ],
+    "grouped_products": [],
+    "has_options": true,
+    "is_purchasable": true,
+    "is_in_stock": true,
+    "is_on_backorder": false,
+    "low_stock_remaining": null,
+    "stock_availability": {
+      "text": "",
+      "class": "in-stock"
+    },
+    "sold_individually": false
+  },
+  {
+    "id": 17651,
+    "name": "CreaVolution® (kreatin monohidrat)",
+    "slug": "creavolution-kreatin-monohidrat",
+    "parent": 0,
+    "type": "variable",
+    "variation": "",
+    "permalink": "https://www.proteini-outlet.com/proizvod/creavolution-kreatin-monohidrat/",
+    "sku": "",
+    "short_description": "<p>CREAVOLUTION® je vrhunski švedski brend posvećen pružanju kreatin monohidrata najviše kvalitete. Naš proizvod sadrži ultrafinu mikronizaciju od 200 mesh, što osigurava iznimnu topljivost i lako miješanje. Svaka serija pažljivo je analizirana i razvijena kako bi zadovoljila najviše standarde čistoće i kvalitete.</p>",
+    "description": "<h4>CreaVolution® (kreatin monohidrat)</h4>\n<ul>\n<li>100% premium čisti kreatin monohidrat</li>\n<li>ultra fina mikronizirana formula</li>\n<li>CreaVolution® je švedski brend s visokim proizvodnim standardima</li>\n<li>laboratorijski testirano na čistoću i kvalitetu</li>\n<li>povećava snagu i volumen mišićnih stanica</li>\n<li>BEZ umjetnih boja i aroma</li>\n<li>premium kvaliteta iz Švedske</li>\n<li>pogodno za VEGANE!</li>\n</ul>\n<p>&nbsp;</p>\n<p><img class=\"alignnone wp-image-17655 size-full\" src=\"htt",
+    "on_sale": false,
+    "prices": {
+      "price": "2800",
+      "regular_price": "2800",
+      "sale_price": "2800",
+      "price_range": null,
+      "currency_code": "EUR",
+      "currency_symbol": "€",
+      "currency_minor_unit": 2,
+      "currency_decimal_separator": ",",
+      "currency_thousand_separator": ".",
+      "currency_prefix": "",
+      "currency_suffix": " €"
+    },
+    "images": [
+      {
+        "id": 17653,
+        "src": "https://www.proteini-outlet.com/wp-content/uploads/2025/11/swedish-supplements-creavolution-300g-proteini-outlet.jpg",
+        "thumbnail": "https://www.proteini-outlet.com/wp-content/uploads/2025/11/swedish-supplements-creavolution-300g-proteini-outlet-600x600.jpg",
+        "srcset": "https://www.proteini-outlet.com/wp-content/uploads/2025/11/swedish-supplements-creavolution-300g-proteini-outlet.jpg 800w, https://www.proteini-outlet.com/wp-content/uploads/2025/11/swedish-supplements-creavolution-300g-proteini-outlet-300x300.jpg 300w, https://www.proteini-outlet.com/wp-content/uploads/2025/11/swedish-supplements-creavolution-300g-proteini-outlet-150x150.jpg 150w, https://www.proteini-outlet.com/wp-content/uploads/2025/11/swedish-supplements-creavolution-300g-proteini-outlet-768x768.jpg 768w, https://www.proteini-outlet.com/wp-content/uploads/2025/11/swedish-supplements-creavolution-300g-proteini-outlet-600x600.jpg 600w, https://www.proteini-outlet.com/wp-content/uploads/2025/11/swedish-supplements-creavolution-300g-proteini-outlet-100x100.jpg 100w, https://www.proteini-outlet.com/wp-content/uploads/2025/11/swedish-supplements-creavolution-300g-proteini-outlet-400x400.jpg 400w",
+        "sizes": "(max-width: 800px) 100vw, 800px",
+        "name": "swedish-supplements-creavolution-300g-proteini-outlet",
+        "alt": ""
+      }
+    ],
+    "categories": [
+      {
+        "id": 79,
+        "name": "Kreatin",
+        "slug": "kreatin",
+        "link": "https://www.proteini-outlet.com/shop/prasci-gelovi-tekucine/kreatin/"
+      },
+      {
+        "id": 276,
+        "name": "Novi proizvodi",
+        "slug": "novi-proizvodi",
+        "link": "https://www.proteini-outlet.com/shop/novi-proizvodi/"
+      },
+      {
+        "id": 73,
+        "name": "Prašci, gelovi, tekućine",
+        "slug": "prasci-gelovi-tekucine",
+        "link": "https://www.proteini-outlet.com/shop/prasci-gelovi-tekucine/"
+      },
+      {
+        "id": 100,
+        "name": "Vegan",
+        "slug": "vegan",
+        "link": "https://www.proteini-outlet.com/shop/formulacije/vegan/"
+      }
+    ],
+    "brands": [],
+    "attributes": [
+      {
+        "id": 1,
+        "name": "Brandovi",
+        "taxonomy": "pa_brandovi",
+        "has_variations": false,
+        "terms": [
+          {
+            "id": 365,
+            "name": "Swedish Supplements",
+            "slug": "swedish-supplements"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "name": "Okus",
+        "taxonomy": "pa_okus",
+        "has_variations": true,
+        "terms": [
+          {
+            "id": 52,
+            "name": "Bez okusa",
+            "slug": "bez-okusa"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "name": "Pakiranje",
+        "taxonomy": "pa_pakiranje",
+        "has_variations": false,
+        "terms": [
+          {
+            "id": 135,
+            "name": "300g",
+            "slug": "300g"
+          }
+        ]
+      }
+    ],
+    "variations": [
+      {
+        "id": 17652,
+        "attributes": [
+          {
+            "name": "Okus",
+            "value": "bez-okusa"
+          }
+        ]
+      }
+    ],
+    "grouped_products": [],
+    "has_options": true,
+    "is_purchasable": true,
+    "is_in_stock": true,
+    "is_on_backorder": false,
+    "low_stock_remaining": null,
+    "stock_availability": {
+      "text": "",
+      "class": "in-stock"
+    },
+    "sold_individually": false
+  },
+  {
+    "id": 15277,
+    "name": "Creatine Creapure® 2500",
+    "slug": "creatine-creapure-2500",
+    "parent": 0,
+    "type": "simple",
+    "variation": "",
+    "permalink": "https://www.proteini-outlet.com/proizvod/creatine-creapure-2500/",
+    "sku": "AMX BLCreapure2500_60chewtab",
+    "short_description": "<p>U sportskom svijetu dodataka prehrani kreatin monohidrat (creatine monohydrate) zauzima istaknuto mjesto. On je jedan od najispitivanijih i najproučavanijih tvari, te iza kreatina u obliku monohidrata postoji više od 200 studija.</p>",
+    "description": "<h4><strong>Creatine Creapure 2500 tablete za žvakanje</strong></h4>\n<ul>\n<li>100% premium čisti kreatin monohidrat (Creapure®)</li>\n<li>2500 mg kreatina po tableti</li>\n<li>super fina mikronizirana formula</li>\n<li>ukusni bomboni za žvakanje (više okusa u pakiranju: naranča, kola, višnja)</li>\n<li>povećava snagu i volumen mišićnih stanica</li>\n<li>laboratorijski ispitan HPLC metodom</li>\n<li>BEZ umjetnih boja i aroma</li>\n</ul>\n<p>U sportskom svijetu dodataka prehrani kreatin monohidrat (creati",
+    "on_sale": false,
+    "prices": {
+      "price": "2400",
+      "regular_price": "2400",
+      "sale_price": "2400",
+      "price_range": null,
+      "currency_code": "EUR",
+      "currency_symbol": "€",
+      "currency_minor_unit": 2,
+      "currency_decimal_separator": ",",
+      "currency_thousand_separator": ".",
+      "currency_prefix": "",
+      "currency_suffix": " €"
+    },
+    "images": [
+      {
+        "id": 15279,
+        "src": "https://www.proteini-outlet.com/wp-content/uploads/2025/01/amix-nutrition-creatine-2500-1-proteini-outlet.jpg",
+        "thumbnail": "https://www.proteini-outlet.com/wp-content/uploads/2025/01/amix-nutrition-creatine-2500-1-proteini-outlet-600x600.jpg",
+        "srcset": "https://www.proteini-outlet.com/wp-content/uploads/2025/01/amix-nutrition-creatine-2500-1-proteini-outlet.jpg 800w, https://www.proteini-outlet.com/wp-content/uploads/2025/01/amix-nutrition-creatine-2500-1-proteini-outlet-600x600.jpg 600w, https://www.proteini-outlet.com/wp-content/uploads/2025/01/amix-nutrition-creatine-2500-1-proteini-outlet-100x100.jpg 100w, https://www.proteini-outlet.com/wp-content/uploads/2025/01/amix-nutrition-creatine-2500-1-proteini-outlet-300x300.jpg 300w, https://www.proteini-outlet.com/wp-content/uploads/2025/01/amix-nutrition-creatine-2500-1-proteini-outlet-150x150.jpg 150w, https://www.proteini-outlet.com/wp-content/uploads/2025/01/amix-nutrition-creatine-2500-1-proteini-outlet-768x768.jpg 768w, https://www.proteini-outlet.com/wp-content/uploads/2025/01/amix-nutrition-creatine-2500-1-proteini-outlet-400x400.jpg 400w",
+        "sizes": "(max-width: 800px) 100vw, 800px",
+        "name": "amix-nutrition-creatine-2500-1-proteini-outlet",
+        "alt": ""
+      }
+    ],
+    "categories": [
+      {
+        "id": 99,
+        "name": "Formulacije",
+        "slug": "formulacije",
+        "link": "https://www.proteini-outlet.com/shop/formulacije/"
+      },
+      {
+        "id": 79,
+        "name": "Kreatin",
+        "slug": "kreatin",
+        "link": "https://www.proteini-outlet.com/shop/prasci-gelovi-tekucine/kreatin/"
+      },
+      {
+        "id": 81,
+        "name": "Tablete, kapsule",
+        "slug": "tablete-kapsule",
+        "link": "https://www.proteini-outlet.com/shop/tablete-kapsule/"
+      },
+      {
+        "id": 100,
+        "name": "Vegan",
+        "slug": "vegan",
+        "link": "https://www.proteini-outlet.com/shop/formulacije/vegan/"
+      }
+    ],
+    "brands": [],
+    "attributes": [
+      {
+        "id": 1,
+        "name": "Brandovi",
+        "taxonomy": "pa_brandovi",
+        "has_variations": false,
+        "terms": [
+          {
+            "id": 40,
+            "name": "Amix Nutrition",
+            "slug": "amix-nutrition"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "name": "Okus",
+        "taxonomy": "pa_okus",
+        "has_variations": false,
+        "terms": [
+          {
+            "id": 199,
+            "name": "Cola",
+            "slug": "cola"
+          },
+          {
+            "id": 129,
+            "name": "Naranča",
+            "slug": "naranca"
+          },
+          {
+            "id": 131,
+            "name": "Višnja",
+            "slug": "visnja"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "name": "Pakiranje",
+        "taxonomy": "pa_pakiranje",
+        "has_variations": false,
+        "terms": [
+          {
+            "id": 453,
+            "name": "60 tableta za žvakanje",
+            "slug": "60-tableta-za-zvakanje"
+          }
+        ]
+      }
+    ],
+    "variations": [],
+    "grouped_products": [],
+    "has_options": false,
+    "is_purchasable": true,
+    "is_in_stock": true,
+    "is_on_backorder": false,
+    "low_stock_remaining": null,
+    "stock_availability": {
+      "text": "Na zalihi",
+      "class": "in-stock"
+    },
+    "sold_individually": false
+  },
+  {
+    "id": 14293,
+    "name": "Platinum Creatine",
+    "slug": "platinum-creatine",
+    "parent": 0,
+    "type": "variable",
+    "variation": "",
+    "permalink": "https://www.proteini-outlet.com/proizvod/platinum-creatine/",
+    "sku": "",
+    "short_description": "<p>U sportskom svijetu dodataka prehrani kreatin monohidrat (creatine monohydrate) zauzima istaknuto mjesto. On je jedan od najispitivanijih i najproučavanijih tvari, te iza kreatina u obliku monohidrata postoji više od 200 studija.<br />\nZa kreatin je potvrđeno da povisuje tjelesne performanse u uzastopnim kratkotrajnim vježbama visokog intenziteta&#8230;</p>",
+    "description": "<h4><strong>PLATINUM CREATINE (MONOHYDRATE)</strong></h4>\n<ul>\n<li>100% premium čisti kreatin monohidrat</li>\n<li>super fina mikronizirana formula</li>\n<li>povećava snagu i volumen mišićnih stanica</li>\n<li>laboratorijski ispitan</li>\n<li>BEZ umjetnih boja i aroma</li>\n<li>premium kvaliteta iz Austrije</li>\n<li>pogodno za VEGANE!</li>\n</ul>\n<p>&nbsp;</p>\n<p>U sportskom svijetu dodataka prehrani kreatin monohidrat (creatine monohydrate) zauzima istaknuto mjesto. On je jedan od najispitivanijih i ",
+    "on_sale": true,
+    "prices": {
+      "price": "1870",
+      "regular_price": "2200",
+      "sale_price": "1870",
+      "price_range": null,
+      "currency_code": "EUR",
+      "currency_symbol": "€",
+      "currency_minor_unit": 2,
+      "currency_decimal_separator": ",",
+      "currency_thousand_separator": ".",
+      "currency_prefix": "",
+      "currency_suffix": " €"
+    },
+    "images": [
+      {
+        "id": 14306,
+        "src": "https://www.proteini-outlet.com/wp-content/uploads/2024/09/platinum-creatine-400g-proteini-outlet-austria-vegan.jpg",
+        "thumbnail": "https://www.proteini-outlet.com/wp-content/uploads/2024/09/platinum-creatine-400g-proteini-outlet-austria-vegan-600x600.jpg",
+        "srcset": "https://www.proteini-outlet.com/wp-content/uploads/2024/09/platinum-creatine-400g-proteini-outlet-austria-vegan.jpg 800w, https://www.proteini-outlet.com/wp-content/uploads/2024/09/platinum-creatine-400g-proteini-outlet-austria-vegan-600x600.jpg 600w, https://www.proteini-outlet.com/wp-content/uploads/2024/09/platinum-creatine-400g-proteini-outlet-austria-vegan-100x100.jpg 100w, https://www.proteini-outlet.com/wp-content/uploads/2024/09/platinum-creatine-400g-proteini-outlet-austria-vegan-300x300.jpg 300w, https://www.proteini-outlet.com/wp-content/uploads/2024/09/platinum-creatine-400g-proteini-outlet-austria-vegan-150x150.jpg 150w, https://www.proteini-outlet.com/wp-content/uploads/2024/09/platinum-creatine-400g-proteini-outlet-austria-vegan-768x768.jpg 768w, https://www.proteini-outlet.com/wp-content/uploads/2024/09/platinum-creatine-400g-proteini-outlet-austria-vegan-400x400.jpg 400w",
+        "sizes": "(max-width: 800px) 100vw, 800px",
+        "name": "platinum-creatine-400g-proteini-outlet-austria-vegan",
+        "alt": ""
+      }
+    ],
+    "categories": [
+      {
+        "id": 79,
+        "name": "Kreatin",
+        "slug": "kreatin",
+        "link": "https://www.proteini-outlet.com/shop/prasci-gelovi-tekucine/kreatin/"
+      },
+      {
+        "id": 275,
+        "name": "Najprodavanije",
+        "slug": "najprodavanije",
+        "link": "https://www.proteini-outlet.com/shop/najprodavanije/"
+      },
+      {
+        "id": 73,
+        "name": "Prašci, gelovi, tekućine",
+        "slug": "prasci-gelovi-tekucine",
+        "link": "https://www.proteini-outlet.com/shop/prasci-gelovi-tekucine/"
+      },
+      {
+        "id": 109,
+        "name": "Vatrena ponuda",
+        "slug": "vatrena-ponuda",
+        "link": "https://www.proteini-outlet.com/shop/vatrena-ponuda/"
+      },
+      {
+        "id": 100,
+        "name": "Vegan",
+        "slug": "vegan",
+        "link": "https://www.proteini-outlet.com/shop/formulacije/vegan/"
+      }
+    ],
+    "brands": [],
+    "attributes": [
+      {
+        "id": 1,
+        "name": "Brandovi",
+        "taxonomy": "pa_brandovi",
+        "has_variations": false,
+        "terms": [
+          {
+            "id": 48,
+            "name": "Proteini Outlet",
+            "slug": "proteini-outlet"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "name": "Okus",
+        "taxonomy": "pa_okus",
+        "has_variations": true,
+        "terms": [
+          {
+            "id": 52,
+            "name": "Bez okusa",
+            "slug": "bez-okusa"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "name": "Pakiranje",
+        "taxonomy": "pa_pakiranje",
+        "has_variations": false,
+        "terms": [
+          {
+            "id": 361,
+            "name": "400 g",
+            "slug": "400-g"
+          }
+        ]
+      }
+    ],
+    "variations": [
+      {
+        "id": 14294,
+        "attributes": [
+          {
+            "name": "Okus",
+            "value": "bez-okusa"
+          }
+        ]
+      }
+    ],
+    "grouped_products": [],
+    "has_options": true,
+    "is_purchasable": true,
+    "is_in_stock": true,
+    "is_on_backorder": false,
+    "low_stock_remaining": null,
+    "stock_availability": {
+      "text": "",
+      "class": "in-stock"
+    },
+    "sold_individually": false
+  },
+  {
+    "id": 5648,
+    "name": "Creatine Monohydrate kapsule",
+    "slug": "creatine-monohydrate-kapsule",
+    "parent": 0,
+    "type": "simple",
+    "variation": "",
+    "permalink": "https://www.proteini-outlet.com/proizvod/creatine-monohydrate-kapsule/",
+    "sku": "AMX CreatMono220kaps",
+    "short_description": "<p>U sportskom svijetu dodataka prehrani kreatin monohidrat (creatine monohydrate) zauzima istaknuto mjesto. On je jedan od najispitivanijih i najproučavanijih tvari, te iza kreatina u obliku monohidrata postoji više od 200 studija.</p>",
+    "description": "<h4><strong>Creatine Monohidrat u kapsulama</strong></h4>\n<ul>\n<li>100% premium čisti kreatin monohidrat</li>\n<li>800 mg kreatina po kapsuli</li>\n<li>super fina mikronizirana formula</li>\n<li>povećava snagu i volumen mišićnih stanica</li>\n<li>laboratorijski ispitan HPLC metodom</li>\n<li>BEZ umjetnih boja i aroma</li>\n</ul>\n<p>U sportskom svijetu dodataka prehrani kreatin monohidrat (creatine monohydrate) zauzima istaknuto mjesto. On je jedan od najispitivanijih i najproučavanijih tvari, te iza k",
+    "on_sale": true,
+    "prices": {
+      "price": "1836",
+      "regular_price": "2160",
+      "sale_price": "1836",
+      "price_range": null,
+      "currency_code": "EUR",
+      "currency_symbol": "€",
+      "currency_minor_unit": 2,
+      "currency_decimal_separator": ",",
+      "currency_thousand_separator": ".",
+      "currency_prefix": "",
+      "currency_suffix": " €"
+    },
+    "images": [
+      {
+        "id": 5647,
+        "src": "https://www.proteini-outlet.com/wp-content/uploads/2021/09/amix-nutrition-creatine-kapsule-proteini-outlet.jpg",
+        "thumbnail": "https://www.proteini-outlet.com/wp-content/uploads/2021/09/amix-nutrition-creatine-kapsule-proteini-outlet-600x600.jpg",
+        "srcset": "https://www.proteini-outlet.com/wp-content/uploads/2021/09/amix-nutrition-creatine-kapsule-proteini-outlet.jpg 800w, https://www.proteini-outlet.com/wp-content/uploads/2021/09/amix-nutrition-creatine-kapsule-proteini-outlet-600x600.jpg 600w, https://www.proteini-outlet.com/wp-content/uploads/2021/09/amix-nutrition-creatine-kapsule-proteini-outlet-100x100.jpg 100w, https://www.proteini-outlet.com/wp-content/uploads/2021/09/amix-nutrition-creatine-kapsule-proteini-outlet-300x300.jpg 300w, https://www.proteini-outlet.com/wp-content/uploads/2021/09/amix-nutrition-creatine-kapsule-proteini-outlet-150x150.jpg 150w, https://www.proteini-outlet.com/wp-content/uploads/2021/09/amix-nutrition-creatine-kapsule-proteini-outlet-768x768.jpg 768w, https://www.proteini-outlet.com/wp-content/uploads/2021/09/amix-nutrition-creatine-kapsule-proteini-outlet-400x400.jpg 400w",
+        "sizes": "(max-width: 800px) 100vw, 800px",
+        "name": "amix-nutrition-creatine-kapsule-proteini-outlet",
+        "alt": ""
+      }
+    ],
+    "categories": [
+      {
+        "id": 99,
+        "name": "Formulacije",
+        "slug": "formulacije",
+        "link": "https://www.proteini-outlet.com/shop/formulacije/"
+      },
+      {
+        "id": 79,
+        "name": "Kreatin",
+        "slug": "kreatin",
+        "link": "https://www.proteini-outlet.com/shop/prasci-gelovi-tekucine/kreatin/"
+      },
+      {
+        "id": 81,
+        "name": "Tablete, kapsule",
+        "slug": "tablete-kapsule",
+        "link": "https://www.proteini-outlet.com/shop/tablete-kapsule/"
+      },
+      {
+        "id": 109,
+        "name": "Vatrena ponuda",
+        "slug": "vatrena-ponuda",
+        "link": "https://www.proteini-outlet.com/shop/vatrena-ponuda/"
+      },
+      {
+        "id": 100,
+        "name": "Vegan",
+        "slug": "vegan",
+        "link": "https://www.proteini-outlet.com/shop/formulacije/vegan/"
+      }
+    ],
+    "brands": [],
+    "attributes": [
+      {
+        "id": 1,
+        "name": "Brandovi",
+        "taxonomy": "pa_brandovi",
+        "has_variations": false,
+        "terms": [
+          {
+            "id": 40,
+            "name": "Amix Nutrition",
+            "slug": "amix-nutrition"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "name": "Okus",
+        "taxonomy": "pa_okus",
+        "has_variations": false,
+        "terms": [
+          {
+            "id": 242,
+            "name": "Nije primjenjivo",
+            "slug": "nije-primjenjivo"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "name": "Pakiranje",
+        "taxonomy": "pa_pakiranje",
+        "has_variations": false,
+        "terms": [
+          {
+            "id": 322,
+            "name": "220 kapsula",
+            "slug": "220-kapsula"
+          }
+        ]
+      }
+    ],
+    "variations": [],
+    "grouped_products": [],
+    "has_options": false,
+    "is_purchasable": true,
+    "is_in_stock": true,
+    "is_on_backorder": false,
+    "low_stock_remaining": null,
+    "stock_availability": {
+      "text": "Na zalihi",
+      "class": "in-stock"
+    },
+    "sold_individually": false
+  }
+]

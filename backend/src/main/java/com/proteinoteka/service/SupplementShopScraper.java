@@ -12,6 +12,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
+import com.proteinoteka.service.producttype.ProductTypes;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -79,6 +80,12 @@ public class SupplementShopScraper implements StoreScraper {
 
     @Override
     public String getBaseUrl() { return BASE_URL; }
+
+    // The store's creatine category also lists bundles and pre-workouts; CreatineProfile rejects those.
+    @Override
+    public List<ListingTarget> listingTargets() {
+        return List.of(primaryListingTarget(), ListingTarget.woo(ProductTypes.CREATINE, "https://supplementshop.rs", "kreatin"));
+    }
 
     @Override
     public boolean hasNextPage(Document doc) {

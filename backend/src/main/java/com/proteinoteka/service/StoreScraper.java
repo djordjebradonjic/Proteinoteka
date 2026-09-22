@@ -2,6 +2,7 @@ package com.proteinoteka.service;
 
 import com.microsoft.playwright.Page;
 import com.proteinoteka.model.Product;
+import com.proteinoteka.service.producttype.ProductTypeProfile;
 import org.jsoup.nodes.Document;
 
 import java.util.List;
@@ -11,9 +12,9 @@ public interface StoreScraper {
     String getStoreName();
 
     // The `stores` table row this scraper's products attach to. Defaults to getStoreName().
-    // A second scraper covering another product family for the SAME physical store (e.g. a
-    // "GymBeam Kreatin" scraper alongside "GymBeam") overrides only this to point back at the
-    // shared row, while getStoreName() stays distinct for scheduling/ScrapeLog identity.
+    // A second scraper for the SAME physical store overrides only this to point back at the shared
+    // row, while getStoreName() stays distinct for scheduling/ScrapeLog identity. Another product
+    // family of a store is normally just another listingTargets() entry, not a second scraper.
     default String getStoreRowName() { return getStoreName(); }
 
     // Product family this scraper covers. Used to scope stale-URL detection so a second
@@ -31,6 +32,28 @@ public interface StoreScraper {
 
     default List<Product> scrape(Page page, Document doc, Set<String> skipUrls) {
         return scrape(page, doc);
+    }
+
+    // The listings this store is walked through in ONE scrape run, primary type first. The default is
+    // the single protein listing every scraper already describes with getBaseUrl()/buildPageUrl(), so
+    // scrapers that don't cover a second product family need no change. A scraper that does returns
+    // one target per family (see ListingTarget); ScraperService runs them in a single browser context
+    // and proxy session, and keeps stale-product tracking separate per type.
+    default List<ListingTarget> listingTargets() {
+        return List.of(primaryListingTarget());
+    }
+
+    // The listing getBaseUrl()/buildPageUrl() describe, for scrapers that add further targets to it.
+    default ListingTarget primaryListingTarget() {
+        return ListingTarget.html(getProductType(), getBaseUrl(), this::buildPageUrl);
+    }
+
+    // Type-aware variant of scrape() for HtmlPaged targets. `profile` is the family being scraped:
+    // a scraper that serves more than one family must use profile.rejectReason(...) instead of the
+    // protein-only BaseScraperEnricher.isNonProteinProduct(...), and skip protein nutrition parsing.
+    default List<Product> scrape(ListingTarget target, ProductTypeProfile profile,
+                                 Page page, Document doc, Set<String> skipUrls) {
+        return scrape(page, doc, skipUrls);
     }
 
     boolean hasNextPage(Document doc);

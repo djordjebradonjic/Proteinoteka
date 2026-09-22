@@ -3,6 +3,8 @@ package com.proteinoteka.service;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.WaitUntilState;
 import com.proteinoteka.model.Product;
+import com.proteinoteka.service.producttype.ProductTypeProfile;
+import com.proteinoteka.service.producttype.ProductTypes;
 import com.proteinoteka.util.WeightParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +27,7 @@ public class LamaScraper implements StoreScraper {
     private static final String STORE_NAME  = "Lama";
     private static final String BASE_URL    = "https://www.lama.rs";
     private static final String LISTING_URL = BASE_URL + "/proteini-i-gejneri";
+    private static final String CREATINE_URL = BASE_URL + "/kreatini";
 
     private final NutritionParserService nutritionParser;
     private final BaseScraperEnricher    baseEnricher;
@@ -44,6 +47,14 @@ public class LamaScraper implements StoreScraper {
         return LISTING_URL;
     }
 
+    // One page holds the whole (small) creatine category, like the protein one.
+    @Override
+    public List<ListingTarget> listingTargets() {
+        return List.of(
+                primaryListingTarget(),
+                ListingTarget.html(ProductTypes.CREATINE, CREATINE_URL, page -> CREATINE_URL));
+    }
+
     @Override
     public List<Product> scrape(Page page, Document doc) {
         return scrape(page, doc, Collections.emptySet());
@@ -51,11 +62,21 @@ public class LamaScraper implements StoreScraper {
 
     @Override
     public List<Product> scrape(Page page, Document doc, Set<String> skipUrls) {
+        return scrapeListing(page, doc, skipUrls, ListingFamily.PROTEIN);
+    }
+
+    @Override
+    public List<Product> scrape(ListingTarget target, ProductTypeProfile profile,
+                                Page page, Document doc, Set<String> skipUrls) {
+        return scrapeListing(page, doc, skipUrls, ListingFamily.of(target, profile));
+    }
+
+    private List<Product> scrapeListing(Page page, Document doc, Set<String> skipUrls, ListingFamily family) {
         List<Product> products = parseListingPage(doc);
-        log.info("[{}] Parsed {} products from listing page", STORE_NAME, products.size());
+        log.info("[{}] Parsed {} {} products from listing page", STORE_NAME, products.size(), family.productType());
 
         if (page != null && !products.isEmpty()) {
-            enrichWithDetails(page, products, skipUrls);
+            enrichWithDetails(page, products, skipUrls, family);
         }
 
         return products;
@@ -91,6 +112,9 @@ public class LamaScraper implements StoreScraper {
                     p.setPrimaryWeightGrams(grams);
                     p.getPackage_weight().add(weightText);
                 }
+                // The size line also carries piece counts ("150 kapsula", "120 tableta") that the
+                // title never says; the creatine parser reads them from here.
+                if (!weightText.isBlank()) p.setVariantLabel(weightText);
             }
 
             Element priceBox = card.selectFirst("div.priceProdN");
@@ -122,12 +146,13 @@ public class LamaScraper implements StoreScraper {
 
     // ── Detail page enrichment ───────────────────────────────────────────────────
 
-    private void enrichWithDetails(Page page, List<Product> products, Set<String> skipUrls) {
+    private void enrichWithDetails(Page page, List<Product> products, Set<String> skipUrls, ListingFamily family) {
         int count = 0;
         for (Product p : products) {
             if (p.getUrl() == null || p.getUrl().isBlank()) continue;
-            if (baseEnricher.isNonProteinProduct(p.getName())) {
-                log.info("[{}] Skipping '{}' — not a protein product", STORE_NAME, p.getName());
+            Optional<String> rejected = family.rejectReason(p, baseEnricher);
+            if (rejected.isPresent()) {
+                log.info("[{}] Skipping '{}' — {}", STORE_NAME, p.getName(), rejected.get());
                 continue;
             }
 
@@ -155,23 +180,28 @@ public class LamaScraper implements StoreScraper {
                 enrichDescription(doc, p);
 
                 if (!skipUrls.contains(p.getUrl())) {
-                    extractNutritionFromDivTable(doc, p);
+                    if (family.isCreatine()) {
+                        baseEnricher.enrichCreatineFromDescription(doc, p, STORE_NAME);
+                    } else {
+                        extractNutritionFromDivTable(doc, p);
 
-                    if (p.getProteinPer100g() == null) {
-                        Element descEl = doc.selectFirst("div.productDesc, div.prodDesc");
-                        if (descEl != null) {
-                            Double protein = nutritionParser.extractProteinPer100g(descEl.text());
-                            if (protein != null) p.setProteinPer100g(protein);
+                        if (p.getProteinPer100g() == null) {
+                            Element descEl = doc.selectFirst("div.productDesc, div.prodDesc");
+                            if (descEl != null) {
+                                Double protein = nutritionParser.extractProteinPer100g(descEl.text());
+                                if (protein != null) p.setProteinPer100g(protein);
+                            }
                         }
-                    }
 
-                    baseEnricher.enrichWithAiIfNeeded(doc, p, STORE_NAME);
+                        baseEnricher.enrichWithAiIfNeeded(doc, p, STORE_NAME);
+                    }
                 }
 
-                log.info("[{}] Enriched '{}' {}g → price={}, brand={}, protein={}g/100g",
+                log.info("[{}] Enriched '{}' {}g → price={}, brand={}, {}",
                         STORE_NAME, p.getName(),
                         p.getPrimaryWeightGrams() != null ? Math.round(p.getPrimaryWeightGrams()) : "?",
-                        p.getPrice(), p.getBrand(), p.getProteinPer100g());
+                        p.getPrice(), p.getBrand(),
+                        family.isCreatine() ? "form=" + p.getProductForm() : "protein=" + p.getProteinPer100g() + "g/100g");
 
                 count++;
                 if (count % 10 == 0) {

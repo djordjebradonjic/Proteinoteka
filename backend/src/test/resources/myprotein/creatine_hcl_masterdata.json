@@ -1,0 +1,50 @@
+{
+ "pageTitle": "Kreatin HCL",
+ "brand": "Myprotein",
+ "variants": [
+  {
+   "inStock": true,
+   "sku": 17169975,
+   "choices": [
+    {
+     "optionKey": "Flavour",
+     "title": "Bez Arome"
+    },
+    {
+     "optionKey": "Amount",
+     "title": "100G - 24servings"
+    }
+   ],
+   "price": {
+    "price": {
+     "amount": "867.0"
+    }
+   },
+   "product": {
+    "images": []
+   }
+  },
+  {
+   "inStock": true,
+   "sku": 17169976,
+   "choices": [
+    {
+     "optionKey": "Flavour",
+     "title": "Bez Arome"
+    },
+    {
+     "optionKey": "Amount",
+     "title": "500G - 121servings"
+    }
+   ],
+   "price": {
+    "price": {
+     "amount": "2895.0"
+    }
+   },
+   "product": {
+    "images": []
+   }
+  }
+ ]
+}

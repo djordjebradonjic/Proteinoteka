@@ -25,6 +25,8 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
     Page<Product> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
+    Page<Product> findByNameContainingIgnoreCaseAndProductType(String name, String productType, Pageable pageable);
+
     Optional<Product> findByUrl(String url);
     Page<Product> findAll(Pageable pageable);
 
@@ -63,6 +65,37 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @Query(value = "SELECT DISTINCT flavour FROM product_flavours WHERE flavour IS NOT NULL ORDER BY flavour ASC", nativeQuery = true)
     List<String> findAllUniqueFlavours();
 
+    // Brand / flavour lists of one product family — the protein filters must not list creatine-only
+    // brands or flavours and vice versa.
+    @Query(value = """
+            SELECT DISTINCT brand FROM products
+            WHERE brand IS NOT NULL
+              AND market = :market
+              AND product_type = :productType
+              AND brand NOT LIKE '%RSD%'
+              AND brand NOT LIKE '%Kategorij%'
+              AND brand NOT LIKE '%Dodaj%'
+              AND brand NOT LIKE '%stanju%'
+              AND brand NOT LIKE '%korpu%'
+              AND brand NOT LIKE '%kom.%'
+              AND LENGTH(brand) <= 60
+            ORDER BY brand ASC
+            """, nativeQuery = true)
+    List<String> findAllUniqueBrandsByMarketAndType(@Param("market") String market,
+                                                    @Param("productType") String productType);
+
+    @Query(value = """
+            SELECT DISTINCT pf.flavour
+            FROM product_flavours pf
+            JOIN products p ON pf.product_id = p.id
+            WHERE pf.flavour IS NOT NULL
+              AND p.market = :market
+              AND p.product_type = :productType
+            ORDER BY pf.flavour ASC
+            """, nativeQuery = true)
+    List<String> findAllUniqueFlavoursByMarketAndType(@Param("market") String market,
+                                                      @Param("productType") String productType);
+
     // Brands a specific store currently carries — used by the store competitive report to
     // work out which trending-search brands the store is NOT stocking (missed opportunity).
     @Query(value = """
@@ -85,21 +118,24 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @Query("SELECT p FROM products p WHERE p.proteinPer100g IS NULL")
     List<Product> findByProteinPer100gIsNull();
 
+    // Creatine has no protein content by nature, so a null protein there is not "missing data".
+    @Query("SELECT p FROM products p WHERE p.proteinPer100g IS NULL AND p.productType = :productType")
+    List<Product> findByProteinPer100gIsNullAndProductType(@Param("productType") String productType);
+
     @Query("SELECT p.url FROM products p WHERE p.store.name = :storeName")
     List<String> findUrlsByStoreName(@Param("storeName") String storeName);
 
     // Scoped variant for stores that host more than one product family under the same
-    // `stores` row (e.g. GymBeam protein + GymBeam Kreatin) — stale-URL detection must not
-    // treat the other family's products as missing just because this scraper's listing never
-    // covers them.
+    // `stores` row (e.g. GymBeam protein + GymBeam creatine) — stale-URL detection must not
+    // treat the other family's products as missing just because this listing never covers them.
     @Query("SELECT p.url FROM products p WHERE p.store.name = :storeName AND p.productType = :productType")
     List<String> findUrlsByStoreNameAndProductType(@Param("storeName") String storeName,
                                                     @Param("productType") String productType);
 
-    @Query("SELECT p FROM products p WHERE p.store.name = :storeName AND " +
-           "((p.productType = 'protein' AND p.proteinPer100g IS NOT NULL AND p.fatPer100g IS NOT NULL) " +
-           " OR p.productType = 'creatine')")
-    List<Product> findNutritionStatusByStoreName(@Param("storeName") String storeName);
+    // Every stored row of a store, any product type — ScraperService asks each type's profile which
+    // of them already have everything a detail-page visit could add.
+    @Query("SELECT p FROM products p WHERE p.store.name = :storeName")
+    List<Product> findAllByStoreName(@Param("storeName") String storeName);
 
     @Modifying
     @Transactional
@@ -130,6 +166,10 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @Query("SELECT p FROM products p WHERE p.aiDescription IS NULL")
     List<Product> findByAiDescriptionIsNull();
 
+    // The AI description prompt is written for whey protein; creatine rows would get whey-protein copy.
+    @Query("SELECT p FROM products p WHERE p.aiDescription IS NULL AND p.productType = :productType")
+    List<Product> findByAiDescriptionIsNullAndProductType(@Param("productType") String productType);
+
     List<Product> findByGroupId(Long groupId);
 
     // Group-wide canonical id (lowest id across ALL group members, unfiltered by store/price) —
@@ -140,18 +180,26 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @Query("SELECT MIN(p.id) FROM products p WHERE p.groupId = :groupId")
     Long findMinIdByGroupId(@Param("groupId") Long groupId);
 
+    // Scoped to one product type: a 500 g creatine and a 500 g protein of the same store must never be
+    // taken for the same row when a URL changes. A list, not an Optional: a store can publish several
+    // products under one generic title and weight (SupplementStore: "Creatine Monohydrate, 300g" from
+    // three brands), and an Optional would throw on the second one.
     @Query("SELECT p FROM products p WHERE LOWER(TRIM(p.name)) = LOWER(TRIM(:name)) " +
            "AND p.store = :store " +
+           "AND p.productType = :productType " +
            "AND p.primaryWeightGrams IS NOT NULL " +
            "AND ABS(p.primaryWeightGrams - :weight) < 10")
-    Optional<Product> findByNameAndStoreAndWeight(@Param("name") String name,
-                                                  @Param("store") Store store,
-                                                  @Param("weight") Double weight);
+    List<Product> findAllByNameAndStoreAndWeight(@Param("name") String name,
+                                                 @Param("store") Store store,
+                                                 @Param("weight") Double weight,
+                                                 @Param("productType") String productType);
 
     // Broader candidate pool for fuzzy name matching when both URL and exact name changed at once
     // (e.g. a store re-platforms and rewrites its listing copy in the same pass).
     @Query("SELECT p FROM products p WHERE p.store = :store " +
+           "AND p.productType = :productType " +
            "AND p.primaryWeightGrams IS NOT NULL " +
            "AND ABS(p.primaryWeightGrams - :weight) < 10")
-    List<Product> findByStoreAndWeight(@Param("store") Store store, @Param("weight") Double weight);
+    List<Product> findByStoreAndWeight(@Param("store") Store store, @Param("weight") Double weight,
+                                       @Param("productType") String productType);
 }

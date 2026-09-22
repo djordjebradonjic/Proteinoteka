@@ -14,6 +14,9 @@ import com.proteinoteka.repository.PriceHistoryRepository;
 import com.proteinoteka.repository.ProductRepository;
 import com.proteinoteka.repository.ScrapeLogRepository;
 import com.proteinoteka.repository.StoreRepository;
+import com.proteinoteka.config.ScrapingTypesProperties;
+import com.proteinoteka.service.producttype.ProductTypeProfile;
+import com.proteinoteka.service.producttype.ProductTypeRegistry;
 import com.proteinoteka.util.PriceIntegrity;
 import com.proteinoteka.util.PriceParser;
 import com.proteinoteka.util.ProductLineMatcher;
@@ -27,10 +30,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -69,6 +74,9 @@ public class ScraperService {
     private final BaseScraperEnricher baseEnricher;
     private final ProductGroupService productGroupService;
     private final ProxyAwareHttpClient httpClient;
+    private final ProductTypeRegistry productTypes;
+    private final ScrapingTypesProperties scrapingTypes;
+    private final WooStoreApiSource wooStoreApiSource;
 
     @Autowired
     private NutritionParserService nutritionParser;
@@ -154,50 +162,87 @@ public class ScraperService {
     }
 
     public List<Product> scrapeStore(StoreScraper scraper, boolean testMode) {
+        return scrapeStoreOutcome(scraper, testMode, null).products();
+    }
+
+    public List<Product> scrapeStore(StoreScraper scraper) {
+        return scrapeStore(scraper, false);
+    }
+
+    /**
+     * What one store run produced across all of its listing targets.
+     *
+     * @param products    every item the listings returned (saved or not), all product types
+     * @param foundByType items returned per product type
+     * @param savedByType items actually stored per product type
+     * @param primaryType the first target's type; it alone drives the ScrapeLog status, so a failed
+     *                    creatine listing can never make a healthy protein run look PARTIAL (and trigger
+     *                    a retry that would double the proxy traffic)
+     * @param proxyBytes  estimated IPRoyal traffic of the run, null when the store doesn't use the proxy
+     * @param removed     stale products deleted by this run, all types
+     */
+    public record ScrapeOutcome(List<Product> products, Map<String, Integer> foundByType,
+                                Map<String, Integer> savedByType, String primaryType, Long proxyBytes,
+                                int removed) {
+
+        /** Items found by the primary target: the count the run's status is judged on. */
+        public int primaryFound() {
+            return foundByType.getOrDefault(primaryType, 0);
+        }
+
+        /** Stored items per type as "protein=86,creatine=14". */
+        public String typeCounts() {
+            return savedByType.entrySet().stream()
+                    .map(e -> e.getKey() + "=" + e.getValue())
+                    .collect(Collectors.joining(","));
+        }
+    }
+
+    // State of one listing target during a store run. Each target tracks its own URLs, so a creatine
+    // listing can never mark protein products as missing (or the reverse).
+    private static final class TargetRun {
+        final ListingTarget target;
+        final ProductTypeProfile profile;
+        final Set<String> existingUrls = new HashSet<>();   // stored URLs of this store+type (stale detection)
+        final Set<String> completeUrls = new HashSet<>();   // stored URLs whose detail page adds nothing
+        final Set<String> foundUrls = new HashSet<>();      // URLs saved by this run
+        final List<Product> products = new ArrayList<>();
+        int saved;
+        boolean blocked;
+        boolean completed;
+
+        TargetRun(ListingTarget target, ProductTypeProfile profile) {
+            this.target = target;
+            this.profile = profile;
+        }
+    }
+
+    /**
+     * Scrapes every enabled listing target of {@code scraper} inside ONE browser context and proxy
+     * session — a second product family costs one more listing, not a second run, and reuses the anti-bot
+     * clearance the first one earned. The primary (first) target runs first; if it is blocked the others
+     * are skipped, so no proxy traffic is spent on a session that is known to be blocked.
+     *
+     * @param onlyTypes when non-null, exactly these product types are scraped and the enabled-types
+     *                  config is bypassed (an explicit admin request, e.g. to test or backfill creatine
+     *                  on one store without re-scraping its protein)
+     */
+    public ScrapeOutcome scrapeStoreOutcome(StoreScraper scraper, boolean testMode, Set<String> onlyTypes) {
         Store store = storeRepository.findByName(scraper.getStoreRowName())
                 .orElseThrow(() -> new RuntimeException("Store not found: " + scraper.getStoreRowName()));
 
-        Set<String> existingUrlSet = new HashSet<>();
-        if (staleEnabled && !testMode) {
-            List<String> existingUrls = productRepository.findUrlsByStoreNameAndProductType(
-                    store.getName(), scraper.getProductType());
-            existingUrlSet.addAll(existingUrls);
-            log.info("[{}] Stale detection: {} existing products tracked", scraper.getStoreName(), existingUrlSet.size());
+        lastBlockDiagnostic = null;
+        List<TargetRun> runs = buildRuns(scraper, store, testMode, onlyTypes);
+        if (runs.isEmpty()) {
+            log.warn("[{}] No listing target selected (onlyTypes={}) — nothing to scrape", scraper.getStoreName(), onlyTypes);
+            return new ScrapeOutcome(List.of(), Map.of(), Map.of(), scraper.getProductType(), null, 0);
         }
 
-        // URLs whose nutrition AND description are already complete — skip detail page visit.
-        // Protein products need protein+fat+sugar+calorie+proteinSource+description all filled;
-        // non-protein products never get proteinSource from AI, so protein+fat+description is enough.
-        // Exception: scrapers that declare skipDetailIfDescriptionExists()=true (nutrition in images)
-        // skip detail fetches for any product that already has brand + description in DB.
-        boolean skipByDescription = scraper.skipDetailIfDescriptionExists();
-        Set<String> completeNutritionUrls = productRepository.findNutritionStatusByStoreName(store.getName())
-                .stream()
-                .filter(p -> {
-                    boolean hasDescription = p.getDescription() != null && !p.getDescription().isBlank();
-                    if (!hasDescription) return false;
-                    if (skipByDescription)
-                        return p.getBrand() != null && !p.getBrand().isBlank();
-                    if ("creatine".equals(p.getProductType())) {
-                        return p.getCreatineGramsPerServing() != null;
-                    }
-                    return baseEnricher.isNonProteinProduct(p.getName())
-                            || (p.getSugarPer100g() != null
-                                && p.getCaloriePer100g() != null && p.getCaloriePer100g() >= 200
-                                && p.getProteinSource() != null);
-                })
-                .map(Product::getUrl)
-                .collect(Collectors.toSet());
-        log.info("[{}] {} products already have complete nutrition+description — detail page will be skipped",
-                scraper.getStoreName(), completeNutritionUrls.size());
-
-        Set<String> foundUrls = new HashSet<>();
         // Rows already matched by an item of this run — the URL-changed fallbacks must not
         // re-point them at a different item (see saveOrUpdateProduct).
         Set<Long> claimedProductIds = new HashSet<>();
-        List<Product> products = new ArrayList<>();
-        boolean wasBlocked = false;
-        lastBlockDiagnostic = null;
+        boolean useProxyForThisStore = proxyEnabled && scraper.requiresProxy();
+        ProxyUsageMeter meter = useProxyForThisStore ? new ProxyUsageMeter() : null;
 
         try (Playwright playwright = Playwright.create()) {
             Browser browser = playwright.chromium().launch(
@@ -216,7 +261,6 @@ public class ScraperService {
             try {
                 String randomUA = getRandomUserAgent();
                 log.info("[{}] Using User-Agent: {}", scraper.getStoreName(), randomUA);
-                boolean useProxyForThisStore = proxyEnabled && scraper.requiresProxy();
                 if (useProxyForThisStore) {
                     log.info("[{}] Proxy enabled: {}:{}", scraper.getStoreName(), proxyHost, proxyPort);
                 }
@@ -250,6 +294,7 @@ public class ScraperService {
                 }
 
                 BrowserContext context = browser.newContext(contextOptions);
+                if (meter != null) context.onRequestFinished(meter::addRequest);
 
                 // Block analytics, ads, tracking, fonts, and media — only HTML+CSS+JS needed for scraping.
                 // This prevents proxy bandwidth waste on third-party trackers and product images.
@@ -281,138 +326,33 @@ public class ScraperService {
                 try {
                     Page page = context.newPage();
                     try {
-                        int currentPage = 0;
-                        int consecutivePageFailures = 0;
-
-                    while (true) {
-                        long delay = testMode ? 500 : humanDelay();
-                        log.info("[{}] Waiting {}ms before next page...", scraper.getStoreName(), delay);
-                        Thread.sleep(delay);
-
-                        String url = scraper.buildPageUrl(currentPage);
-                        log.info("[{}] Scraping page {}: {}", scraper.getStoreName(), currentPage, url);
-
-                        boolean pageLoadFailed = false;
-                        if (!scraper.usePlaywrightForListing()) {
-                            // Server-rendered stores (PrestaShop, Drupal, Next.js SSR) — JSoup is enough for listing.
-                            // Avoids loading images/JS/tracking through proxy on listing pages.
+                        for (int i = 0; i < runs.size(); i++) {
+                            TargetRun run = runs.get(i);
+                            if (i > 0 && runs.get(0).blocked) {
+                                log.warn("[{}] Skipping the {} listing — the primary {} listing was blocked",
+                                        scraper.getStoreName(), run.profile.code(), runs.get(0).profile.code());
+                                continue;
+                            }
+                            long bytesBefore = meter == null ? 0 : meter.total();
                             try {
-                                String html = httpClient.connection(url, scraper.requiresProxy()).get().html();
-                                page.setContent(html);
-                                log.info("[{}] JSoup listing fetch succeeded for {}", scraper.getStoreName(), url);
-                            } catch (Exception jsoupEx) {
-                                log.error("[{}] JSoup listing fetch failed for page {}: {}",
-                                        scraper.getStoreName(), currentPage, jsoupEx.getMessage());
-                                pageLoadFailed = true;
-                                if (currentPage == 0 && lastBlockDiagnostic == null) {
-                                    lastBlockDiagnostic = "jsoup-listing-failed msg=" + jsoupEx.getMessage()
-                                            + " proxy=" + scraper.requiresProxy();
+                                scrapeTarget(scraper, run, page, store, testMode, claimedProductIds,
+                                        useProxyForThisStore, meter);
+                                run.completed = true;
+                            } catch (Exception e) {
+                                // One listing failing (site hiccup, parse bug, API change) must not take the
+                                // other families of the same store down with it.
+                                log.error("[{}] {} listing failed: {}", scraper.getStoreName(),
+                                        run.profile.code(), e.getMessage(), e);
+                                run.blocked = true;
+                                if (lastBlockDiagnostic == null) {
+                                    lastBlockDiagnostic = run.profile.code() + "-listing-failed msg=" + e.getMessage();
                                 }
                             }
-                        } else if (!navigateWithRetry(page, url, 3)) {
-                            log.warn("[{}] Playwright navigation failed — trying JSoup direct fetch for {}",
-                                    scraper.getStoreName(), url);
-                            try {
-                                String html = httpClient.connection(url, scraper.requiresProxy()).get().html();
-                                page.setContent(html);
-                                log.info("[{}] JSoup direct fetch succeeded for {}", scraper.getStoreName(), url);
-                            } catch (Exception jsoupEx) {
-                                log.error("[{}] JSoup fallback also failed for page {}: {}",
-                                        scraper.getStoreName(), currentPage, jsoupEx.getMessage());
-                                pageLoadFailed = true;
-                                if (currentPage == 0) {
-                                    lastBlockDiagnostic = "playwright-and-jsoup-failed msg=" + jsoupEx.getMessage()
-                                            + " proxy=" + scraper.requiresProxy()
-                                            + " | " + lastBlockDiagnostic;
-                                }
+                            if (meter != null) {
+                                log.info("[{}] {} listing used ~{} KB of proxy traffic", scraper.getStoreName(),
+                                        run.profile.code(), (meter.total() - bytesBefore) / 1024);
                             }
                         }
-
-                        // A single page failing to load (site hiccup, transient timeout) shouldn't
-                        // abort the whole run and silently truncate every page after it — that's
-                        // what produced a "SUCCESS" scrape with only 54/195 products for Polleo
-                        // Sport when page 5 alone timed out. Skip the bad page and keep going;
-                        // only give up once several pages *in a row* fail, which is a much
-                        // stronger signal of an actual site block rather than one flaky request.
-                        if (pageLoadFailed) {
-                            consecutivePageFailures++;
-                            if (consecutivePageFailures >= MAX_CONSECUTIVE_PAGE_FAILURES) {
-                                log.error("[{}] {} consecutive page failures — stopping scraper",
-                                        scraper.getStoreName(), consecutivePageFailures);
-                                break;
-                            }
-                            currentPage++;
-                            continue;
-                        }
-                        consecutivePageFailures = 0;
-
-                        if (isBlockedByFirewall(page)) {
-                            log.warn("[{}] FIREWALL DETECTED on listing page — giving scraper waitForListing a chance to recover.", scraper.getStoreName());
-                            scraper.waitForListing(page);
-                            if (isBlockedByFirewall(page)) {
-                                log.error("[{}] FIREWALL persists after waitForListing. Stopping scraper.", scraper.getStoreName());
-                                wasBlocked = true;
-                                lastBlockDiagnostic = String.format(
-                                        "firewall title='%s' url=%s proxy=%s page=%d",
-                                        safeTitle(page), safeUrl(page), useProxyForThisStore, currentPage);
-                                break;
-                            }
-                            log.info("[{}] Firewall bypassed via waitForListing fallback.", scraper.getStoreName());
-                        } else {
-                            simulateHumanScroll(page);
-                            scraper.waitForListing(page);
-                        }
-
-                        Document doc = Jsoup.parse(page.content());
-                        List<Product> pageProducts = scraper.scrape(page, doc, completeNutritionUrls);
-
-                        log.info("[{}] Found {} products on page {}",
-                                scraper.getStoreName(), pageProducts.size(), currentPage);
-
-                        // Page loaded, title didn't match any known challenge string, yet the
-                        // listing parsed zero products — a silent block (e.g. a Turnstile
-                        // interstitial that leaves <title> unchanged, or a bot-detection page
-                        // with unfamiliar wording). Capture it the same way so BLOCKED runs are
-                        // diagnosable from ScrapeLog.errorMessage without live log access.
-                        if (currentPage == 0 && pageProducts.isEmpty() && lastBlockDiagnostic == null) {
-                            lastBlockDiagnostic = String.format(
-                                    "no-products title='%s' url=%s proxy=%s contentLen=%d",
-                                    safeTitle(page), safeUrl(page), useProxyForThisStore, doc.html().length());
-                        }
-
-                        // The same URL emitted twice with different prices would be written as two
-                        // price changes in one run (A→B→A history, re-"discovered" as a drop every
-                        // week). Keep one item per URL — the lowest price, like the variant scrapers.
-                        pageProducts = PriceIntegrity.keepLowestPricePerUrl(
-                                pageProducts, item -> priceParser.parse(item.getPrice()));
-
-                        for (Product p : pageProducts) {
-                            p.setStore(store);
-                            boolean saved = saveOrUpdateProduct(p, store, claimedProductIds);
-                            products.add(p);
-                            if (saved && p.getUrl() != null) {
-                                foundUrls.add(p.getUrl());
-                            }
-                        }
-
-                        if (!scraper.hasNextPage(doc)) {
-                            log.info("[{}] No more pages found", scraper.getStoreName());
-                            break;
-                        }
-
-                        currentPage++;
-
-                        if (testMode) {
-                            log.info("[{}] TEST MODE: Stopping after first page", scraper.getStoreName());
-                            break;
-                        }
-
-                        if (currentPage > 50) {
-                            log.warn("[{}] Reached max page limit (50), stopping", scraper.getStoreName());
-                            break;
-                        }
-                    }
-
                     } finally {
                         page.close();
                     }
@@ -426,19 +366,267 @@ public class ScraperService {
 
         } catch (Exception e) {
             log.error("[{}] Critical error during scraping: {}", scraper.getStoreName(), e.getMessage(), e);
-            wasBlocked = true;
+            for (TargetRun run : runs) {
+                if (!run.completed) run.blocked = true;
+            }
         }
 
-        if (staleEnabled && !testMode && !wasBlocked && !existingUrlSet.isEmpty()) {
-            removeStaleProducts(scraper.getStoreName(), existingUrlSet, foundUrls);
+        int removed = 0;
+        if (staleEnabled && !testMode) {
+            for (TargetRun run : runs) {
+                if (run.completed && !run.blocked && !run.existingUrls.isEmpty()) {
+                    removed += removeStaleProducts(scraper.getStoreName(), run.profile.code(),
+                            run.existingUrls, run.foundUrls);
+                }
+            }
         }
 
-        log.info("[{}] Scraping complete. Total products: {}", scraper.getStoreName(), products.size());
-        return products;
+        List<Product> all = new ArrayList<>();
+        Map<String, Integer> foundByType = new LinkedHashMap<>();
+        Map<String, Integer> savedByType = new LinkedHashMap<>();
+        for (TargetRun run : runs) {
+            all.addAll(run.products);
+            foundByType.merge(run.profile.code(), run.products.size(), Integer::sum);
+            savedByType.merge(run.profile.code(), run.saved, Integer::sum);
+        }
+        ScrapeOutcome outcome = new ScrapeOutcome(all, foundByType, savedByType, runs.get(0).profile.code(),
+                meter == null ? null : meter.total(), removed);
+        log.info("[{}] Scraping complete. Total products: {} (saved {}){}", scraper.getStoreName(), all.size(),
+                outcome.typeCounts(), meter == null ? "" : ", ~" + meter.total() / 1024 + " KB proxy traffic");
+        return outcome;
     }
 
-    public List<Product> scrapeStore(StoreScraper scraper) {
-        return scrapeStore(scraper, false);
+    private boolean isSelected(StoreScraper scraper, ListingTarget target, Set<String> onlyTypes) {
+        return onlyTypes != null
+                ? onlyTypes.contains(target.productType())
+                : scrapingTypes.isEnabled(target.productType(), scraper.getStoreName());
+    }
+
+    /**
+     * The product types a run of {@code scraper} would scrape right now. Empty means there is nothing to
+     * do (e.g. a scraper whose only listing is a family that is switched off) and the caller should skip
+     * the run instead of logging it as a blocked scrape.
+     */
+    public List<String> selectedTypes(StoreScraper scraper, Set<String> onlyTypes) {
+        return scraper.listingTargets().stream()
+                .filter(t -> isSelected(scraper, t, onlyTypes))
+                .map(ListingTarget::productType)
+                .toList();
+    }
+
+    /** The targets to run, each with its stale-detection and skip-detail state loaded. */
+    private List<TargetRun> buildRuns(StoreScraper scraper, Store store, boolean testMode, Set<String> onlyTypes) {
+        List<Product> storedRows = null;
+        List<TargetRun> runs = new ArrayList<>();
+        for (ListingTarget target : scraper.listingTargets()) {
+            if (!isSelected(scraper, target, onlyTypes)) continue;
+
+            TargetRun run = new TargetRun(target, productTypes.forCode(target.productType()));
+            if (staleEnabled && !testMode) {
+                run.existingUrls.addAll(productRepository.findUrlsByStoreNameAndProductType(
+                        store.getName(), target.productType()));
+                log.info("[{}] Stale detection ({}): {} existing products tracked",
+                        scraper.getStoreName(), target.productType(), run.existingUrls.size());
+            }
+            if (storedRows == null) storedRows = productRepository.findAllByStoreName(store.getName());
+            run.completeUrls.addAll(completeDetailUrls(scraper, storedRows, run.profile));
+            log.info("[{}] {} {} products already have complete data — detail page will be skipped",
+                    scraper.getStoreName(), run.completeUrls.size(), target.productType());
+            runs.add(run);
+        }
+        return runs;
+    }
+
+    // URLs whose stored data is already complete for their type — the detail page visit is skipped.
+    // What "complete" means is the type profile's call. Scrapers that declare
+    // skipDetailIfDescriptionExists()=true (nutrition in images) skip detail fetches for any product that
+    // already has brand + description in DB.
+    private Set<String> completeDetailUrls(StoreScraper scraper, List<Product> storedRows, ProductTypeProfile profile) {
+        boolean nutritionInImages = scraper.skipDetailIfDescriptionExists();
+        return storedRows.stream()
+                .filter(p -> profile.code().equals(p.getProductType()))
+                .filter(p -> {
+                    boolean hasDescription = p.getDescription() != null && !p.getDescription().isBlank();
+                    if (!hasDescription) return false;
+                    if (!profile.isDetailComplete(p, nutritionInImages)) return false;
+                    return !nutritionInImages || (p.getBrand() != null && !p.getBrand().isBlank());
+                })
+                .map(Product::getUrl)
+                .collect(Collectors.toSet());
+    }
+
+    private void scrapeTarget(StoreScraper scraper, TargetRun run, Page page, Store store, boolean testMode,
+                              Set<Long> claimedProductIds, boolean useProxy, ProxyUsageMeter meter) throws Exception {
+        switch (run.target.source()) {
+            case ListingTarget.HtmlPaged source ->
+                    scrapeHtmlTarget(scraper, run, source, page, store, testMode, claimedProductIds, useProxy, meter);
+            case ListingTarget.WooStoreApi source ->
+                    scrapeWooTarget(run, source, store, claimedProductIds, useProxy, meter);
+        }
+    }
+
+    private void scrapeWooTarget(TargetRun run, ListingTarget.WooStoreApi source, Store store,
+                                 Set<Long> claimedProductIds, boolean useProxy, ProxyUsageMeter meter) throws IOException {
+        List<Product> items;
+        try {
+            items = wooStoreApiSource.fetch(source, store, useProxy, meter);
+        } catch (IOException e) {
+            if (lastBlockDiagnostic == null) {
+                lastBlockDiagnostic = "woo-api-failed slug=" + source.categorySlug()
+                        + " msg=" + e.getMessage() + " proxy=" + useProxy;
+            }
+            throw e;
+        }
+        items = PriceIntegrity.keepLowestPricePerUrl(items, item -> priceParser.parse(item.getPrice()));
+        persistScraped(run, items, store, claimedProductIds);
+    }
+
+    private void scrapeHtmlTarget(StoreScraper scraper, TargetRun run, ListingTarget.HtmlPaged source, Page page,
+                                  Store store, boolean testMode, Set<Long> claimedProductIds,
+                                  boolean useProxyForThisStore, ProxyUsageMeter meter) throws InterruptedException {
+        int currentPage = 0;
+        int consecutivePageFailures = 0;
+
+        while (true) {
+            long delay = testMode ? 500 : humanDelay();
+            log.info("[{}] Waiting {}ms before next page...", scraper.getStoreName(), delay);
+            Thread.sleep(delay);
+
+            String url = source.pageUrl().apply(currentPage);
+            log.info("[{}] Scraping {} page {}: {}", scraper.getStoreName(), run.profile.code(), currentPage, url);
+
+            boolean pageLoadFailed = false;
+            if (!scraper.usePlaywrightForListing()) {
+                // Server-rendered stores (PrestaShop, Drupal, Next.js SSR) — JSoup is enough for listing.
+                // Avoids loading images/JS/tracking through proxy on listing pages.
+                try {
+                    String html = fetchHtml(url, scraper.requiresProxy(), meter);
+                    page.setContent(html);
+                    log.info("[{}] JSoup listing fetch succeeded for {}", scraper.getStoreName(), url);
+                } catch (Exception jsoupEx) {
+                    log.error("[{}] JSoup listing fetch failed for page {}: {}",
+                            scraper.getStoreName(), currentPage, jsoupEx.getMessage());
+                    pageLoadFailed = true;
+                    if (currentPage == 0 && lastBlockDiagnostic == null) {
+                        lastBlockDiagnostic = "jsoup-listing-failed msg=" + jsoupEx.getMessage()
+                                + " proxy=" + scraper.requiresProxy();
+                    }
+                }
+            } else if (!navigateWithRetry(page, url, 3)) {
+                log.warn("[{}] Playwright navigation failed — trying JSoup direct fetch for {}",
+                        scraper.getStoreName(), url);
+                try {
+                    String html = fetchHtml(url, scraper.requiresProxy(), meter);
+                    page.setContent(html);
+                    log.info("[{}] JSoup direct fetch succeeded for {}", scraper.getStoreName(), url);
+                } catch (Exception jsoupEx) {
+                    log.error("[{}] JSoup fallback also failed for page {}: {}",
+                            scraper.getStoreName(), currentPage, jsoupEx.getMessage());
+                    pageLoadFailed = true;
+                    if (currentPage == 0) {
+                        lastBlockDiagnostic = "playwright-and-jsoup-failed msg=" + jsoupEx.getMessage()
+                                + " proxy=" + scraper.requiresProxy()
+                                + " | " + lastBlockDiagnostic;
+                    }
+                }
+            }
+
+            // A single page failing to load (site hiccup, transient timeout) shouldn't
+            // abort the whole run and silently truncate every page after it — that's
+            // what produced a "SUCCESS" scrape with only 54/195 products for Polleo
+            // Sport when page 5 alone timed out. Skip the bad page and keep going;
+            // only give up once several pages *in a row* fail, which is a much
+            // stronger signal of an actual site block rather than one flaky request.
+            if (pageLoadFailed) {
+                consecutivePageFailures++;
+                if (consecutivePageFailures >= MAX_CONSECUTIVE_PAGE_FAILURES) {
+                    log.error("[{}] {} consecutive page failures — stopping scraper",
+                            scraper.getStoreName(), consecutivePageFailures);
+                    return;
+                }
+                currentPage++;
+                continue;
+            }
+            consecutivePageFailures = 0;
+
+            if (isBlockedByFirewall(page)) {
+                log.warn("[{}] FIREWALL DETECTED on listing page — giving scraper waitForListing a chance to recover.", scraper.getStoreName());
+                scraper.waitForListing(page);
+                if (isBlockedByFirewall(page)) {
+                    log.error("[{}] FIREWALL persists after waitForListing. Stopping scraper.", scraper.getStoreName());
+                    run.blocked = true;
+                    lastBlockDiagnostic = String.format(
+                            "firewall title='%s' url=%s proxy=%s page=%d",
+                            safeTitle(page), safeUrl(page), useProxyForThisStore, currentPage);
+                    return;
+                }
+                log.info("[{}] Firewall bypassed via waitForListing fallback.", scraper.getStoreName());
+            } else {
+                simulateHumanScroll(page);
+                scraper.waitForListing(page);
+            }
+
+            Document doc = Jsoup.parse(page.content());
+            List<Product> pageProducts = scraper.scrape(run.target, run.profile, page, doc, run.completeUrls);
+
+            log.info("[{}] Found {} {} products on page {}",
+                    scraper.getStoreName(), pageProducts.size(), run.profile.code(), currentPage);
+
+            // Page loaded, title didn't match any known challenge string, yet the
+            // listing parsed zero products — a silent block (e.g. a Turnstile
+            // interstitial that leaves <title> unchanged, or a bot-detection page
+            // with unfamiliar wording). Capture it the same way so BLOCKED runs are
+            // diagnosable from ScrapeLog.errorMessage without live log access.
+            if (currentPage == 0 && pageProducts.isEmpty() && lastBlockDiagnostic == null) {
+                lastBlockDiagnostic = String.format(
+                        "no-products title='%s' url=%s proxy=%s contentLen=%d",
+                        safeTitle(page), safeUrl(page), useProxyForThisStore, doc.html().length());
+            }
+
+            // The same URL emitted twice with different prices would be written as two
+            // price changes in one run (A→B→A history, re-"discovered" as a drop every
+            // week). Keep one item per URL — the lowest price, like the variant scrapers.
+            pageProducts = PriceIntegrity.keepLowestPricePerUrl(
+                    pageProducts, item -> priceParser.parse(item.getPrice()));
+
+            persistScraped(run, pageProducts, store, claimedProductIds);
+
+            if (!scraper.hasNextPage(doc)) {
+                log.info("[{}] No more pages found", scraper.getStoreName());
+                return;
+            }
+
+            currentPage++;
+
+            if (testMode) {
+                log.info("[{}] TEST MODE: Stopping after first page", scraper.getStoreName());
+                return;
+            }
+
+            if (currentPage > 50) {
+                log.warn("[{}] Reached max page limit (50), stopping", scraper.getStoreName());
+                return;
+            }
+        }
+    }
+
+    private void persistScraped(TargetRun run, List<Product> scraped, Store store, Set<Long> claimedProductIds) {
+        for (Product p : scraped) {
+            p.setStore(store);
+            p.setProductType(run.profile.code());
+            boolean saved = saveOrUpdateProduct(p, store, claimedProductIds, run.profile, run.target.categoryTrusted());
+            run.products.add(p);
+            if (saved) {
+                run.saved++;
+                if (p.getUrl() != null) run.foundUrls.add(p.getUrl());
+            }
+        }
+    }
+
+    private String fetchHtml(String url, boolean useProxy, ProxyUsageMeter meter) throws IOException {
+        org.jsoup.Connection.Response response = httpClient.connection(url, useProxy).execute();
+        if (useProxy && meter != null) meter.addResponse(response);
+        return response.parse().html();
     }
 
     // -------------------- Stale product cleanup --------------------
@@ -449,10 +637,13 @@ public class ScraperService {
     // a still-listed product.
     private static final int STALE_MISS_THRESHOLD = 3;
 
-    private void removeStaleProducts(String storeName, Set<String> existingUrlSet, Set<String> foundUrls) {
+    /** @return how many stale products were deleted */
+    private int removeStaleProducts(String storeName, String productType, Set<String> existingUrlSet,
+                                    Set<String> foundUrls) {
+        String label = storeName + "/" + productType;
         if (foundUrls.isEmpty()) {
-            log.warn("[{}] Stale removal skipped — scrape found 0 valid products (possible block or scrape error)", storeName);
-            return;
+            log.warn("[{}] Stale removal skipped — scrape found 0 valid products (possible block or scrape error)", label);
+            return 0;
         }
 
         productRepository.resetMissedScrapes(foundUrls);
@@ -461,15 +652,15 @@ public class ScraperService {
         missingUrls.removeAll(foundUrls);
 
         if (missingUrls.isEmpty()) {
-            log.info("[{}] No stale products detected", storeName);
-            return;
+            log.info("[{}] No stale products detected", label);
+            return 0;
         }
 
         double removalPercent = (double) missingUrls.size() / existingUrlSet.size() * 100;
         if (removalPercent > maxRemovalPercent) {
             log.warn("[{}] Safety check FAILED — skipping stale removal, not counting this as a miss either (likely a site-wide block, not real removals). Found: {}, Missing: {} ({}% would be removed, threshold {}%)",
-                    storeName, foundUrls.size(), missingUrls.size(), (int) removalPercent, maxRemovalPercent);
-            return;
+                    label, foundUrls.size(), missingUrls.size(), (int) removalPercent, maxRemovalPercent);
+            return 0;
         }
 
         productRepository.incrementMissedScrapes(missingUrls);
@@ -477,20 +668,16 @@ public class ScraperService {
         List<String> urlsToDelete = productRepository.findUrlsWithMissedScrapesAtLeast(missingUrls, STALE_MISS_THRESHOLD);
         if (urlsToDelete.isEmpty()) {
             log.info("[{}] {} product(s) missing this scrape but under the grace threshold ({} consecutive misses) — not deleted yet",
-                    storeName, missingUrls.size(), STALE_MISS_THRESHOLD);
-            return;
+                    label, missingUrls.size(), STALE_MISS_THRESHOLD);
+            return 0;
         }
 
         log.info("[{}] Removing {} stale products (missed {}+ consecutive scrapes): {}",
-                storeName, urlsToDelete.size(), STALE_MISS_THRESHOLD, urlsToDelete);
+                label, urlsToDelete.size(), STALE_MISS_THRESHOLD, urlsToDelete);
         productRepository.deleteByUrlIn(urlsToDelete);
 
-        scrapeLogRepository.findFirstByStoreNameOrderByStartedAtDesc(storeName).ifPresent(entry -> {
-            entry.setProductsRemoved(urlsToDelete.size());
-            scrapeLogRepository.save(entry);
-        });
-
-        log.info("[{}] Stale removal complete — {} products removed", storeName, urlsToDelete.size());
+        log.info("[{}] Stale removal complete — {} products removed", label, urlsToDelete.size());
+        return urlsToDelete.size();
     }
 
     // -------------------- ANTI-BAN HELPERS --------------------
@@ -743,34 +930,23 @@ public class ScraperService {
      */
     @Transactional
     public boolean saveOrUpdateProduct(Product scraped, Store store, Set<Long> claimedProductIds) {
+        return saveOrUpdateProduct(scraped, store, claimedProductIds, productTypes.forProduct(scraped), false);
+    }
 
-        boolean isCreatine = "creatine".equals(scraped.getProductType());
+    /**
+     * @param profile         rules of the product family being saved (acceptance, ranges, price floor,
+     *                        family-specific fields) — see {@link ProductTypeProfile}
+     * @param categoryTrusted the item came from a listing dedicated to that family
+     */
+    @Transactional
+    public boolean saveOrUpdateProduct(Product scraped, Store store, Set<Long> claimedProductIds,
+                                       ProductTypeProfile profile, boolean categoryTrusted) {
 
-        if (isCreatine) {
-            // Kreatin nema proteinski sadržaj, pa protein-specifični gejtovi ispod ne važe.
-            // Umesto toga, odbaci ako ne postoji nikakva potvrda gramaže kreatina po serviranju
-            // niti ključna reč u nazivu — znak da je nešto pogrešno detektovano kao kreatin.
-            boolean hasCreatineGrams = scraped.getCreatineGramsPerServing() != null
-                    && scraped.getCreatineGramsPerServing() > 0;
-            boolean nameLooksLikeCreatine = scraped.getName() != null
-                    && scraped.getName().toLowerCase().matches(".*(kreatin|creatine).*");
-            if (!hasCreatineGrams && !nameLooksLikeCreatine) {
-                log.info("[{}] Skipping '{}' — no creatine confirmation (name/grams)", store.getName(), scraped.getName());
-                return false;
-            }
-        } else {
-            // 0. Provera da li je proizvod proteinski suplement
-            if (baseEnricher.isNonProteinProduct(scraped.getName())) {
-                log.info("[{}] Skipping '{}' - not a protein supplement", store.getName(), scraped.getName());
-                return false;
-            }
-
-            // Odbaci mass gainere i snackove sa premalo proteina (gaineri, barovi, namazi)
-            if (scraped.getProteinPer100g() != null && scraped.getProteinPer100g() < 25.0) {
-                log.info("[{}] Skipping '{}' — protein {}g/100g too low for a protein supplement",
-                        store.getName(), scraped.getName(), scraped.getProteinPer100g());
-                return false;
-            }
+        // 0. Does the item belong to this product family at all?
+        Optional<String> rejected = profile.rejectReason(scraped, categoryTrusted);
+        if (rejected.isPresent()) {
+            log.info("[{}] Skipping '{}' — {}", store.getName(), scraped.getName(), rejected.get());
+            return false;
         }
 
         // 1. Normalizuj brend
@@ -786,29 +962,8 @@ public class ScraperService {
             scraped.setBrand(brandNormalizer.normalize(scraped.getBrand()));
         }
 
-        // 2. Validacija nutritivnih vrednosti
-        if (scraped.getProteinPer100g() != null) {
-            if (scraped.getProteinPer100g() < 15 || scraped.getProteinPer100g() > 100) {
-                log.warn("[{}] Invalid protein value for '{}': {}g/100g — setting null",
-                        store.getName(), scraped.getName(), scraped.getProteinPer100g());
-                scraped.setProteinPer100g(null);
-            }
-        }
-        if (scraped.getSugarPer100g() != null && scraped.getSugarPer100g() > 100) {
-            log.warn("[{}] Invalid sugar value for '{}': {}g/100g — setting null",
-                    store.getName(), scraped.getName(), scraped.getSugarPer100g());
-            scraped.setSugarPer100g(null);
-        }
-        if (scraped.getFatPer100g() != null && scraped.getFatPer100g() > 100) {
-            log.warn("[{}] Invalid fat value for '{}': {}g/100g — setting null",
-                    store.getName(), scraped.getName(), scraped.getFatPer100g());
-            scraped.setFatPer100g(null);
-        }
-        if (scraped.getCaloriePer100g() != null && scraped.getCaloriePer100g() > 900) {
-            log.warn("[{}] Invalid calorie value for '{}': {}kcal/100g — setting null",
-                    store.getName(), scraped.getName(), scraped.getCaloriePer100g());
-            scraped.setCaloriePer100g(null);
-        }
+        // 2. Validacija vrednosti specifičnih za tip proizvoda (protein: makroi; kreatin: doza/pakovanje)
+        profile.sanitize(scraped, store.getName());
 
         // 3. Validacija cene
         Double numericPrice = priceParser.parse(scraped.getPrice());
@@ -816,7 +971,7 @@ public class ScraperService {
             log.warn("[{}] Skipping '{}' - no valid price", store.getName(), scraped.getName());
             return false;
         }
-        double minPrice = "EUR".equals(store.getCurrency()) ? 5.0 : 1000.0;
+        double minPrice = profile.minPrice(store.getCurrency());
         if (numericPrice < minPrice) {
             log.info("[{}] Skipping '{}' - price {} {} below minimum {} (likely sachet/single-serving)",
                     store.getName(), scraped.getName(), numericPrice, store.getCurrency(), minPrice);
@@ -830,17 +985,24 @@ public class ScraperService {
 
         // Fallback: ako URL ne matchuje (SKU se promenio), traži po imenu+prodavnici+gramazi
         if (existingOpt.isEmpty() && scraped.getPrimaryWeightGrams() != null) {
-            Optional<Product> byWeight = productRepository.findByNameAndStoreAndWeight(
-                    scraped.getName(), store, scraped.getPrimaryWeightGrams());
-            if (byWeight.isPresent()) {
-                Product match = byWeight.get();
+            List<Product> byWeight = productRepository.findAllByNameAndStoreAndWeight(
+                    scraped.getName(), store, scraped.getPrimaryWeightGrams(), profile.code());
+            if (byWeight.size() > 1) {
+                // The store lists several products under this exact title and weight (different brands
+                // behind one generic name), so which of them the item is cannot be told — and neither
+                // can the fuzzy fallback below. Nothing is re-pointed: the item becomes its own row.
+                log.warn("[{}] {} stored rows share '{}' {}g — cannot tell which one is {}, treating it as a new product",
+                        store.getName(), byWeight.size(), scraped.getName(),
+                        Math.round(scraped.getPrimaryWeightGrams()), scraped.getUrl());
+            } else if (!byWeight.isEmpty()) {
+                Product match = byWeight.get(0);
                 if (isRepointAllowed(match, numericPrice, claimedProductIds)) {
                     log.info("[{}] SKU promenjen za '{}' {}g — stari URL: {}, novi URL: {}",
                             store.getName(), scraped.getName(),
                             Math.round(scraped.getPrimaryWeightGrams()),
                             match.getUrl(), scraped.getUrl());
                     match.setUrl(scraped.getUrl());
-                    existingOpt = byWeight;
+                    existingOpt = Optional.of(match);
                 } else {
                     // Same name+weight but a different product (claimed by another item this run,
                     // or the price is too far off) — becomes a new row instead of hijacking this one.
@@ -856,7 +1018,8 @@ public class ScraperService {
                 // traži najbliži fuzzy match po imenu među proizvodima iste prodavnice/gramaze,
                 // umesto da se tretira kao potpuno nov proizvod (što bi ostavilo stari kanonski
                 // URL da postane 404 kad ga sledeći scrape obriše kao "stale").
-                List<Product> candidates = productRepository.findByStoreAndWeight(store, scraped.getPrimaryWeightGrams());
+                List<Product> candidates = productRepository.findByStoreAndWeight(
+                        store, scraped.getPrimaryWeightGrams(), profile.code());
                 Product bestMatch = null;
                 int bestScore = 0;
                 for (Product candidate : candidates) {
@@ -893,23 +1056,8 @@ public class ScraperService {
             }
         }
 
-        if (scraped.getProteinPer100g() == null || scraped.getProteinPer100g() < 15) {
-            if (existingOpt.isPresent() && existingOpt.get().getProteinPer100g() != null
-                    && existingOpt.get().getProteinPer100g() >= 15) {
-                Product fb = existingOpt.get();
-                scraped.setProteinPer100g(fb.getProteinPer100g());
-                if (scraped.getFatPer100g() == null)         scraped.setFatPer100g(fb.getFatPer100g());
-                if (scraped.getSugarPer100g() == null)       scraped.setSugarPer100g(fb.getSugarPer100g());
-                if (scraped.getCaloriePer100g() == null)     scraped.setCaloriePer100g(fb.getCaloriePer100g());
-                if (scraped.getProteinSource() == null)      scraped.setProteinSource(fb.getProteinSource());
-                if (scraped.getPrimaryWeightGrams() == null) scraped.setPrimaryWeightGrams(fb.getPrimaryWeightGrams());
-                log.info("[{}] '{}' — protein null from listing, restored from DB ({}g/100g)",
-                        store.getName(), scraped.getName(), scraped.getProteinPer100g());
-            } else {
-                log.warn("[{}] Skipping '{}' - no valid protein data (protein={})",
-                        store.getName(), scraped.getName(), scraped.getProteinPer100g());
-                return false;
-            }
+        if (!profile.restoreFromStored(scraped, existingOpt, store.getName())) {
+            return false;
         }
         scraped.setMarket(store.getMarket() != null ? store.getMarket() : "rs");
         scraped.setCurrency(store.getCurrency() != null ? store.getCurrency() : "RSD");
@@ -1018,26 +1166,8 @@ public class ScraperService {
                 }
             }
 
-            // GROUP 3 — ažuriraj protein ako je null ili ako se promenio za >3g/100g
-            // (hvata reformulacije i ispravlja pogrešne stare vrijednosti)
-            if (scraped.getProteinPer100g() != null && scraped.getProteinPer100g() <= 95
-                    && scraped.getProteinPer100g() >= 15) {
-                Double existingProtein = existing.getProteinPer100g();
-                if (existingProtein == null || existingProtein < 15
-                        || Math.abs(scraped.getProteinPer100g() - existingProtein) > 3.0) {
-                    existing.setProteinPer100g(scraped.getProteinPer100g());
-                }
-            }
-            if (existing.getFatPer100g() == null && scraped.getFatPer100g() != null)
-                existing.setFatPer100g(scraped.getFatPer100g());
-            if (existing.getSugarPer100g() == null && scraped.getSugarPer100g() != null)
-                existing.setSugarPer100g(scraped.getSugarPer100g());
-            boolean kcalSuspect = existing.getCaloriePer100g() != null && existing.getCaloriePer100g() < 200;
-            if ((existing.getCaloriePer100g() == null || kcalSuspect) && scraped.getCaloriePer100g() != null
-                    && scraped.getCaloriePer100g() >= 200)
-                existing.setCaloriePer100g(scraped.getCaloriePer100g());
-            if (existing.getProteinSource() == null && scraped.getProteinSource() != null)
-                existing.setProteinSource(scraped.getProteinSource());
+            // GROUP 3 — polja specifična za tip proizvoda (protein: makroi; kreatin: oblik, doza, pakovanje)
+            profile.mergeInto(existing, scraped);
 
             existing.setProteinPerRsd(computeProteinPerRsd(numericPrice, existing));
             existing.setProteinPerCurrency(computeProteinPerRsd(numericPrice, existing));
@@ -1062,6 +1192,7 @@ public class ScraperService {
 
         } else {
             scraped.setStore(store);
+            scraped.setProductType(profile.code());
             scraped.setNumericPrice(numericPrice);
             scraped.setValueScore(valueScore);
             if (weightGrams > 0) scraped.setPrimaryWeightGrams(weightGrams);

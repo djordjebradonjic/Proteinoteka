@@ -66,9 +66,19 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 export default function SearchAutocomplete({
   value,
   onChange,
+  productType,
+  placeholder = "Pretraži proteine, brendove...",
+  seeAllPath = "/",
+  gridId = "product-grid",
 }: {
   value: string;
   onChange: (v: string) => void;
+  /** Restricts suggestions (and "Prikaži sve") to one product family; omit for the site-wide (protein-default) search. */
+  productType?: string;
+  placeholder?: string;
+  /** Page the "Prikaži sve →" link and its target grid live on; defaults to the homepage. */
+  seeAllPath?: string;
+  gridId?: string;
 }) {
   const [query, setQuery] = useState(value);
   const [results, setResults] = useState<ProductSuggestion[]>([]);
@@ -89,7 +99,9 @@ export default function SearchAutocomplete({
       setLoading(true);
       try {
         const res = await fetch(
-          `${API_BASE}/api/v1/products/search?query=${encodeURIComponent(q)}&size=20`,
+          `${API_BASE}/api/v1/products/search?query=${encodeURIComponent(q)}&size=20${
+            productType ? `&productType=${productType}` : ""
+          }`,
         );
         if (!res.ok) throw new Error();
         const data: any[] = await res.json();
@@ -191,7 +203,7 @@ export default function SearchAutocomplete({
             if (results.length > 0) setOpen(true);
           }}
           onKeyDown={handleKeyDown}
-          placeholder="Pretraži proteine, brendove..."
+          placeholder={placeholder}
           className="flex-1 px-4 py-2.5 text-sm text-slate-800 bg-white outline-none placeholder:text-slate-400"
           autoComplete="off"
         />
@@ -338,15 +350,15 @@ export default function SearchAutocomplete({
                 className="text-xs font-semibold text-[#FF9900] hover:underline"
                 onClick={() => {
                   setOpen(false);
-                  const url = `/?query=${encodeURIComponent(query.trim())}`;
-                  if (window.location.pathname === "/") {
+                  const url = `${seeAllPath}?query=${encodeURIComponent(query.trim())}`;
+                  if (window.location.pathname === seeAllPath) {
                     navigateTo(url);
                     requestAnimationFrame(() => {
-                      const el = document.getElementById("product-grid");
+                      const el = document.getElementById(gridId);
                       if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
                     });
                   } else {
-                    window.location.href = url + "#product-grid";
+                    window.location.href = url + `#${gridId}`;
                   }
                 }}
               >

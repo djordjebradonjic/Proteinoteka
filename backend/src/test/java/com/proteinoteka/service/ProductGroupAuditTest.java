@@ -55,6 +55,45 @@ class ProductGroupAuditTest {
         assertTrue(has(issues, "GROUP_STALE_METADATA"), issues.toString());
     }
 
+    // ------------------------------------------------------------------ counted forms
+
+    private static Product capsules(Long groupId, String name, int units, long storeId) {
+        Product p = ProductGroupServiceTest.pieces(name, "Amix Nutrition", "capsule", units, store(storeId, "Store" + storeId));
+        p.setGroupId(groupId);
+        return p;
+    }
+
+    @Test
+    void aCleanCapsuleGroupIsMeasuredInPiecesAndHasNoIssues() {
+        ProductGroup g = group(1, "Amix Nutrition", 120);
+        List<Product> ps = List.of(
+                capsules(1L, "Kre-Alkalyn 120cap - Amix", 120, 1),
+                capsules(1L, "Kre-alkalyn 120 kapsula AMIX", 120, 2));
+        assertEquals(List.of(), ProductGroupAudit.run(List.of(g), ps));
+    }
+
+    @Test
+    void differentCapsuleCountsInOneGroupAreFlaggedInPieces() {
+        ProductGroup g = group(1, "Amix Nutrition", 120);
+        List<Product> ps = List.of(
+                capsules(1L, "Kre-Alkalyn 120cap - Amix", 120, 1),
+                capsules(1L, "Kre-alkalyn 110 kapsula AMIX", 110, 2));
+        List<String> issues = ProductGroupAudit.run(List.of(g), ps);
+        assertTrue(issues.stream().anyMatch(i -> i.startsWith("GROUP_WEIGHT_SPREAD") && i.contains("pcs")), issues.toString());
+    }
+
+    @Test
+    void ungroupedCreatineThatFitsAGroupIsReported() {
+        ProductGroup g = group(1, "Amix Nutrition", 120);
+        List<Product> ps = new ArrayList<>(List.of(
+                capsules(1L, "Kre-Alkalyn 120cap - Amix", 120, 1),
+                capsules(1L, "Kre-alkalyn 120 kapsula AMIX", 120, 2)));
+        ps.add(capsules(null, "AMIX KreAlkalyn 120 kapsula", 120, 3));
+
+        List<String> issues = ProductGroupAudit.run(List.of(g), ps);
+        assertTrue(has(issues, "UNGROUPED_MATCH"), issues.toString());
+    }
+
     @Test
     void singleMemberAndSameStoreAreFlagged() {
         ProductGroup lonely = group(1, "Amix", 2200);

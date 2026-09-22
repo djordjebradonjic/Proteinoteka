@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.WaitUntilState;
 import com.proteinoteka.model.Product;
+import com.proteinoteka.service.producttype.ProductTypes;
 import com.proteinoteka.util.WeightParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,6 +48,16 @@ public class ProteinboxScraper implements StoreScraper {
     // which left every listing page blocked (0 products) — route through the residential proxy.
     @Override
     public boolean requiresProxy() { return true; }
+
+    // Creatine is read from the Woo Store API (the whole category in ~43 KB of JSON) instead of a browser
+    // walk through the residential proxy: a creatine-only run costs a few dozen KB of proxy traffic and
+    // opens no page. If Cloudflare ever blocks the API from the proxy, the run fails cheaply and says why
+    // in scrape_log.error_message ("woo-api-failed ..."); it is never retried.
+    @Override
+    public List<ListingTarget> listingTargets() {
+        return List.of(primaryListingTarget(),
+                ListingTarget.woo(ProductTypes.CREATINE, "https://proteinbox.rs", "kreatin"));
+    }
 
     @Override
     public boolean hasNextPage(Document doc) {

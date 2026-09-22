@@ -4,6 +4,8 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.WaitUntilState;
 import com.proteinoteka.model.Product;
 import com.proteinoteka.repository.ProductRepository;
+import com.proteinoteka.service.producttype.ProductTypeProfile;
+import com.proteinoteka.service.producttype.ProductTypes;
 import com.proteinoteka.util.PriceParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +28,7 @@ public class SupplementStoreScraper implements StoreScraper {
     private static final String STORE_NAME  = "SupplementStore";
     private static final String BASE_URL    = "https://supplementstore.rs";
     private static final String LISTING_URL = BASE_URL + "/kategorije/proteini?limit=100";
+    private static final String CREATINE_LISTING_URL = BASE_URL + "/kategorije/kreatin?limit=100";
 
     private final BaseScraperEnricher    baseEnricher;
     private final ProductRepository      productRepository;
@@ -47,10 +50,22 @@ public class SupplementStoreScraper implements StoreScraper {
         return doc.selectFirst("ul.pagination a.next") != null;
     }
 
+    // ScraperService pages are 0-indexed, the site's ?page= is 1-indexed
+    private static String pageUrl(String listingUrl, int page) {
+        return page == 0 ? listingUrl : listingUrl + "&page=" + (page + 1);
+    }
+
     @Override
     public String buildPageUrl(int page) {
-        // ScraperService pages are 0-indexed, the site's ?page= is 1-indexed
-        return page == 0 ? LISTING_URL : LISTING_URL + "&page=" + (page + 1);
+        return pageUrl(LISTING_URL, page);
+    }
+
+    @Override
+    public List<ListingTarget> listingTargets() {
+        return List.of(
+                primaryListingTarget(),
+                ListingTarget.html(ProductTypes.CREATINE, CREATINE_LISTING_URL,
+                        page -> pageUrl(CREATINE_LISTING_URL, page)));
     }
 
     @Override
@@ -60,11 +75,21 @@ public class SupplementStoreScraper implements StoreScraper {
 
     @Override
     public List<Product> scrape(Page page, Document doc, Set<String> skipUrls) {
+        return scrapeListing(page, doc, skipUrls, ListingFamily.PROTEIN);
+    }
+
+    @Override
+    public List<Product> scrape(ListingTarget target, ProductTypeProfile profile,
+                                Page page, Document doc, Set<String> skipUrls) {
+        return scrapeListing(page, doc, skipUrls, ListingFamily.of(target, profile));
+    }
+
+    private List<Product> scrapeListing(Page page, Document doc, Set<String> skipUrls, ListingFamily family) {
         List<Product> products = parseListingPage(doc);
-        log.info("[{}] Parsed {} products from listing page", STORE_NAME, products.size());
+        log.info("[{}] Parsed {} {} products from listing page", STORE_NAME, products.size(), family.productType());
 
         if (page != null && !products.isEmpty()) {
-            enrichWithDetails(page, products, skipUrls, productLimit);
+            enrichWithDetails(page, products, skipUrls, productLimit, family);
         }
 
         return products;
@@ -131,11 +156,8 @@ public class SupplementStoreScraper implements StoreScraper {
 
     // ── Detail page enrichment ───────────────────────────────────────────────────
 
-    private void enrichWithDetails(Page page, List<Product> products, Set<String> skipUrls) {
-        enrichWithDetails(page, products, skipUrls, Integer.MAX_VALUE);
-    }
-
-    private void enrichWithDetails(Page page, List<Product> products, Set<String> skipUrls, int productLimit) {
+    private void enrichWithDetails(Page page, List<Product> products, Set<String> skipUrls, int productLimit,
+                                   ListingFamily family) {
         int count = 0;
 
         for (Product p : products) {
@@ -144,8 +166,9 @@ public class SupplementStoreScraper implements StoreScraper {
                 break;
             }
             if (p.getUrl() == null || p.getUrl().isBlank()) continue;
-            if (baseEnricher.isNonProteinProduct(p.getName())) {
-                log.info("[{}] Skipping '{}' — not a protein product", STORE_NAME, p.getName());
+            Optional<String> rejected = family.rejectReason(p, baseEnricher);
+            if (rejected.isPresent()) {
+                log.info("[{}] Skipping '{}' — {}", STORE_NAME, p.getName(), rejected.get());
                 continue;
             }
 
@@ -184,23 +207,28 @@ public class SupplementStoreScraper implements StoreScraper {
                     // Journal3 theme renders all tab panes in the initial HTML — no tab click needed
                     Document docNutrition = docMain;
 
-                    extractNutritionFromBrText(docNutrition, p);
+                    if (family.isCreatine()) {
+                        baseEnricher.enrichCreatineFromDescription(docNutrition, p, STORE_NAME);
+                    } else {
+                        extractNutritionFromBrText(docNutrition, p);
 
-                    // No protein guess from the marketing description: it mixes per-serving grams
-                    // ("24 g proteina" → 24, "30 g proteina" → 30) and ad copy ("90% proteina") with
-                    // per-100g values. A wrong value is worse than none — a "too low" one makes
-                    // saveOrUpdateProduct drop the whole product, and the DB/AI fallbacks below only
-                    // run for a null protein.
+                        // No protein guess from the marketing description: it mixes per-serving grams
+                        // ("24 g proteina" → 24, "30 g proteina" → 30) and ad copy ("90% proteina") with
+                        // per-100g values. A wrong value is worse than none — a "too low" one makes
+                        // saveOrUpdateProduct drop the whole product, and the DB/AI fallbacks below only
+                        // run for a null protein.
 
-                    baseEnricher.enrichWithAiIfNeeded(docNutrition, p, STORE_NAME);
+                        baseEnricher.enrichWithAiIfNeeded(docNutrition, p, STORE_NAME);
+                    }
                 } else {
                     restoreNutritionFromDb(p);
                 }
 
-                log.info("[{}] Enriched '{}' {}g → price={}, brand={}, protein={}g/100g",
+                log.info("[{}] Enriched '{}' {}g → price={}, brand={}, {}",
                         STORE_NAME, p.getName(),
                         p.getPrimaryWeightGrams() != null ? Math.round(p.getPrimaryWeightGrams()) : "?",
-                        p.getPrice(), p.getBrand(), p.getProteinPer100g());
+                        p.getPrice(), p.getBrand(),
+                        family.isCreatine() ? "form=" + p.getProductForm() : "protein=" + p.getProteinPer100g() + "g/100g");
 
                 count++;
                 if (count % 15 == 0) {

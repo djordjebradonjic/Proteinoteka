@@ -41,6 +41,9 @@ public final class ValueScoreAudit {
         List<Product> protein = products.stream()
                 .filter(p -> !"creatine".equals(p.getProductType()))
                 .toList();
+        List<Product> creatine = products.stream()
+                .filter(p -> "creatine".equals(p.getProductType()))
+                .toList();
 
         // effectiveSource + market -> price/g-protein of cleanly scored products (for medians/outliers)
         Map<String, List<Double>> pricesBySegment = new HashMap<>();
@@ -113,9 +116,103 @@ public final class ValueScoreAudit {
             if (weightIssue != null) issues.add("WEIGHT_NAME_MISMATCH — " + tag + " " + weightIssue + " — price per gram and score use the latter");
         }
 
-        issues.addAll(brandIssues(protein, brandScoresLowercase));
+        issues.addAll(brandIssues(products, brandScoresLowercase));
         issues.addAll(benchmarkDrift(protein, ppgById));
+        issues.addAll(creatineIssues(creatine, brandScoresLowercase));
         return issues;
+    }
+
+    // ------------------------------------------------------------------ creatine
+
+    /**
+     * The same questions as for protein, asked of the creatine formula (price per gram of pack): stale
+     * stored scores, prices outside any believable range, listings far from their market's median, and a
+     * benchmark that no longer matches the market. Creatine sold by the piece is reported once as a data
+     * gap — it cannot be scored without servings x dose, and that is not an error of any one listing.
+     */
+    private static List<String> creatineIssues(List<Product> creatine, Map<String, Double> brands) {
+        List<String> out = new ArrayList<>();
+        if (creatine.isEmpty()) return out;
+
+        Map<Long, Evaluation> evals = new HashMap<>();
+        Map<Long, Double> ppgById = new HashMap<>();
+        Map<String, List<Double>> pricesByMarket = new HashMap<>();
+        Map<String, String> currencyByMarket = new HashMap<>();
+        int counted = 0;
+
+        for (Product p : creatine) {
+            Evaluation ev = ValueScoreCalculator.evaluate(p.getNumericPrice(), p, brandScore(p, brands));
+            evals.put(p.getId(), ev);
+            if (ev.skipReason() == SkipReason.COUNTED_FORM) counted++;
+            if (ev.scored()) {
+                double ppg = p.getNumericPrice() / ValueScoreCalculator.extractPackageGrams(p);
+                ppgById.put(p.getId(), ppg);
+                String market = market(p);
+                pricesByMarket.computeIfAbsent(market, k -> new ArrayList<>()).add(ppg);
+                currencyByMarket.put(market, cur(p));
+            }
+        }
+
+        Map<String, Double> medians = new HashMap<>();
+        pricesByMarket.forEach((market, list) -> { if (list.size() >= 5) medians.put(market, median(list)); });
+
+        for (Product p : creatine) {
+            Evaluation ev = evals.get(p.getId());
+            String tag = tag(p);
+
+            if (!ev.scored()) {
+                if (p.getValueScore() != null) {
+                    out.add(String.format(Locale.ROOT,
+                            "VALUE_SCORE_STALE — %s stored score %.1f but the creatine is unscoreable (%s); run /api/admin/recalculate-scores",
+                            tag, p.getValueScore(), ev.skipReason()));
+                }
+                if (ev.skipReason() == SkipReason.IMPLAUSIBLE_PRICE) {
+                    double g = ValueScoreCalculator.extractPackageGrams(p);
+                    out.add(String.format(Locale.ROOT,
+                            "VALUE_SCORE_SKIPPED — %s IMPLAUSIBLE_PRICE (price=%s %s, weight=%.0fg = %.4f %s/g of pack against the %.4f market benchmark) — a wrong price or weight, or not (only) creatine",
+                            tag, p.getNumericPrice(), p.getCurrency(), g, p.getNumericPrice() / g, cur(p),
+                            ValueScoreCalculator.creatineBenchmark(p.getCurrency())));
+                }
+                continue;
+            }
+
+            double computed = ev.breakdown().total();
+            if (p.getValueScore() == null || Math.abs(p.getValueScore() - computed) >= STORED_SCORE_TOLERANCE) {
+                out.add(String.format(Locale.ROOT,
+                        "VALUE_SCORE_STALE — %s stored=%s computed=%.1f; run /api/admin/recalculate-scores",
+                        tag, p.getValueScore() == null ? "null" : String.format(Locale.ROOT, "%.1f", p.getValueScore()), computed));
+            }
+
+            Double ppg = ppgById.get(p.getId());
+            Double med = medians.get(market(p));
+            if (ppg != null && med != null) {
+                double r = ppg / med;
+                if (r < PRICE_OUTLIER_LOW || r > PRICE_OUTLIER_HIGH) {
+                    out.add(String.format(Locale.ROOT,
+                            "PRICE_OUTLIER — %s %.4f %s/g of pack is %.2fx the %s creatine median (%.4f) — verify price and weight on the store page",
+                            tag, ppg, cur(p), r, market(p), med));
+                }
+            }
+        }
+
+        pricesByMarket.forEach((market, list) -> {
+            if (list.size() < BENCHMARK_MIN_SAMPLE) return;
+            double med = median(list);
+            double bench = ValueScoreCalculator.creatineBenchmark(currencyByMarket.get(market));
+            double dev = bench / med - 1.0;
+            if (Math.abs(dev) > BENCHMARK_DRIFT_TOLERANCE) {
+                out.add(String.format(Locale.ROOT,
+                        "BENCHMARK_DRIFT — %s/creatine benchmark %.3f is %+.0f%% vs current median %.3f (n=%d); recalibrate ValueScoreCalculator.CREATINE_BENCHMARK_*",
+                        market, bench, dev * 100, med, list.size()));
+            }
+        });
+
+        if (counted > 0) {
+            out.add(String.format(Locale.ROOT,
+                    "CREATINE_UNSCORED_COUNTED_FORMS — %d capsule/tablet/gummy listings carry no value score: their price per gram of creatine needs servings x dose, which stores rarely state (a data gap, not an error of any one listing)",
+                    counted));
+        }
+        return out;
     }
 
     // ------------------------------------------------------------------ brands
@@ -188,6 +285,10 @@ public final class ValueScoreAudit {
     private static String segment(Product p) {
         String src = ValueScoreCalculator.effectiveSource(p);
         return (p.getMarket() == null ? "rs" : p.getMarket()) + "/" + (src == null ? "unknown" : src);
+    }
+
+    private static String market(Product p) {
+        return p.getMarket() == null ? "rs" : p.getMarket();
     }
 
     private static String cur(Product p) {

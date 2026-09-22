@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import me.xdrop.fuzzywuzzy.FuzzySearch;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.util.Optional;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +29,27 @@ public class BrandNormalizerService {
                 .replaceAll("^\\d+\\.\\s*", "")
                 .replaceAll("[®™]", "")
                 .trim();
+    }
+
+    /**
+     * A known brand written anywhere in a product title ("Creatine Powder – Optimum Nutrition / 88
+     * porcija"). The longest whole-word match wins, and the canonical name is returned when the brand
+     * has one. Brand names under 3 characters are skipped: aliases such as "BS" would match inside
+     * unrelated titles.
+     */
+    public Optional<String> findKnownBrandIn(String title) {
+        if (title == null || title.isBlank()) return Optional.empty();
+        BrandReputation best = null;
+        for (BrandReputation br : brandReputationRepository.findAll()) {
+            String name = br.getBrandName();
+            if (name == null || name.length() < 3) continue;
+            if (best != null && name.length() <= best.getBrandName().length()) continue;
+            Pattern whole = Pattern.compile("(?<![\\p{L}\\p{N}])" + Pattern.quote(name) + "(?![\\p{L}\\p{N}])",
+                    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+            if (whole.matcher(title).find()) best = br;
+        }
+        if (best == null) return Optional.empty();
+        return Optional.of(best.getCanonicalName() != null ? best.getCanonicalName() : best.getBrandName());
     }
 
     public String normalize(String rawBrand) {

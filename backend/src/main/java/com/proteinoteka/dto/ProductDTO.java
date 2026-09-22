@@ -31,6 +31,12 @@ public record ProductDTO(Long id,
                          String currency,
                          Long groupId,
                          Long groupCanonicalId,
-                         ValueScoreBreakdown valueBreakdown)
+                         ValueScoreBreakdown valueBreakdown,
+                         String productType,
+                         String productForm,
+                         Integer unitCount,
+                         Double creatineGramsPerServing,
+                         Integer servingsPerContainer,
+                         String creatineType)
     {
 }

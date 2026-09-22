@@ -16,6 +16,7 @@ import com.proteinoteka.repository.PriceHistoryRepository;
 import com.proteinoteka.repository.ProductRepository;
 import com.proteinoteka.service.ProductGroupService;
 import com.proteinoteka.service.ScraperService;
+import com.proteinoteka.service.producttype.ProductTypes;
 import com.proteinoteka.util.BotDetector;
 import com.proteinoteka.util.PriceIntegrity;
 import jakarta.servlet.http.HttpServletRequest;
@@ -57,6 +58,12 @@ public class ProductController {
 
     private static final int MAX_SEARCH_SIZE = 50;
 
+    // Every listing endpoint answers for ONE product family; protein is the default so that adding a
+    // family (creatine) can never leak its rows into the protein pages, feeds and rankings.
+    private static String typeOrDefault(String productType) {
+        return productType == null || productType.isBlank() ? ProductTypes.PROTEIN : productType;
+    }
+
     private static final java.util.Set<String> NULLABLE_SORT_COLS =
             java.util.Set.of("valueScore", "proteinPerRsd", "lastPriceChangeAt", "lastPriceDropPct", "lastPriceIncreasePct");
 
@@ -75,9 +82,13 @@ public class ProductController {
             @RequestParam(required = false) String weightRange,
             @RequestParam(required = false) String market,
             @RequestParam(required = false) String productType,
+            @RequestParam(required = false) String productForm,
+            @RequestParam(required = false) String creatineType,
             Pageable pageable) {
 
-        Specification<Product> spec = buildSpec(name, storeName, brand, flavour, category, minPrice, maxPrice, weightRange, market, productType);
+        Specification<Product> spec = buildSpec(name, storeName, brand, flavour, category, minPrice, maxPrice, weightRange, market, productType)
+                .and(ProductSpecifications.hasProductForm(productForm))
+                .and(ProductSpecifications.hasCreatineType(creatineType));
 
         // JPA Criteria API doesn't support NULLS LAST — exclude nulls via spec instead.
         // Products with no valueScore/proteinPerRsd are irrelevant when sorting by those fields.
@@ -138,7 +149,8 @@ public class ProductController {
     @GetMapping("/search")
     public List<ProductDTO> searchAutocomplete(
             @RequestParam String query,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String productType) {
 
         if (query == null || query.trim().length() < 2) return List.of();
 
@@ -146,7 +158,7 @@ public class ProductController {
         Pageable pageable = PageRequest.of(0, Math.max(1, Math.min(size, MAX_SEARCH_SIZE)));
 
         return productRepository
-                .findByNameContainingIgnoreCase(query.trim(), pageable)  // ← već postoji!
+                .findByNameContainingIgnoreCaseAndProductType(query.trim(), typeOrDefault(productType), pageable)
                 .stream()
                 .map(this::convertToDTO)
                 .sorted(Comparator.comparingDouble(
@@ -222,14 +234,16 @@ public class ProductController {
             @RequestParam(required = false) String category,
             @RequestParam(defaultValue = "valueScore") String sortBy,
             @RequestParam(defaultValue = "10") int limit,
-            @RequestParam(required = false) String market) {
+            @RequestParam(required = false) String market,
+            @RequestParam(required = false) String productType) {
 
         int safeLimit = Math.min(limit, 500);
 
         Specification<Product> spec = ((Specification<Product>) (root, query, cb) -> cb.and(
                 cb.isNotNull(root.get("valueScore")),
                 cb.greaterThan(root.get("numericPrice"), 0.0)
-        )).and(ProductSpecifications.hasMarket(market));
+        )).and(ProductSpecifications.hasMarket(market))
+          .and(ProductSpecifications.hasProductType(typeOrDefault(productType)));
         if (category != null && !category.isBlank()) {
             spec = spec.and(ProductSpecifications.hasProteinSource(category));
         }
@@ -261,7 +275,8 @@ public class ProductController {
                 cb.isNotNull(root.get("description")),
                 cb.notEqual(cb.trim(root.get("description")), ""),
                 cb.greaterThanOrEqualTo(root.get("primaryWeightGrams"), 500.0)
-        )).and(ProductSpecifications.hasMarket(market));
+        )).and(ProductSpecifications.hasMarket(market))
+          .and(ProductSpecifications.hasProductType(ProductTypes.PROTEIN));
 
         // Fetch 5× more than needed so both deduplication passes still fill the limit.
         // Guardrails: max 1 product per brand; per-source caps:
@@ -294,14 +309,16 @@ public class ProductController {
                 .toList();
     }
 
-    @Cacheable(value = "price-drops", key = "'drops-' + #market + '-' + #limit")
+    @Cacheable(value = "price-drops", key = "'drops-' + #market + '-' + #limit + '-' + (#productType ?: 'protein')")
     @GetMapping("/price-drops")
     public List<ProductDTO> getPriceDrops(
             @RequestParam(defaultValue = "5") int limit,
-            @RequestParam(required = false) String market) {
+            @RequestParam(required = false) String market,
+            @RequestParam(required = false) String productType) {
 
         int safeLimit = Math.min(limit, 20);
         String effectiveMarket = (market == null || market.isEmpty()) ? "rs" : market;
+        String effectiveType = typeOrDefault(productType);
 
         // Find all products that have ever changed price (2+ history entries).
         // convertToDTO already sets previousPrice = most-recent history entry
@@ -311,6 +328,7 @@ public class ProductController {
         return priceHistoryRepository.findProductsWithMultiplePriceEntries().stream()
                 .filter(p -> p.getNumericPrice() != null && p.getNumericPrice() > 0)
                 .filter(p -> effectiveMarket.equals(p.getMarket()))
+                .filter(p -> effectiveType.equals(p.getProductType()))
                 // Two history rows minutes apart mean one scrape run wrote the row twice (A→B→A
                 // flapping between two products/variants), not a real repricing — the "drop"
                 // would be fake. Also covers flapping already stored before the scraper guards.
@@ -326,14 +344,16 @@ public class ProductController {
                 .toList();
     }
 
-    @Cacheable(value = "black-friday", key = "'bf-' + #market + '-' + #limit")
+    @Cacheable(value = "black-friday", key = "'bf-' + #market + '-' + #limit + '-' + (#productType ?: 'protein')")
     @GetMapping("/black-friday")
     public List<ProductDTO> getBlackFridayDeals(
             @RequestParam(defaultValue = "20") int limit,
-            @RequestParam(required = false) String market) {
+            @RequestParam(required = false) String market,
+            @RequestParam(required = false) String productType) {
 
         int safeLimit = Math.min(limit, 20);
         String effectiveMarket = (market == null || market.isEmpty()) ? "rs" : market;
+        String effectiveType = typeOrDefault(productType);
         LocalDateTime since = LocalDateTime.now().minusDays(90);
 
         // Discount vs. the 90-day average price (not just the previous scrape) — needs
@@ -341,6 +361,7 @@ public class ProductController {
         return priceHistoryRepository.findProductsWithHistorySince(since).stream()
                 .filter(p -> p.getNumericPrice() != null && p.getNumericPrice() > 0)
                 .filter(p -> effectiveMarket.equals(p.getMarket()))
+                .filter(p -> effectiveType.equals(p.getProductType()))
                 // Flapping history (two rows minutes apart = one run wrote the row twice) inflates
                 // the 90-day average with a price the product never really had, which shows up as
                 // a fake "discount". Same guard as /price-drops.
@@ -401,25 +422,29 @@ public class ProductController {
         return productRepository.findAllIds();
     }
 
-    @Cacheable(value = "products-meta", key = "'brands-' + (#market ?: 'rs')")
+    @Cacheable(value = "products-meta", key = "'brands-' + (#market ?: 'rs') + '-' + (#productType ?: 'protein')")
     @GetMapping("/brands")
-    List<String> getAllBrands(@RequestParam(required = false) String market) {
+    List<String> getAllBrands(@RequestParam(required = false) String market,
+                              @RequestParam(required = false) String productType) {
         String effectiveMarket = (market == null || market.isEmpty()) ? "rs" : market;
-        return productRepository.findAllUniqueBrandsByMarket(effectiveMarket);
+        return productRepository.findAllUniqueBrandsByMarketAndType(effectiveMarket, typeOrDefault(productType));
     }
 
-    @Cacheable(value = "products-meta", key = "'flavours-' + (#market ?: 'rs')")
+    @Cacheable(value = "products-meta", key = "'flavours-' + (#market ?: 'rs') + '-' + (#productType ?: 'protein')")
     @GetMapping("/flavours")
-    List<String> getAllFlavours(@RequestParam(required = false) String market) {
+    List<String> getAllFlavours(@RequestParam(required = false) String market,
+                                @RequestParam(required = false) String productType) {
         String effectiveMarket = (market == null || market.isEmpty()) ? "rs" : market;
-        return productRepository.findAllUniqueFlavoursByMarket(effectiveMarket);
+        return productRepository.findAllUniqueFlavoursByMarketAndType(effectiveMarket, typeOrDefault(productType));
     }
 
-    @Cacheable(value = "products-meta", key = "'weight-distribution-' + (#market ?: 'rs')")
+    @Cacheable(value = "products-meta", key = "'weight-distribution-' + (#market ?: 'rs') + '-' + (#productType ?: 'protein')")
     @GetMapping("/weight-distribution")
-    Map<String, Long> getWeightDistribution(@RequestParam(required = false) String market) {
+    Map<String, Long> getWeightDistribution(@RequestParam(required = false) String market,
+                                            @RequestParam(required = false) String productType) {
         String effectiveMarket = (market == null || market.isEmpty()) ? "rs" : market;
-        Specification<Product> spec = ProductSpecifications.hasMarket(effectiveMarket);
+        Specification<Product> spec = ProductSpecifications.hasMarket(effectiveMarket)
+                .and(ProductSpecifications.hasProductType(typeOrDefault(productType)));
         List<Product> all = productRepository.findAll(spec);
         Map<String, Long> dist = new java.util.LinkedHashMap<>();
         dist.put("0-500",     countInRange(all, 0, 500));
@@ -540,7 +565,13 @@ public class ProductController {
                 product.getCurrency(),
                 product.getGroupId(),
                 groupCanonicalId,
-                breakdown
+                breakdown,
+                product.getProductType(),
+                product.getProductForm(),
+                product.getUnitCount(),
+                product.getCreatineGramsPerServing(),
+                product.getServingsPerContainer(),
+                product.getCreatineType()
         );
     }
 }

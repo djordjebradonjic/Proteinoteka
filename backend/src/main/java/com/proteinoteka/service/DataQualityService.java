@@ -3,6 +3,7 @@ package com.proteinoteka.service;
 
 import com.proteinoteka.dto.DataQualityReport;
 import com.proteinoteka.model.BrandReputation;
+import com.proteinoteka.service.producttype.ProductTypes;
 import com.proteinoteka.repository.BrandReputationRepository;
 import com.proteinoteka.repository.DataQualityRepository;
 import com.proteinoteka.repository.ProductGroupRepository;
@@ -255,10 +256,12 @@ public class DataQualityService {
             log.warn("[DataQuality] {}", msg);
         }
 
-        List<com.proteinoteka.model.Product> products = loadProducts(market);
-        issues.addAll(checkValueScoreIntegrity(products));
-        issues.addAll(checkProductGroupIntegrity(products));
-        issues.addAll(checkPriceChangeIntegrity(products));
+        // The value-score and group audits know every family (each applies its own formula and rules);
+        // the price-change audit belongs to the protein pages (/price-drops, Black Friday) it protects.
+        List<com.proteinoteka.model.Product> allFamilies = loadProducts(market, false);
+        issues.addAll(checkValueScoreIntegrity(allFamilies));
+        issues.addAll(checkProductGroupIntegrity(allFamilies));
+        issues.addAll(checkPriceChangeIntegrity(loadProducts(market, true)));
 
         if (issues.isEmpty()) {
             log.info("[DataQuality] Outlier check passed — no suspicious values found.");
@@ -269,8 +272,14 @@ public class DataQualityService {
         return issues;
     }
 
-    private List<com.proteinoteka.model.Product> loadProducts(String market) {
+    /**
+     * @param proteinOnly the protein-specific checks (macros, protein source, price-drop pages) must not
+     *                    see other families, which would show up there as "missing protein"; the value-score
+     *                    and group audits take every family and split it themselves
+     */
+    private List<com.proteinoteka.model.Product> loadProducts(String market, boolean proteinOnly) {
         return productRepository.findAll().stream()
+                .filter(p -> !proteinOnly || ProductTypes.PROTEIN.equals(p.getProductType()))
                 .filter(p -> market == null || market.equalsIgnoreCase(p.getMarket()))
                 .toList();
     }
@@ -281,7 +290,7 @@ public class DataQualityService {
      * See {@link ValueScoreAudit}.
      */
     public List<String> checkValueScoreIntegrity(String market) {
-        return checkValueScoreIntegrity(loadProducts(market));
+        return checkValueScoreIntegrity(loadProducts(market, false));
     }
 
     private List<String> checkValueScoreIntegrity(List<com.proteinoteka.model.Product> products) {

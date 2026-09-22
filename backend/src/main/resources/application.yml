@@ -34,6 +34,10 @@ task:
 scraping:
   schedule:
     enabled: true
+  types:
+    # Product families scraped besides protein (protein is always on). Kill switch and rollout control:
+    # SCRAPING_TYPES_ENABLED=protein,creatine ; SCRAPING_TYPES_STORES_CREATINE=GymBeam,FitLab limits it to those stores.
+    enabled: ${SCRAPING_TYPES_ENABLED:protein}
   stale:
     enabled: true
     max-removal-percent: 50

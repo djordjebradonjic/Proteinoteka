@@ -36,10 +36,12 @@ export const HEADER_NAV_LINKS: NavLink[] =
     ? [
         { label: "Cijene",          href: "/" },
         { label: "Top lista",       href: "/?sort=valueScore%2Cdesc" },
+        { label: "Kreatin",         href: "/kreatin" },
       ]
     : [
         { label: "Cene",            href: "/whey-protein-cena" },
         { label: "Top lista",       href: "/najbolji-whey-protein-srbija" },
+        { label: "Kreatin",         href: "/kreatin" },
         { label: "Baza podataka",   href: "/baza-podataka" },
       ];
 
@@ -102,6 +104,7 @@ const RS_FOOTER_POPULAR: NavLink[] = [
   { label: "Najjeftiniji whey protein", href: "/najjeftiniji-whey-protein"    },
   { label: "Najbolji whey protein",     href: "/najbolji-whey-protein-srbija" },
   { label: "Whey izolat Srbija",        href: "/whey-isolate-srbija"          },
+  { label: "Kreatin cena",              href: "/kreatin"                      },
   { label: "Početna",                   href: "/"                             },
   { label: "O nama",                    href: "/o-nama"                       },
   { label: "Kontakt",                   href: "/#kontakt"                     },
@@ -111,6 +114,7 @@ const RS_FOOTER_POPULAR: NavLink[] = [
 ];
 
 const HR_FOOTER_POPULAR: NavLink[] = [
+  { label: "Kreatin cijena",       href: "/kreatin"        },
   { label: "Početna",              href: "/"               },
   { label: "O nama",               href: "/o-nama"         },
   { label: "Kontakt",              href: "/#kontakt"       },

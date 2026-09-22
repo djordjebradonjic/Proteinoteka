@@ -20,6 +20,8 @@ import com.proteinoteka.service.PolleoSportScraper;
 import com.proteinoteka.service.ShopbuilderScraper;
 import com.proteinoteka.service.StoreScraper;
 import com.proteinoteka.service.SupplementStoreScraper;
+import com.proteinoteka.service.producttype.ProductTypeRegistry;
+import com.proteinoteka.service.producttype.ProductTypes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.CacheManager;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +30,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -57,6 +61,7 @@ public class AdminController {
     private final List<StoreScraper> scrapers;
     private final ProductRepository productRepository;
     private final ScrapingSchedulerService schedulerService;
+    private final ProductTypeRegistry productTypes;
     private final BrandReputationRepository brandReputationRepository;
     private final CacheManager cacheManager;
     private final AlertJobRepository alertJobRepository;
@@ -83,6 +88,33 @@ public class AdminController {
             @RequestParam(defaultValue = "false") boolean testMode) {
         runAsync("scraper-all", () -> scraperService.scrapeAll(testMode));
         return ResponseEntity.accepted().body("All scrapers started in background" + (testMode ? " [TEST MODE]" : ""));
+    }
+
+    // Runs only the given product types on one store: POST /scrape/store?name=Proteinbox&types=creatine
+    // (no types = a normal full run). The cheap way to test or backfill one product family without
+    // re-scraping the others — for a proxied store a creatine-only run is a few dozen KB of proxy traffic.
+    @PostMapping("/scrape/store")
+    public ResponseEntity<String> scrapeStoreTypes(@RequestParam String name,
+                                                   @RequestParam(required = false) String types) {
+        if (!schedulerService.isKnownStore(name)) {
+            return ResponseEntity.badRequest().body("Unknown store: " + name);
+        }
+        Set<String> onlyTypes = null;
+        if (types != null && !types.isBlank()) {
+            onlyTypes = new LinkedHashSet<>(Arrays.asList(types.trim().split("\\s*,\\s*")));
+            for (String type : onlyTypes) {
+                if (!productTypes.isKnown(type)) {
+                    return ResponseEntity.badRequest().body("Unknown product type: " + type);
+                }
+            }
+        }
+        Set<String> selected = onlyTypes;
+        runAsync("scraper-" + name, () -> {
+            if (selected == null) schedulerService.scrapeStoreNow(name);
+            else schedulerService.scrapeStoreNow(name, selected);
+        });
+        return ResponseEntity.accepted().body(name + " scraping started in background"
+                + (selected == null ? "" : " [types: " + String.join(",", selected) + "]"));
     }
 
     @PostMapping("/scrape/pansport")
@@ -127,11 +159,12 @@ public class AdminController {
         return ResponseEntity.accepted().body("GymBeam scraping started in background");
     }
 
-    // Pilot creatine scraper — see GymBeamCreatineScraper
+    // Kept for existing callers: the creatine listing is now a target of the normal GymBeam scraper,
+    // so this is just POST /scrape/store?name=GymBeam&types=creatine.
     @PostMapping("/scrape/gymbeam-kreatin")
     public ResponseEntity<String> scrapeGymBeamKreatin() {
-        runAsync("scraper-gymbeam-kreatin", () -> schedulerService.scrapeStoreNow("GymBeam Kreatin"));
-        return ResponseEntity.accepted().body("GymBeam Kreatin scraping started in background");
+        runAsync("scraper-gymbeam-kreatin", () -> schedulerService.scrapeStoreNow("GymBeam", Set.of(ProductTypes.CREATINE)));
+        return ResponseEntity.accepted().body("GymBeam creatine scraping started in background");
     }
 
     @PostMapping("/scrape/myprotein")
@@ -374,16 +407,21 @@ public class AdminController {
             p.setValueScore(newScore);
             p.setProteinPerRsd(scraperService.computeProteinPerRsd(p.getNumericPrice(), p));
         }
-        // Compute percentile ranks based on value score
-        List<Product> withScore = all.stream()
-                .filter(p -> p.getValueScore() != null)
-                .sorted(java.util.Comparator.comparingDouble(Product::getValueScore))
-                .toList();
+        // Percentile ranks are computed within a product type: a creatine's price-per-gram score says
+        // nothing about where a whey sits among wheys, and ranking them together would skew both.
         all.stream().filter(p -> p.getValueScore() == null).forEach(p -> p.setPercentileRank(null));
-        for (int i = 0; i < withScore.size(); i++) {
-            int pct = (int) Math.round((double) i / withScore.size() * 100);
-            withScore.get(i).setPercentileRank(pct);
-        }
+        all.stream()
+                .filter(p -> p.getValueScore() != null)
+                .collect(Collectors.groupingBy(Product::getProductType))
+                .values()
+                .forEach(sameType -> {
+                    List<Product> sorted = sameType.stream()
+                            .sorted(java.util.Comparator.comparingDouble(Product::getValueScore))
+                            .toList();
+                    for (int i = 0; i < sorted.size(); i++) {
+                        sorted.get(i).setPercentileRank((int) Math.round((double) i / sorted.size() * 100));
+                    }
+                });
 
         productRepository.saveAll(all);
         List.of("products", "products-meta", "products-search").forEach(name -> {
@@ -435,6 +473,8 @@ public class AdminController {
     @PostMapping("/enrich-nutrition")
     public ResponseEntity<String> enrichNutrition() {
         List<Product> candidates = productRepository.findAll().stream()
+                // the AI prompt extracts protein macros; running it over creatine would only invent them
+                .filter(p -> ProductTypes.PROTEIN.equals(p.getProductType()))
                 .filter(p -> (p.getSugarPer100g() == null || p.getFatPer100g() == null)
                         && p.getDescription() != null && !p.getDescription().isBlank())
                 .toList();
