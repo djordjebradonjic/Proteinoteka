@@ -104,6 +104,45 @@ export async function fetchSimilarCreatine(product: Product, limit = 4): Promise
 }
 
 /**
+ * Best value-score creatine (powders only score, see CreatineProfile), for the "najbolje ocenjeni" carousel.
+ * Decorative, not the page's critical path: a transient failure returns an empty list instead of throwing.
+ */
+export async function fetchCreatineTopRatedProducts(limit = 8): Promise<Product[]> {
+  try {
+    const url = new URL(`${API}/api/v1/products/top`);
+    url.searchParams.set("productType", "creatine");
+    url.searchParams.set("sortBy", "valueScore");
+    url.searchParams.set("limit", String(limit));
+    url.searchParams.set("market", CURRENT_MARKET);
+    const res = await apiFetch(url.toString(), { next: { revalidate: REVALIDATE, tags: ["products"] } });
+    if (!res.ok) return [];
+    const data: Product[] = await res.json();
+    return data.some((p) => !isCreatine(p)) ? [] : data;
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Biggest recent price drops in creatine, for the "najveći pad cene" carousel. Same best-effort contract as
+ * fetchCreatineTopRatedProducts above.
+ */
+export async function fetchCreatinePriceDropProducts(limit = 8): Promise<Product[]> {
+  try {
+    const url = new URL(`${API}/api/v1/products/price-drops`);
+    url.searchParams.set("productType", "creatine");
+    url.searchParams.set("limit", String(limit));
+    url.searchParams.set("market", CURRENT_MARKET);
+    const res = await apiFetch(url.toString(), { next: { revalidate: REVALIDATE, tags: ["products"] } });
+    if (!res.ok) return [];
+    const data: Product[] = await res.json();
+    return data.some((p) => !isCreatine(p)) ? [] : data;
+  } catch {
+    return [];
+  }
+}
+
+/**
  * Every creatine listing of this market, for the sitemap. Throws on failure (a sitemap baked from a partial
  * read would stay partial for a day); returns nothing when the backend does not know the family yet.
  */

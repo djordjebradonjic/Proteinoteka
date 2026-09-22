@@ -3,12 +3,14 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import CreatineListing from "@/components/creatine/CreatineListing";
 import CreatineExtras from "@/components/creatine/CreatineExtras";
+import CreatineHeroSection from "@/components/creatine/CreatineHeroSection";
+import CreatineFeaturedSection from "@/components/creatine/CreatineFeaturedSection";
 import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
 import { hreflangAlternates } from "@/lib/hreflang";
 import { safeJsonLd } from "@/lib/jsonLd";
 import { productUrl } from "@/lib/productUrl";
 import { CREATINE_COPY, CREATINE_PATH } from "@/lib/creatine";
-import { fetchCreatinePage } from "@/lib/creatine-data";
+import { fetchCreatinePage, fetchCreatineTopRatedProducts, fetchCreatinePriceDropProducts } from "@/lib/creatine-data";
 
 export const revalidate = 21600;
 
@@ -44,7 +46,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function CreatinePage() {
-  const first = await fetchCreatinePage(FIRST_PAGE);
+  const [first, topRated, priceDrops] = await Promise.all([
+    fetchCreatinePage(FIRST_PAGE),
+    fetchCreatineTopRatedProducts(8),
+    fetchCreatinePriceDropProducts(8),
+  ]);
   const url = `${BASE}${CREATINE_PATH}`;
 
   const jsonLd = [
@@ -97,29 +103,13 @@ export default async function CreatinePage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
       <main className="min-h-screen bg-white">
-        <Header />
+        <Header hasHero />
 
-        <section className="bg-[#1B2B4B] text-white">
-          <div className="max-w-7xl mx-auto px-4 py-8 md:py-10">
-            <nav className="flex items-center gap-1.5 text-xs text-white/60 mb-5" aria-label="Breadcrumb">
-              <Link href="/" className="hover:text-[#FF9900] transition-colors">{COPY.breadcrumbHome}</Link>
-              <span>/</span>
-              <span className="text-white/90">{COPY.navLabel}</span>
-            </nav>
-            <p className="inline-block mb-3 px-3 py-1 rounded-full bg-[#FF9900]/15 border border-[#FF9900]/40 text-xs font-bold uppercase tracking-wide text-[#FFB84D]">
-              {COPY.page.eyebrow}
-            </p>
-            <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight max-w-3xl">{COPY.page.h1}</h1>
-            <p className="mt-3 text-base md:text-[17px] text-white/75 max-w-3xl leading-relaxed">{COPY.page.lead}</p>
-            <ul className="mt-5 flex flex-wrap gap-2">
-              {COPY.page.chips.map((c) => (
-                <li key={c} className="px-3 py-1.5 rounded-full bg-white/10 border border-white/15 text-xs font-semibold text-white/90">
-                  {c}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
+        <CreatineHeroSection />
+
+        <div id="izdvojeno-kreatin" style={{ scrollMarginTop: "80px" }}>
+          <CreatineFeaturedSection topRatedProducts={topRated} priceDropProducts={priceDrops} />
+        </div>
 
         <CreatineListing
           initialProducts={first.content}

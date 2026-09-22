@@ -139,6 +139,15 @@ export const CREATINE_COPY = HR
         chips: ["Cijena po 100 g za svaki prah", "Ocjena isplativosti 0–10", "Samo hrvatske trgovine"],
         schemaName: "Najisplativiji kreatin u Hrvatskoj",
       },
+      hero: { cta: "Najbolje ocijenjeni →" },
+      featured: {
+        title: "Izdvojeno",
+        subtitle: "Kreatin s najboljom ocjenom isplativosti i najvećim padom cijene",
+        tabRated: "⭐ Najbolje ocijenjeni",
+        tabDrops: "🔥 Najveći pad cijene",
+        emptyRated: "Nema podataka.",
+        emptyDrops: "Trenutno nema kreatina s padom cijene.",
+      },
       listing: {
         sort: { value: "Najbolja vrijednost", priceAsc: "Najniža cijena", priceDesc: "Najviša cijena", nameAz: "Naziv A–Ž" },
         type: "Vrsta", brand: "Brend", store: "Trgovina", price: "Cijena", search: "Traži kreatin…",
@@ -212,6 +221,15 @@ export const CREATINE_COPY = HR
           "Kreatin monohidrat je jedan od retkih suplemenata čiji je učinak potvrđen u desetinama studija. Isti proizvod se u različitim prodavnicama ne prodaje po istoj ceni, pa za svaki kreatin prikazujemo cenu po 100 g, cenu po dozi i ocenu isplativosti.",
         chips: ["Cena po 100 g za svaki prah", "Ocena isplativosti 0–10", "Samo prodavnice iz Srbije"],
         schemaName: "Najisplativiji kreatin u Srbiji",
+      },
+      hero: { cta: "Najbolje ocenjeni →" },
+      featured: {
+        title: "Izdvojeno",
+        subtitle: "Kreatin sa najboljom ocenom isplativosti i najvećim padom cene",
+        tabRated: "⭐ Najbolje ocenjeni",
+        tabDrops: "🔥 Najveći pad cene",
+        emptyRated: "Nema podataka.",
+        emptyDrops: "Trenutno nema kreatina sa padom cene.",
       },
       listing: {
         sort: { value: "Najbolja vrednost", priceAsc: "Najniža cena", priceDesc: "Najviša cena", nameAz: "Naziv A–Š" },
