@@ -148,7 +148,7 @@ export const CREATINE_COPY = HR
       },
       listing: {
         sort: { priceAsc: "Najniža cijena", priceDesc: "Najviša cijena", nameAz: "Naziv A–Ž" },
-        type: "Vrsta", brand: "Brend", store: "Trgovina", price: "Cijena", search: "Traži kreatin…",
+        type: "Vrsta", brand: "Brend", store: "Trgovina", weight: "Pakiranje", price: "Cijena", search: "Traži kreatin…",
         reset: "Poništi filtre", from: "od", to: "do", results: (from: number, to: number, total: number) => `Prikazano ${from}–${to} od ${total}`,
         none: "Nema kreatina za odabrane filtre",
       },
@@ -220,7 +220,7 @@ export const CREATINE_COPY = HR
       },
       listing: {
         sort: { priceAsc: "Najniža cena", priceDesc: "Najviša cena", nameAz: "Naziv A–Š" },
-        type: "Vrsta", brand: "Brend", store: "Prodavnica", price: "Cena", search: "Traži kreatin…",
+        type: "Vrsta", brand: "Brend", store: "Prodavnica", weight: "Pakovanje", price: "Cena", search: "Traži kreatin…",
         reset: "Poništi filtere", from: "od", to: "do", results: (from: number, to: number, total: number) => `Prikazano ${from}–${to} od ${total}`,
         none: "Nema kreatina za izabrane filtere",
       },
