@@ -269,15 +269,17 @@ export default function CreatineProductContent({ product, storePrices, similar }
 
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 leading-tight">{displayName(product)}</h1>
 
-            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-              <p className="text-xs uppercase tracking-wider text-slate-400 font-bold mb-1">{IS_HR ? "Trenutna cijena" : "Trenutna cena"}</p>
+            <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+              <p className="text-xs uppercase tracking-wider text-slate-400 font-bold mb-1.5">{IS_HR ? "Trenutna cijena" : "Trenutna cena"}</p>
               {product.previousPrice != null && product.previousPrice > 0 && product.previousPrice !== product.numericPrice && (
-                <p className="text-sm text-[#9CA3AF] line-through leading-none mb-1">
-                  <PriceTag price={product.previousPrice} className="text-sm text-[#9CA3AF] line-through" currencyClassName="text-[0.85em] ml-0.5 text-[#9CA3AF]" />
+                <p className="text-base text-[#9CA3AF] line-through leading-none mb-1.5">
+                  <PriceTag price={product.previousPrice} className="text-base text-[#9CA3AF] line-through" currencyClassName="text-[0.85em] ml-0.5 text-[#9CA3AF]" />
                 </p>
               )}
-              <div className="flex items-center flex-wrap gap-2 mb-3">
-                <PriceTag price={product.numericPrice} className="text-3xl sm:text-4xl font-black text-slate-900 leading-none" />
+              {/* The price is the main comparison point for creatine (no value score on the frontend), so it
+                  carries the visual weight this card would otherwise give a score. */}
+              <div className="flex items-center flex-wrap gap-2.5 mb-3">
+                <PriceTag price={product.numericPrice} className="text-5xl sm:text-6xl font-black text-[#1B2B4B] leading-none tracking-tight" />
                 <PriceTrendIndicator currentPrice={product.numericPrice} previousPrice={product.previousPrice} />
               </div>
               <CreatinePriceMeta product={product} size="md" />
@@ -355,7 +357,7 @@ export default function CreatineProductContent({ product, storePrices, similar }
                           )}
                         </div>
                       </div>
-                      <span className={`text-sm sm:text-base font-black shrink-0 ${isCheapest ? "text-green-700" : "text-slate-900"}`}>
+                      <span className={`text-base sm:text-lg font-black shrink-0 ${isCheapest ? "text-green-700" : "text-slate-900"}`}>
                         {formatPrice(sp.numericPrice)}
                       </span>
                       <a

@@ -10,8 +10,8 @@ export default function CreatinePriceMeta({ product, size = "sm" }: { product: C
   const perServing = pricePerServing(product);
   if (per100 == null && perServing == null) return null;
 
-  const main = size === "md" ? "text-base" : "text-xs md:text-sm";
-  const sub = size === "md" ? "text-sm" : "text-[10px] md:text-xs";
+  const main = size === "md" ? "text-lg" : "text-xs md:text-sm";
+  const sub = size === "md" ? "text-base" : "text-[10px] md:text-xs";
 
   return (
     <div className="flex flex-col gap-0.5">
