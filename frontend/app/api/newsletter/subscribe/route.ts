@@ -2,6 +2,7 @@ import { Resend } from "resend";
 import { NextRequest, NextResponse } from "next/server";
 import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
 import { newsletterFromAddress } from "@/lib/emailSender";
+import { apiFetch } from "@/lib/apiFetch";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const DOMAIN = MARKET_CONFIG[CURRENT_MARKET].domain;
@@ -37,7 +38,7 @@ export async function POST(req: NextRequest) {
   const normalizedSource = source && VALID_SOURCES.has(source) ? source : "unknown";
 
   // Save to DB — fire and forget, don't block email send
-  fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/newsletter/subscribe`, {
+  apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/newsletter/subscribe`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email: normalizedEmail, market: CURRENT_MARKET, source: normalizedSource }),

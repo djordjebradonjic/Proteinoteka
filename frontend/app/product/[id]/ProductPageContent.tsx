@@ -26,6 +26,7 @@ import { formatPrice } from "@/lib/formatPrice";
 import { getScoreColor, getScoreLabel } from "@/lib/scoreColor";
 import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
 import { displayName } from "@/lib/productDisplayName";
+import { CLIENT_API } from "@/lib/clientApi";
 
 const IS_HR = CURRENT_MARKET === "hr";
 const MARKET = MARKET_CONFIG[CURRENT_MARKET];
@@ -367,7 +368,7 @@ function ReviewSection({ productId, reviews, aggregateRating }: {
     setError("");
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/products/${productId}/reviews`,
+        `${CLIENT_API}/products/${productId}/reviews`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

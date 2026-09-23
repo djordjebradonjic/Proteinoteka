@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 import { NextRequest, NextResponse } from "next/server";
 import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
+import { apiFetch } from "@/lib/apiFetch";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const DOMAIN = MARKET_CONFIG[CURRENT_MARKET].domain;
@@ -43,7 +44,7 @@ export async function POST(req: NextRequest) {
   const goalLabel = goal ? GOAL_LABEL[goal] ?? goal : null;
 
   // Save to DB — fire and forget, don't block email send
-  fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/calculator/subscribe`, {
+  apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/calculator/subscribe`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, name, goal, protein, calories, carbs, fat, market: CURRENT_MARKET }),

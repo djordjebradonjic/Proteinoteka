@@ -1,6 +1,7 @@
+import { CLIENT_API } from "./clientApi";
+
 const COOKIE = "wl_email";
 const COOKIE_DAYS = 60;
-const API = () => process.env.NEXT_PUBLIC_API_URL ?? "";
 
 export function getWishlistEmail(): string | null {
   if (typeof document === "undefined") return null;
@@ -20,7 +21,7 @@ export function clearWishlistEmail(): void {
 export async function fetchWishlistIds(email: string): Promise<number[]> {
   try {
     const res = await fetch(
-      `${API()}/api/v1/wishlist?email=${encodeURIComponent(email)}`,
+      `${CLIENT_API}/wishlist?email=${encodeURIComponent(email)}`,
     );
     if (!res.ok) return [];
     return res.json();
@@ -34,7 +35,7 @@ export async function pushWishlistToBackend(
   productIds: number[],
 ): Promise<void> {
   try {
-    await fetch(`${API()}/api/v1/wishlist/save`, {
+    await fetch(`${CLIENT_API}/wishlist/save`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, productIds }),
@@ -46,7 +47,7 @@ export async function pushWishlistToBackend(
 
 export async function fetchProductById(id: number): Promise<unknown | null> {
   try {
-    const res = await fetch(`${API()}/api/v1/products/${id}`);
+    const res = await fetch(`${CLIENT_API}/products/${id}`);
     return res.ok ? res.json() : null;
   } catch {
     return null;

@@ -1,5 +1,6 @@
+import { CLIENT_API } from "./clientApi";
+
 const STORAGE_KEY = "wl_alerts";
-const API = () => process.env.NEXT_PUBLIC_API_URL ?? "";
 
 export interface AlertEntry {
   targetPrice?: number;
@@ -58,7 +59,7 @@ export async function createAlert(
   const body: Record<string, unknown> = { email, productId };
   if (targetPrice !== undefined) body.targetPrice = targetPrice;
 
-  const res = await fetch(`${API()}/api/v1/wishlist/alert`, {
+  const res = await fetch(`${CLIENT_API}/wishlist/alert`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -70,7 +71,7 @@ export async function createAlert(
 
 export async function deleteAlert(email: string, productId: number): Promise<void> {
   const res = await fetch(
-    `${API()}/api/v1/wishlist/alert?email=${encodeURIComponent(email)}&productId=${productId}`,
+    `${CLIENT_API}/wishlist/alert?email=${encodeURIComponent(email)}&productId=${productId}`,
     { method: "DELETE" },
   );
   if (!res.ok) throw new Error(`Alert delete error: ${res.status}`);

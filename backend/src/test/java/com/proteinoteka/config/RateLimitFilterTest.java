@@ -200,4 +200,80 @@ class RateLimitFilterTest {
         mvc.perform(MockMvcRequestBuilders.get("/api/v1/products").param("size", "2000").header("X-Internal-Token", "s3cret"))
                 .andExpect(content().string("2000"));
     }
+
+    private RateLimitFilter locked(int perMinute, int burst) {
+        return new RateLimitFilter(true, perMinute, burst, "s3cret", 1, 48, true, now::get);
+    }
+
+    private MockHttpServletRequest internal(String uri, String clientIp) {
+        MockHttpServletRequest req = get(uri, "76.76.21.1");
+        req.addHeader("X-Internal-Token", "s3cret");
+        if (clientIp != null) req.addHeader("X-Client-IP", clientIp);
+        return req;
+    }
+
+    @Test
+    void lockRefusesDirectCallsButKeepsBrowserAndEmailUrlsOpen() throws Exception {
+        RateLimitFilter f = locked(600, 60);
+        for (String uri : new String[] {"/api/v1/products", "/api/v1/products/12", "/api/v1/products/search",
+                "/api/v1/wishlist", "/api/v1/products/12/buy/extra", "/api/v1/products/abc/buy"}) {
+            assertEquals(403, status(f, get(uri, "1.2.3.4")), uri);
+        }
+        for (String uri : new String[] {"/api/v1/products/12/buy", "/api/v1/alerts/track/open",
+                "/api/v1/alerts/track/click", "/api/v1/wishlist/unsubscribe", "/api/v1/newsletter/unsubscribe",
+                "/api/v1/b2b/products", "/api/v1/admin/tracking", "/api/admin/groups", "/api/track", "/swagger-ui.html"}) {
+            assertEquals(200, status(f, get(uri, "1.2.3.4")), uri);
+        }
+        assertEquals(200, status(f, internal("/api/v1/products", null)));
+        assertEquals(200, status(f, internal("/api/v1/products", "1.2.3.4")));
+    }
+
+    @Test
+    void lockCannotBeDodgedWithEncodedOrDotSegmentPaths() throws Exception {
+        RateLimitFilter f = locked(600, 60);
+        for (String uri : new String[] {"/%61pi/v1/products", "/api/%761/products", "/api/v1/b2b/../products",
+                "/api/v1/products/12/buy/../..", "/api;x=1/v1/products", "/api/./v1/products", "/api/v1/%zz"}) {
+            assertEquals(403, status(f, get(uri, "1.2.3.4")), uri);
+        }
+    }
+
+    @Test
+    void encodedPathsNoLongerSkipTheRateLimit() throws Exception {
+        RateLimitFilter f = filter(60, 1, "");
+        assertEquals(200, status(f, get("/%61pi/v1/products", "1.2.3.4")));
+        assertEquals(429, status(f, get("/api/./v1/products", "1.2.3.4")));
+    }
+
+    @Test
+    void lockStaysOffWithoutAConfiguredToken() throws Exception {
+        RateLimitFilter f = new RateLimitFilter(true, 600, 60, "", 1, 48, true, now::get);
+        assertEquals(200, status(f, get("/api/v1/products", "1.2.3.4")));
+    }
+
+    @Test
+    void proxiedVisitorsAreLimitedAndCappedByTheirOwnAddress() throws Exception {
+        RateLimitFilter f = locked(60, 1);
+        MockHttpServletRequest big = internal("/api/v1/products", "1.1.1.1");
+        big.addParameter("size", "2000");
+        assertEquals("48", passed(f, big).getParameter("size"));
+        assertEquals(429, status(f, internal("/api/v1/products", "1.1.1.1")));
+        // another visitor behind the same Vercel address has its own bucket
+        assertEquals(200, status(f, internal("/api/v1/products", "2.2.2.2")));
+        // page rendering (no X-Client-IP) is never limited or capped
+        for (int i = 0; i < 5; i++) assertEquals(200, status(f, internal("/api/v1/products", null)));
+        MockHttpServletRequest sitemap = internal("/api/v1/products", null);
+        sitemap.addParameter("size", "2000");
+        assertEquals("2000", passed(f, sitemap).getParameter("size"));
+    }
+
+    @Test
+    void clientIpHeaderWithoutTheTokenIsIgnored() throws Exception {
+        RateLimitFilter f = filter(60, 1, "s3cret");
+        MockHttpServletRequest first = get("/api/v1/products", "1.2.3.4");
+        first.addHeader("X-Client-IP", "9.9.9.1");
+        assertEquals(200, status(f, first));
+        MockHttpServletRequest second = get("/api/v1/products", "1.2.3.4");
+        second.addHeader("X-Client-IP", "9.9.9.2");
+        assertEquals(429, status(f, second));
+    }
 }

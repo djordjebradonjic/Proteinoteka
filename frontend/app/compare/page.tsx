@@ -12,6 +12,7 @@ import { productUrl } from "@/lib/productUrl";
 import { getScoreColor } from "@/lib/scoreColor";
 import Image from "next/image";
 import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
+import { CLIENT_API } from "@/lib/clientApi";
 
 const IS_HR = CURRENT_MARKET === "hr";
 const MARKET = MARKET_CONFIG[CURRENT_MARKET];
@@ -211,7 +212,7 @@ function ComparePage() {
     async function load() {
       // Try dedicated compare endpoint first
       try {
-        const res = await fetch(`${API_BASE}/api/v1/products/compare?ids=${idsParam}`);
+        const res = await fetch(`${CLIENT_API}/products/compare?ids=${idsParam}`);
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data) && data.length > 0) {
@@ -225,7 +226,7 @@ function ComparePage() {
       try {
         const results = await Promise.all(
           ids.map(id =>
-            fetch(`${API_BASE}/api/v1/products/${id}`)
+            fetch(`${CLIENT_API}/products/${id}`)
               .then(r => r.ok ? r.json() : null)
               .catch(() => null)
           )

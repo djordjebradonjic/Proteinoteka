@@ -59,7 +59,7 @@ Use typed hooks from `store/hooks.ts` (`useAppDispatch`, `useAppSelector`).
 
 ### Data fetching
 
-Axios instance in `lib/axios.ts` with `baseURL = process.env.NEXT_PUBLIC_API_URL + "/api/v1"`. All backend calls go through this instance. SSR calls in `app/page.tsx` use native `fetch` with the same base URL.
+The browser never calls the backend directly: client code uses `CLIENT_API` (`/api/data`, `lib/clientApi.ts`; the axios instance in `lib/axios.ts` has it as `baseURL`), and `app/api/data/[...path]/route.ts` forwards an allowlist of paths to `<NEXT_PUBLIC_API_URL>/api/v1` with the internal token and the visitor IP. A new client call needs a line in that allowlist. Server code (SSR, ISR, sitemap, route handlers) calls `NEXT_PUBLIC_API_URL/api/v1` through `lib/apiFetch.ts`. Only the "Kupi" `/products/{id}/buy` links point at the backend directly.
 
 ### URL-driven filtering
 
@@ -131,9 +131,10 @@ ANTHROPIC_API_KEY=...
 PLAYWRIGHT_EXECUTABLE_PATH=...   # optional, for scraper browser
 RATE_LIMIT_BYPASS_TOKEN=...      # lets the Next.js server (shared Vercel IPs) skip the per-IP limit; empty = no bypass
 RATE_LIMIT_ENABLED / RATE_LIMIT_PER_MINUTE / RATE_LIMIT_BURST / RATE_LIMIT_PROXY_HOPS / RATE_LIMIT_MAX_PAGE_SIZE  # RateLimitFilter, defaults true/120/60/1/48
+API_REQUIRE_TOKEN=false          # true = /api/v1 answers only the Next.js server (403 otherwise); needs RATE_LIMIT_BYPASS_TOKEN
 ```
 
-`RateLimitFilter` throttles `/api/v1/**` per client IP (rightmost `X-Forwarded-For` entry). Without the token it also caps `size`/`limit` at `RATE_LIMIT_MAX_PAGE_SIZE` (48; off while no token is configured, B2B excluded), so only the Next.js server can request big pages (sitemap `size=2000`, SEO lists with `limit: 500`). Server-side fetches in the frontend must go through `lib/apiFetch.ts`, otherwise ISR/sitemap calls from Vercel get 429s.
+`RateLimitFilter` throttles `/api/v1/**` per client IP (rightmost `X-Forwarded-For` entry). Without the token it also caps `size`/`limit` at `RATE_LIMIT_MAX_PAGE_SIZE` (48; off while no token is configured, B2B excluded), so only the Next.js server can request big pages (sitemap `size=2000`, SEO lists with `limit: 500`). Requests proxied through `/api/data` carry `X-Client-IP` and are limited and capped per visitor; server rendering sends no `X-Client-IP` and is neither. With `API_REQUIRE_TOKEN=true` a call without the token gets 403, except `/products/{id}/buy`, `/alerts/track/**`, `/wishlist/unsubscribe`, `/newsletter/unsubscribe` (browser and email links) and `/b2b/**`; paths are normalized like `AdminTokenFilter` so encoded or `..` paths can't dodge it. Server-side fetches in the frontend must go through `lib/apiFetch.ts`, otherwise ISR/sitemap calls from Vercel get 429s (and 403s once the API is locked).
 
 ---
 

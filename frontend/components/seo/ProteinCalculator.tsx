@@ -5,8 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { productUrl } from "@/lib/productUrl";
 import { Product } from "@/types/product";
+import { CLIENT_API } from "@/lib/clientApi";
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? "";
 const MARKET = process.env.NEXT_PUBLIC_MARKET ?? "rs";
 const IS_HR = MARKET === "hr";
 
@@ -75,7 +75,7 @@ export function ProteinCalculator() {
     const dailyG = Math.round(weight * PROTEIN_TABLE[activity][goal]);
 
     try {
-      const url = new URL(`${API}/api/v1/products`);
+      const url = new URL(`${CLIENT_API}/products`, window.location.origin);
       url.searchParams.set("size", "30");
       url.searchParams.set("sort", "valueScore,desc");
       url.searchParams.set("page", "0");

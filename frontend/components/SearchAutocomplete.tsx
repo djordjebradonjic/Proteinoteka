@@ -10,6 +10,7 @@ import { navigateTo } from "@/lib/navigation";
 import PriceTag from "@/components/PriceTag";
 import { getScoreColor, getScoreBg, getScoreLabel } from "@/lib/scoreColor";
 import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
+import { CLIENT_API } from "@/lib/clientApi";
 
 const { locale, currency } = MARKET_CONFIG[CURRENT_MARKET];
 
@@ -61,8 +62,6 @@ function HighlightMatch({ text, query }: { text: string; query: string }) {
   );
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
-
 export default function SearchAutocomplete({
   value,
   onChange,
@@ -99,7 +98,7 @@ export default function SearchAutocomplete({
       setLoading(true);
       try {
         const res = await fetch(
-          `${API_BASE}/api/v1/products/search?query=${encodeURIComponent(q)}&size=20${
+          `${CLIENT_API}/products/search?query=${encodeURIComponent(q)}&size=20${
             productType ? `&productType=${productType}` : ""
           }`,
         );

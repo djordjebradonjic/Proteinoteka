@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { CURRENT_MARKET } from './marketConfig';
+import { CLIENT_API } from './clientApi';
 
 const api = axios.create({
-  baseURL: `${process.env.NEXT_PUBLIC_API_URL || "https://proteinoteka-production.up.railway.app"}/api/v1`,
+  baseURL: CLIENT_API,
 });
 
 api.interceptors.request.use(config => {

@@ -4,6 +4,7 @@ import { isAdminAuthenticated } from "@/lib/adminAuth";
 import { buildCampaignHtml, toCampaignPicks, UNSUB_PLACEHOLDER, RawProduct } from "@/lib/newsletterCampaignEmail";
 import { MARKET_CONFIG, Market } from "@/lib/marketConfig";
 import { newsletterFromAddress } from "@/lib/emailSender";
+import { apiFetch } from "@/lib/apiFetch";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -11,7 +12,7 @@ const DIGEST_SIZE = 6;
 const BATCH_SIZE = 100; // Resend batch.send hard limit per request
 
 async function fetchDigestPicks(market: Market) {
-  const res = await fetch(
+  const res = await apiFetch(
     `${API}/api/v1/products?market=${market}&sort=lastPriceDropPct,desc&size=${DIGEST_SIZE}&page=0`,
   );
   if (!res.ok) throw new Error("Failed to fetch digest products");

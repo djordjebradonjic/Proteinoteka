@@ -80,7 +80,8 @@ public class AdminTokenFilter extends OncePerRequestFilter {
                 || (segments.size() >= 3 && segments.get(1).equals("v1") && segments.get(2).equals("admin"));
     }
 
-    private static List<String> normalizedSegments(String rawUri) {
+    /** Path segments as Spring MVC routes them (lower-cased); throws IllegalArgumentException on a bad escape. */
+    static List<String> normalizedSegments(String rawUri) {
         // 1. drop ";..." path parameters from every raw segment (what UrlPathHelper does)
         StringBuilder noParams = new StringBuilder();
         for (String segment : rawUri.split("/", -1)) {
