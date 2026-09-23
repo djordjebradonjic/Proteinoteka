@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, Search, X } from "lucide-react";
 import api from "@/lib/axios";
 import ProductGrid from "@/components/ProductGrid";
+import { WEIGHT_RANGES } from "@/components/SIdeBarFilter";
 import { Product } from "@/types/product";
 import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
 import {
@@ -18,8 +19,8 @@ import {
 
 // The creatine list. The URL is the single source of truth (bookmarkable, back/forward work); the first
 // render matches the server's (defaults, initial data) and the URL is read right after mount. The parameter
-// names (sort, brand, store, minPrice, maxPrice, page, query) are the ones robots.ts already keeps crawlers
-// out of, so a filtered state never becomes an indexable duplicate of /kreatin.
+// names (sort, brand, store, minPrice, maxPrice, page, query, pak) are the ones robots.ts already keeps
+// crawlers out of, so a filtered state never becomes an indexable duplicate of /kreatin.
 
 interface Props {
   initialProducts: Product[];
@@ -113,6 +114,7 @@ export default function CreatineListing({ initialProducts, initialTotalPages, in
   const [totalItems, setTotalItems] = useState(initialTotalItems);
   const [loading, setLoading] = useState(false);
   const [brands, setBrands] = useState<string[]>([]);
+  const [weightCounts, setWeightCounts] = useState<Record<string, number>>({});
   const [searchDraft, setSearchDraft] = useState("");
   const [minDraft, setMinDraft] = useState("");
   const [maxDraft, setMaxDraft] = useState("");
@@ -130,6 +132,9 @@ export default function CreatineListing({ initialProducts, initialTotalPages, in
     api.get("/products/brands", { params: { productType: "creatine" } })
       .then((res) => setBrands(res.data ?? []))
       .catch(() => {});
+    api.get("/products/weight-distribution", { params: { productType: "creatine" } })
+      .then((res) => setWeightCounts(res.data ?? {}))
+      .catch(() => {});
   }, []);
 
   const params = useMemo(() => new URLSearchParams(qs), [qs]);
@@ -138,6 +143,7 @@ export default function CreatineListing({ initialProducts, initialTotalPages, in
   const types = list(params.get("tip"));
   const selBrands = list(params.get("brand"));
   const selStores = list(params.get("store"));
+  const selWeights = list(params.get("pak"));
   const minPrice = params.get("minPrice") ?? "";
   const maxPrice = params.get("maxPrice") ?? "";
   const query = params.get("query") ?? "";
@@ -191,6 +197,7 @@ export default function CreatineListing({ initialProducts, initialTotalPages, in
             ...(q.get("tip") && { creatineType: q.get("tip") }),
             ...(q.get("brand") && { brand: q.get("brand") }),
             ...(q.get("store") && { storeName: q.get("store") }),
+            ...(q.get("pak") && { weightRange: q.get("pak") }),
             ...(q.get("minPrice") && { minPrice: q.get("minPrice") }),
             ...(q.get("maxPrice") && { maxPrice: q.get("maxPrice") }),
             ...(q.get("query") && { name: q.get("query") }),
@@ -223,6 +230,7 @@ export default function CreatineListing({ initialProducts, initialTotalPages, in
     ...types.map((v) => ({ key: `t-${v}`, label: TYPE_LABELS[v] ?? v, onRemove: () => toggle("tip", v) })),
     ...selBrands.map((v) => ({ key: `b-${v}`, label: v, onRemove: () => toggle("brand", v) })),
     ...selStores.map((v) => ({ key: `s-${v}`, label: v, onRemove: () => toggle("store", v) })),
+    ...selWeights.map((v) => ({ key: `w-${v}`, label: WEIGHT_RANGES.find((r) => r.value === v)?.label ?? v, onRemove: () => toggle("pak", v) })),
     ...(minPrice ? [{ key: "min", label: `${L.from} ${minPrice} ${CURRENCY}`, onRemove: () => setOrDelete("minPrice", "") }] : []),
     ...(maxPrice ? [{ key: "max", label: `${L.to} ${maxPrice} ${CURRENCY}`, onRemove: () => setOrDelete("maxPrice", "") }] : []),
   ];
@@ -285,6 +293,12 @@ export default function CreatineListing({ initialProducts, initialTotalPages, in
           options={CREATINE_STORES.map((s) => ({ value: s, label: s }))}
           selected={selStores}
           onToggle={(v) => toggle("store", v)}
+        />
+        <MultiSelect
+          label={L.weight}
+          options={WEIGHT_RANGES.map((r) => ({ value: r.value, label: `${r.label} (${weightCounts[r.value] ?? 0})` }))}
+          selected={selWeights}
+          onToggle={(v) => toggle("pak", v)}
         />
         <div className="flex items-center gap-1.5">
           <input
