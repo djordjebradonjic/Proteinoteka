@@ -240,8 +240,10 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           </span>
         )}
 
-        {/* Value Score — prominent, in content area */}
-        {vsConfig && vs != null && (
+        {/* Value Score — prominent, in content area. Not for creatine: the backend still computes it (kept for
+            internal audit), but a single price-per-gram number already tells the whole story for a commodity
+            like creatine, so a second "score" on top of it has no product value here. */}
+        {!creatine && vsConfig && vs != null && (
           <div className="flex flex-col gap-0.5">
             <div
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white shadow-sm self-start"

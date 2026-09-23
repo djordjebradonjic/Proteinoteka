@@ -104,28 +104,9 @@ export async function fetchSimilarCreatine(product: Product, limit = 4): Promise
 }
 
 /**
- * Best value-score creatine (powders only score, see CreatineProfile), for the "najbolje ocenjeni" carousel.
- * Decorative, not the page's critical path: a transient failure returns an empty list instead of throwing.
- */
-export async function fetchCreatineTopRatedProducts(limit = 8): Promise<Product[]> {
-  try {
-    const url = new URL(`${API}/api/v1/products/top`);
-    url.searchParams.set("productType", "creatine");
-    url.searchParams.set("sortBy", "valueScore");
-    url.searchParams.set("limit", String(limit));
-    url.searchParams.set("market", CURRENT_MARKET);
-    const res = await apiFetch(url.toString(), { next: { revalidate: REVALIDATE, tags: ["products"] } });
-    if (!res.ok) return [];
-    const data: Product[] = await res.json();
-    return data.some((p) => !isCreatine(p)) ? [] : data;
-  } catch {
-    return [];
-  }
-}
-
-/**
- * Biggest recent price drops in creatine, for the "najveći pad cene" carousel. Same best-effort contract as
- * fetchCreatineTopRatedProducts above.
+ * Biggest recent price drops in creatine, for the "najveći pad cene" carousel. Decorative, not the page's
+ * critical path: a transient failure returns an empty list instead of throwing. (There is no equivalent
+ * "best rated" fetcher: creatine has no value score shown on the frontend — see CreatineFeaturedSection.)
  */
 export async function fetchCreatinePriceDropProducts(limit = 8): Promise<Product[]> {
   try {
