@@ -5,6 +5,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,11 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.LongSupplier;
 
 /**
@@ -33,6 +39,12 @@ import java.util.function.LongSupplier;
  * <p>The client IP is the entry {@code trustedProxyHops} from the right of {@code X-Forwarded-For}:
  * the left side of that header is client-controlled and would let a scraper dodge the limit by
  * sending a fresh value on every request.
+ *
+ * <p>Without the token, {@code size} and {@code limit} are also capped at {@code maxPageSize}: the
+ * browser never asks for more than a listing page, while an uncapped {@code size=2000} returned
+ * the whole catalogue in one request. The Next.js server keeps its large pages (sitemap, SEO
+ * lists), so the cap is only applied once a token exists, otherwise it would truncate them. The
+ * B2B API has its own keys and limits and is left alone.
  */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 10)
@@ -40,12 +52,14 @@ import java.util.function.LongSupplier;
 public class RateLimitFilter extends OncePerRequestFilter {
 
     static final String BYPASS_HEADER = "X-Internal-Token";
+    private static final Set<String> PAGE_SIZE_PARAMS = Set.of("size", "limit");
 
     private final boolean enabled;
     private final double refillPerMillis;
     private final double burst;
     private final String bypassToken;
     private final int trustedProxyHops;
+    private final int maxPageSize;
     private final LongSupplier clock;
     private final Cache<String, Bucket> buckets = Caffeine.newBuilder()
             .expireAfterAccess(Duration.ofMinutes(10))
@@ -58,21 +72,24 @@ public class RateLimitFilter extends OncePerRequestFilter {
             @Value("${ratelimit.requests-per-minute:120}") int requestsPerMinute,
             @Value("${ratelimit.burst:60}") int burst,
             @Value("${ratelimit.bypass-token:}") String bypassToken,
-            @Value("${ratelimit.trusted-proxy-hops:1}") int trustedProxyHops) {
-        this(enabled, requestsPerMinute, burst, bypassToken, trustedProxyHops, System::currentTimeMillis);
+            @Value("${ratelimit.trusted-proxy-hops:1}") int trustedProxyHops,
+            @Value("${ratelimit.max-page-size:48}") int maxPageSize) {
+        this(enabled, requestsPerMinute, burst, bypassToken, trustedProxyHops, maxPageSize, System::currentTimeMillis);
     }
 
     RateLimitFilter(boolean enabled, int requestsPerMinute, int burst, String bypassToken,
-                    int trustedProxyHops, LongSupplier clock) {
+                    int trustedProxyHops, int maxPageSize, LongSupplier clock) {
         this.enabled = enabled;
         this.refillPerMillis = requestsPerMinute / 60_000.0;
         this.burst = Math.max(1, burst);
         this.bypassToken = bypassToken == null ? "" : bypassToken.trim();
         this.trustedProxyHops = Math.max(1, trustedProxyHops);
+        this.maxPageSize = Math.max(1, maxPageSize);
         this.clock = clock;
-        log.info("API rate limit {}: {} req/min, burst {}, bypass token {}",
+        log.info("API rate limit {}: {} req/min, burst {}, bypass token {}, page size cap {}",
                 enabled ? "on" : "off", requestsPerMinute, (int) this.burst,
-                this.bypassToken.isEmpty() ? "not set" : "set");
+                this.bypassToken.isEmpty() ? "not set" : "set",
+                this.bypassToken.isEmpty() ? "off (needs the token)" : this.maxPageSize);
     }
 
     @Override
@@ -89,7 +106,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
         long retryAfterMs = tryAcquire(clientIp(request));
         if (retryAfterMs == 0) {
-            filterChain.doFilter(request, response);
+            boolean capPageSize = !bypassToken.isEmpty() && !request.getRequestURI().startsWith("/api/v1/b2b");
+            filterChain.doFilter(capPageSize ? new PageSizeCappedRequest(request, maxPageSize) : request, response);
             return;
         }
 
@@ -130,6 +148,50 @@ public class RateLimitFilter extends OncePerRequestFilter {
     /** @return 0 when the request may proceed, otherwise the milliseconds until a token is free. */
     private long tryAcquire(String ip) {
         return buckets.get(ip, k -> new Bucket(burst, clock.getAsLong())).tryTake(clock.getAsLong(), refillPerMillis, burst);
+    }
+
+    /** Lowers {@code size}/{@code limit} to the cap; any other value (non-numeric, smaller) passes as is. */
+    static final class PageSizeCappedRequest extends HttpServletRequestWrapper {
+        private final Map<String, String[]> params;
+
+        PageSizeCappedRequest(HttpServletRequest request, int max) {
+            super(request);
+            Map<String, String[]> capped = new LinkedHashMap<>(request.getParameterMap());
+            for (String name : PAGE_SIZE_PARAMS) {
+                String[] values = capped.get(name);
+                if (values != null) capped.put(name, Arrays.stream(values).map(v -> cap(v, max)).toArray(String[]::new));
+            }
+            this.params = Collections.unmodifiableMap(capped);
+        }
+
+        private static String cap(String value, int max) {
+            try {
+                return Long.parseLong(value.trim()) > max ? String.valueOf(max) : value;
+            } catch (NumberFormatException e) {
+                return value;
+            }
+        }
+
+        @Override
+        public String getParameter(String name) {
+            String[] values = params.get(name);
+            return values == null || values.length == 0 ? null : values[0];
+        }
+
+        @Override
+        public String[] getParameterValues(String name) {
+            return params.get(name);
+        }
+
+        @Override
+        public Map<String, String[]> getParameterMap() {
+            return params;
+        }
+
+        @Override
+        public java.util.Enumeration<String> getParameterNames() {
+            return Collections.enumeration(params.keySet());
+        }
     }
 
     private static final class Bucket {

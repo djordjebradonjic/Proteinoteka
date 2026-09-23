@@ -130,10 +130,10 @@ DATABASE_PASSWORD=...             # never commit real values; local dev default 
 ANTHROPIC_API_KEY=...
 PLAYWRIGHT_EXECUTABLE_PATH=...   # optional, for scraper browser
 RATE_LIMIT_BYPASS_TOKEN=...      # lets the Next.js server (shared Vercel IPs) skip the per-IP limit; empty = no bypass
-RATE_LIMIT_ENABLED / RATE_LIMIT_PER_MINUTE / RATE_LIMIT_BURST / RATE_LIMIT_PROXY_HOPS  # RateLimitFilter, defaults true/120/60/1
+RATE_LIMIT_ENABLED / RATE_LIMIT_PER_MINUTE / RATE_LIMIT_BURST / RATE_LIMIT_PROXY_HOPS / RATE_LIMIT_MAX_PAGE_SIZE  # RateLimitFilter, defaults true/120/60/1/48
 ```
 
-`RateLimitFilter` throttles `/api/v1/**` per client IP (rightmost `X-Forwarded-For` entry). Server-side fetches in the frontend must go through `lib/apiFetch.ts`, otherwise ISR/sitemap calls from Vercel get 429s.
+`RateLimitFilter` throttles `/api/v1/**` per client IP (rightmost `X-Forwarded-For` entry). Without the token it also caps `size`/`limit` at `RATE_LIMIT_MAX_PAGE_SIZE` (48; off while no token is configured, B2B excluded), so only the Next.js server can request big pages (sitemap `size=2000`, SEO lists with `limit: 500`). Server-side fetches in the frontend must go through `lib/apiFetch.ts`, otherwise ISR/sitemap calls from Vercel get 429s.
 
 ---
 

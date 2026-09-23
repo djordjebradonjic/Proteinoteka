@@ -70,6 +70,8 @@ ratelimit:
   bypass-token: ${RATE_LIMIT_BYPASS_TOKEN:}
   # Proxies in front of the app; the client IP is that many entries from the right of X-Forwarded-For.
   trusted-proxy-hops: ${RATE_LIMIT_PROXY_HOPS:1}
+  # Largest size/limit a client without the token gets (browser listings use 12); only active once a token is set.
+  max-page-size: ${RATE_LIMIT_MAX_PAGE_SIZE:48}
 
 b2b:
   api:
