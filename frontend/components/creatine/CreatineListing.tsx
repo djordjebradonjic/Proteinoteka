@@ -32,16 +32,14 @@ const L = CREATINE_COPY.listing;
 const CURRENCY = MARKET_CONFIG[CURRENT_MARKET].currency;
 
 const SORTS = [
-  { value: "valueScore,desc",  label: L.sort.value },
   { value: "numericPrice,asc", label: L.sort.priceAsc },
   { value: "numericPrice,desc", label: L.sort.priceDesc },
   { value: "name,asc",         label: L.sort.nameAz },
 ];
 
-/** Powder is ranked by value; a piece pack has no score, so its default is the cheapest first. */
-function defaultSort(tabKey: string): string {
-  return tabKey === DEFAULT_FORM_TAB ? "valueScore,desc" : "numericPrice,asc";
-}
+// No value-score sort: creatine's score isn't shown on the frontend (see CreatineFeaturedSection), so cheapest
+// first is the one sensible default, regardless of form tab.
+const DEFAULT_SORT = "numericPrice,asc";
 
 function list(raw: string | null): string[] {
   return (raw ?? "").split(",").filter(Boolean);
@@ -136,7 +134,7 @@ export default function CreatineListing({ initialProducts, initialTotalPages, in
 
   const params = useMemo(() => new URLSearchParams(qs), [qs]);
   const tab = formTab(params.get("oblik") ?? DEFAULT_FORM_TAB);
-  const sort = params.get("sort") || defaultSort(tab.key);
+  const sort = params.get("sort") || DEFAULT_SORT;
   const types = list(params.get("tip"));
   const selBrands = list(params.get("brand"));
   const selStores = list(params.get("store"));
@@ -188,7 +186,7 @@ export default function CreatineListing({ initialProducts, initialTotalPages, in
             productType: "creatine",
             page: Number(q.get("page")) || 0,
             size: PAGE_SIZE,
-            sort: q.get("sort") || defaultSort(t.key),
+            sort: q.get("sort") || DEFAULT_SORT,
             ...(t.forms && { productForm: t.forms }),
             ...(q.get("tip") && { creatineType: q.get("tip") }),
             ...(q.get("brand") && { brand: q.get("brand") }),
@@ -313,7 +311,7 @@ export default function CreatineListing({ initialProducts, initialTotalPages, in
         </div>
         <select
           value={sort}
-          onChange={(e) => setOrDelete("sort", e.target.value === defaultSort(tab.key) ? "" : e.target.value)}
+          onChange={(e) => setOrDelete("sort", e.target.value === DEFAULT_SORT ? "" : e.target.value)}
           aria-label="Sortiranje"
           className="h-10 ml-auto px-3 rounded-lg border border-[#E2E8F0] bg-white text-sm font-medium text-[#1B2B4B] focus:outline-none focus:border-[#FF9900]"
         >

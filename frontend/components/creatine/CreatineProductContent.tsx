@@ -18,7 +18,6 @@ import { getWishlistEmail } from "@/lib/wishlistSync";
 import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
 import { formatPrice } from "@/lib/formatPrice";
 import { displayName } from "@/lib/productDisplayName";
-import { getScoreColor, getScoreLabel } from "@/lib/scoreColor";
 import { productUrl } from "@/lib/productUrl";
 import {
   CREATINE_COPY,
@@ -168,9 +167,6 @@ export default function CreatineProductContent({ product, storePrices, similar }
   const perServing = pricePerServing(product);
   const per100 = pricePer100g(product);
 
-  const score = product.valueScore;
-  const scoreColor = score != null ? getScoreColor(score) : "#94a3b8";
-
   const cheapestElsewhere = storePrices.find(
     (sp) => sp.id !== product.id && sp.numericPrice != null && sp.numericPrice > 0 && sp.numericPrice < product.numericPrice,
   );
@@ -302,38 +298,6 @@ export default function CreatineProductContent({ product, storePrices, similar }
               )}
               <p className="text-[11px] text-slate-400 mt-3 leading-snug">{P.disclaimer}</p>
             </div>
-
-            {/* Value score, or the reason there is none */}
-            {score != null ? (
-              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4">
-                <div
-                  className="w-16 h-16 rounded-full flex items-center justify-center shrink-0 text-white font-black text-xl"
-                  style={{ background: scoreColor }}
-                >
-                  {score.toFixed(1)}
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs uppercase tracking-wider text-slate-400 font-bold">{P.scoreTitle}</p>
-                  <p className="text-base font-bold" style={{ color: scoreColor }}>{getScoreLabel(score)}</p>
-                  <p className="text-xs text-slate-400">
-                    {product.percentileRank != null && product.percentileRank >= 10
-                      ? `Bolje od ${product.percentileRank}% kreatina`
-                      : IS_HR ? "na ljestvici 0–10" : "na skali 0–10"}
-                  </p>
-                  <Link href="/kako-racunamo-value-score" className="text-xs font-semibold text-[#FF9900] hover:underline">
-                    {P.scoreLink} →
-                  </Link>
-                </div>
-              </div>
-            ) : (
-              <div className="bg-slate-100 border border-slate-200 rounded-2xl p-5">
-                <p className="text-xs uppercase tracking-wider text-slate-400 font-bold mb-1">{P.scoreTitle}</p>
-                <p className="text-sm text-slate-600 leading-relaxed">{counted ? P.scoreCounted : P.scoreMissing}</p>
-                <Link href="/kako-racunamo-value-score" className="inline-block mt-2 text-xs font-semibold text-[#FF9900] hover:underline">
-                  {P.scoreLink} →
-                </Link>
-              </div>
-            )}
 
             <a
               href={buyUrl(product.id)}

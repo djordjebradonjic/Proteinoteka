@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import Header from "@/components/Header";
 import CreatineListing from "@/components/creatine/CreatineListing";
 import CreatineExtras from "@/components/creatine/CreatineExtras";
@@ -10,7 +9,7 @@ import { hreflangAlternates } from "@/lib/hreflang";
 import { safeJsonLd } from "@/lib/jsonLd";
 import { productUrl } from "@/lib/productUrl";
 import { CREATINE_COPY, CREATINE_PATH } from "@/lib/creatine";
-import { fetchCreatinePage, fetchCreatineTopRatedProducts, fetchCreatinePriceDropProducts } from "@/lib/creatine-data";
+import { fetchCreatinePage, fetchCreatinePriceDropProducts } from "@/lib/creatine-data";
 
 export const revalidate = 21600;
 
@@ -18,9 +17,10 @@ const MARKET = MARKET_CONFIG[CURRENT_MARKET];
 const BASE = `https://${MARKET.domain}`;
 const COPY = CREATINE_COPY;
 
-// What the page shows before any filter is touched: powders, best value first. The client list starts from
-// exactly this, so the server-rendered HTML and the first client render are the same.
-const FIRST_PAGE = { form: "powder", sort: "valueScore,desc" } as const;
+// What the page shows before any filter is touched: powders, cheapest first (no value score for creatine —
+// see CreatineListing). The client list starts from exactly this, so the server-rendered HTML and the first
+// client render are the same.
+const FIRST_PAGE = { form: "powder", sort: "numericPrice,asc" } as const;
 
 export async function generateMetadata(): Promise<Metadata> {
   const { totalItems } = await fetchCreatinePage(FIRST_PAGE);
@@ -46,9 +46,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function CreatinePage() {
-  const [first, topRated, priceDrops] = await Promise.all([
+  const [first, priceDrops] = await Promise.all([
     fetchCreatinePage(FIRST_PAGE),
-    fetchCreatineTopRatedProducts(8),
     fetchCreatinePriceDropProducts(8),
   ]);
   const url = `${BASE}${CREATINE_PATH}`;
@@ -108,7 +107,7 @@ export default async function CreatinePage() {
         <CreatineHeroSection />
 
         <div id="izdvojeno-kreatin" style={{ scrollMarginTop: "80px" }}>
-          <CreatineFeaturedSection topRatedProducts={topRated} priceDropProducts={priceDrops} />
+          <CreatineFeaturedSection priceDropProducts={priceDrops} />
         </div>
 
         <CreatineListing
@@ -128,11 +127,6 @@ export default async function CreatinePage() {
                 </div>
               ))}
             </div>
-            <p className="mt-8 text-sm">
-              <Link href="/kako-racunamo-value-score" className="font-semibold text-[#FF9900] hover:underline">
-                {COPY.product.scoreLink} →
-              </Link>
-            </p>
 
             <h2 className="text-2xl font-extrabold text-slate-900 mt-14 mb-5">Česta pitanja</h2>
             <div className="space-y-3">
