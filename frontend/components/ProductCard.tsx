@@ -259,16 +259,29 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           </div>
         )}
 
+        {/* Creatine has no value-score badge to draw the eye, so the price itself carries that weight — bigger
+            and bolder than the protein card's price, which sits next to its own Value Score badge instead. */}
         <div className="flex flex-col gap-0.5 min-h-[2.5rem] justify-center">
           {product.previousPrice != null &&
            product.previousPrice > 0 &&
            product.previousPrice !== product.numericPrice && (
-            <span className="text-[10px] text-[#9CA3AF] line-through leading-none">
-              <PriceTag price={product.previousPrice} className="text-[10px] text-[#9CA3AF] line-through" currencyClassName="text-[0.9em] font-medium text-[#9CA3AF] ml-0.5" />
+            <span className={`${creatine ? "text-xs" : "text-[10px]"} text-[#9CA3AF] line-through leading-none`}>
+              <PriceTag
+                price={product.previousPrice}
+                className={`${creatine ? "text-xs" : "text-[10px]"} text-[#9CA3AF] line-through`}
+                currencyClassName="text-[0.9em] font-medium text-[#9CA3AF] ml-0.5"
+              />
             </span>
           )}
-          <p className="text-sm md:text-base font-semibold text-[#1A1A1A] flex items-center gap-1.5 leading-none">
-            <PriceTag price={product.numericPrice} className="text-sm md:text-base font-semibold text-[#1A1A1A]" />
+          <p
+            className={`flex items-center gap-1.5 leading-none ${
+              creatine ? "text-xl md:text-2xl font-black text-[#1B2B4B]" : "text-sm md:text-base font-semibold text-[#1A1A1A]"
+            }`}
+          >
+            <PriceTag
+              price={product.numericPrice}
+              className={creatine ? "text-xl md:text-2xl font-black text-[#1B2B4B]" : "text-sm md:text-base font-semibold text-[#1A1A1A]"}
+            />
             <PriceTrendIndicator currentPrice={product.numericPrice} previousPrice={product.previousPrice} />
           </p>
         </div>
