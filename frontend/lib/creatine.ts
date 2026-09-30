@@ -139,7 +139,7 @@ export const CREATINE_COPY = HR
         chips: ["Cijena po 100 g za svaki prah", "Prati pad cijene", "Samo hrvatske trgovine"],
         schemaName: "Najisplativiji kreatin u Hrvatskoj",
       },
-      hero: { cta: "Najveći pad cijene →" },
+      hero: { cta: "Pogledaj sve →" },
       featured: {
         title: "Izdvojeno",
         subtitle: "Kreatin s najvećim padom cijene",
@@ -211,7 +211,7 @@ export const CREATINE_COPY = HR
         chips: ["Cena po 100 g za svaki prah", "Prati pad cene", "Samo prodavnice iz Srbije"],
         schemaName: "Najisplativiji kreatin u Srbiji",
       },
-      hero: { cta: "Najveći pad cene →" },
+      hero: { cta: "Pogledaj sve →" },
       featured: {
         title: "Izdvojeno",
         subtitle: "Kreatin sa najvećim padom cene",
