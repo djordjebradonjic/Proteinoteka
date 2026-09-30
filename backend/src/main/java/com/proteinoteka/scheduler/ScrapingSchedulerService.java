@@ -44,6 +44,13 @@ public class ScrapingSchedulerService {
      *
      * Rules: max 2 heavy Playwright scrapers per day, each in its own time window
      * (never concurrent); light scrapers are paired freely alongside them.
+     *
+     * All windows sit between 00:00–06:00 Belgrade time: stores run daytime "happy hour" /
+     * flash-sale pricing that reverts within hours, and a scrape landing inside one of those
+     * windows would record the temporary price as if it were the regular one (a fake "drop" that
+     * "recovers" on the next weekly scrape). Scraping overnight avoids that. {@link
+     * ScrapingScheduler#dailyCheck()} runs at 00:05 (moved from 06:50) so every window is still in
+     * the future when the day's stores are picked.
      */
     record ScrapeWindow(List<String> stores, int fromHour, int toHour) {}
 
@@ -51,34 +58,34 @@ public class ScrapingSchedulerService {
     static {
         Map<Integer, List<ScrapeWindow>> m = new java.util.HashMap<>();
         m.put(1, List.of(
-            new ScrapeWindow(List.of("Proteinbox"),                    9, 12),
-            new ScrapeWindow(List.of("SupplementStore"),               13, 16)
+            new ScrapeWindow(List.of("Proteinbox"),                    0, 3),
+            new ScrapeWindow(List.of("SupplementStore"),                3, 6)
         ));
         m.put(2, List.of(
-            new ScrapeWindow(List.of("Proteini.si"),                   9, 12),
-            new ScrapeWindow(List.of("FitLab", "Lama"),                 13, 16),
-            new ScrapeWindow(List.of("MyProtein HR"),                   17, 19)
+            new ScrapeWindow(List.of("Proteini.si"),                   0, 2),
+            new ScrapeWindow(List.of("FitLab", "Lama"),                 2, 4),
+            new ScrapeWindow(List.of("MyProtein HR"),                   4, 6)
         ));
         m.put(3, List.of(
-            new ScrapeWindow(List.of("Supplementshop"),                9, 11),
-            new ScrapeWindow(List.of("Shopbuilder"),                   12, 14)
+            new ScrapeWindow(List.of("Supplementshop"),                0, 3),
+            new ScrapeWindow(List.of("Shopbuilder"),                   3, 6)
         ));
         m.put(4, List.of(
-            new ScrapeWindow(List.of("XSport"),                        9, 13),
-            new ScrapeWindow(List.of("GymBeam", "Ogistrashop"), 14, 17)
+            new ScrapeWindow(List.of("XSport"),                        0, 3),
+            new ScrapeWindow(List.of("GymBeam", "Ogistrashop"),        3, 6)
         ));
         m.put(5, List.of(
-            new ScrapeWindow(List.of("Polleo Sport"),                  9, 12),
-            new ScrapeWindow(List.of("Proteka"),                       13, 16)
+            new ScrapeWindow(List.of("Polleo Sport"),                  0, 3),
+            new ScrapeWindow(List.of("Proteka"),                       3, 6)
         ));
         m.put(6, List.of(
-            new ScrapeWindow(List.of("Nutrition Shop HR"),             9, 12),
-            new ScrapeWindow(List.of("Proteini Outlet"),               13, 16)
+            new ScrapeWindow(List.of("Nutrition Shop HR"),             0, 3),
+            new ScrapeWindow(List.of("Proteini Outlet"),               3, 6)
         ));
         m.put(7, List.of(
-            new ScrapeWindow(List.of("Proteini.si HR"),                9, 13),
-            new ScrapeWindow(List.of("MyProtein", "Pansport"),         14, 16),
-            new ScrapeWindow(List.of("GymBeam HR"),                    17, 19)
+            new ScrapeWindow(List.of("Proteini.si HR"),                0, 2),
+            new ScrapeWindow(List.of("MyProtein", "Pansport"),         2, 4),
+            new ScrapeWindow(List.of("GymBeam HR"),                    4, 6)
         ));
         SCHEDULE = java.util.Collections.unmodifiableMap(m);
     }
