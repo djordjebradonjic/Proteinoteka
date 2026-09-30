@@ -7,7 +7,6 @@ import HeroSection from "@/components/HeroSection";
 import ProductSection from "@/components/ProductSection";
 import FeaturedSection from "@/components/FeaturedSection";
 import HowItWorks from "@/components/HowItWorks";
-import CreatineTeaser from "@/components/CreatineTeaser";
 
 
 const CompareBar = dynamic(() => import("./CompareBar"), { ssr: false });
@@ -22,7 +21,6 @@ interface Props {
   initialCategory?: string;
   topValueProducts?: Product[];
   priceDropProducts?: Product[];
-  creatineProducts?: Product[];
   categoryHero?: React.ReactNode;
   categoryFaq?: React.ReactNode;
 }
@@ -35,7 +33,6 @@ export default function HomeContent({
   initialCategory = "",
   topValueProducts = [],
   priceDropProducts = [],
-  creatineProducts = [],
   categoryHero,
   categoryFaq,
 }: Props) {
@@ -56,8 +53,6 @@ export default function HomeContent({
           />
         </div>
       )}
-
-      {!initialCategory && <CreatineTeaser products={creatineProducts} />}
 
       {categoryHero}
 
