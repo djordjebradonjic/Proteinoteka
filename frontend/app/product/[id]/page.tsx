@@ -8,9 +8,13 @@ const API = process.env.NEXT_PUBLIC_API_URL ?? "";
 async function fetchProduct(id: string): Promise<Product | null> {
   try {
     const res = await apiFetch(`${API}/api/v1/products/${id}`, { next: { revalidate: 86400 } });
-    if (!res.ok) return null;
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`product ${id}: API answered HTTP ${res.status}`);
     return res.json();
-  } catch { return null; }
+  } catch (e) {
+    if (e instanceof Error && e.message.startsWith("product ")) throw e;
+    throw new Error(`product ${id}: API unreachable`);
+  }
 }
 
 export default async function ProductRedirectPage({

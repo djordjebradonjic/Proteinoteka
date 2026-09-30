@@ -31,9 +31,15 @@ interface Params { params: Promise<{ category: string; slug: string }> }
 async function fetchProduct(id: number): Promise<Product | null> {
   try {
     const res = await apiFetch(`${API}/api/v1/products/${id}`, { next: { revalidate: 86400, tags: ["products"] } });
-    if (!res.ok) return null;
+    // Only a real 404 means "deleted". Any other failure (429, 5xx, timeout) must not look like
+    // a deleted product: the caller answers that with a permanent redirect Google keeps.
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`product ${id}: API answered HTTP ${res.status}`);
     return res.json();
-  } catch { return null; }
+  } catch (e) {
+    if (e instanceof Error && e.message.startsWith("product ")) throw e;
+    throw new Error(`product ${id}: API unreachable`);
+  }
 }
 
 async function fetchSimilar(category: string, excludeId: number): Promise<Product[]> {
