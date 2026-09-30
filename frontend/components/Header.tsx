@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { Heart, ChevronDown } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
@@ -8,6 +9,8 @@ import { toggleWishlist } from "@/store/wishlistSlice";
 import SearchAutocomplete from "@/components/SearchAutocomplete";
 import { navigateTo } from "@/lib/navigation";
 import { useTranslations } from "next-intl";
+import { SUPPLEMENT_CATEGORIES } from "@/lib/supplementCategories";
+import { CREATINE_PATH } from "@/lib/creatine";
 import { HEADER_GUIDES, HEADER_NAV_LINKS, ALL_GUIDES_HREF } from "@/lib/navConfig";
 
 function Logo() {
@@ -184,6 +187,8 @@ export default function Header({ hasHero = false }: { hasHero?: boolean }) {
   const [localSearch, setLocalSearch] = useState("");
   const [mounted, setMounted] = useState(false);
   const [heroVisible, setHeroVisible] = useState(hasHero);
+  const pathname = usePathname();
+  const activeCategory = pathname.startsWith(CREATINE_PATH) ? "creatine" : pathname === "/" ? "protein" : null;
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -286,6 +291,28 @@ export default function Header({ hasHero = false }: { hasHero?: boolean }) {
           </button>
         </div>
       </div>
+
+      {/* Mobile category strip: the desktop nav (with Kreatin) is hidden below md */}
+      <nav aria-label="Kategorije suplemenata" className="md:hidden flex gap-2 px-4 pb-2.5">
+        {SUPPLEMENT_CATEGORIES.map((cat) => {
+          const active = cat.key === activeCategory;
+          return (
+            <Link
+              key={cat.key}
+              href={cat.href}
+              aria-current={active ? "page" : undefined}
+              className="flex-1 text-center py-1.5 rounded-lg text-sm font-bold transition-colors"
+              style={
+                active
+                  ? { background: "#FF9900", color: "#131921" }
+                  : { background: "rgba(255,255,255,0.08)", color: "#e2e8f0" }
+              }
+            >
+              {cat.label}
+            </Link>
+          );
+        })}
+      </nav>
 
       {!heroVisible && (
         <div className="md:hidden absolute top-full left-0 right-0 px-4 pb-3 z-[60]" style={{ backgroundColor: "#131921" }}>

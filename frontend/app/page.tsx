@@ -1,4 +1,5 @@
 import HomeContent from "@/components/HomeContent";
+import { apiFetch } from "@/lib/apiFetch";
 import { Metadata } from "next";
 import { Suspense } from "react";
 import { fetchTopProducts, fetchTopValueProducts, fetchPriceDropProducts } from "@/lib/seo-data";
@@ -6,6 +7,7 @@ import { productUrl } from "@/lib/productUrl";
 import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
 import { hreflangAlternates } from "@/lib/hreflang";
 import { safeJsonLd } from "@/lib/jsonLd";
+import { fetchCreatinePage } from "@/lib/creatine-data";
 
 // useSearchParams() now lives only inside ProductSection (wrapped in its own Suspense)
 // and inside mini SearchSync/CategorySync components (each in their own Suspense).
@@ -90,7 +92,7 @@ async function getInitialProducts() {
   // keep serving the last successfully generated page and retry on the next request — see
   // node_modules/next/dist/docs/01-app/02-guides/incremental-static-regeneration.md
   // ("Handling uncaught exceptions").
-  const res = await fetch(
+  const res = await apiFetch(
     `${process.env.NEXT_PUBLIC_API_URL}/api/v1/products?page=0&size=12&sort=random&market=${process.env.NEXT_PUBLIC_MARKET ?? 'rs'}`,
     { next: { revalidate: 21600, tags: ["products"] } },
   );
@@ -105,12 +107,22 @@ async function getInitialProducts() {
   };
 }
 
+// Decorative teaser: a failure (or a backend that predates creatine) just hides the row instead of failing the page.
+async function getCreatineTeaser() {
+  try {
+    return (await fetchCreatinePage({ form: "powder", size: 8 })).content;
+  } catch {
+    return [];
+  }
+}
+
 export default async function Home() {
-  const [initialData, topProducts, topValueProducts, priceDropProducts] = await Promise.all([
+  const [initialData, topProducts, topValueProducts, priceDropProducts, creatineProducts] = await Promise.all([
     getInitialProducts(),
     fetchTopProducts({ sortBy: "valueScore", limit: 10 }),
     fetchTopValueProducts(8),
     fetchPriceDropProducts(8),
+    getCreatineTeaser(),
   ]);
 
   const top10 = topProducts.slice(0, 10);
@@ -141,6 +153,7 @@ export default async function Home() {
           initialTotalItems={initialData.totalItems}
           topValueProducts={topValueProducts}
           priceDropProducts={priceDropProducts}
+          creatineProducts={creatineProducts}
         />
       </Suspense>
     </>

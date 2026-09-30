@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { FOOTER_STORES, FOOTER_GUIDES, FOOTER_POPULAR } from "@/lib/navConfig";
+import { CREATINE_PATH } from "@/lib/creatine";
 import NewsletterInlineForm from "@/components/NewsletterInlineForm";
 
 const CATEGORIES = [
@@ -12,6 +13,13 @@ const CATEGORIES = [
   { label: "Kazein",           slug: "kazein"           },
   { label: "Biljni protein",   slug: "biljni-protein"   },
   { label: "Blend",            slug: "blend"            },
+];
+
+const CREATINE_FORMS = [
+  { label: "Kreatin prah",     oblik: "prah"    },
+  { label: "Kreatin kapsule",  oblik: "kapsule" },
+  { label: "Kreatin tablete",  oblik: "tablete" },
+  { label: "Kreatin gumice",   oblik: "gumice"  },
 ];
 
 function ColHeading({ children }: { children: React.ReactNode }) {
@@ -58,6 +66,16 @@ export default function Footer() {
                 </FooterLink>
               ))}
             </ul>
+            <div className="mt-5">
+              <ColHeading>Kreatin</ColHeading>
+              <ul className="flex flex-col gap-2">
+                {CREATINE_FORMS.map((f) => (
+                  <FooterLink key={f.oblik} href={`${CREATINE_PATH}?oblik=${f.oblik}`}>
+                    {f.label}
+                  </FooterLink>
+                ))}
+              </ul>
+            </div>
           </div>
 
           {/* Col 2 — Prodavnice / Trgovine */}
