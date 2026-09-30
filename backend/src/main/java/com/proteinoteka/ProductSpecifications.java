@@ -6,6 +6,7 @@ import jakarta.persistence.criteria.ListJoin;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -103,6 +104,12 @@ public class ProductSpecifications {
     public static Specification<Product> hasProductType(String productType) {
         return (root, query, cb) -> cb.equal(root.get("productType"),
                 productType == null || productType.isEmpty() ? "protein" : productType);
+    }
+
+    // Rows a scrape hasn't refreshed since the cutoff carry a price nobody has confirmed (a store
+    // blocked for weeks, a delisted product) — see ListingFreshness.
+    public static Specification<Product> updatedSince(LocalDateTime cutoff) {
+        return (root, query, cb) -> cb.greaterThanOrEqualTo(root.get("lastUpdated"), cutoff);
     }
 
     public static Specification<Product> hasMarket(String market) {
