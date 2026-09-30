@@ -299,6 +299,7 @@ public class ProductGroupService {
                     m.put("canonicalName", group.getCanonicalName());
                     m.put("brand", group.getBrand());
                     m.put("weightGrams", group.getWeightGrams());
+                    m.put("market", group.getMarket());
                     m.put("storeCount", products.stream()
                             .map(p -> p.get("store")).collect(Collectors.toSet()).size());
                     m.put("products", products);

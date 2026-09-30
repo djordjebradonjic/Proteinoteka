@@ -1,22 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
-import { isAdminAuthenticated } from "@/lib/adminAuth";
+import { NextRequest } from "next/server";
+import { forwardToBackend, requireAdmin } from "@/lib/adminProxy";
 
-const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? "";
-const TOKEN   = process.env.ADMIN_TOKEN ?? "";
-
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ storeName: string }> },
-) {
-  if (!await isAdminAuthenticated(req)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+export async function GET(req: NextRequest, { params }: { params: Promise<{ storeName: string }> }) {
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
   const { storeName } = await params;
   const days = req.nextUrl.searchParams.get("days") ?? "30";
-
-  const res = await fetch(
-    `${BACKEND}/api/admin/store-report/${encodeURIComponent(storeName)}?days=${encodeURIComponent(days)}`,
-    { headers: { "X-Admin-Token": TOKEN }, cache: "no-store" },
-  );
-  return NextResponse.json(await res.json(), { status: res.status });
+  return forwardToBackend(
+    `/api/admin/store-report/${encodeURIComponent(storeName)}?days=${encodeURIComponent(days)}`);
 }

@@ -5,7 +5,8 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, Legend,
 } from "recharts";
-import { Trash2, RefreshCw, ChevronDown, ChevronRight, Zap, Users, Star, Check, Globe, AlertCircle, CheckCircle2, Clock, FileText, Download } from "lucide-react";
+import { Trash2, RefreshCw, ChevronDown, ChevronRight, Zap, Users, Star, Check, Globe, AlertCircle, CheckCircle2, Clock, FileText, Download, LogOut, Server, Wrench, History } from "lucide-react";
+import { ScrapeTab, MaintenanceTab, AuditTab } from "./_tabs";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -56,11 +57,12 @@ interface AlertMetrics {
   insights:    DecisionRule[];
 }
 
-interface AlertSubscriber { email: string; productId: number; productName: string; targetPrice: number | null; addedAt: string; }
+interface AlertSubscriber { email: string; productId: number; productName: string; targetPrice: number | null; currency?: string; addedAt: string; }
 
-interface GroupProduct { id: number; name: string; store: string; price: number; weight: number; source: string; }
+interface GroupProduct { id: number; name: string; store: string; price: number | null; weight: number | null; source: string | null; }
 interface ProductGroup {
   groupId: number;
+  market?: string;
   canonicalName: string;
   brand: string;
   weightGrams: number;
@@ -80,7 +82,9 @@ function mergeByDate(views: DayClick[], compares: DayClick[], clickouts: DayClic
 }
 
 type ClearMode = "all" | "keepClickOut" | "clicks";
-type Tab = "analytics" | "grupe" | "recenzije" | "domeni" | "izvestaji" | "kvalitet";
+type Tab = "analytics" | "grupe" | "recenzije" | "domeni" | "izvestaji" | "kvalitet" | "scraperi" | "odrzavanje" | "log";
+
+const currencyOf = (market?: string | null) => (market === "hr" ? "EUR" : "RSD");
 type Market = "sve" | "rs" | "hr";
 
 // ── Main page ─────────────────────────────────────────────────────────────────
@@ -88,13 +92,22 @@ type Market = "sve" | "rs" | "hr";
 export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("analytics");
 
+  const logout = async () => {
+    try { await fetch("/api/admin/logout", { method: "POST" }); } finally { window.location.href = "/admin/login"; }
+  };
+
   return (
     <main className="min-h-screen bg-slate-50">
       {/* Tab navigation */}
       <div className="bg-white border-b border-slate-200 px-6 pt-6">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-2xl font-black text-[#1B2B4B] mb-4">Admin Panel</h1>
-          <div className="flex gap-1">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-2xl font-black text-[#1B2B4B]">Admin Panel</h1>
+            <button onClick={logout} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-500 hover:text-red-600 border border-slate-200 rounded-lg transition-colors">
+              <LogOut className="w-3.5 h-3.5" /> Odjavi se
+            </button>
+          </div>
+          <div className="flex gap-1 overflow-x-auto">
             {([
               { id: "analytics",  label: "Analytics",  icon: <Users  className="w-4 h-4" /> },
               { id: "domeni",     label: "Domeni",     icon: <Globe  className="w-4 h-4" /> },
@@ -102,11 +115,14 @@ export default function AdminPage() {
               { id: "recenzije",  label: "Recenzije",  icon: <Star   className="w-4 h-4" /> },
               { id: "izvestaji",  label: "Izveštaji",  icon: <FileText className="w-4 h-4" /> },
               { id: "kvalitet",   label: "Kvalitet",   icon: <CheckCircle2 className="w-4 h-4" /> },
+              { id: "scraperi",   label: "Scraperi",   icon: <Server className="w-4 h-4" /> },
+              { id: "odrzavanje", label: "Održavanje", icon: <Wrench className="w-4 h-4" /> },
+              { id: "log",        label: "Log",        icon: <History className="w-4 h-4" /> },
             ] as { id: Tab; label: string; icon: React.ReactNode }[]).map(t => (
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 transition-colors ${
+                className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold whitespace-nowrap rounded-t-lg border-b-2 transition-colors ${
                   tab === t.id
                     ? "border-[#FF9900] text-[#FF9900] bg-orange-50"
                     : "border-transparent text-slate-500 hover:text-slate-700"
@@ -126,6 +142,9 @@ export default function AdminPage() {
         {tab === "recenzije"  && <RecenzijeTab />}
         {tab === "izvestaji"  && <IzvestajiTab />}
         {tab === "kvalitet"   && <KvalitetTab />}
+        {tab === "scraperi"   && <ScrapeTab />}
+        {tab === "odrzavanje" && <MaintenanceTab />}
+        {tab === "log"        && <AuditTab />}
       </div>
     </main>
   );
@@ -136,16 +155,25 @@ export default function AdminPage() {
 function GrupeTab() {
   const [groups, setGroups]     = useState<ProductGroup[]>([]);
   const [loading, setLoading]   = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [generating, setGen]    = useState(false);
-  const [result, setResult]     = useState<{ groupsCreated: number; clustersTooSmall: number } | null>(null);
+  const [result, setResult]     = useState<{ groupsCreated: number; clustersTooSmall: number; productsAttachedToExistingGroups?: number } | null>(null);
+  const [message, setMessage]   = useState<{ ok: boolean; text: string } | null>(null);
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
   const [deleting, setDeleting] = useState<number | null>(null);
+  const [manualIds, setManualIds]   = useState("");
+  const [manualName, setManualName] = useState("");
+  const [creating, setCreating]     = useState(false);
 
   const loadGroups = async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       const res = await fetch("/api/admin/groups");
-      if (res.ok) setGroups(await res.json());
+      if (!res.ok) throw new Error();
+      setGroups(await res.json());
+    } catch {
+      setLoadError(true);
     } finally { setLoading(false); }
   };
 
@@ -154,28 +182,60 @@ function GrupeTab() {
   const autoGenerate = async () => {
     setGen(true);
     setResult(null);
+    setMessage(null);
     try {
       const res = await fetch("/api/admin/groups/auto-generate", { method: "POST" });
-      if (res.ok) {
-        const data = await res.json();
-        setResult(data);
-        await loadGroups();
-      }
+      if (!res.ok) throw new Error();
+      setResult(await res.json());
+      await loadGroups();
+    } catch {
+      setMessage({ ok: false, text: "Auto-generisanje nije uspelo. Proveri Log / backend." });
     } finally { setGen(false); }
   };
 
   const deleteGroup = async (groupId: number) => {
+    if (!window.confirm(`Obrisati grupu #${groupId}? Proizvodi ostaju, ali se razdvajaju.`)) return;
     setDeleting(groupId);
+    setMessage(null);
     try {
-      await fetch(`/api/admin/groups/${groupId}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/groups/${groupId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
       setGroups(g => g.filter(x => x.groupId !== groupId));
+    } catch {
+      setMessage({ ok: false, text: `Brisanje grupe #${groupId} nije uspelo.` });
     } finally { setDeleting(null); }
+  };
+
+  const createManual = async () => {
+    const ids = [...new Set(manualIds.split(/[\s,;]+/).filter(Boolean).map(Number))];
+    if (ids.length < 2 || ids.some(n => !Number.isInteger(n) || n <= 0)) {
+      setMessage({ ok: false, text: "Unesi najmanje 2 ispravna ID-a proizvoda, odvojena zarezom." });
+      return;
+    }
+    setCreating(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/admin/groups", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productIds: ids, canonicalName: manualName.trim() || undefined }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.message ?? err?.error ?? `HTTP ${res.status}`);
+      }
+      setMessage({ ok: true, text: `Grupa kreirana od ${ids.length} proizvoda.` });
+      setManualIds(""); setManualName("");
+      await loadGroups();
+    } catch (e) {
+      setMessage({ ok: false, text: `Kreiranje grupe nije uspelo: ${e instanceof Error ? e.message : "greška"}` });
+    } finally { setCreating(false); }
   };
 
   const toggle = (id: number) => {
     setExpanded(prev => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
   };
@@ -208,15 +268,35 @@ function GrupeTab() {
           <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-xl text-sm">
             <span className="font-bold text-green-700">Gotovo!</span>
             <span className="text-green-600 ml-2">
-              Kreirano {result.groupsCreated} novih grupa. {result.clustersTooSmall} klastera preskočeno (samo 1 prodavnica).
+              Kreirano {result.groupsCreated} novih grupa, {result.productsAttachedToExistingGroups ?? 0} proizvoda dodato u postojeće. {result.clustersTooSmall} klastera preskočeno (samo 1 prodavnica).
             </span>
           </div>
+        )}
+
+        {message && (
+          <div className={`mb-4 p-3 rounded-xl text-sm border ${message.ok ? "bg-green-50 border-green-200 text-green-700" : "bg-red-50 border-red-200 text-red-700"}`}>{message.text}</div>
         )}
 
         <div className="grid grid-cols-3 gap-4">
           <StatBox label="Ukupno grupa" value={groups.length} color="#FF9900" />
           <StatBox label="Cross-store" value={crossStore.length} color="#22c55e" />
           <StatBox label="Produkata upareno" value={totalGrouped} color="#3b82f6" />
+        </div>
+      </div>
+
+      {/* Manual group */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-1">Ručno spajanje</h3>
+        <p className="text-xs text-slate-400 mb-3">ID-jevi proizvoda se vide u proširenom redu grupe (#id) i u Kvalitet tabu (nalazi UNGROUPED_*).</p>
+        <div className="flex flex-wrap gap-2">
+          <input value={manualIds} onChange={e => setManualIds(e.target.value)} placeholder="ID-jevi: 101, 245, 388"
+            className="flex-1 min-w-[220px] px-3 py-2 text-sm border border-slate-200 rounded-xl" />
+          <input value={manualName} onChange={e => setManualName(e.target.value)} placeholder="Naziv grupe (opciono)"
+            className="flex-1 min-w-[200px] px-3 py-2 text-sm border border-slate-200 rounded-xl" />
+          <button onClick={createManual} disabled={creating || !manualIds.trim()}
+            className="px-4 py-2 bg-[#FF9900] hover:bg-[#e68a00] disabled:opacity-50 text-white text-sm font-bold rounded-xl">
+            {creating ? "Kreiram..." : "Spoji"}
+          </button>
         </div>
       </div>
 
@@ -271,9 +351,14 @@ function GrupeTab() {
       {loading && (
         <div className="text-center py-12 text-slate-400 text-sm">Učitavanje...</div>
       )}
-      {!loading && groups.length === 0 && (
+      {loadError && (
+        <div className="text-center py-12 text-red-400 text-sm">
+          Greška pri učitavanju grupa. <button onClick={loadGroups} className="underline font-semibold">Pokušaj ponovo</button>
+        </div>
+      )}
+      {!loading && !loadError && groups.length === 0 && (
         <div className="text-center py-12 text-slate-400 text-sm">
-          Nema kreiranih grupa. Klikni "Pokreni auto-generate" da počneš.
+          Nema kreiranih grupa. Klikni &quot;Pokreni auto-generate&quot; da počneš.
         </div>
       )}
     </div>
@@ -290,9 +375,9 @@ function GroupRow({
   deleting: boolean;
 }) {
   const cheapest = group.products.reduce((min, p) =>
-    p.price < min ? p.price : min, Infinity);
+    p.price != null && p.price < min ? p.price : min, Infinity);
   const mostExpensive = group.products.reduce((max, p) =>
-    p.price > max ? p.price : max, 0);
+    p.price != null && p.price > max ? p.price : max, 0);
   const saving = mostExpensive > cheapest ? Math.round(mostExpensive - cheapest) : 0;
 
   return (
@@ -325,7 +410,7 @@ function GroupRow({
             )}
             {saving > 0 && (
               <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600">
-                uštedi {saving.toLocaleString("sr-RS")} RSD
+                uštedi {saving.toLocaleString("sr-RS")} {currencyOf(group.market)}
               </span>
             )}
           </div>
@@ -353,7 +438,7 @@ function GroupRow({
                     {p.store}
                   </span>
                   <span className={`font-black shrink-0 ${isCheapest ? "text-green-600" : "text-slate-700"}`}>
-                    {p.price.toLocaleString("sr-RS")} RSD
+                    {p.price != null ? `${p.price.toLocaleString("sr-RS")} ${currencyOf(group.market)}` : "—"}
                   </span>
                   {isCheapest && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 font-bold">najjeftinije</span>}
                   <span className="text-slate-400 truncate">{p.name}</span>
@@ -385,30 +470,39 @@ function RecenzijeTab() {
   const [reviews, setReviews]   = useState<PendingReview[]>([]);
   const [loading, setLoading]   = useState(true);
   const [acting, setActing]     = useState<number | null>(null);
+  const [loadError, setLoadError] = useState(false);
+  const [actError, setActError]   = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       const res = await fetch("/api/admin/reviews");
-      if (res.ok) setReviews(await res.json());
+      if (!res.ok) throw new Error();
+      setReviews(await res.json());
+    } catch {
+      setLoadError(true);
     } finally { setLoading(false); }
   };
 
   useEffect(() => { load(); }, []);
 
-  const approve = async (id: number) => {
+  // The row is only removed once the backend confirmed; a 401/500 used to make a still-pending
+  // review vanish from the list.
+  const act = async (id: number, method: "PUT" | "DELETE") => {
     setActing(id);
-    await fetch(`/api/admin/reviews/${id}`, { method: "PUT" });
-    setReviews(r => r.filter(x => x.id !== id));
-    setActing(null);
+    setActError(null);
+    try {
+      const res = await fetch(`/api/admin/reviews/${id}`, { method });
+      if (!res.ok) throw new Error();
+      setReviews(r => r.filter(x => x.id !== id));
+    } catch {
+      setActError(`Akcija nad recenzijom #${id} nije uspela — recenzija je i dalje na čekanju.`);
+    } finally { setActing(null); }
   };
 
-  const reject = async (id: number) => {
-    setActing(id);
-    await fetch(`/api/admin/reviews/${id}`, { method: "DELETE" });
-    setReviews(r => r.filter(x => x.id !== id));
-    setActing(null);
-  };
+  const approve = (id: number) => act(id, "PUT");
+  const reject = (id: number) => act(id, "DELETE");
 
   return (
     <div className="space-y-6">
@@ -424,7 +518,14 @@ function RecenzijeTab() {
 
       {loading && <div className="text-center py-12 text-slate-400 text-sm">Učitavanje...</div>}
 
-      {!loading && reviews.length === 0 && (
+      {loadError && (
+        <div className="text-center py-12 text-red-400 text-sm">
+          Greška pri učitavanju recenzija. <button onClick={load} className="underline font-semibold">Pokušaj ponovo</button>
+        </div>
+      )}
+      {actError && <div className="p-3 rounded-xl text-sm border bg-red-50 border-red-200 text-red-700">{actError}</div>}
+
+      {!loading && !loadError && reviews.length === 0 && (
         <div className="text-center py-12 text-slate-400 text-sm">Nema recenzija na čekanju.</div>
       )}
 
@@ -696,6 +797,7 @@ function AnalyticsTab() {
   const [confirm, setConfirm]                 = useState<ClearMode | null>(null);
   const [clearing, setClearing]               = useState(false);
   const [market, setMarket]                   = useState<Market>("sve");
+  const [clearError, setClearError]           = useState<string | null>(null);
 
   const fetchStats = (m: Market = market) => {
     setLoading(true);
@@ -728,15 +830,26 @@ function AnalyticsTab() {
 
   const clearTracking = async (mode: ClearMode) => {
     setClearing(true);
-    if (mode === "clicks") {
-      await fetch("/api/admin/clicks", { method: "DELETE" });
-    } else {
-      const qs = mode === "keepClickOut" ? "?keepClickOut=true" : "";
-      await fetch(`/api/admin/tracking${qs}`, { method: "DELETE" });
+    setClearError(null);
+    try {
+      // Scoped to the market selected above, so ".hr" can never wipe the .rs numbers.
+      const params = new URLSearchParams();
+      if (market !== "sve") params.set("market", market);
+      let res: Response;
+      if (mode === "clicks") {
+        res = await fetch(`/api/admin/clicks${params.size ? `?${params}` : ""}`, { method: "DELETE" });
+      } else {
+        if (mode === "keepClickOut") params.set("keepClickOut", "true");
+        res = await fetch(`/api/admin/tracking${params.size ? `?${params}` : ""}`, { method: "DELETE" });
+      }
+      if (!res.ok) throw new Error();
+      setConfirm(null);
+      fetchStats();
+    } catch {
+      setClearError("Brisanje nije uspelo — podaci nisu obrisani.");
+    } finally {
+      setClearing(false);
     }
-    setConfirm(null);
-    setClearing(false);
-    fetchStats();
   };
 
   if (loading) return <div className="text-center py-16 text-slate-400 text-sm">Učitavanje...</div>;
@@ -758,7 +871,9 @@ function AnalyticsTab() {
                 : confirm === "clicks"
                   ? "Biće obrisani svi Kupi klikovi. Ova akcija je nepovratna."
                   : "Biće obrisani PRODUCT_VIEW i COMPARE_CLICK podaci. CLICK_OUT se čuva."}
+              {" "}Tržište: <b>{market === "sve" ? "OBA (.rs i .hr)" : market === "rs" ? "samo .rs" : "samo .hr"}</b>.
             </p>
+            {clearError && <p className="text-xs text-red-600 font-semibold mb-3">{clearError}</p>}
             <div className="flex gap-3">
               <button onClick={() => setConfirm(null)} className="flex-1 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors">Otkaži</button>
               <button onClick={() => clearTracking(confirm)} disabled={clearing} className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-sm font-bold transition-colors">
@@ -791,9 +906,9 @@ function AnalyticsTab() {
           </div>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <button onClick={() => setConfirm("clicks")} className="px-4 py-2 rounded-xl border border-orange-200 text-orange-600 hover:bg-orange-50 text-xs font-semibold transition-colors">Resetuj Kupi</button>
-          <button onClick={() => setConfirm("keepClickOut")} className="px-4 py-2 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold transition-colors">Resetuj (zadrži Kupi)</button>
-          <button onClick={() => setConfirm("all")} className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-colors">Obriši sve</button>
+          <button onClick={() => { setClearError(null); setConfirm("clicks"); }} className="px-4 py-2 rounded-xl border border-orange-200 text-orange-600 hover:bg-orange-50 text-xs font-semibold transition-colors">Resetuj Kupi</button>
+          <button onClick={() => { setClearError(null); setConfirm("keepClickOut"); }} className="px-4 py-2 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold transition-colors">Resetuj (zadrži Kupi)</button>
+          <button onClick={() => { setClearError(null); setConfirm("all"); }} className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-colors">Obriši sve</button>
         </div>
       </div>
 
@@ -871,6 +986,9 @@ function AnalyticsTab() {
         </Section>
       </div>
 
+      {market !== "sve" && (
+        <p className="mt-6 text-xs text-slate-400">Sekcije ispod (kalkulator, alerti, newsletter) prikazuju oba tržišta — filter važi samo za tracking iznad.</p>
+      )}
       {calcStats && <CalculatorSection stats={calcStats} />}
       {alertMetrics && <AlertSection metrics={alertMetrics} subscribers={alertSubscribers} />}
       {newsletterStats && <NewsletterSection stats={newsletterStats} />}
@@ -1155,6 +1273,19 @@ function NewsletterCampaignSection() {
   const [sending, setSending] = useState(false);
   const [showHtml, setShowHtml] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+  const [testEmail, setTestEmail] = useState("");
+
+  const sendTest = () => {
+    setResult(null);
+    fetch("/api/admin/newsletter/campaign", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ market, testEmail: testEmail.trim() }),
+    })
+      .then(r => r.json().then(data => ({ ok: r.ok, data })))
+      .then(({ ok, data }) => setResult(ok ? `Test poslat na ${testEmail.trim()}.` : `Greška: ${data.error ?? "nepoznata"}`))
+      .catch(() => setResult("Greška pri slanju testa."));
+  };
 
   const loadPreview = (m: "rs" | "hr") => {
     setLoading(true);
@@ -1167,7 +1298,7 @@ function NewsletterCampaignSection() {
       .finally(() => setLoading(false));
   };
 
-  const handleSend = () => {
+  const handleSend = (force = false) => {
     if (!preview) return;
     const confirmed = window.confirm(
       `Poslati newsletter kampanju na ${preview.recipientCount} aktivnih pretplatnika (${market.toUpperCase()})? Ova akcija se ne može poništiti.`,
@@ -1179,10 +1310,18 @@ function NewsletterCampaignSection() {
     fetch("/api/admin/newsletter/campaign", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ market }),
+      body: JSON.stringify({ market, force }),
     })
-      .then(r => r.json().then(data => ({ ok: r.ok, data })))
-      .then(({ ok, data }) => {
+      .then(r => r.json().then(data => ({ ok: r.ok, status: r.status, data })))
+      .then(({ ok, status, data }) => {
+        if (status === 409 && data.code === "RECENT_CAMPAIGN") {
+          setResult(`${data.error} Ako stvarno želiš ponovo, potvrdi u sledećem koraku.`);
+          if (window.confirm(`${data.error}\nPoslati ponovo svejedno?`)) {
+            setSending(false);
+            handleSend(true);
+          }
+          return;
+        }
         setResult(ok ? `Poslato ${data.sentCount} email-ova.` : `Greška: ${data.error ?? "nepoznata"}`);
         if (ok) loadPreview(market);
       })
@@ -1213,6 +1352,8 @@ function NewsletterCampaignSection() {
             {loading ? "Učitavanje..." : "Prikaži pregled"}
           </button>
         </div>
+
+        {!preview && result && <p className="text-xs font-semibold text-red-500">{result}</p>}
 
         {preview && (
           <div className="space-y-4">
@@ -1270,14 +1411,27 @@ function NewsletterCampaignSection() {
                 {showHtml ? "Sakrij HTML pregled" : "Prikaži HTML pregled"}
               </button>
               <button
-                onClick={handleSend}
+                onClick={() => handleSend()}
                 disabled={sending || preview.picks.length === 0 || preview.recipientCount === 0}
                 className="px-4 py-1.5 text-xs font-bold rounded-lg bg-[#FF9900] hover:bg-[#e68a00] disabled:opacity-50 text-[#131921] transition-colors"
               >
                 {sending ? "Slanje..." : `Pošalji ${preview.recipientCount} primalaca`}
               </button>
-              {result && <span className="text-xs font-semibold text-slate-600">{result}</span>}
             </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <input value={testEmail} onChange={e => setTestEmail(e.target.value)} type="email" placeholder="test@email.com"
+                className="px-3 py-1.5 text-xs border border-slate-200 rounded-lg w-56" />
+              <button onClick={sendTest} disabled={!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(testEmail.trim())}
+                className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-600 hover:border-[#FF9900] hover:text-[#FF9900] disabled:opacity-40">
+                Pošalji test
+              </button>
+              <a href={`/api/admin/subscribers-export?market=${market}`}
+                className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-600 hover:border-slate-300">
+                Izvezi pretplatnike (CSV, {market.toUpperCase()})
+              </a>
+            </div>
+            {result && <p className="text-xs font-semibold text-slate-600">{result}</p>}
 
             {showHtml && (
               <iframe
@@ -1372,7 +1526,7 @@ function AlertSection({ metrics, subscribers }: { metrics: AlertMetrics; subscri
                     <td className="py-2.5 pr-4 text-slate-500 text-xs truncate max-w-[200px]">{sub.productName}</td>
                     <td className="py-2.5 pr-4 text-xs">
                       {sub.targetPrice != null
-                        ? <span className="font-bold text-[#FF9900]">{new Intl.NumberFormat("sr-RS").format(Math.round(sub.targetPrice))} RSD</span>
+                        ? <span className="font-bold text-[#FF9900]">{new Intl.NumberFormat("sr-RS").format(Math.round(sub.targetPrice))} {sub.currency ?? "RSD"}</span>
                         : <span className="text-slate-400">Bilo koji pad</span>}
                     </td>
                     <td className="py-2.5 text-xs text-slate-400">
@@ -1537,6 +1691,27 @@ const OUTLIER_TYPE_LABELS: Record<string, string> = {
   SUGAR_TOO_HIGH: "Šećer previsok",
   WEIGHT_IMPLAUSIBLE: "Težina nerealna",
   STALE_PRODUCT: "Zastareo proizvod",
+  PRICE_OUTLIER: "Cena odstupa",
+  BENCHMARK_DRIFT: "Benchmark odstupa",
+  VALUE_SCORE_STALE: "Zastareo score",
+  VALUE_SCORE_SKIPPED: "Score preskočen",
+  WEIGHT_NAME_MISMATCH: "Težina ≠ naziv",
+  PROTEIN_SOURCE_SUSPECT: "Sumnjiv tip proteina",
+  BRAND_SUSPECT: "Sumnjiv brend",
+  UNKNOWN_BRAND: "Nepoznat brend",
+  CREATINE_UNSCORED_COUNTED_FORMS: "Kreatin na komad",
+  DUPLICATE_GROUPS: "Duplirane grupe",
+  GROUP_MIXED_BRAND: "Grupa: mešani brendovi",
+  GROUP_MIXED_MARKET: "Grupa: mešana tržišta",
+  GROUP_MIXED_SOURCE: "Grupa: mešan tip",
+  GROUP_NAME_MISMATCH: "Grupa: naziv ne odgovara",
+  GROUP_PROTEIN_OUTLIER: "Grupa: protein odstupa",
+  GROUP_SAME_STORE: "Grupa: ista prodavnica",
+  GROUP_STALE_METADATA: "Grupa: zastarela težina",
+  GROUP_TOO_SMALL: "Grupa: premala",
+  GROUP_WEIGHT_SPREAD: "Grupa: raspon težina",
+  UNGROUPED_AMBIGUOUS: "Negrupisan: nejasno",
+  UNGROUPED_MATCH: "Negrupisan: ima par",
 };
 
 function coverageColor(pct: number): string {
@@ -1549,6 +1724,7 @@ function KvalitetTab() {
   const [error, setError]     = useState(false);
   const [market, setMarket]   = useState<Market>("sve");
   const [showAllOutliers, setShowAllOutliers] = useState(false);
+  const [typeFilter, setTypeFilter] = useState<string>("");
 
   const load = (m: Market) => {
     setLoading(true);
@@ -1585,7 +1761,14 @@ function KvalitetTab() {
     { label: "Slika",            pct: report.imageCoveragePercent,         with: report.withImage,                without: report.withoutImage },
   ];
 
-  const visibleOutliers = showAllOutliers ? outliers : outliers.slice(0, 15);
+  const typeOf = (o: string) => o.split(" — ")[0];
+  const typeCounts = outliers.reduce<Record<string, number>>((acc, o) => {
+    const t = typeOf(o);
+    acc[t] = (acc[t] ?? 0) + 1;
+    return acc;
+  }, {});
+  const filtered = typeFilter ? outliers.filter(o => typeOf(o) === typeFilter) : outliers;
+  const visibleOutliers = showAllOutliers ? filtered : filtered.slice(0, 15);
 
   return (
     <div className="space-y-6">
@@ -1682,15 +1865,27 @@ function KvalitetTab() {
           <p className="text-sm text-emerald-600 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Nema pronađenih anomalija.</p>
         ) : (
           <>
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              <button onClick={() => { setTypeFilter(""); setShowAllOutliers(false); }}
+                className={`px-2.5 py-1 text-[11px] font-bold rounded-lg ${typeFilter === "" ? "bg-[#1B2B4B] text-white" : "bg-slate-100 text-slate-500 hover:bg-slate-200"}`}>
+                Sve ({outliers.length})
+              </button>
+              {Object.entries(typeCounts).sort((a, b) => b[1] - a[1]).map(([t, n]) => (
+                <button key={t} onClick={() => { setTypeFilter(t); setShowAllOutliers(false); }}
+                  className={`px-2.5 py-1 text-[11px] font-bold rounded-lg ${typeFilter === t ? "bg-[#FF9900] text-white" : "bg-slate-100 text-slate-500 hover:bg-slate-200"}`}>
+                  {OUTLIER_TYPE_LABELS[t] ?? t} ({n})
+                </button>
+              ))}
+            </div>
             <div className="space-y-1.5 max-h-[480px] overflow-y-auto">
               {visibleOutliers.map((o, i) => <OutlierRow key={i} text={o} />)}
             </div>
-            {outliers.length > 15 && (
+            {filtered.length > 15 && (
               <button
                 onClick={() => setShowAllOutliers(v => !v)}
                 className="mt-3 text-xs font-semibold text-[#FF9900] hover:underline"
               >
-                {showAllOutliers ? "Prikaži manje" : `Prikaži svih ${outliers.length}`}
+                {showAllOutliers ? "Prikaži manje" : `Prikaži svih ${filtered.length}`}
               </button>
             )}
           </>

@@ -100,9 +100,18 @@ public class ClickStatsController {
         );
     }
 
+    /** market = rs|hr limits the wipe to that market's products; omitted wipes everything. */
     @DeleteMapping("/tracking")
     public Map<String, String> clearTracking(
-            @RequestParam(defaultValue = "false") boolean keepClickOut) {
+            @RequestParam(defaultValue = "false") boolean keepClickOut,
+            @RequestParam(required = false) String market) {
+        final String m = (market != null && !market.isBlank()) ? market : null;
+        if (m != null) {
+            int n = keepClickOut
+                    ? trackingEventRepository.deleteExceptClickOutByMarket(m)
+                    : trackingEventRepository.deleteByMarket(m);
+            return Map.of("deleted", n + " tracking events (" + m + ")");
+        }
         if (keepClickOut) {
             trackingEventRepository.deleteAllExceptClickOut();
             return Map.of("deleted", "all except CLICK_OUT");
@@ -112,7 +121,11 @@ public class ClickStatsController {
     }
 
     @DeleteMapping("/clicks")
-    public Map<String, String> clearClickEvents() {
+    public Map<String, String> clearClickEvents(@RequestParam(required = false) String market) {
+        if (market != null && !market.isBlank()) {
+            int n = clickEventRepository.deleteByMarket(market);
+            return Map.of("deleted", n + " click_events (" + market + ")");
+        }
         clickEventRepository.deleteAll();
         return Map.of("deleted", "click_events");
     }

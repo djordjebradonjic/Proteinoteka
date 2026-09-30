@@ -1,20 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
-import { isAdminAuthenticated } from "@/lib/adminAuth";
+import { NextRequest } from "next/server";
+import { auditLog } from "@/lib/adminAuth";
+import { forwardToBackend, requireAdmin } from "@/lib/adminProxy";
 
 export async function DELETE(req: NextRequest) {
-  if (!await isAdminAuthenticated(req)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/clicks`,
-      {
-        method: "DELETE",
-        headers: { "X-Admin-Token": process.env.ADMIN_TOKEN ?? "" },
-      },
-    );
-    return new NextResponse(null, { status: res.status });
-  } catch {
-    return NextResponse.json({ error: "Backend unavailable" }, { status: 503 });
-  }
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
+  const market = req.nextUrl.searchParams.get("market");
+  const qs = market === "rs" || market === "hr" ? `?market=${market}` : "";
+  const res = await forwardToBackend(`/api/v1/admin/clicks${qs}`, { method: "DELETE" });
+  if (res.ok) await auditLog(req, "CLICKS_CLEARED", `tržište: ${market ?? "sva"}`);
+  return res;
 }

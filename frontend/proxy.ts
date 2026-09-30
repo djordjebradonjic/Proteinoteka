@@ -1,13 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { safeEqual } from "@/lib/safeEqual";
-
-const COOKIE = "admin_session";
-
-async function sessionToken(): Promise<string> {
-  const raw = `${process.env.ADMIN_USERNAME}:${process.env.ADMIN_PASSWORD}`;
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
-}
+import { ADMIN_COOKIE, verifySessionToken } from "@/lib/adminAuth";
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -17,11 +9,7 @@ export async function proxy(req: NextRequest) {
   }
 
   try {
-    // Fail closed when credentials aren't configured (see lib/adminAuth.ts).
-    if (!process.env.ADMIN_USERNAME || !process.env.ADMIN_PASSWORD) throw new Error("admin credentials not configured");
-    const cookie = req.cookies.get(COOKIE)?.value;
-    const expected = await sessionToken();
-    if (safeEqual(cookie, expected)) return NextResponse.next();
+    if (await verifySessionToken(req.cookies.get(ADMIN_COOKIE)?.value)) return NextResponse.next();
   } catch {
     // fall through to redirect
   }

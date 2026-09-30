@@ -368,6 +368,8 @@ public class AdminController {
                 .collect(Collectors.toSet());
         Map<Long, String> productNames = productRepository.findAllById(productIds).stream()
                 .collect(Collectors.toMap(Product::getId, Product::getName, (a, b) -> a));
+        Map<Long, String> productCurrencies = productRepository.findAllById(productIds).stream()
+                .collect(Collectors.toMap(Product::getId, Product::getCurrency, (a, b) -> a));
 
         List<Map<String, Object>> result = items.getContent().stream().map(w -> {
             Map<String, Object> m = new LinkedHashMap<>();
@@ -375,6 +377,7 @@ public class AdminController {
             m.put("productId", w.getProductId());
             m.put("productName", productNames.getOrDefault(w.getProductId(), "#" + w.getProductId()));
             m.put("targetPrice", w.getTargetPrice());
+            m.put("currency", productCurrencies.getOrDefault(w.getProductId(), "RSD"));
             m.put("addedAt", w.getAddedAt());
             return m;
         }).collect(Collectors.toList());
