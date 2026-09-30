@@ -107,14 +107,23 @@ public class ScraperService {
 
     // Diagnostic capture for BLOCKED runs (0 products found) — set during scrapeStore()
     // so ScrapingSchedulerService can persist *why* into ScrapeLog.errorMessage without
-    // needing live application log access. Scrapes never run concurrently within one JVM
-    // (heavy Playwright scrapers are always sequential — see ScrapingSchedulerService's
-    // non-overlap invariant), so a plain field is safe here.
+    // needing live application log access. Not store-scoped: if two different stores ever
+    // scrape at the same instant this can be attributed to the wrong one, but it is a
+    // debugging aid, not persisted state, so that's an acceptable, pre-existing tradeoff.
     private volatile String lastBlockDiagnostic;
 
     public String getLastBlockDiagnostic() {
         return lastBlockDiagnostic;
     }
+
+    // Guards against the SAME store scraping twice at once: an admin double-click, a manual
+    // trigger colliding with the scheduler's catch-up/retry, or scrapeAll() overlapping a
+    // per-store trigger. Without this, two Playwright sessions would hit the store concurrently
+    // (doubled proxy traffic/billing on proxied stores) and race on stale-product cleanup and
+    // price-history writes for the same rows. Deliberately store-scoped, not global: different
+    // stores are still allowed to scrape concurrently (the 7-day schedule already spaces heavy
+    // Playwright scrapers apart by time-of-day).
+    private final Set<String> storesCurrentlyScraping = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
     // Playwright 1.42 bundles Chromium 123 — keep UA versions close to engine to avoid sec-ch-ua mismatch.
     // No Firefox/Safari — TLS fingerprint would mismatch the Chromium engine.
@@ -226,8 +235,22 @@ public class ScraperService {
      * @param onlyTypes when non-null, exactly these product types are scraped and the enabled-types
      *                  config is bypassed (an explicit admin request, e.g. to test or backfill creatine
      *                  on one store without re-scraping its protein)
+     * @throws IllegalStateException if this store is already mid-scrape in another thread
      */
     public ScrapeOutcome scrapeStoreOutcome(StoreScraper scraper, boolean testMode, Set<String> onlyTypes) {
+        String storeName = scraper.getStoreName();
+        if (!storesCurrentlyScraping.add(storeName)) {
+            throw new IllegalStateException(
+                    storeName + " is already being scraped — refusing to start a concurrent run");
+        }
+        try {
+            return doScrapeStoreOutcome(scraper, testMode, onlyTypes);
+        } finally {
+            storesCurrentlyScraping.remove(storeName);
+        }
+    }
+
+    private ScrapeOutcome doScrapeStoreOutcome(StoreScraper scraper, boolean testMode, Set<String> onlyTypes) {
         Store store = storeRepository.findByName(scraper.getStoreRowName())
                 .orElseThrow(() -> new RuntimeException("Store not found: " + scraper.getStoreRowName()));
 

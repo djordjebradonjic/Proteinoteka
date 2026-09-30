@@ -22,11 +22,6 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/v1/wishlist")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {
-        "http://localhost:3000",
-        "https://proteinoteka.rs",
-        "https://www.proteinoteka.rs"
-})
 public class WishlistController {
 
     private final WishlistItemRepository wishlistRepo;

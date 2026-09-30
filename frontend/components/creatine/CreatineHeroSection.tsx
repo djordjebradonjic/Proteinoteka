@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Percent, BarChart2, Store } from "lucide-react";
 import { navigateTo } from "@/lib/navigation";
 import SearchAutocomplete from "@/components/SearchAutocomplete";
+import CategorySwitcher from "@/components/CategorySwitcher";
 import { CREATINE_COPY, CREATINE_PATH } from "@/lib/creatine";
 
 // Same decorative chrome as the protein HeroSection (animated dots, gradient, feature badges), but trimmed for
@@ -121,6 +122,8 @@ export default function CreatineHeroSection() {
 
       {/* Content */}
       <div className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-8 sm:pt-16 pb-0 text-center">
+
+        <CategorySwitcher active="creatine" />
 
         <nav
           className="flex items-center justify-center gap-1.5 text-xs text-white/50 mb-4"

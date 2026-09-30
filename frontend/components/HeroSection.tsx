@@ -5,6 +5,7 @@ import { Store, Zap, BarChart2 } from "lucide-react";
 import { CATEGORIES } from "@/lib/categories";
 import { navigateTo } from "@/lib/navigation";
 import SearchAutocomplete from "@/components/SearchAutocomplete";
+import CategorySwitcher from "@/components/CategorySwitcher";
 import { useTranslations } from "next-intl";
 
 interface HeroProps {
@@ -174,6 +175,8 @@ export default function HeroSection({ selectedCategories: propCategories, onCate
 
       {/* Content */}
       <div className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-10 sm:pt-20 pb-0 text-center">
+
+        <CategorySwitcher active="protein" />
 
         {/* Tagline — small, above search */}
         <p

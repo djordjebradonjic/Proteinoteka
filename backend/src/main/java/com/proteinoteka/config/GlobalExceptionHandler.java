@@ -41,6 +41,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(error(400, ex.getMessage(), req.getRequestURI()));
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, Object>> handleConflict(IllegalStateException ex, HttpServletRequest req) {
+        log.warn("[409] {} {} — {}", req.getMethod(), req.getRequestURI(), ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error(409, ex.getMessage(), req.getRequestURI()));
+    }
+
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<Map<String, Object>> handleMissingParam(MissingServletRequestParameterException ex, HttpServletRequest req) {
         log.warn("[400] {} {} — missing param: {}", req.getMethod(), req.getRequestURI(), ex.getParameterName());

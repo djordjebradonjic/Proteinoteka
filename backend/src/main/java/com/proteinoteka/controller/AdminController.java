@@ -291,17 +291,16 @@ public class AdminController {
     }
 
     private void runAsync(String threadName, Runnable task) {
-        Thread t = Executors.defaultThreadFactory().newThread(task);
+        Thread t = Executors.defaultThreadFactory().newThread(() -> {
+            try {
+                task.run();
+            } catch (Exception e) {
+                log.error("[{}] Background task failed: {}", threadName, e.getMessage(), e);
+            }
+        });
         t.setName(threadName);
         t.setDaemon(true);
         t.start();
-    }
-
-    private StoreScraper findScraper(String name) {
-        return scrapers.stream()
-                .filter(s -> s.getStoreName().equals(name))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException(name + " scraper not found"));
     }
 
     @PostMapping("/scrape/store/{storeName}")
