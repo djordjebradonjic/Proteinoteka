@@ -197,7 +197,7 @@ export default function CreatineHeroSection() {
         {/* CTA */}
         <div className="flex justify-center mb-6" style={visible ? { animation: "creatineHeroBadge 0.45s cubic-bezier(0.16,1,0.3,1) 0.65s both" } : { opacity: 0 }}>
           <a
-            href="#izdvojeno-kreatin"
+            href="#creatine-list"
             className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl text-base sm:text-lg font-extrabold transition-all duration-150"
             style={{ background: "#FF9900", color: "#131921", boxShadow: "0 0 28px rgba(255,153,0,0.45), 0 4px 16px rgba(0,0,0,0.3)" }}
             onMouseEnter={(e) => {
