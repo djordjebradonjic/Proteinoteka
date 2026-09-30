@@ -4,6 +4,7 @@ import { SUPPLEMENT_CATEGORIES } from "@/lib/supplementCategories";
 // Primary category navigation for the hero: real links (own URL per family), not a filter, so each family keeps
 // its own SEO page, shareable URL and back-button behaviour.
 export default function CategorySwitcher({ active }: { active: string }) {
+  if (SUPPLEMENT_CATEGORIES.length < 2) return null;
   return (
     // Below md the sticky Header strip does this job, so a second copy in the hero would just duplicate it.
     <nav aria-label="Kategorije suplemenata" className="hidden md:flex justify-center mb-6">

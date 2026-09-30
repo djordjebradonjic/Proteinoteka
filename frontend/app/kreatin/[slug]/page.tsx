@@ -1,7 +1,7 @@
 import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import CreatineProductContent from "@/components/creatine/CreatineProductContent";
-import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
+import { CURRENT_MARKET, MARKET_CONFIG, CREATINE_ENABLED } from "@/lib/marketConfig";
 import { safeJsonLd } from "@/lib/jsonLd";
 import { extractProductId, productUrl } from "@/lib/productUrl";
 import { displayName } from "@/lib/productDisplayName";
@@ -45,6 +45,7 @@ function buildTitle(name: string): string {
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
+  if (!CREATINE_ENABLED) return NOT_FOUND_META;
   const { slug } = await params;
   const id = extractProductId(slug);
   if (!id) return NOT_FOUND_META;
@@ -97,6 +98,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 }
 
 export default async function CreatineProductPage({ params }: Params) {
+  if (!CREATINE_ENABLED) notFound();
   const { slug } = await params;
   const id = extractProductId(slug);
   if (!id) notFound();

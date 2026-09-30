@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import Header from "@/components/Header";
 import CreatineListing from "@/components/creatine/CreatineListing";
 import CreatineExtras from "@/components/creatine/CreatineExtras";
 import CreatineHeroSection from "@/components/creatine/CreatineHeroSection";
 import CreatineFeaturedSection from "@/components/creatine/CreatineFeaturedSection";
-import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
+import { CURRENT_MARKET, MARKET_CONFIG, CREATINE_ENABLED } from "@/lib/marketConfig";
 import { hreflangAlternates } from "@/lib/hreflang";
 import { safeJsonLd } from "@/lib/jsonLd";
 import { productUrl } from "@/lib/productUrl";
@@ -23,6 +24,7 @@ const COPY = CREATINE_COPY;
 const FIRST_PAGE = { form: "powder", sort: "numericPrice,asc" } as const;
 
 export async function generateMetadata(): Promise<Metadata> {
+  if (!CREATINE_ENABLED) notFound();
   const { totalItems } = await fetchCreatinePage(FIRST_PAGE);
   const url = `${BASE}${CREATINE_PATH}`;
   return {
@@ -46,6 +48,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function CreatinePage() {
+  if (!CREATINE_ENABLED) notFound();
   const [first, priceDrops] = await Promise.all([
     fetchCreatinePage(FIRST_PAGE),
     fetchCreatinePriceDropProducts(8),

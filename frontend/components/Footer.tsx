@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { FOOTER_STORES, FOOTER_GUIDES, FOOTER_POPULAR } from "@/lib/navConfig";
 import { CREATINE_PATH } from "@/lib/creatine";
+import { CREATINE_ENABLED } from "@/lib/marketConfig";
 import NewsletterInlineForm from "@/components/NewsletterInlineForm";
 
 const CATEGORIES = [
@@ -66,6 +67,7 @@ export default function Footer() {
                 </FooterLink>
               ))}
             </ul>
+            {CREATINE_ENABLED && (
             <div className="mt-5">
               <ColHeading>Kreatin</ColHeading>
               <ul className="flex flex-col gap-2">
@@ -76,6 +78,7 @@ export default function Footer() {
                 ))}
               </ul>
             </div>
+            )}
           </div>
 
           {/* Col 2 — Prodavnice / Trgovine */}

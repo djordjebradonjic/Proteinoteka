@@ -1,4 +1,4 @@
-import { CURRENT_MARKET } from "@/lib/marketConfig";
+import { CURRENT_MARKET, CREATINE_ENABLED } from "@/lib/marketConfig";
 
 export type NavLink = { label: string; href: string };
 
@@ -36,7 +36,7 @@ export const HEADER_NAV_LINKS: NavLink[] =
     ? [
         { label: "Cijene",          href: "/" },
         { label: "Top lista",       href: "/?sort=valueScore%2Cdesc" },
-        { label: "Kreatin",         href: "/kreatin" },
+        ...(CREATINE_ENABLED ? [{ label: "Kreatin", href: "/kreatin" }] : []),
       ]
     : [
         { label: "Cene",            href: "/whey-protein-cena" },
@@ -114,7 +114,7 @@ const RS_FOOTER_POPULAR: NavLink[] = [
 ];
 
 const HR_FOOTER_POPULAR: NavLink[] = [
-  { label: "Kreatin cijena",       href: "/kreatin"        },
+  ...(CREATINE_ENABLED ? [{ label: "Kreatin cijena", href: "/kreatin" }] : []),
   { label: "Početna",              href: "/"               },
   { label: "O nama",               href: "/o-nama"         },
   { label: "Kontakt",              href: "/#kontakt"       },

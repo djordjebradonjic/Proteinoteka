@@ -1,5 +1,5 @@
 import { MetadataRoute } from "next";
-import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
+import { CURRENT_MARKET, MARKET_CONFIG, CREATINE_ENABLED } from "@/lib/marketConfig";
 import { productUrl } from "@/lib/productUrl";
 import { CREATINE_PATH } from "@/lib/creatine";
 import { fetchAllCreatine } from "@/lib/creatine-data";
@@ -12,6 +12,7 @@ export const revalidate = 86400;
 const BASE = `https://${MARKET_CONFIG[CURRENT_MARKET].domain}`;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  if (!CREATINE_ENABLED) return [];
   const products = await fetchAllCreatine();
   // Nothing to index until the market actually carries creatine (the listing page is noindex then too)
   if (products.length === 0) return [];

@@ -293,6 +293,7 @@ export default function Header({ hasHero = false }: { hasHero?: boolean }) {
       </div>
 
       {/* Mobile category strip: the desktop nav (with Kreatin) is hidden below md */}
+      {SUPPLEMENT_CATEGORIES.length > 1 && (
       <nav aria-label="Kategorije suplemenata" className="md:hidden flex gap-2 px-4 pb-2.5">
         {SUPPLEMENT_CATEGORIES.map((cat) => {
           const active = cat.key === activeCategory;
@@ -313,6 +314,7 @@ export default function Header({ hasHero = false }: { hasHero?: boolean }) {
           );
         })}
       </nav>
+      )}
 
       {!heroVisible && (
         <div className="md:hidden absolute top-full left-0 right-0 px-4 pb-3 z-[60]" style={{ backgroundColor: "#131921" }}>

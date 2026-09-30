@@ -21,3 +21,8 @@ export const MARKET_CONFIG = {
 
 export const CURRENT_MARKET =
   (process.env.NEXT_PUBLIC_MARKET as Market) ?? 'rs';
+
+// Creatine is live on RS only for now: the HR market has no creatine scraped yet. Turn it on for HR by setting
+// NEXT_PUBLIC_CREATINE_HR=true (build-time, needs a redeploy) once the HR stores are scraped.
+export const CREATINE_ENABLED =
+  CURRENT_MARKET !== 'hr' || process.env.NEXT_PUBLIC_CREATINE_HR === 'true';
