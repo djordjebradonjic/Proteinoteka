@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line, Legend,
+  LineChart, Line, Legend, LabelList,
 } from "recharts";
 import { Trash2, RefreshCw, ChevronDown, ChevronRight, Zap, Users, Star, Check, Globe, AlertCircle, CheckCircle2, Clock, FileText, Download, LogOut, Server, Wrench, History } from "lucide-react";
 import { ScrapeTab, MaintenanceTab, AuditTab } from "./_tabs";
@@ -955,11 +955,12 @@ function AnalyticsTab() {
       <div className="grid md:grid-cols-2 gap-6 mt-6">
         <Section title="Klikovi Kupi — po prodavnici">
           {stats.clicksPerStore.length === 0 ? <Empty /> : (
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={stats.clicksPerStore} layout="vertical" margin={{ left: 8 }}>
+            // One row per store: a fixed height made recharts skip category labels once there were many stores.
+            <ResponsiveContainer width="100%" height={Math.max(220, stats.clicksPerStore.length * 30 + 30)}>
+              <BarChart data={stats.clicksPerStore} layout="vertical" margin={{ left: 8, right: 28 }}>
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
                 <XAxis type="number" allowDecimals={false} axisLine={false} tickLine={false} tick={{ fill: "#94a3b8", fontSize: 11 }} />
-                <YAxis type="category" dataKey="storeName" axisLine={false} tickLine={false} tick={{ fill: "#475569", fontSize: 12 }} width={90} />
+                <YAxis type="category" dataKey="storeName" interval={0} axisLine={false} tickLine={false} tick={{ fill: "#475569", fontSize: 12 }} width={130} />
                 <Tooltip cursor={{ fill: "#f8fafc" }} content={({ active, payload }) =>
                   active && payload?.length ? (
                     <div className="bg-slate-900 text-white px-3 py-2 rounded-lg shadow-xl text-xs">
@@ -967,7 +968,9 @@ function AnalyticsTab() {
                     </div>
                   ) : null}
                 />
-                <Bar dataKey="count" fill="#FF9900" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="count" fill="#FF9900" radius={[0, 4, 4, 0]}>
+                  <LabelList dataKey="count" position="right" style={{ fill: "#475569", fontSize: 11, fontWeight: 600 }} />
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           )}
