@@ -22,6 +22,11 @@ class ListingFreshnessTest {
         assertEquals(LocalDateTime.parse("2026-09-16T12:00:00"), ListingFreshness.listingCutoff(NOW));
     }
 
+    @Test
+    void rankingCutoffIsOneWeeklyCycle() {
+        assertEquals(LocalDateTime.parse("2026-09-23T12:00:00"), ListingFreshness.rankingCutoff(NOW));
+    }
+
     // ── isConfirmedForDeals ──────────────────────────────────────────────────────
 
     @Test

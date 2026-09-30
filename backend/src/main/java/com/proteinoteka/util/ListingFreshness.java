@@ -25,10 +25,17 @@ import java.util.Objects;
 public final class ListingFreshness {
 
     /**
-     * A product not refreshed by a scrape within this window is left out of listings and
-     * rankings: two weekly cycles, so one failed run never hides a store.
+     * A product not refreshed by a scrape within this window is left out of listings: two
+     * weekly cycles, so one failed run never hides a store.
      */
     public static final Duration MAX_LISTING_AGE = Duration.ofDays(14);
+
+    /**
+     * A product not refreshed within this window is left out of the ranked sections
+     * ({@code /top}, {@code /top-value}) — one weekly cycle, so a ranking can't surface a price
+     * the store has already moved past.
+     */
+    public static final Duration MAX_RANKING_AGE = Duration.ofDays(7);
 
     /**
      * A price drop older than this is no longer news — the section is about current deals. One
@@ -47,6 +54,11 @@ public final class ListingFreshness {
     /** Oldest {@code lastUpdated} a listed product may have. */
     public static LocalDateTime listingCutoff(LocalDateTime now) {
         return now.minus(MAX_LISTING_AGE);
+    }
+
+    /** Oldest {@code lastUpdated} a ranked ({@code /top}, {@code /top-value}) product may have. */
+    public static LocalDateTime rankingCutoff(LocalDateTime now) {
+        return now.minus(MAX_RANKING_AGE);
     }
 
     /**

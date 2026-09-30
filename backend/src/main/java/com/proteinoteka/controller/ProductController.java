@@ -246,7 +246,7 @@ public class ProductController {
                 cb.greaterThan(root.get("numericPrice"), 0.0)
         )).and(ProductSpecifications.hasMarket(market))
           .and(ProductSpecifications.hasProductType(typeOrDefault(productType)))
-          .and(ProductSpecifications.updatedSince(ListingFreshness.listingCutoff(LocalDateTime.now())));
+          .and(ProductSpecifications.updatedSince(ListingFreshness.rankingCutoff(LocalDateTime.now())));
         if (category != null && !category.isBlank()) {
             spec = spec.and(ProductSpecifications.hasProteinSource(category));
         }
@@ -280,7 +280,7 @@ public class ProductController {
                 cb.greaterThanOrEqualTo(root.get("primaryWeightGrams"), 500.0)
         )).and(ProductSpecifications.hasMarket(market))
           .and(ProductSpecifications.hasProductType(ProductTypes.PROTEIN))
-          .and(ProductSpecifications.updatedSince(ListingFreshness.listingCutoff(LocalDateTime.now())));
+          .and(ProductSpecifications.updatedSince(ListingFreshness.rankingCutoff(LocalDateTime.now())));
 
         // Fetch 5× more than needed so both deduplication passes still fill the limit.
         // Guardrails: max 1 product per brand; per-source caps:
