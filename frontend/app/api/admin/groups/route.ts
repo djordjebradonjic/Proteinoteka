@@ -1,36 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAdminAuthenticated } from "@/lib/adminAuth";
-
-const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? "";
-const TOKEN   = process.env.ADMIN_TOKEN ?? "";
+import { auditLog } from "@/lib/adminAuth";
+import { forwardToBackend, requireAdmin } from "@/lib/adminProxy";
 
 export async function GET(req: NextRequest) {
-  if (!await isAdminAuthenticated(req)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  try {
-    const res = await fetch(`${BACKEND}/api/admin/groups`, {
-      headers: { "X-Admin-Token": TOKEN },
-    });
-    return NextResponse.json(await res.json(), { status: res.status });
-  } catch {
-    return NextResponse.json({ error: "Backend unavailable" }, { status: 503 });
-  }
+  return (await requireAdmin(req)) ?? forwardToBackend("/api/admin/groups");
 }
 
 export async function POST(req: NextRequest) {
-  if (!await isAdminAuthenticated(req)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
+  let body: { productIds?: unknown; canonicalName?: unknown };
   try {
-    const body = await req.json();
-    const res = await fetch(`${BACKEND}/api/admin/groups/confirm`, {
-      method: "POST",
-      headers: { "X-Admin-Token": TOKEN, "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    return NextResponse.json(await res.json(), { status: res.status });
+    body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Backend unavailable" }, { status: 503 });
+    return NextResponse.json({ error: "Neispravan zahtev" }, { status: 400 });
   }
+  const ids = Array.isArray(body.productIds) ? body.productIds : [];
+  if (ids.length < 2 || !ids.every(i => Number.isInteger(i) && i > 0)) {
+    return NextResponse.json({ error: "Potrebna su najmanje 2 ispravna ID-a proizvoda" }, { status: 400 });
+  }
+  const res = await forwardToBackend("/api/admin/groups/confirm", {
+    method: "POST",
+    body: { productIds: ids, canonicalName: typeof body.canonicalName === "string" ? body.canonicalName : undefined },
+  });
+  if (res.ok) await auditLog(req, "GROUP_CREATED", ids.join(","));
+  return res;
 }

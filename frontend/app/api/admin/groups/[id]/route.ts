@@ -1,24 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAdminAuthenticated } from "@/lib/adminAuth";
+import { auditLog } from "@/lib/adminAuth";
+import { forwardToBackend, requireAdmin } from "@/lib/adminProxy";
 
-const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? "";
-const TOKEN   = process.env.ADMIN_TOKEN ?? "";
-
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  if (!await isAdminAuthenticated(req)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
   const { id } = await params;
-  try {
-    const res = await fetch(`${BACKEND}/api/admin/groups/${id}`, {
-      method: "DELETE",
-      headers: { "X-Admin-Token": TOKEN },
-    });
-    return new NextResponse(null, { status: res.status });
-  } catch {
-    return NextResponse.json({ error: "Backend unavailable" }, { status: 503 });
-  }
+  if (!/^\d+$/.test(id)) return NextResponse.json({ error: "Neispravan id" }, { status: 400 });
+  const res = await forwardToBackend(`/api/admin/groups/${id}`, { method: "DELETE" });
+  if (res.ok) await auditLog(req, "GROUP_DELETED", `#${id}`);
+  return res;
 }

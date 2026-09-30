@@ -111,4 +111,9 @@ public interface ClickEventRepository extends JpaRepository<ClickEvent, Long> {
     @org.springframework.transaction.annotation.Transactional
     @Query(value = "DELETE FROM click_events WHERE created_at < :cutoff", nativeQuery = true)
     int deleteByCreatedAtBefore(@Param("cutoff") LocalDateTime cutoff);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    @Query(value = "DELETE FROM click_events WHERE product_id IN (SELECT id FROM products WHERE market = :market)", nativeQuery = true)
+    int deleteByMarket(@Param("market") String market);
 }

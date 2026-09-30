@@ -1,35 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAdminAuthenticated } from "@/lib/adminAuth";
+import { auditLog } from "@/lib/adminAuth";
+import { forwardToBackend, requireAdmin } from "@/lib/adminProxy";
 
-const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? "";
-const TOKEN   = process.env.ADMIN_TOKEN ?? "";
+type Ctx = { params: Promise<{ id: string }> };
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  if (!await isAdminAuthenticated(req)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+async function act(req: NextRequest, { params }: Ctx, method: "PUT" | "DELETE") {
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
   const { id } = await params;
-  const res = await fetch(`${BACKEND}/api/admin/reviews/${id}/approve`, {
-    method: "PUT",
-    headers: { "X-Admin-Token": TOKEN },
-  });
-  return new NextResponse(null, { status: res.status });
+  if (!/^\d+$/.test(id)) return NextResponse.json({ error: "Neispravan id" }, { status: 400 });
+  const res = await forwardToBackend(
+    method === "PUT" ? `/api/admin/reviews/${id}/approve` : `/api/admin/reviews/${id}`, { method });
+  if (res.ok) await auditLog(req, method === "PUT" ? "REVIEW_APPROVED" : "REVIEW_REJECTED", `#${id}`);
+  return res;
 }
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  if (!await isAdminAuthenticated(req)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const { id } = await params;
-  const res = await fetch(`${BACKEND}/api/admin/reviews/${id}`, {
-    method: "DELETE",
-    headers: { "X-Admin-Token": TOKEN },
-  });
-  return new NextResponse(null, { status: res.status });
-}
+export const PUT = (req: NextRequest, ctx: Ctx) => act(req, ctx, "PUT");
+export const DELETE = (req: NextRequest, ctx: Ctx) => act(req, ctx, "DELETE");

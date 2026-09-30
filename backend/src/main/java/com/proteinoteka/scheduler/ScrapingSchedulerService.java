@@ -227,6 +227,11 @@ public class ScrapingSchedulerService {
                                 entry.put("lastScrapeAt", last.getStartedAt());
                                 entry.put("lastScrapeStatus", last.getStatus());
                                 entry.put("lastProductsFound", last.getProductsFound());
+                                entry.put("lastFinishedAt", last.getFinishedAt());
+                                entry.put("lastError", last.getErrorMessage());
+                                entry.put("lastProductsRemoved", last.getProductsRemoved());
+                                entry.put("lastTypeCounts", last.getProductTypeCounts());
+                                entry.put("lastProxyBytes", last.getProxyBytes());
                             },
                             () -> {
                                 entry.put("lastScrapeAt", null);
@@ -234,6 +239,8 @@ public class ScrapingSchedulerService {
                                 entry.put("lastProductsFound", null);
                             }
                     );
+            scrapeLogRepository.findFirstByStoreNameAndStatusOrderByStartedAtDesc(store, ScrapeStatus.SUCCESS)
+                    .ifPresent(ok -> entry.put("lastSuccessAt", ok.getStartedAt()));
 
             entry.put("nextScheduledAt", computeNextScheduledTime(store, cycleDay));
             return entry;
