@@ -12,13 +12,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/admin")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {
-        "http://localhost:3000",
-        "https://proteinoteka.rs",
-        "https://www.proteinoteka.rs",
-        "https://proteinoteka.com.hr",
-        "https://www.proteinoteka.com.hr"
-})
 public class ClickStatsController {
 
     private final ClickEventRepository    clickEventRepository;

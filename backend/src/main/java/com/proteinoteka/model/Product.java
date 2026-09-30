@@ -3,22 +3,34 @@ package com.proteinoteka.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.BatchSize;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+// Getter/Setter instead of @Data: Product <-> PriceHistory is a bidirectional JPA relation, and
+// @Data's generated equals()/hashCode()/toString() walk every field including that back-reference
+// on both sides, which is infinite recursion (StackOverflowError) the moment either entity is
+// logged, put in a Set, or compared. equals()/hashCode() are id-only (entity identity); toString()
+// excludes priceHistories.
 @Entity(name = "products")
-@Data
+@Getter
+@Setter
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(exclude = "priceHistories")
 @NoArgsConstructor
 @AllArgsConstructor
 public class Product {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
 
     private String name;

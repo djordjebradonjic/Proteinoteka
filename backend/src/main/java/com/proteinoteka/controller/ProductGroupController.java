@@ -13,11 +13,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/admin/groups")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {
-        "http://localhost:3000",
-        "https://proteinoteka.rs",
-        "https://www.proteinoteka.rs"
-})
 public class ProductGroupController {
 
     private final ProductGroupService productGroupService;

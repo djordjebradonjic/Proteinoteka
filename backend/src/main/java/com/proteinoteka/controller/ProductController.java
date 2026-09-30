@@ -40,13 +40,6 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/v1/products")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {
-        "http://localhost:3000",
-        "https://proteinoteka.rs",
-        "https://www.proteinoteka.rs",
-        "https://proteinoteka.com.hr",
-        "https://www.proteinoteka.com.hr"
-})
 public class ProductController {
 
     private final ProductRepository productRepository;

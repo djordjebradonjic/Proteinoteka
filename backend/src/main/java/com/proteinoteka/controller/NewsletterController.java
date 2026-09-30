@@ -27,13 +27,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
-@CrossOrigin(origins = {
-        "http://localhost:3000",
-        "https://proteinoteka.rs",
-        "https://www.proteinoteka.rs",
-        "https://proteinoteka.com.hr",
-        "https://www.proteinoteka.com.hr"
-})
 @Slf4j
 public class NewsletterController {
 

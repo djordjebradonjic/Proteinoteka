@@ -9,11 +9,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/track")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {
-        "http://localhost:3000",
-        "https://proteinoteka.rs",
-        "https://www.proteinoteka.rs"
-})
 public class TrackingController {
 
     private final TrackingService trackingService;
