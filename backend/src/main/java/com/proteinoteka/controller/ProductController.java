@@ -18,6 +18,7 @@ import com.proteinoteka.service.ProductGroupService;
 import com.proteinoteka.service.ScraperService;
 import com.proteinoteka.service.producttype.ProductTypes;
 import com.proteinoteka.util.BotDetector;
+import com.proteinoteka.util.ListingFreshness;
 import com.proteinoteka.util.PriceIntegrity;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -125,7 +126,8 @@ public class ProductController {
                                              Double minPrice, Double maxPrice, String weightRange,
                                              String market, String productType) {
         Specification<Product> spec = Specification.where(ProductSpecifications.hasMarket(market))
-                .and(ProductSpecifications.hasProductType(productType));
+                .and(ProductSpecifications.hasProductType(productType))
+                .and(ProductSpecifications.updatedSince(ListingFreshness.listingCutoff(LocalDateTime.now())));
         if (name != null && !name.isEmpty())
             spec = spec.and(ProductSpecifications.hasName(name));
         if (storeName != null && !storeName.isEmpty())
@@ -243,7 +245,8 @@ public class ProductController {
                 cb.isNotNull(root.get("valueScore")),
                 cb.greaterThan(root.get("numericPrice"), 0.0)
         )).and(ProductSpecifications.hasMarket(market))
-          .and(ProductSpecifications.hasProductType(typeOrDefault(productType)));
+          .and(ProductSpecifications.hasProductType(typeOrDefault(productType)))
+          .and(ProductSpecifications.updatedSince(ListingFreshness.rankingCutoff(LocalDateTime.now())));
         if (category != null && !category.isBlank()) {
             spec = spec.and(ProductSpecifications.hasProteinSource(category));
         }
@@ -276,7 +279,8 @@ public class ProductController {
                 cb.notEqual(cb.trim(root.get("description")), ""),
                 cb.greaterThanOrEqualTo(root.get("primaryWeightGrams"), 500.0)
         )).and(ProductSpecifications.hasMarket(market))
-          .and(ProductSpecifications.hasProductType(ProductTypes.PROTEIN));
+          .and(ProductSpecifications.hasProductType(ProductTypes.PROTEIN))
+          .and(ProductSpecifications.updatedSince(ListingFreshness.rankingCutoff(LocalDateTime.now())));
 
         // Fetch 5× more than needed so both deduplication passes still fill the limit.
         // Guardrails: max 1 product per brand; per-source caps:
@@ -319,16 +323,22 @@ public class ProductController {
         int safeLimit = Math.min(limit, 20);
         String effectiveMarket = (market == null || market.isEmpty()) ? "rs" : market;
         String effectiveType = typeOrDefault(productType);
+        LocalDateTime now = LocalDateTime.now();
+        java.util.Set<String> seenPages = new java.util.HashSet<>();
 
         // Find all products that have ever changed price (2+ history entries).
         // convertToDTO already sets previousPrice = most-recent history entry
         // (the old price saved right before the current price was applied).
-        // If previousPrice > numericPrice the price dropped — no time window needed. convertToDTO
-        // nulls previousPrice when the gap is implausibly large, so those never make the list.
+        // If previousPrice > numericPrice the price dropped. convertToDTO nulls previousPrice when
+        // the gap is implausibly large, so those never make the list.
         return priceHistoryRepository.findProductsWithMultiplePriceEntries().stream()
                 .filter(p -> p.getNumericPrice() != null && p.getNumericPrice() > 0)
                 .filter(p -> effectiveMarket.equals(p.getMarket()))
                 .filter(p -> effectiveType.equals(p.getProductType()))
+                // A sale is only news while it is recent and the last scrape still saw it; a drop
+                // from June, or one from a store we can no longer scrape, is likely over by now.
+                .filter(p -> ListingFreshness.isConfirmedForDeals(p, now))
+                .filter(p -> ListingFreshness.isRecentPriceChange(p.getPriceHistories(), now))
                 // Two history rows minutes apart mean one scrape run wrote the row twice (A→B→A
                 // flapping between two products/variants), not a real repricing — the "drop"
                 // would be fake. Also covers flapping already stored before the scraper guards.
@@ -340,6 +350,8 @@ public class ProductController {
                         && dto.previousPrice() > dto.numericPrice())
                 .sorted(Comparator.comparingDouble(
                         (ProductDTO dto) -> (dto.previousPrice() - dto.numericPrice()) / dto.previousPrice()).reversed())
+                // Pack sizes of one store page are one deal, not two cards (biggest drop wins).
+                .filter(dto -> dto.productUrl() == null || seenPages.add(ListingFreshness.pageKey(dto.productUrl())))
                 .limit(safeLimit)
                 .toList();
     }
@@ -354,7 +366,8 @@ public class ProductController {
         int safeLimit = Math.min(limit, 20);
         String effectiveMarket = (market == null || market.isEmpty()) ? "rs" : market;
         String effectiveType = typeOrDefault(productType);
-        LocalDateTime since = LocalDateTime.now().minusDays(90);
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime since = now.minusDays(90);
 
         // Discount vs. the 90-day average price (not just the previous scrape) — needs
         // at least 2 entries in the window, otherwise "average" is just the current price.
@@ -362,6 +375,8 @@ public class ProductController {
                 .filter(p -> p.getNumericPrice() != null && p.getNumericPrice() > 0)
                 .filter(p -> effectiveMarket.equals(p.getMarket()))
                 .filter(p -> effectiveType.equals(p.getProductType()))
+                // Same bar as /price-drops: the discounted price must be one the last scrape saw.
+                .filter(p -> ListingFreshness.isConfirmedForDeals(p, now))
                 // Flapping history (two rows minutes apart = one run wrote the row twice) inflates
                 // the 90-day average with a price the product never really had, which shows up as
                 // a fake "discount". Same guard as /price-drops.
