@@ -218,6 +218,8 @@ public class GymBeamScraperTest {
                 AbstractGymBeamScraper.brandFromNameSuffix("Kreatin Powder - Optimum Nutrition"));
         org.junit.jupiter.api.Assertions.assertEquals("Weider",
                 AbstractGymBeamScraper.brandFromNameSuffix("Pure Creatine - Weider"));
+        org.junit.jupiter.api.Assertions.assertEquals("Optimum Nutrition",
+                AbstractGymBeamScraper.brandFromNameSuffix("Micronized Creatine Powder \u2013 Optimum Nutrition"));
         org.junit.jupiter.api.Assertions.assertNull(AbstractGymBeamScraper.brandFromNameSuffix("Kreatin"));
     }
 }

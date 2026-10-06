@@ -513,11 +513,16 @@ public abstract class AbstractGymBeamScraper implements StoreScraper {
      * ("Kreatin Powder - Optimum Nutrition", "Pure Creatine - Weider"). Null when there is no suffix.
      * Without a brand a product can never join a comparison group.
      */
+    // GymBeam writes the separator as a hyphen or an en/em dash
+    private static final Pattern NAME_SUFFIX_SEPARATOR = Pattern.compile("\\s[-\u2013\u2014]\\s");
+
     static String brandFromNameSuffix(String name) {
         if (name == null) return null;
-        int i = name.lastIndexOf(" - ");
-        if (i < 0) return null;
-        String brand = name.substring(i + 3).trim();
+        Matcher m = NAME_SUFFIX_SEPARATOR.matcher(name);
+        int end = -1;
+        while (m.find()) end = m.end();
+        if (end < 0) return null;
+        String brand = name.substring(end).trim();
         return brand.isEmpty() || brand.length() > 40 ? null : brand;
     }
 
