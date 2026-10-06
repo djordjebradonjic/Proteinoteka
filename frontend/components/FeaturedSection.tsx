@@ -17,13 +17,13 @@ interface Props {
 type Tab = "value" | "drops";
 
 export default function FeaturedSection({ topValueProducts, priceDropProducts }: Props) {
-  const [activeTab, setActiveTab] = useState<Tab>("value");
+  const [activeTab, setActiveTab] = useState<Tab>(priceDropProducts.length ? "drops" : "value");
 
   if (!topValueProducts.length && !priceDropProducts.length) return null;
 
   const tabs: { id: Tab; label: string }[] = [
-    { id: "value", label: IS_HR ? "⚡ Top vrijednost" : "⚡ Top vrednost" },
     { id: "drops", label: IS_HR ? "🔥 Najveći pad cijene" : "🔥 Najveći pad cene" },
+    { id: "value", label: IS_HR ? "⚡ Top vrijednost" : "⚡ Top vrednost" },
   ];
 
   return (
