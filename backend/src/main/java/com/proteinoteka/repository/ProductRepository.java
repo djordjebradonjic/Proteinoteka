@@ -172,6 +172,8 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
     List<Product> findByGroupId(Long groupId);
 
+    List<Product> findByGroupIdIsNotNullAndMarketAndProductType(String market, String productType);
+
     // Group-wide canonical id (lowest id across ALL group members, unfiltered by store/price) —
     // must stay the single source of truth for "which member is SEO-canonical" so the product
     // page's rel=canonical and sitemap.ts's dedup can never disagree (they used to compute this

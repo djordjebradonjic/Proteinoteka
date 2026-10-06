@@ -37,6 +37,7 @@ public record ProductDTO(Long id,
                          Integer unitCount,
                          Double creatineGramsPerServing,
                          Integer servingsPerContainer,
-                         String creatineType)
+                         String creatineType,
+                         Double priciestPrice)
     {
 }

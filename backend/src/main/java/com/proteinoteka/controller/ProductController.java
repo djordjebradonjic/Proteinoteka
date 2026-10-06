@@ -349,6 +349,72 @@ public class ProductController {
                 .toList();
     }
 
+    // Cheapest listing of each product group against the dearest store selling the same product
+    // (same brand, line and pack size — ProductGroupService.fitsGroup). Only fresh listings count,
+    // so "cheaper than the priciest store" is never based on a price a store stopped showing.
+    @Cacheable(value = "price-drops", key = "'group-savings-' + #market + '-' + #limit + '-' + (#productType ?: 'protein')")
+    @GetMapping("/group-savings")
+    public List<ProductDTO> getGroupSavings(
+            @RequestParam(defaultValue = "8") int limit,
+            @RequestParam(required = false) String market,
+            @RequestParam(required = false) String productType) {
+
+        int safeLimit = Math.min(limit, 20);
+        String effectiveMarket = (market == null || market.isEmpty()) ? "rs" : market;
+        String effectiveType = typeOrDefault(productType);
+        LocalDateTime now = LocalDateTime.now();
+        java.util.Set<String> seenPages = new java.util.HashSet<>();
+
+        Map<Long, List<Product>> groups = productRepository
+                .findByGroupIdIsNotNullAndMarketAndProductType(effectiveMarket, effectiveType).stream()
+                .filter(p -> p.getNumericPrice() != null && p.getNumericPrice() > 0)
+                .filter(p -> p.getStore() != null)
+                .filter(p -> ListingFreshness.isConfirmedForDeals(p, now))
+                .collect(java.util.stream.Collectors.groupingBy(Product::getGroupId));
+
+        record Saving(Product cheapest, Product priciest, double pct) {}
+
+        return groups.values().stream()
+                .map(members -> {
+                    // One price per store: its cheapest listing (several flavours of one group).
+                    Map<String, Product> perStore = new java.util.HashMap<>();
+                    for (Product p : members) {
+                        perStore.merge(p.getStore().getName(), p,
+                                (a, b) -> b.getNumericPrice() < a.getNumericPrice() ? b : a);
+                    }
+                    if (perStore.size() < 2) return null;
+                    Product cheapest = perStore.values().stream()
+                            .min(Comparator.comparingDouble(Product::getNumericPrice)).orElseThrow();
+                    Product priciest = perStore.values().stream()
+                            .max(Comparator.comparingDouble(Product::getNumericPrice)).orElseThrow();
+                    // A gap no real repricing explains means the group holds mismatched products.
+                    if (!PriceIntegrity.isCredibleChange(priciest.getNumericPrice(), cheapest.getNumericPrice())) {
+                        return null;
+                    }
+                    double pct = (priciest.getNumericPrice() - cheapest.getNumericPrice()) / priciest.getNumericPrice();
+                    return pct > 0 ? new Saving(cheapest, priciest, pct) : null;
+                })
+                .filter(java.util.Objects::nonNull)
+                .sorted(Comparator.comparingDouble(Saving::pct).reversed())
+                .filter(s -> s.cheapest().getUrl() == null || seenPages.add(ListingFreshness.pageKey(s.cheapest().getUrl())))
+                .limit(safeLimit)
+                .map(s -> {
+                    ProductDTO dto = convertToDTO(s.cheapest());
+                    return withPriciest(dto, s.priciest().getNumericPrice());
+                })
+                .toList();
+    }
+
+    private static ProductDTO withPriciest(ProductDTO d, Double price) {
+        return new ProductDTO(d.id(), d.name(), d.brand(), d.price(), d.imageUrl(), d.productUrl(), d.storeName(),
+                d.weights(), d.flavours(), d.priceHistory(), d.description(), d.numericPrice(), d.proteinPer100g(),
+                d.valueScore(), d.primaryWeightGrams(), d.sugarPer100g(), d.fatPer100g(), d.caloriePer100g(),
+                d.proteinSource(), d.aiDescription(), d.previousPrice(), d.percentileRank(), d.lastUpdated(),
+                d.canonicalSlug(), d.market(), d.currency(), d.groupId(), d.groupCanonicalId(), d.valueBreakdown(),
+                d.productType(), d.productForm(), d.unitCount(), d.creatineGramsPerServing(),
+                d.servingsPerContainer(), d.creatineType(), price);
+    }
+
     @Cacheable(value = "black-friday", key = "'bf-' + #market + '-' + #limit + '-' + (#productType ?: 'protein')")
     @GetMapping("/black-friday")
     public List<ProductDTO> getBlackFridayDeals(
@@ -579,7 +645,8 @@ public class ProductController {
                 product.getUnitCount(),
                 product.getCreatineGramsPerServing(),
                 product.getServingsPerContainer(),
-                product.getCreatineType()
+                product.getCreatineType(),
+                null
         );
     }
 }

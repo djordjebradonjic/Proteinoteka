@@ -5,12 +5,16 @@ import { Product } from "@/types/product";
 import { productUrl } from "@/lib/productUrl";
 import { formatPrice } from "@/lib/formatPrice";
 import PriceTag from "@/components/PriceTag";
+import { CURRENT_MARKET } from "@/lib/marketConfig";
+
+const IS_HR = CURRENT_MARKET === "hr";
 
 interface Props { product: Product }
 
 export default function FeaturedPriceDropCard({ product }: Props) {
   const curr    = product.numericPrice;
-  const prev    = product.previousPrice ?? null;
+  // Cheapest store of a product group vs. the dearest store selling the same product.
+  const prev    = product.priciestPrice ?? null;
   const hasDrop = prev != null && prev > curr && curr > 0;
 
   const dropPct = hasDrop ? Math.round(((prev! - curr) / prev!) * 100) : 0;
@@ -66,6 +70,9 @@ export default function FeaturedPriceDropCard({ product }: Props) {
                 </p>
               )}
             </div>
+            <p className="text-[11px] text-slate-500 mt-1 leading-snug">
+              {dropPct}% jeftinije u {product.storeName} {IS_HR ? "nego u najskupljoj trgovini" : "nego u najskupljoj prodavnici"}
+            </p>
             <div className="flex items-baseline gap-2 flex-wrap mt-1">
               {prev != null && (
                 <span className="text-sm line-through text-slate-400"><PriceTag price={prev} className="text-sm line-through text-slate-400" currencyClassName="text-[0.85em] ml-0.5 text-slate-400" /></span>

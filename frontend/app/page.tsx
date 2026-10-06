@@ -2,7 +2,7 @@ import HomeContent from "@/components/HomeContent";
 import { apiFetch } from "@/lib/apiFetch";
 import { Metadata } from "next";
 import { Suspense } from "react";
-import { fetchTopProducts, fetchTopValueProducts, fetchPriceDropProducts } from "@/lib/seo-data";
+import { fetchTopProducts, fetchTopValueProducts, fetchGroupSavingsProducts } from "@/lib/seo-data";
 import { productUrl } from "@/lib/productUrl";
 import { CURRENT_MARKET, MARKET_CONFIG } from "@/lib/marketConfig";
 import { hreflangAlternates } from "@/lib/hreflang";
@@ -111,7 +111,7 @@ export default async function Home() {
     getInitialProducts(),
     fetchTopProducts({ sortBy: "valueScore", limit: 10 }),
     fetchTopValueProducts(8),
-    fetchPriceDropProducts(8),
+    fetchGroupSavingsProducts(8),
   ]);
 
   const top10 = topProducts.slice(0, 10);

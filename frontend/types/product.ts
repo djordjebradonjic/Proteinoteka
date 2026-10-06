@@ -51,4 +51,6 @@ export interface Product {
   creatineGramsPerServing?: number | null;
   servingsPerContainer?: number | null;
   creatineType?: string | null;
+  // Set by /products/group-savings: the price at the dearest store selling the same product (this row is the cheapest).
+  priciestPrice?: number | null;
 }

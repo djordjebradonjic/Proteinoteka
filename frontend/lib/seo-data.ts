@@ -76,6 +76,20 @@ export async function fetchPriceDropProducts(limit = 8): Promise<Product[]> {
   }
 }
 
+export async function fetchGroupSavingsProducts(limit = 8): Promise<Product[]> {
+  if (!API) return [];
+  try {
+    const url = new URL(`${API}/api/v1/products/group-savings`);
+    url.searchParams.set("limit", String(limit));
+    url.searchParams.set("market", MARKET);
+    const res = await apiFetch(url.toString(), { next: { revalidate: 21600, tags: ["products"] } });
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
 export async function fetchBlackFridayProducts(limit = 20): Promise<Product[]> {
   if (!API) return [];
   try {
