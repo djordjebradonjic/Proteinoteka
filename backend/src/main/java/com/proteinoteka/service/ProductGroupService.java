@@ -116,8 +116,21 @@ public class ProductGroupService {
         // brand+weight+source alone can't tell apart distinct product lines sold under one brand
         // (e.g. "Iso Cool" vs "Iso Sensation 93", or a store's private-label "Rice Protein" vs
         // "Vegan Blend"): require a shared distinguishing word, or both fully generic.
-        return members.stream().anyMatch(m ->
-                ProductLineMatcher.sameProductLine(p.getName(), p.getBrand(), m.getName(), m.getBrand()));
+        return members.stream().anyMatch(m -> sameLine(p, m));
+    }
+
+    /** Same product line by name; creatine's category words ("Kreatin Monohidrat") do not count as a line. */
+    public static boolean sameLine(Product a, Product b) {
+        return ProductLineMatcher.sameProductLine(a.getName(), a.getBrand(), b.getName(), b.getBrand(), isCreatine(a));
+    }
+
+    /** The distinguishing words of a listing's name, per its family. */
+    public static Set<String> lineWordsOf(Product p) {
+        return ProductLineMatcher.productLineWords(p.getName(), p.getBrand(), isCreatine(p));
+    }
+
+    private static boolean isCreatine(Product p) {
+        return ProductTypes.CREATINE.equals(familyOf(p));
     }
 
     // ── Public: get store prices for a product ────────────────────────────────
@@ -260,7 +273,7 @@ public class ProductGroupService {
             boolean placed = false;
             for (List<Product> line : lines) {
                 Product first = line.get(0);
-                if (ProductLineMatcher.sameProductLine(p.getName(), p.getBrand(), first.getName(), first.getBrand())) {
+                if (sameLine(p, first)) {
                     line.add(p);
                     placed = true;
                     break;

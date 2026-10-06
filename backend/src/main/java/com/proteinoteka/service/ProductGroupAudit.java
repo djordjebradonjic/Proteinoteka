@@ -2,7 +2,6 @@ package com.proteinoteka.service;
 
 import com.proteinoteka.model.Product;
 import com.proteinoteka.model.ProductGroup;
-import com.proteinoteka.util.ProductLineMatcher;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -107,13 +106,13 @@ public final class ProductGroupAudit {
         // share none. A member with no distinguishing words ("Iso Whey Zero 908g") or only a flavour
         // name says nothing about the product line, so it is not evidence either way.
         for (Product p : members) {
-            if (ProductLineMatcher.productLineWords(p.getName(), p.getBrand()).isEmpty()) continue;
+            if (ProductGroupService.lineWordsOf(p).isEmpty()) continue;
             List<Product> comparable = members.stream()
-                    .filter(o -> o != p && !ProductLineMatcher.productLineWords(o.getName(), o.getBrand()).isEmpty())
+                    .filter(o -> o != p && !ProductGroupService.lineWordsOf(o).isEmpty())
                     .toList();
             if (comparable.isEmpty()) continue;
             boolean related = comparable.stream().anyMatch(o ->
-                    ProductLineMatcher.sameProductLine(p.getName(), p.getBrand(), o.getName(), o.getBrand()));
+                    ProductGroupService.sameLine(p, o));
             if (!related) {
                 out.add(String.format("GROUP_NAME_MISMATCH — %s: id=%s '%s' shares no product line with the other members",
                         tag, p.getId(), p.getName()));
@@ -177,7 +176,7 @@ public final class ProductGroupAudit {
 
     private static double matchShare(List<Product> from, List<Product> to) {
         long hits = from.stream().filter(x -> to.stream().anyMatch(y ->
-                ProductLineMatcher.sameProductLine(x.getName(), x.getBrand(), y.getName(), y.getBrand()))).count();
+                ProductGroupService.sameLine(x, y))).count();
         return (double) hits / from.size();
     }
 

@@ -51,12 +51,31 @@ public final class ProductLineMatcher {
             java.util.Map.entry("veggie", "vegan"), java.util.Map.entry("profesional", "professional")
     );
 
+    /**
+     * Words that only say "this is creatine" (either spelling, the form, the generic type). For creatine
+     * they are the product's category, not its line: "Creatine Monohydrate" and "Kreatin Monohidrat" are
+     * one product. A real line name (Creapure, Creavitargo, Crea-Tech) is not here and still separates.
+     * The form and type themselves are compared on their own fields, not through the name.
+     */
+    private static final Set<String> CREATINE_STOPWORDS = Set.of(
+            "creatine", "creatin", "kreatin", "kreatina", "kreatini", "kreatinom", "krea",
+            "monohydrate", "monohydrat", "monohidrat", "monohidrata", "mono", "micronized", "micronised",
+            "mikronizirani", "mikronizovani", "mikronizirana", "mikronizovana", "hcl", "hydrochloride",
+            "caps", "capsules", "capsule", "kapsule", "kapsula", "kaps", "tablets", "tablete", "tabs",
+            "gummies", "gumene", "prah", "prasak", "prašak", "powder", "unflavoured", "unflavored", "neutral",
+            "neutralni", "bez", "ukusa", "serving", "servings", "porcija", "porcije", "doza", "doze"
+    );
+
     public static Set<String> productLineWords(String name, String brand) {
+        return productLineWords(name, brand, Set.of());
+    }
+
+    private static Set<String> productLineWords(String name, String brand, Set<String> extraStopwords) {
         if (name == null) return Collections.emptySet();
         Set<String> words = new HashSet<>();
         for (String w : stripBrandAndWeight(name, brand).split("\\s+")) {
             w = SYNONYMS.getOrDefault(w, w);
-            if (w.length() > 2 && !NAME_STOPWORDS.contains(w)) words.add(w);
+            if (w.length() > 2 && !NAME_STOPWORDS.contains(w) && !extraStopwords.contains(w)) words.add(w);
         }
         return words;
     }
@@ -87,8 +106,22 @@ public final class ProductLineMatcher {
      * when only one side has distinguishing words (e.g. "Vegan Blend" vs "Protein boba").
      */
     public static boolean sameProductLine(String nameA, String brandA, String nameB, String brandB) {
-        Set<String> a = productLineWords(nameA, brandA);
-        Set<String> b = productLineWords(nameB, brandB);
+        return sameProductLine(nameA, brandA, nameB, brandB, Set.of());
+    }
+
+    /** Same as above for a product family: creatine's category words (kreatin, monohidrat...) are not a line. */
+    public static boolean sameProductLine(String nameA, String brandA, String nameB, String brandB, boolean creatine) {
+        return sameProductLine(nameA, brandA, nameB, brandB, creatine ? CREATINE_STOPWORDS : Set.of());
+    }
+
+    public static Set<String> productLineWords(String name, String brand, boolean creatine) {
+        return productLineWords(name, brand, creatine ? CREATINE_STOPWORDS : Set.of());
+    }
+
+    private static boolean sameProductLine(String nameA, String brandA, String nameB, String brandB,
+                                           Set<String> extraStopwords) {
+        Set<String> a = productLineWords(nameA, brandA, extraStopwords);
+        Set<String> b = productLineWords(nameB, brandB, extraStopwords);
         if (hasWordOverlap(a, b)) return true;
         if (a.isEmpty() || b.isEmpty()) return false;
         String compactA = stripBrandAndWeight(nameA, brandA).replaceAll("\\s+", "");

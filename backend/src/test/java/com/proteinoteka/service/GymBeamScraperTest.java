@@ -211,4 +211,13 @@ public class GymBeamScraperTest {
 
         assertTrue(scraper.scrape(null, listing, Set.of()).isEmpty());
     }
+
+    @org.junit.jupiter.api.Test
+    void brandIsReadFromTheNameSuffixWhenThereIsNoManufacturerAttribute() {
+        org.junit.jupiter.api.Assertions.assertEquals("Optimum Nutrition",
+                AbstractGymBeamScraper.brandFromNameSuffix("Kreatin Powder - Optimum Nutrition"));
+        org.junit.jupiter.api.Assertions.assertEquals("Weider",
+                AbstractGymBeamScraper.brandFromNameSuffix("Pure Creatine - Weider"));
+        org.junit.jupiter.api.Assertions.assertNull(AbstractGymBeamScraper.brandFromNameSuffix("Kreatin"));
+    }
 }

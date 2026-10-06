@@ -184,7 +184,8 @@ public abstract class AbstractGymBeamScraper implements StoreScraper {
                 }
 
                 Product first = variants.get(0);
-                first.setBrand(extractBrand(productData));
+                first.setBrand(extractBrand(productData) != null
+                        ? extractBrand(productData) : brandFromNameSuffix(first.getName()));
                 first.setDescription(descDoc.text().trim());
 
                 boolean anyNeedsNutrition = variants.stream()
@@ -505,6 +506,19 @@ public abstract class AbstractGymBeamScraper implements StoreScraper {
             }
         }
         return null;
+    }
+
+    /**
+     * Creatine listings often carry no manufacturer attribute and name the brand as a suffix instead
+     * ("Kreatin Powder - Optimum Nutrition", "Pure Creatine - Weider"). Null when there is no suffix.
+     * Without a brand a product can never join a comparison group.
+     */
+    static String brandFromNameSuffix(String name) {
+        if (name == null) return null;
+        int i = name.lastIndexOf(" - ");
+        if (i < 0) return null;
+        String brand = name.substring(i + 3).trim();
+        return brand.isEmpty() || brand.length() > 40 ? null : brand;
     }
 
     // -------------------- Nutrition extraction --------------------

@@ -161,6 +161,25 @@ class ProductGroupServiceTest {
         assertTrue(ProductGroupService.fitsGroup(creatine(name, "Applied Nutrition", 250, null, null, b), g, powder));
     }
 
+    @Test
+    void creatineSpelledInSerbianAndEnglishIsOneProduct() {
+        Store a = store(1, "A"), b = store(2, "B");
+        ProductGroup g = group(1, "Applied Nutrition", 250);
+        List<Product> members = List.of(creatine("Applied Nutrition Creatine Monohydrate 250g",
+                "Applied Nutrition", 250, "powder", "monohydrate", a));
+
+        assertTrue(ProductGroupService.fitsGroup(creatine("Applied Nutrition Kreatin Monohidrat 250g",
+                "Applied Nutrition", 250, "powder", "monohydrate", b), g, members));
+        assertTrue(ProductGroupService.fitsGroup(creatine("Applied Nutrition Micronized Creatine 250 g",
+                "Applied Nutrition", 250, "powder", "monohydrate", b), g, members));
+        // a named line (Creapure, Creavitargo...) is still a different product from the plain one
+        assertFalse(ProductGroupService.fitsGroup(creatine("Applied Nutrition Creapure 250g",
+                "Applied Nutrition", 250, "powder", "monohydrate", b), g, members));
+        // a flavoured creatine is not the plain one
+        assertFalse(ProductGroupService.fitsGroup(creatine("Applied Nutrition Kreatin Monohidrat Limun 250g",
+                "Applied Nutrition", 250, "powder", "monohydrate", b), g, members));
+    }
+
     // ------------------------------------------------------------------ counted forms (pieces)
 
     /** A capsule/tablet/gummy listing: no gram weight, the pack is a piece count. */
