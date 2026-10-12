@@ -6,6 +6,11 @@ import { X, ChevronUp, BookOpen } from "lucide-react";
 
 const GUIDES = [
   {
+    slug: "kako-uzimati-kreatin",
+    title: "Kreatin — kako uzimati, doza i koji kupiti",
+    readMin: 12,
+  },
+  {
     slug: "najbolji-protein-za-pocetnike",
     title: "Najbolji protein za početnike — top izbori i cene",
     readMin: 6,

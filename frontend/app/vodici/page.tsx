@@ -23,6 +23,12 @@ export const metadata: Metadata = {
 
 const ARTICLES = [
   {
+    href: "/vodici/kako-uzimati-kreatin",
+    title: "Kreatin: kako se uzima, koliko i koji vredi kupiti",
+    excerpt: "3–5 g dnevno, faza punjenja nije obavezna, a skuplji oblici ne rade bolje od monohidrata. Doza, tajming, nuspojave i stvarne cene iz Srbije.",
+    readMin: 12,
+  },
+  {
     href: "/vodici/najbolji-protein-za-pocetnike",
     title: "Najbolji protein za početnike — top izbori i cene",
     excerpt: "Najbolji ukupno, najjeftiniji, najbolja vrednost za novac, najlakši za varenje i najbolji biljni izbor — sa aktuelnim cenama.",

@@ -96,6 +96,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const RS_GUIDE_META: Record<string, GuideMeta> = {
     "koliko-proteina-dnevno":           { changeFrequency: "monthly", priority: 0.7, lastModified: d("2025-04-01") },
     "kada-piti-protein":                { changeFrequency: "weekly",  priority: 0.75, lastModified: now },
+    "kako-uzimati-kreatin":             { changeFrequency: "weekly",  priority: 0.85, lastModified: now },
     "whey-isolate-vs-concentrate":      { changeFrequency: "weekly",  priority: 0.75, lastModified: now },
     "da-li-protein-goji":               { changeFrequency: "monthly", priority: 0.7, lastModified: d("2025-05-01") },
     "protein-za-mrsavljenje":           { changeFrequency: "monthly", priority: 0.7, lastModified: d("2025-05-01") },
@@ -184,6 +185,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "da-li-protein-goji-hrvatska":             { changeFrequency: "monthly", priority: 0.75, lastModified: now },
     "protein-za-mrsavljenje-hrvatska":         { changeFrequency: "weekly",  priority: 0.8,  lastModified: now },
     "kada-piti-protein-hrvatska":              { changeFrequency: "monthly", priority: 0.75, lastModified: now },
+    "kako-uzimati-kreatin-hrvatska":           { changeFrequency: "weekly",  priority: 0.85, lastModified: now },
     "whey-isolate-vs-concentrate-hrvatska":    { changeFrequency: "monthly", priority: 0.75, lastModified: now },
     "protein-za-zene-hrvatska":                { changeFrequency: "monthly", priority: 0.75, lastModified: now },
   };

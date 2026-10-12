@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import Header from "@/components/Header";
 import CreatineListing from "@/components/creatine/CreatineListing";
 import CreatineExtras from "@/components/creatine/CreatineExtras";
@@ -130,6 +131,15 @@ export default async function CreatinePage() {
                 </div>
               ))}
             </div>
+
+            <p className="mt-8">
+              <Link
+                href={CURRENT_MARKET === "hr" ? "/hr-vodici/kako-uzimati-kreatin-hrvatska" : "/vodici/kako-uzimati-kreatin"}
+                className="inline-block px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-[#FF9900] hover:text-[#FF9900] transition-colors shadow-sm"
+              >
+                {CURRENT_MARKET === "hr" ? "Cijeli vodič: kako uzimati kreatin →" : "Ceo vodič: kako uzimati kreatin →"}
+              </Link>
+            </p>
 
             <h2 className="text-2xl font-extrabold text-slate-900 mt-14 mb-5">Česta pitanja</h2>
             <div className="space-y-3">

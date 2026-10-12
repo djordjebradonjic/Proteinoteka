@@ -95,6 +95,12 @@ const HR_SEO_PAGES = [
 
 const HR_GUIDES = [
   {
+    href: "/hr-vodici/kako-uzimati-kreatin-hrvatska",
+    title: "Kreatin: kako se uzima, koliko i koji se isplati kupiti",
+    desc: "3–5 g dnevno, faza punjenja nije obavezna, a skuplji oblici ne djeluju bolje od monohidrata. Doza, tajming, nuspojave i što gledati pri kupnji.",
+    readMin: 12,
+  },
+  {
     href: "/hr-vodici/najbolji-protein-za-pocetnike-hrvatska",
     title: "Najbolji protein za početnike — top izbori i cijene",
     desc: "Najbolji ukupno, proračun, vrijednost za novac, probavljivost i biljni izbor — s aktualnim cijenama.",
