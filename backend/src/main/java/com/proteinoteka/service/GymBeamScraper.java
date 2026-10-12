@@ -21,6 +21,10 @@ public class GymBeamScraper extends AbstractGymBeamScraper {
     @Override public String getStoreName() { return STORE_NAME; }
     @Override public String getBaseUrl()   { return BASE_URL; }
 
+    // gymbeam.rs answers Railway's datacenter IP with a Cloudflare challenge ("Sačekajte trenutak...",
+    // BLOCKED since 2026-10-10); gymbeam.hr does not, so only the RS store goes through the proxy.
+    @Override public boolean requiresProxy() { return true; }
+
     @Override
     public List<ListingTarget> listingTargets() {
         return List.of(
